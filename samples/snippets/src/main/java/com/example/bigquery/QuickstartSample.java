@@ -27,12 +27,17 @@ public class QuickstartSample {
   public static void main(String... args) throws Exception {
     // Instantiates a client
     BigQuery bigquery = BigQueryOptions.defaultInstance().service();
+
     // The name for the new dataset
     String datasetName = "my_new_dataset";
+
+    // Prepares a new dataset
     Dataset dataset = null;
     DatasetInfo datasetInfo = DatasetInfo.builder(datasetName).build();
-    // Creates the new dataset
+
+    // Creates the dataset
     dataset = bigquery.create(datasetInfo);
+
     System.out.printf("Dataset %s created.%n", dataset.datasetId().dataset());
   }
 }
