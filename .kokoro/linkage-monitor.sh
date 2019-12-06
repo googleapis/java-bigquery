@@ -17,7 +17,7 @@ set -eo pipefail
 # Display commands being run.
 set -x
 
-cd github/google-cloud-java/
+cd github/java-bigquery/
 
 # Print out Java version
 java -version

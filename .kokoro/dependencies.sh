@@ -15,7 +15,7 @@
 
 set -eo pipefail
 
-cd github/google-cloud-java/
+cd github/java-bigquery/
 
 # Print out Java
 java -version
