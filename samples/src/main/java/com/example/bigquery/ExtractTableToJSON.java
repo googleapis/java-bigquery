@@ -6,9 +6,13 @@ import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQuery.TableOption;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
+import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Job;
+import com.google.cloud.bigquery.LegacySQLTypeName;
+import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.StandardTableDefinition;
 import com.google.cloud.bigquery.Table;
+import com.google.cloud.bigquery.TableDefinition;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableInfo;
 import org.threeten.bp.Duration;
@@ -17,25 +21,15 @@ public class ExtractTableToJSON {
 
   public static void runExtractTableToJSON() {
     // TODO(developer): Replace these variables before running the sample.
-    String datasetName = "my-dataset-name";
+    Table table = null;
     String format = "CSV";
-    String tableName = "my_table";
     String bucketName = "my-bucket";
     String gcsFileName = "gs://" + bucketName + "/extractTest.csv";
-    extractTableToJSON(datasetName, tableName, format, gcsFileName);
+    extractTableToJSON(table, format, gcsFileName);
   }
 
-
   // Exports my-dataset-name:my_table to gcs://my-bucket/my-file as raw CSV
-  public static void extractTableToJSON(String datasetName, String tableName, String format, String gcsFileName) {
-    // Initialize client that will be used to send requests. This client only needs to be created
-    // once, and can be reused for multiple requests.
-    BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
-
-    //Create a table to extract to GCS
-    StandardTableDefinition.Builder builder = StandardTableDefinition.newBuilder();
-    Table table = bigquery.create(TableInfo.of(TableId.of(datasetName, tableName), builder.build()));
-
+  public static void extractTableToJSON(Table table, String format, String gcsFileName) {
     Job job = table.extract(format, gcsFileName);
     try {
       Job completedJob =
