@@ -1,7 +1,6 @@
 package com.example.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.*;
 
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
@@ -52,10 +51,10 @@ public class ExtractTableToJSONIT {
             Field.of("booleanField", LegacySQLTypeName.BOOLEAN));
     Table table = createTableHelper(generatedDatasetName, tableName, schema);
 
-    //Extract table content to GCS
+    //Extract table content to GCS in CSV format
     ExtractTableToJSON.extractTableToJSON(table,"CSV", "gs://my-bucket/extractTest.csv");
     assertThat(bout.toString())
-        .contains("table extraction job completed successfully");
+        .contains("Table extraction job completed successfully");
   }
 
   private static Table createTableHelper(String datasetName, String tableName, Schema schema) {
