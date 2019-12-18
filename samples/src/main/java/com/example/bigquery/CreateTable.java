@@ -38,7 +38,7 @@ public class CreateTable {
     try {
       bigquery.create(tableInfo);
       System.out.println("Table created successfully");
-    } catch(BigQueryException e) {
+    } catch (BigQueryException e) {
       System.out.println("Table was not created. \n" + e.toString());
     }
   }

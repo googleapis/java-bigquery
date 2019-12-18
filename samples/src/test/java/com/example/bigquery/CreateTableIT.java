@@ -32,10 +32,10 @@ public class CreateTableIT {
   public void testCreateTable() {
     String generatedDatasetName = RemoteBigQueryHelper.generateDatasetName();
 
-    //Create a new dataset to create a table in
+    // Create a new dataset to create a table in
     CreateDataset.createDataset(generatedDatasetName);
 
-    //Create an empty table with specific schema in the dataset just created
+    // Create an empty table with specific schema in the dataset just created
     String tableName = "my_table_name";
     Schema schema =
         Schema.of(

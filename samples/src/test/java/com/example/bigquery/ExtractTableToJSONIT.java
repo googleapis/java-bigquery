@@ -40,10 +40,10 @@ public class ExtractTableToJSONIT {
   public void testExtractTableToJSON() {
     String generatedDatasetName = RemoteBigQueryHelper.generateDatasetName();
 
-    //Create a new dataset to create a new table in
+    // Create a new dataset to create a new table in
     CreateDataset.createDataset(generatedDatasetName);
 
-    //Create a new table to extract to GCS for
+    // Create a new table to extract to GCS for
     String tableName = "my_table_name";
     Schema schema =
         Schema.of(
@@ -51,10 +51,9 @@ public class ExtractTableToJSONIT {
             Field.of("booleanField", LegacySQLTypeName.BOOLEAN));
     Table table = createTableHelper(generatedDatasetName, tableName, schema);
 
-    //Extract table content to GCS in CSV format
-    ExtractTableToJSON.extractTableToJSON(table,"CSV", "gs://my-bucket/extractTest.csv");
-    assertThat(bout.toString())
-        .contains("Table extraction job completed successfully");
+    // Extract table content to GCS in CSV format
+    ExtractTableToJSON.extractTableToJSON(table, "CSV", "gs://my-bucket/extractTest.csv");
+    assertThat(bout.toString()).contains("Table extraction job completed successfully");
   }
 
   private static Table createTableHelper(String datasetName, String tableName, Schema schema) {
@@ -69,7 +68,7 @@ public class ExtractTableToJSONIT {
     try {
       Table table = bigquery.create(tableInfo);
       return table;
-    } catch(BigQueryException e) {
+    } catch (BigQueryException e) {
       System.out.println("Table was not created. \n" + e.toString());
       return null;
     }

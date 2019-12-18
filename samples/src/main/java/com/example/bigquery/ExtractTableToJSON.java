@@ -3,6 +3,7 @@ package com.example.bigquery;
 // [START bigquery_extract_table]
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.Table;
+
 public class ExtractTableToJSON {
 
   public static void runExtractTableToJSON() {
