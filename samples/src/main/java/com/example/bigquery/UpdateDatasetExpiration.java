@@ -27,7 +27,7 @@ public class UpdateDatasetExpiration {
 
   public static void runUpdateDatasetExpiration() {
     // TODO(developer): Replace these variables before running the sample.
-    String datasetName = "my-dataset-name";
+    String datasetName = "MY_DATASET_NAME";
     updateDatasetExpiration(datasetName);
   }
 

@@ -28,7 +28,7 @@ public class ListDatasets {
 
   public static void runListDatasets() {
     // TODO(developer): Replace these variables before running the sample.
-    String projectId = "my-project-id";
+    String projectId = "MY_PROJECT_ID";
     listDatasets(projectId);
   }
 

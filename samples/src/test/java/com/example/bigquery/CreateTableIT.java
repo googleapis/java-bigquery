@@ -36,7 +36,7 @@ public class CreateTableIT {
     CreateDataset.createDataset(generatedDatasetName);
 
     // Create an empty table with specific schema in the dataset just created
-    String tableName = "my_table_name";
+    String tableName = "MY_TABLE_NAME";
     Schema schema =
         Schema.of(
             Field.of("stringField", LegacySQLTypeName.STRING),

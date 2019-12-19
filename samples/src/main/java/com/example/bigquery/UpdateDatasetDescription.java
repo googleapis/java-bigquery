@@ -26,7 +26,7 @@ public class UpdateDatasetDescription {
 
   public static void runUpdateDatasetDescription() {
     // TODO(developer): Replace these variables before running the sample.
-    String datasetName = "my-dataset-name";
+    String datasetName = "MY_DATASET_NAME";
     String newDescription = "this is the new dataset description";
     updateDatasetDescription(datasetName, newDescription);
   }

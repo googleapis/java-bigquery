@@ -44,7 +44,7 @@ public class ExtractTableToJSONIT {
     CreateDataset.createDataset(generatedDatasetName);
 
     // Create a new table to extract to GCS for
-    String tableName = "my_table_name";
+    String tableName = "MY_TABLE_NAME";
     Schema schema =
         Schema.of(
             Field.of("stringField", LegacySQLTypeName.STRING),

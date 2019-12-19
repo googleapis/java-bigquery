@@ -26,8 +26,8 @@ public class DeleteDataset {
 
   public static void runDeleteDataset() {
     // TODO(developer): Replace these variables before running the sample.\
-    String projectId = "my-project-id";
-    String datasetName = "my-dataset-name";
+    String projectId = "MY_PROJECT_ID";
+    String datasetName = "MY_DATASET_NAME";
     deleteDataset(projectId, datasetName);
   }
 
