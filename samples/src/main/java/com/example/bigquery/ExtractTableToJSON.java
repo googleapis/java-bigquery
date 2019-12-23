@@ -20,64 +20,43 @@ package com.example.bigquery;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
-import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Job;
-import com.google.cloud.bigquery.LegacySQLTypeName;
-import com.google.cloud.bigquery.Schema;
-import com.google.cloud.bigquery.StandardTableDefinition;
 import com.google.cloud.bigquery.Table;
-import com.google.cloud.bigquery.TableDefinition;
 import com.google.cloud.bigquery.TableId;
-import com.google.cloud.bigquery.TableInfo;
 
 public class ExtractTableToJSON {
+  // Initialize client that will be used to send requests. This client only needs to be created
+  // once, and can be reused for multiple requests.
+  private static BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
+
+  private static String projectId = "bigquery-public-data";
+  private static String datasetName = "samples";
+  private static String tableName = "shakespeare";
+  private static TableId tableId = TableId.of(projectId, datasetName, tableName);
+  private static Table table = bigquery.getTable(tableId);
 
   public static void runExtractTableToJSON() {
     // TODO(developer): Replace these variables before running the sample.
-    String datasetName = "MY_DATASET_NAME";
+    // For more information on export format available see:
+    // https://cloud.google.com/bigquery/docs/exporting-data#export_formats_and_compression_types
     String format = "CSV";
     String bucketName = "my-bucket";
-    String gcsFileName = "gs://" + bucketName + "/path/to/file";
-    // Create a new table to extract to GCS as CSV
-    String tableName = "MY_TABLE_NAME";
-    Schema schema =
-        Schema.of(
-            Field.of("stringField", LegacySQLTypeName.STRING),
-            Field.of("booleanField", LegacySQLTypeName.BOOLEAN));
-    Table table = createTableHelper(datasetName, tableName, schema);
+    String destinationUri = "gs://" + bucketName + "/path/to/file";
 
     //Extract table
-    extractTableToJSON(table, format, gcsFileName);
+    extractTableToJSON(format, destinationUri);
   }
 
   // Exports my-dataset-name:my_table to gcs://my-bucket/my-file as raw CSV
-  public static void extractTableToJSON(Table table, String format, String gcsFileName) {
+  public static void extractTableToJSON(String format, String destinationUri) {
+    Job job = table.extract(format, destinationUri);
     try {
-      Job job = table.extract(format, gcsFileName);
-      if(job != null && job.getStatus().getError() == null)
+      if (job != null && job.getStatus().getError() == null)
         System.out.println("Table extraction job completed successfully. Check in GCS bucket for the CSV file.");
       else
         System.out.println("Table extraction job failed");
     } catch (BigQueryException e) {
       System.out.println("Table extraction job was interrupted. \n" + e.toString());
-    }
-  }
-
-  private static Table createTableHelper(String datasetName, String tableName, Schema schema) {
-    // Initialize client that will be used to send requests. This client only needs to be created
-    // once, and can be reused for multiple requests.
-    BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
-
-    TableId tableId = TableId.of(datasetName, tableName);
-    TableDefinition tableDefinition = StandardTableDefinition.of(schema);
-    TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build();
-
-    try {
-      Table table = bigquery.create(tableInfo);
-      return table;
-    } catch (BigQueryException e) {
-      System.out.println("Table was not created. \n" + e.toString());
-      return null;
     }
   }
 }
