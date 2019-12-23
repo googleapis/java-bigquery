@@ -17,19 +17,31 @@
 package com.example.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
+import static junit.framework.TestCase.assertNotNull;
 
-import com.google.cloud.storage.BucketInfo;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.testing.RemoteStorageHelper;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class ExtractTableToJsonIT {
   private ByteArrayOutputStream bout;
   private PrintStream out;
+
+  private static final String GCS_BUCKET = System.getenv("GCS_BUCKET");
+
+  private static void requireEnvVar(String varName) {
+    assertNotNull(
+        "Environment variable '%s' is required to perform these tests.".format(varName),
+        System.getenv(varName));
+  }
+
+  @BeforeClass
+  public static void checkRequirements() {
+    requireEnvVar("GCS_BUCKET");
+  }
 
   @Before
   public void setUp() throws Exception {
@@ -48,12 +60,8 @@ public class ExtractTableToJsonIT {
     String projectId = "bigquery-public-data";
     String datasetName = "samples";
     String tableName = "shakespeare";
-    String bucketName = RemoteStorageHelper.generateBucketName();
-    String destinationUri = "gs://" + bucketName + "/extractTest.csv";
-
-    // Create GCS bucket to store extracted file
-    Storage storage = RemoteStorageHelper.create().getOptions().getService();
-    storage.create(BucketInfo.of(bucketName));
+    String destinationUri = "gs://" + GCS_BUCKET + "/extractTest.csv";
+    System.out.println(destinationUri);
 
     // Extract table content to GCS in CSV format
     ExtractTableToJson.extractTableToJson(projectId, datasetName, tableName, destinationUri);

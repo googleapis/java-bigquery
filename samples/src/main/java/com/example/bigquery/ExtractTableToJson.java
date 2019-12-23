@@ -18,6 +18,7 @@ package com.example.bigquery;
 
 // [START bigquery_extract_table]
 import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.Table;
@@ -25,7 +26,7 @@ import com.google.cloud.bigquery.TableId;
 
 public class ExtractTableToJson {
 
-  public static void runextracttabletojson() {
+  public static void runExtractTableToJson() {
     // TODO(developer): Replace these variables before running the sample.
     String projectId = "bigquery-public-data";
     String datasetName = "samples";
@@ -45,28 +46,24 @@ public class ExtractTableToJson {
     TableId tableId = TableId.of(projectId, datasetName, tableName);
     Table table = bigquery.getTable(tableId);
 
-    // For more information on export format available see:
+    // For more information on export formats available see:
     // https://cloud.google.com/bigquery/docs/exporting-data#export_formats_and_compression_types
     // For more information on Job see:
     // https://googleapis.dev/java/google-cloud-clients/latest/index.html?com/google/cloud/bigquery/package-summary.html
     Job job = table.extract("CSV", destinationUri);
     try {
+      // Blocks until this job completes its execution, either failing or succeeding.
       Job completedJob = job.waitFor();
       if (completedJob == null) {
-        // Job no longer exists
-        System.out.println("Job no longer exists");
+        System.out.println("Job not executed since it no longer exists.");
         return;
       } else if (completedJob.getStatus().getError() != null) {
-        // Job failed, handle error
         System.out.println(
             "BigQuery was unable to extract due to an error: \n" + job.getStatus().getError());
         return;
-      } else {
-        // Job completed successfully
-        System.out.println("Table export successful. Check in GCS bucket for the CSV file.");
       }
-    } catch (InterruptedException e) {
-      // Handle interrupted wait
+      System.out.println("Table export successful. Check in GCS bucket for the CSV file.");
+    } catch (BigQueryException | InterruptedException e) {
       System.out.println("Table extraction job was interrupted. \n" + e.toString());
     }
   }
