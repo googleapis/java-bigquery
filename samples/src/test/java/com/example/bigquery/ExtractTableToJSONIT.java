@@ -27,7 +27,8 @@ public class ExtractTableToJSONIT {
   @Test
   public void testExtractTableToJSON() {
     // Extract table content to GCS in CSV format
-    ExtractTableToJSON.extractTableToJSON("CSV", "gs://my-bucket/extractTest.csv");
+    ExtractTableToJSON.extractTableToJSON(
+        "bigquery-public-data", "samples", "shakespeare", "gs://my-bucket/extractTest.csv");
     assertThat(bout.toString()).contains("Table extraction job completed successfully");
   }
 }
