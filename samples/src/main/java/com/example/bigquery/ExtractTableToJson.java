@@ -18,28 +18,25 @@ package com.example.bigquery;
 
 // [START bigquery_extract_table]
 import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableId;
 
-public class ExtractTableToJSON {
+public class ExtractTableToJson {
 
-  public static void runExtractTableToJSON() {
+  public static void runextracttabletojson() {
     // TODO(developer): Replace these variables before running the sample.
     String projectId = "bigquery-public-data";
     String datasetName = "samples";
     String tableName = "shakespeare";
     String bucketName = "my-bucket";
     String destinationUri = "gs://" + bucketName + "/path/to/file";
-
-    // Extract table
-    extractTableToJSON(projectId, datasetName, tableName, destinationUri);
+    extractTableToJson(projectId, datasetName, tableName, destinationUri);
   }
 
-  // Exports my-dataset-name:my_table to gcs://my-bucket/my-file as raw CSV
-  public static void extractTableToJSON(
+  // Exports datasetName:tableName to destinationUri as raw CSV
+  public static void extractTableToJson(
       String projectId, String datasetName, String tableName, String destinationUri) {
     // Initialize client that will be used to send requests. This client only needs to be created
     // once, and can be reused for multiple requests.
@@ -50,13 +47,26 @@ public class ExtractTableToJSON {
 
     // For more information on export format available see:
     // https://cloud.google.com/bigquery/docs/exporting-data#export_formats_and_compression_types
+    // For more information on Job see:
+    // https://googleapis.dev/java/google-cloud-clients/latest/index.html?com/google/cloud/bigquery/package-summary.html
     Job job = table.extract("CSV", destinationUri);
     try {
-      if (job != null && job.getStatus().getError() == null)
+      Job completedJob = job.waitFor();
+      if (completedJob == null) {
+        // Job no longer exists
+        System.out.println("Job no longer exists");
+        return;
+      } else if (completedJob.getStatus().getError() != null) {
+        // Job failed, handle error
         System.out.println(
-            "Table extraction job completed successfully. Check in GCS bucket for the CSV file.");
-      else System.out.println("Table extraction job failed");
-    } catch (BigQueryException e) {
+            "BigQuery was unable to extract due to an error: \n" + job.getStatus().getError());
+        return;
+      } else {
+        // Job completed successfully
+        System.out.println("Table export successful. Check in GCS bucket for the CSV file.");
+      }
+    } catch (InterruptedException e) {
+      // Handle interrupted wait
       System.out.println("Table extraction job was interrupted. \n" + e.toString());
     }
   }

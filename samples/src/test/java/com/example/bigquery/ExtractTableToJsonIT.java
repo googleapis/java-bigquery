@@ -18,22 +18,21 @@ package com.example.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.LegacySQLTypeName;
-import com.google.cloud.bigquery.Schema;
-import com.google.cloud.bigquery.testing.RemoteBigQueryHelper;
+import com.google.cloud.storage.BucketInfo;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.testing.RemoteStorageHelper;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class CreateTableIT {
+public class ExtractTableToJsonIT {
   private ByteArrayOutputStream bout;
   private PrintStream out;
 
   @Before
-  public void setUp() {
+  public void setUp() throws Exception {
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
     System.setOut(out);
@@ -45,20 +44,20 @@ public class CreateTableIT {
   }
 
   @Test
-  public void testCreateTable() {
-    String generatedDatasetName = RemoteBigQueryHelper.generateDatasetName();
+  public void testExtractTableToJson() {
+    String projectId = "bigquery-public-data";
+    String datasetName = "samples";
+    String tableName = "shakespeare";
+    String bucketName = RemoteStorageHelper.generateBucketName();
+    String destinationUri = "gs://" + bucketName + "/extractTest.csv";
 
-    // Create a new dataset to create a table in
-    CreateDataset.createDataset(generatedDatasetName);
+    // Create GCS bucket to store extracted file
+    Storage storage = RemoteStorageHelper.create().getOptions().getService();
+    storage.create(BucketInfo.of(bucketName));
 
-    // Create an empty table with specific schema in the dataset just created
-    String tableName = "MY_TABLE_NAME";
-    Schema schema =
-        Schema.of(
-            Field.of("stringField", LegacySQLTypeName.STRING),
-            Field.of("booleanField", LegacySQLTypeName.BOOLEAN));
-    CreateTable.createTable(generatedDatasetName, tableName, schema);
-
-    assertThat(bout.toString()).contains("Table created successfully");
+    // Extract table content to GCS in CSV format
+    ExtractTableToJson.extractTableToJson(projectId, datasetName, tableName, destinationUri);
+    assertThat(bout.toString())
+        .contains("Table export successful. Check in GCS bucket for the CSV file.");
   }
 }
