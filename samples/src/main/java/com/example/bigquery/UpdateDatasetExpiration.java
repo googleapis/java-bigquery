@@ -36,11 +36,10 @@ public class UpdateDatasetExpiration {
     // once, and can be reused for multiple requests.
     BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
-    Dataset dataset = bigquery.getDataset(datasetName);
-
     // Update dataset expiration to one day
     Long newExpiration = TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS);
     try {
+      Dataset dataset = bigquery.getDataset(datasetName);
       bigquery.update(dataset.toBuilder().setDefaultTableLifetime(newExpiration).build());
       System.out.println("Dataset description updated successfully to " + newExpiration);
     } catch (BigQueryException e) {

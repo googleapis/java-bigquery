@@ -36,10 +36,8 @@ public class UpdateDatasetDescription {
     // once, and can be reused for multiple requests.
     BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
-    Dataset dataset = bigquery.getDataset(datasetName);
-
-    // Update dataset description
     try {
+      Dataset dataset = bigquery.getDataset(datasetName);
       bigquery.update(dataset.toBuilder().setDescription(newDescription).build());
       System.out.println("Dataset description updated successfully to " + newDescription);
     } catch (BigQueryException e) {

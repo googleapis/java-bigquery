@@ -43,15 +43,16 @@ public class ExtractTableToJson {
     // once, and can be reused for multiple requests.
     BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
-    TableId tableId = TableId.of(projectId, datasetName, tableName);
-    Table table = bigquery.getTable(tableId);
-
-    // For more information on export formats available see:
-    // https://cloud.google.com/bigquery/docs/exporting-data#export_formats_and_compression_types
-    // For more information on Job see:
-    // https://googleapis.dev/java/google-cloud-clients/latest/index.html?com/google/cloud/bigquery/package-summary.html
-    Job job = table.extract("CSV", destinationUri);
     try {
+      TableId tableId = TableId.of(projectId, datasetName, tableName);
+      Table table = bigquery.getTable(tableId);
+
+      // For more information on export formats available see:
+      // https://cloud.google.com/bigquery/docs/exporting-data#export_formats_and_compression_types
+      // For more information on Job see:
+      // https://googleapis.dev/java/google-cloud-clients/latest/index.html?com/google/cloud/bigquery/package-summary.html
+      Job job = table.extract("CSV", destinationUri);
+
       // Blocks until this job completes its execution, either failing or succeeding.
       Job completedJob = job.waitFor();
       if (completedJob == null) {
