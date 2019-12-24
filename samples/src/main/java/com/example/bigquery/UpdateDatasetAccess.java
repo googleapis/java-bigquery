@@ -35,11 +35,11 @@ public class UpdateDatasetAccess {
   }
 
   public static void updateDatasetAccess(String datasetName) {
-    // Initialize client that will be used to send requests. This client only needs to be created
-    // once, and can be reused for multiple requests.
-    BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
-
     try {
+      // Initialize client that will be used to send requests. This client only needs to be created
+      // once, and can be reused for multiple requests.
+      BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
+
       Dataset dataset = bigquery.getDataset(datasetName);
 
       // Create a new ACL granting the READER role to "sample.bigquery.dev@gmail.com"

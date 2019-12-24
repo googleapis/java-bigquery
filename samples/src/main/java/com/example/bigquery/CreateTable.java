@@ -43,15 +43,15 @@ public class CreateTable {
   }
 
   public static void createTable(String datasetName, String tableName, Schema schema) {
-    // Initialize client that will be used to send requests. This client only needs to be created
-    // once, and can be reused for multiple requests.
-    BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
-
-    TableId tableId = TableId.of(datasetName, tableName);
-    TableDefinition tableDefinition = StandardTableDefinition.of(schema);
-    TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build();
-
     try {
+      // Initialize client that will be used to send requests. This client only needs to be created
+      // once, and can be reused for multiple requests.
+      BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
+
+      TableId tableId = TableId.of(datasetName, tableName);
+      TableDefinition tableDefinition = StandardTableDefinition.of(schema);
+      TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build();
+
       bigquery.create(tableInfo);
       System.out.println("Table created successfully");
     } catch (BigQueryException e) {

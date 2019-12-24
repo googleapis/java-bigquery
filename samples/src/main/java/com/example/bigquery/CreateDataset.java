@@ -32,12 +32,13 @@ public class CreateDataset {
   }
 
   public static void createDataset(String datasetName) {
-    // Initialize client that will be used to send requests. This client only needs to be created
-    // once, and can be reused for multiple requests.
-    BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
-
-    DatasetInfo datasetInfo = DatasetInfo.newBuilder(datasetName).build();
     try {
+      // Initialize client that will be used to send requests. This client only needs to be created
+      // once, and can be reused for multiple requests.
+      BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
+
+      DatasetInfo datasetInfo = DatasetInfo.newBuilder(datasetName).build();
+
       Dataset newDataset = bigquery.create(datasetInfo);
       String newDatasetName = newDataset.getDatasetId().getDataset();
       System.out.println(newDatasetName + " created successfully");

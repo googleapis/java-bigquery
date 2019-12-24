@@ -33,12 +33,11 @@ public class ListDatasets {
   }
 
   public static void listDatasets(String projectId) {
-    // Initialize client that will be used to send requests. This client only needs to be created
-    // once, and can be reused for multiple requests.
-    BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
-
-    // List datasets in a specified project
     try {
+      // Initialize client that will be used to send requests. This client only needs to be created
+      // once, and can be reused for multiple requests.
+      BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
+
       Page<Dataset> datasets = bigquery.listDatasets(projectId, DatasetListOption.pageSize(100));
       for (Dataset dataset : datasets.iterateAll()) {
         System.out.println(dataset.getDatasetId() + " dataset in project listed successfully");

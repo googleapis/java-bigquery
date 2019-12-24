@@ -39,11 +39,11 @@ public class ExtractTableToJson {
   // Exports datasetName:tableName to destinationUri as raw CSV
   public static void extractTableToJson(
       String projectId, String datasetName, String tableName, String destinationUri) {
-    // Initialize client that will be used to send requests. This client only needs to be created
-    // once, and can be reused for multiple requests.
-    BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
-
     try {
+      // Initialize client that will be used to send requests. This client only needs to be created
+      // once, and can be reused for multiple requests.
+      BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
+
       TableId tableId = TableId.of(projectId, datasetName, tableName);
       Table table = bigquery.getTable(tableId);
 

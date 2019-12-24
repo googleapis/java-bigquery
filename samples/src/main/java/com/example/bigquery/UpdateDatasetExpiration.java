@@ -32,13 +32,14 @@ public class UpdateDatasetExpiration {
   }
 
   public static void updateDatasetExpiration(String datasetName) {
-    // Initialize client that will be used to send requests. This client only needs to be created
-    // once, and can be reused for multiple requests.
-    BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
-
-    // Update dataset expiration to one day
-    Long newExpiration = TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS);
     try {
+      // Initialize client that will be used to send requests. This client only needs to be created
+      // once, and can be reused for multiple requests.
+      BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
+
+      // Update dataset expiration to one day
+      Long newExpiration = TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS);
+
       Dataset dataset = bigquery.getDataset(datasetName);
       bigquery.update(dataset.toBuilder().setDefaultTableLifetime(newExpiration).build());
       System.out.println("Dataset description updated successfully to " + newExpiration);
