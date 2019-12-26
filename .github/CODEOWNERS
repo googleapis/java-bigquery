@@ -1,0 +1,5 @@
+# Code owners file.
+# This file controls who is tagged for review for any given pull request.
+
+# The java-samples-reviewers team is the default owner for samples changes
+samples/*                         @GoogleCloudPlatform/java-samples-reviewers
