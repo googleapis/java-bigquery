@@ -19,15 +19,6 @@
     },
     {
       "packagePatterns": [
-        "^com.google.api:gax",
-        "^com.google.auth:",
-        "^com.google.cloud:google-cloud-core",
-        "^io.grpc:"
-      ],
-      "groupName": "core dependencies"
-    },
-    {
-      "packagePatterns": [
         "*"
       ],
       "semanticCommitType": "deps",
