@@ -19,116 +19,40 @@ set -eo pipefail
 # Enables `**` to include files nested inside sub-folders
 shopt -s globstar
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+# Update `gcloud` and log versioning for debugging.
+gcloud components install beta --quiet
+gcloud components update --quiet
+echo "********** GCLOUD INFO ***********"
+gcloud -v
+echo "********** MAVEN INFO  ***********"
+mvn -v
 
-# `--debug` can be added make local testing of this script easier
-if [[ $* == *--script-debug* ]]; then
-    SCRIPT_DEBUG="true"
-    JAVA_VERSION="1.8"
-else
-    SCRIPT_DEBUG="false"
-fi
+# Setup required env variables
+export GOOGLE_CLOUD_PROJECT=java-docs-samples-testing
+export GOOGLE_APPLICATION_CREDENTIALS=${KOKORO_GFILE_DIR}/service-acct.json
+export GCS_BUCKET=java-docs-samples-testing
 
-# `--only-changed` will only run tests on projects container changes from the master branch.
-if [[ $* == *--only-diff* ]]; then
-    ONLY_DIFF="true"
-else
-    ONLY_DIFF="false"
-fi
+# Activate service account
+gcloud auth activate-service-account \
+    --key-file="$GOOGLE_APPLICATION_CREDENTIALS" \
+    --project="$GOOGLE_CLOUD_PROJECT"
 
-# Verify Java versions have been specified
-if [[ -z ${JAVA_VERSION+x} ]]; then
-    echo -e "'JAVA_VERSION' env var should be a comma delimited list of valid java versions."
-    exit 1
-fi
+# Get the directory of the build script
+scriptDir=$(realpath $(dirname "${BASH_SOURCE[0]}"))
+# Move into the samples directory
+cd ${scriptDir}/../samples/
 
-if [[ "$SCRIPT_DEBUG" != "true" ]]; then
-    # Update `gcloud` and log versioning for debugging.
-    gcloud components install beta --quiet
-    gcloud components update --quiet
-    echo "********** GCLOUD INFO ***********"
-    gcloud -v
-    echo "********** MAVEN INFO  ***********"
-    mvn -v
-
-    # Setup required env variables
-    export GOOGLE_CLOUD_PROJECT=google.com:stephs-playground
-    export GOOGLE_APPLICATION_CREDENTIALS="/usr/local/google/home/stephwang/Desktop/stephdev/steph_playground_207c76c9d016.json"
-    export GCS_BUCKET="gcloud-test-bucket-temp-f5cd3910-f287-4b0a-9b63-f6a1c4c3c129"
-    export LOCATION_ID=us-east1
-
-    # Activate service account
-    gcloud auth activate-service-account \
-        --key-file="$GOOGLE_APPLICATION_CREDENTIALS" \
-        --project="$GOOGLE_CLOUD_PROJECT"
-
-    ## Get the directory of the build script
-    scriptDir=$(realpath $(dirname "${BASH_SOURCE[0]}"))
-    ## cd to the parent directory, i.e. the root of the git repo
-    cd ${scriptDir}/..
-fi
-
-echo -e "\n******************** TESTING PROJECTS ********************"
-# Switch to 'fail at end' to allow all tests to complete before exiting.
-set +e
-# Use RTN to return a non-zero value if the test fails.
+echo -e "\n******************** RUNNING SAMPLE TESTS ********************"
 RTN=0
-ROOT=$(pwd)
-# Find all POMs in the repository (may break on whitespace).
-for file in **/pom.xml; do
-    cd "$ROOT"
-    # Navigate to the project folder.
-    file=$(dirname "$file")
-    cd "$file"
 
-    # If $DIFF_ONLY is true, skip projects without changes.
-    if [[ "$ONLY_DIFF" = "true" ]]; then
-        git diff --quiet origin/master.. .
-        CHANGED=$?
-        if [[ "$CHANGED" -eq 0 ]]; then
-          # echo -e "\n Skipping $file: no changes in folder.\n"
-          continue
-        fi
-    fi
+mvn --fail-at-end clean verify
 
-    echo "------------------------------------------------------------"
-    echo "- testing $file"
-    echo "------------------------------------------------------------"
-
-    # Fail the tests if no Java version was found.
-    POM_JAVA=$(grep -oP '(?<=<maven.compiler.target>).*?(?=</maven.compiler.target>)' pom.xml)
-    if [[ "$POM_JAVA" = "" ]]; then
-        RTN=1
-        echo -e "\n Testing failed: Unable to determine Java version. Please set in pom:"
-        echo -e "\n<properties>"
-        echo -e "  <maven.compiler.target>1.8</maven.compiler.target>"
-        echo -e "  <maven.compiler.source>1.8</maven.compiler.source>"
-        echo -e "</properties>\n"
-        continue
-    fi
-
-    # Skip tests that don't have the correct Java version.
-    if ! [[ ",$JAVA_VERSION," =~ ",$POM_JAVA," ]]; then
-        echo -e "\n Skipping tests: Java version ($POM_JAVA) not required ($JAVA_VERSION)\n"
-        continue
-    fi
-
-    # Use maven to execute the tests for the project.
-    mvn -q --batch-mode --fail-at-end clean verify \
-       -Dfile.encoding="UTF-8" \
-       -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn \
-       -Dmaven.test.redirectTestOutputToFile=true \
-       -Dbigtable.projectID="${GOOGLE_CLOUD_PROJECT}" \
-       -Dbigtable.instanceID=instance
-    EXIT=$?
-
-    if [[ $EXIT -ne 0 ]]; then
-      RTN=1
-      echo -e "\n Testing failed: Maven returned a non-zero exit code. \n"
-    else
-      echo -e "\n Testing completed.\n"
-    fi
-
-done
+EXIT=$?
+if [[ $EXIT -ne 0 ]]; then
+  RTN=1
+  echo -e "\n Testing failed: Maven returned a non-zero exit code. \n"
+else
+  echo -e "\n Testing completed.\n"
+fi
 
 exit "$RTN"
