@@ -58,6 +58,7 @@ import java.util.Map;
 import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -429,8 +430,6 @@ public class BigQueryImplTest {
   private BigQueryRpc bigqueryRpcMock;
   private BigQuery bigquery;
 
-  @Rule public ExpectedException thrown = ExpectedException.none();
-
   private BigQueryOptions createBigQueryOptionsForProject(
       String project, BigQueryRpcFactory rpcFactory) {
     return BigQueryOptions.newBuilder()
@@ -533,8 +532,12 @@ public class BigQueryImplTest {
     EasyMock.replay(bigqueryRpcMock);
     options.setThrowNotFound(true);
     bigquery = options.getService();
-    thrown.expect(BigQueryException.class);
-    bigquery.getDataset("dataset-not-found");
+    try {
+      bigquery.getDataset("dataset-not-found");
+      Assert.fail();
+    } catch (BigQueryException ex) {
+      Assert.assertNotNull(ex.getMessage());
+    }
   }
 
   @Test
@@ -787,8 +790,8 @@ public class BigQueryImplTest {
   @Test
   public void testListPartition() {
     EasyMock.expect(
-            bigqueryRpcMock.getTable(
-                PROJECT, DATASET, "table$__PARTITIONS_SUMMARY__", EMPTY_RPC_OPTIONS))
+        bigqueryRpcMock.getTable(
+            PROJECT, DATASET, "table$__PARTITIONS_SUMMARY__", EMPTY_RPC_OPTIONS))
         .andReturn(TABLE_INFO_PARTITIONS.toPb());
     EasyMock.expect(bigqueryRpcMock.listTableData(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
         .andReturn(TABLE_DATA_WITH_PARTITIONS);
@@ -817,8 +820,12 @@ public class BigQueryImplTest {
     EasyMock.replay(bigqueryRpcMock);
     options.setThrowNotFound(true);
     bigquery = options.getService();
-    thrown.expect(BigQueryException.class);
-    bigquery.getTable(DATASET, "table-not-found");
+    try {
+      bigquery.getTable(DATASET, "table-not-found");
+      Assert.fail();
+    } catch (BigQueryException ex) {
+      Assert.assertNotNull(ex.getMessage());
+    }
   }
 
   @Test
@@ -1161,8 +1168,12 @@ public class BigQueryImplTest {
             .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
             .build()
             .getService();
-    thrown.expect(BigQueryException.class);
-    bigquery.insertAll(request);
+    try {
+      bigquery.insertAll(request);
+      Assert.fail();
+    } catch (BigQueryException ex) {
+      Assert.assertNotNull(ex.getMessage());
+    }
   }
 
   @Test
@@ -1477,8 +1488,12 @@ public class BigQueryImplTest {
     EasyMock.replay(bigqueryRpcMock);
     options.setThrowNotFound(true);
     bigquery = options.getService();
-    thrown.expect(BigQueryException.class);
-    bigquery.getJob("job-not-found");
+    try {
+      bigquery.getJob("job-not-found");
+      Assert.fail();
+    } catch (BigQueryException ex) {
+      Assert.assertNotNull(ex.getMessage());
+    }
   }
 
   @Test
@@ -1720,8 +1735,8 @@ public class BigQueryImplTest {
     optionMap.put(pageSizeOption.getRpcOption(), pageSizeOption.getValue());
 
     EasyMock.expect(
-            bigqueryRpcMock.getQueryResults(
-                PROJECT, JOB, null, BigQueryImpl.optionMap(Job.DEFAULT_QUERY_WAIT_OPTIONS)))
+        bigqueryRpcMock.getQueryResults(
+            PROJECT, JOB, null, BigQueryImpl.optionMap(Job.DEFAULT_QUERY_WAIT_OPTIONS)))
         .andReturn(responsePb);
     EasyMock.expect(bigqueryRpcMock.listTableData(PROJECT, DATASET, TABLE, optionMap))
         .andReturn(
@@ -1901,9 +1916,13 @@ public class BigQueryImplTest {
             .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
             .build()
             .getService();
-    thrown.expect(BigQueryException.class);
-    thrown.expectMessage(exceptionMessage);
-    bigquery.getDataset(DatasetId.of(DATASET));
+
+    try {
+      bigquery.getDataset(DatasetId.of(DATASET));
+      Assert.fail();
+    } catch (BigQueryException ex) {
+      Assert.assertEquals(exceptionMessage, ex.getMessage());
+    }
   }
 
   @Test
@@ -1918,21 +1937,28 @@ public class BigQueryImplTest {
             .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
             .build()
             .getService();
-    thrown.expect(BigQueryException.class);
-    thrown.expectMessage(exceptionMessage);
-    bigquery.getDataset(DATASET);
+    try {
+      bigquery.getDataset(DATASET);
+      Assert.fail();
+    } catch (BigQueryException ex) {
+      Assert.assertTrue(ex.getMessage().endsWith(exceptionMessage));
+    }
   }
 
   @Test
   public void testQueryDryRun() throws Exception {
     // https://github.com/googleapis/google-cloud-java/issues/2479
     EasyMock.replay(bigqueryRpcMock);
-    thrown.expect(UnsupportedOperationException.class);
-    options
-        .toBuilder()
-        .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
-        .build()
-        .getService()
-        .query(QueryJobConfiguration.newBuilder("foo").setDryRun(true).build());
+    try {
+      options
+          .toBuilder()
+          .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
+          .build()
+          .getService()
+          .query(QueryJobConfiguration.newBuilder("foo").setDryRun(true).build());
+      Assert.fail();
+    } catch (UnsupportedOperationException ex) {
+      Assert.assertNotNull(ex.getMessage());
+    }
   }
 }
