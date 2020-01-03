@@ -132,19 +132,14 @@ public class BigQueryImplTest {
           .setCreationTime(TABLE_CREATION_TIME)
           .build();
 
-  private static final ModelId MODEL_ID = ModelId.of(DATASET, MODEL);
   private static final ModelId OTHER_MODEL_ID = ModelId.of(DATASET, OTHER_MODEL);
   private static final ModelId MODEL_ID_WITH_PROJECT = ModelId.of(PROJECT, DATASET, MODEL);
 
-  private static final ModelInfo MODEL_INFO = ModelInfo.of(MODEL_ID);
   private static final ModelInfo OTHER_MODEL_INFO = ModelInfo.of(OTHER_MODEL_ID);
   private static final ModelInfo MODEL_INFO_WITH_PROJECT = ModelInfo.of(MODEL_ID_WITH_PROJECT);
 
-  private static final LoadJobConfiguration LOAD_JOB_CONFIGURATION =
-      LoadJobConfiguration.of(TABLE_ID, "URI");
   private static final LoadJobConfiguration LOAD_JOB_CONFIGURATION_WITH_PROJECT =
       LoadJobConfiguration.of(TABLE_ID_WITH_PROJECT, "URI");
-  private static final JobInfo LOAD_JOB = JobInfo.of(LOAD_JOB_CONFIGURATION);
   private static final JobInfo COMPLETE_LOAD_JOB =
       JobInfo.of(JobId.of(PROJECT, JOB), LOAD_JOB_CONFIGURATION_WITH_PROJECT);
   private static final CopyJobConfiguration COPY_JOB_CONFIGURATION =
@@ -165,16 +160,8 @@ public class BigQueryImplTest {
           .setDefaultDataset(DatasetId.of(PROJECT, DATASET))
           .setDestinationTable(TABLE_ID_WITH_PROJECT)
           .build();
-  private static final JobInfo QUERY_JOB = JobInfo.of(QUERY_JOB_CONFIGURATION);
   private static final JobInfo COMPLETE_QUERY_JOB =
       JobInfo.of(JobId.of(PROJECT, JOB), QUERY_JOB_CONFIGURATION_WITH_PROJECT);
-  private static final ExtractJobConfiguration EXTRACT_JOB_CONFIGURATION =
-      ExtractJobConfiguration.of(TABLE_ID, "URI");
-  private static final ExtractJobConfiguration EXTRACT_JOB_CONFIGURATION_WITH_PROJECT =
-      ExtractJobConfiguration.of(TABLE_ID_WITH_PROJECT, "URI");
-  private static final JobInfo EXTRACT_JOB = JobInfo.of(EXTRACT_JOB_CONFIGURATION);
-  private static final JobInfo COMPLETE_EXTRACT_JOB =
-      JobInfo.of(JobId.of(PROJECT, JOB), EXTRACT_JOB_CONFIGURATION_WITH_PROJECT);
   private static final TableCell BOOLEAN_FIELD = new TableCell().setV("false");
   private static final TableCell INTEGER_FIELD = new TableCell().setV("1");
   private static final TableRow TABLE_ROW =
