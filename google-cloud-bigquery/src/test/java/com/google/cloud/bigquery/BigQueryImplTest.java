@@ -60,9 +60,7 @@ import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class BigQueryImplTest {
 
@@ -790,8 +788,8 @@ public class BigQueryImplTest {
   @Test
   public void testListPartition() {
     EasyMock.expect(
-        bigqueryRpcMock.getTable(
-            PROJECT, DATASET, "table$__PARTITIONS_SUMMARY__", EMPTY_RPC_OPTIONS))
+            bigqueryRpcMock.getTable(
+                PROJECT, DATASET, "table$__PARTITIONS_SUMMARY__", EMPTY_RPC_OPTIONS))
         .andReturn(TABLE_INFO_PARTITIONS.toPb());
     EasyMock.expect(bigqueryRpcMock.listTableData(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
         .andReturn(TABLE_DATA_WITH_PARTITIONS);
@@ -1735,8 +1733,8 @@ public class BigQueryImplTest {
     optionMap.put(pageSizeOption.getRpcOption(), pageSizeOption.getValue());
 
     EasyMock.expect(
-        bigqueryRpcMock.getQueryResults(
-            PROJECT, JOB, null, BigQueryImpl.optionMap(Job.DEFAULT_QUERY_WAIT_OPTIONS)))
+            bigqueryRpcMock.getQueryResults(
+                PROJECT, JOB, null, BigQueryImpl.optionMap(Job.DEFAULT_QUERY_WAIT_OPTIONS)))
         .andReturn(responsePb);
     EasyMock.expect(bigqueryRpcMock.listTableData(PROJECT, DATASET, TABLE, optionMap))
         .andReturn(
