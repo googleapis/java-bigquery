@@ -34,9 +34,9 @@ public class CopyMultipleTablesIT {
   private ByteArrayOutputStream bout;
   private PrintStream out;
 
-  private static final String MY_DATASET_NAME = System.getenv("BIGQUERY_DATASET_NAME");
-  private static final String TABLE1 = System.getenv("BIGQUERY_TABLE1");
-  private static final String TABLE2 = System.getenv("BIGQUERY_TABLE2");
+  private static final String BIGQUERY_DATASET_NAME = System.getenv("BIGQUERY_DATASET_NAME");
+  private static final String BIGQUERY_TABLE1 = System.getenv("BIGQUERY_TABLE1");
+  private static final String BIGQUERY_TABLE2 = System.getenv("BIGQUERY_TABLE2");
 
   private static void requireEnvVar(String varName) {
     assertNotNull(
@@ -67,9 +67,9 @@ public class CopyMultipleTablesIT {
   public void testCopyMultipleTables() {
     // Create a new destination table for each test since existing table cannot be overwritten
     String generatedTableName = "gcloud_test_table_temp_"+ UUID.randomUUID().toString().replace('-', '_');
-    CreateTable.createTable(MY_DATASET_NAME, generatedTableName, null);
+    CreateTable.createTable(BIGQUERY_DATASET_NAME, generatedTableName, null);
 
-    CopyMultipleTables.copyMultipleTables(MY_DATASET_NAME, generatedTableName);
+    CopyMultipleTables.copyMultipleTables(BIGQUERY_DATASET_NAME, generatedTableName);
     assertThat(bout.toString())
         .contains("Table copied successfully.");
   }
