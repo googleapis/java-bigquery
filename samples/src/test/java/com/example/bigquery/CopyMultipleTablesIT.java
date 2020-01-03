@@ -19,8 +19,12 @@ package com.example.bigquery;
 import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertNotNull;
 
+import com.google.cloud.bigquery.Field;
+import com.google.cloud.bigquery.LegacySQLTypeName;
+import com.google.cloud.bigquery.Schema;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.UUID;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -30,10 +34,9 @@ public class CopyMultipleTablesIT {
   private ByteArrayOutputStream bout;
   private PrintStream out;
 
-  private static final String MY_DATASET_NAME = System.getenv("MY_DATASET_NAME");
-  private static final String MY_TABLE_NAME = System.getenv("MY_TABLE_NAME");
-  private static final String TABLE1 = System.getenv("TABLE1");
-  private static final String TABLE2 = System.getenv("TABLE2");
+  private static final String MY_DATASET_NAME = System.getenv("BIGQUERY_DATASET_NAME");
+  private static final String TABLE1 = System.getenv("BIGQUERY_TABLE1");
+  private static final String TABLE2 = System.getenv("BIGQUERY_TABLE2");
 
   private static void requireEnvVar(String varName) {
     assertNotNull(
@@ -43,10 +46,9 @@ public class CopyMultipleTablesIT {
 
   @BeforeClass
   public static void checkRequirements() {
-    requireEnvVar("MY_DATASET_NAME");
-    requireEnvVar("MY_TABLE_NAME");
-    requireEnvVar("TABLE1");
-    requireEnvVar("TABLE2");
+    requireEnvVar("BIGQUERY_DATASET_NAME");
+    requireEnvVar("BIGQUERY_TABLE1");
+    requireEnvVar("BIGQUERY_TABLE2");
   }
 
   @Before
@@ -63,7 +65,11 @@ public class CopyMultipleTablesIT {
 
   @Test
   public void testCopyMultipleTables() {
-    CopyMultipleTables.copyMultipleTables(MY_DATASET_NAME, MY_TABLE_NAME);
+    // Create a new destination table for each test since existing table cannot be overwritten
+    String generatedTableName = "gcloud_test_table_temp_"+ UUID.randomUUID().toString().replace('-', '_');
+    CreateTable.createTable(MY_DATASET_NAME, generatedTableName, null);
+
+    CopyMultipleTables.copyMultipleTables(MY_DATASET_NAME, generatedTableName);
     assertThat(bout.toString())
         .contains("Table copied successfully.");
   }
