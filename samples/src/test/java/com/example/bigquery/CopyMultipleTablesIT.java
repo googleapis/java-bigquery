@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Google LLC
+ * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,11 +26,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class ExtractTableToJsonIT {
+public class CopyMultipleTablesIT {
   private ByteArrayOutputStream bout;
   private PrintStream out;
 
-  private static final String GCS_BUCKET = System.getenv("GCS_BUCKET");
+  private static final String MY_DATASET_NAME = System.getenv("MY_DATASET_NAME");
+  private static final String MY_TABLE_NAME = System.getenv("MY_TABLE_NAME");
+  private static final String TABLE1 = System.getenv("TABLE1");
+  private static final String TABLE2 = System.getenv("TABLE2");
 
   private static void requireEnvVar(String varName) {
     assertNotNull(
@@ -40,7 +43,10 @@ public class ExtractTableToJsonIT {
 
   @BeforeClass
   public static void checkRequirements() {
-    requireEnvVar("GCS_BUCKET");
+    requireEnvVar("MY_DATASET_NAME");
+    requireEnvVar("MY_TABLE_NAME");
+    requireEnvVar("TABLE1");
+    requireEnvVar("TABLE2");
   }
 
   @Before
@@ -56,15 +62,9 @@ public class ExtractTableToJsonIT {
   }
 
   @Test
-  public void testExtractTableToJson() {
-    String projectId = "bigquery-public-data";
-    String datasetName = "samples";
-    String tableName = "shakespeare";
-    String destinationUri = "gs://" + GCS_BUCKET + "/extractTest.csv";
-
-    // Extract table content to GCS in CSV format
-    ExtractTableToJson.extractTableToJson(projectId, datasetName, tableName, destinationUri);
+  public void testCopyMultipleTables() {
+    CopyMultipleTables.copyMultipleTables(MY_DATASET_NAME, MY_TABLE_NAME);
     assertThat(bout.toString())
-        .contains("Table export successful. Check in GCS bucket for the CSV file.");
+        .contains("Table copied successfully.");
   }
 }
