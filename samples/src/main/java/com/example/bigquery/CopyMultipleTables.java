@@ -47,8 +47,10 @@ public class CopyMultipleTables {
       // https://googleapis.dev/java/google-cloud-clients/latest/com/google/cloud/bigquery/JobConfiguration.html
       CopyJobConfiguration configuration =
           CopyJobConfiguration.newBuilder(
-              destinationTable,
-              Arrays.asList(TableId.of(destinationDatasetName, "table1"), TableId.of(destinationDatasetName, "table2")))
+                  destinationTable,
+                  Arrays.asList(
+                      TableId.of(destinationDatasetName, "table1"),
+                      TableId.of(destinationDatasetName, "table2")))
               .build();
 
       // For more information on Job see:

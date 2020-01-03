@@ -19,9 +19,6 @@ package com.example.bigquery;
 import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertNotNull;
 
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.LegacySQLTypeName;
-import com.google.cloud.bigquery.Schema;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.UUID;
@@ -66,11 +63,11 @@ public class CopyMultipleTablesIT {
   @Test
   public void testCopyMultipleTables() {
     // Create a new destination table for each test since existing table cannot be overwritten
-    String generatedTableName = "gcloud_test_table_temp_"+ UUID.randomUUID().toString().replace('-', '_');
+    String generatedTableName =
+        "gcloud_test_table_temp_" + UUID.randomUUID().toString().replace('-', '_');
     CreateTable.createTable(BIGQUERY_DATASET_NAME, generatedTableName, null);
 
     CopyMultipleTables.copyMultipleTables(BIGQUERY_DATASET_NAME, generatedTableName);
-    assertThat(bout.toString())
-        .contains("Table copied successfully.");
+    assertThat(bout.toString()).contains("Table copied successfully.");
   }
 }
