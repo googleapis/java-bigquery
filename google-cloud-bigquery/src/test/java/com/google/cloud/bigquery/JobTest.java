@@ -493,8 +493,6 @@ public class JobTest {
     } catch (BigQueryException expected) {
       Assert.assertNotNull(expected.getMessage());
     }
-    
-    verify(status, clock, mockOptions);
   }
 
   @Test
