@@ -41,9 +41,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.Collections;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.threeten.bp.Duration;
 
 public class JobTest {
@@ -406,7 +404,7 @@ public class JobTest {
     expect(bigquery.getOptions()).andReturn(mockOptions);
     replay(bigquery, mockOptions);
     initializeJob();
-    
+
     try {
       job.getQueryResults();
       Assert.fail();
@@ -486,7 +484,7 @@ public class JobTest {
     expect(bigquery.getJob(JOB_INFO.getJobId(), expectedOptions)).andReturn(runningJob);
     replay(status, bigquery, clock, mockOptions);
     initializeJob();
-    
+
     try {
       job.waitFor(concat(TEST_RETRY_OPTIONS, RetryOption.totalTimeout(Duration.ofMillis(3))));
       Assert.fail();
