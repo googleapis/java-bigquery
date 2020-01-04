@@ -27,7 +27,8 @@ import com.google.cloud.http.HttpTransportOptions;
 import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 
-public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> implements AutoCloseable{
+public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions>
+    implements AutoCloseable {
 
   private static final String API_SHORT_NAME = "BigQuery";
   private static final String BIGQUERY_SCOPE = "https://www.googleapis.com/auth/bigquery";
