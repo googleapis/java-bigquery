@@ -27,7 +27,7 @@ import com.google.cloud.http.HttpTransportOptions;
 import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 
-public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
+public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> implements AutoCloseable{
 
   private static final String API_SHORT_NAME = "BigQuery";
   private static final String BIGQUERY_SCOPE = "https://www.googleapis.com/auth/bigquery";
@@ -36,6 +36,11 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
   private final String location;
   // set the option ThrowNotFound when you want to throw the exception when the value not found
   private boolean setThrowNotFound;
+
+  @Override
+  public void close() throws Exception {
+    System.out.println("Closed BigQuery Resource");
+  }
 
   public static class DefaultBigQueryFactory implements BigQueryFactory {
 
