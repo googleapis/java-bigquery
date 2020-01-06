@@ -19,9 +19,9 @@ package com.google.cloud.bigquery;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
 
 import com.google.cloud.bigquery.TimePartitioning.Type;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TimePartitioningTest {
@@ -66,7 +66,7 @@ public class TimePartitioningTest {
   public void testTypeOf_Npe() {
     try {
       TimePartitioning.of(null);
-      fail();
+      Assert.fail();
     } catch (NullPointerException ex) {
       assertNotNull(ex.getMessage());
     }
@@ -76,7 +76,7 @@ public class TimePartitioningTest {
   public void testTypeAndExpirationOf_Npe() {
     try {
       TimePartitioning.of(null, EXPIRATION_MS);
-      fail();
+      Assert.fail();
     } catch (NullPointerException ex) {
       assertNotNull(ex.getMessage());
     }
