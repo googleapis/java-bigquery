@@ -24,6 +24,11 @@ mvn -v
 source ${KOKORO_GFILE_DIR}/bigquery_secrets.txt
 echo "********** Successfully Set All Environment Variables **********"
 
+# Activate service account
+gcloud auth activate-service-account \
+    --key-file="$GOOGLE_APPLICATION_CREDENTIALS" \
+    --project="$GOOGLE_CLOUD_PROJECT"
+
 # Get the directory of the build script
 scriptDir=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 # Move into the samples directory
