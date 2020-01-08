@@ -54,9 +54,7 @@ public class AddEmptyColumn {
 
       // Create a new schema adding the current fields, plus the new one
       List<Field> fieldList = new ArrayList<Field>();
-      for (Field f : fields) {
-        fieldList.add(f);
-      }
+      fields.forEach(fieldList::add);
       fieldList.add(newField);
       Schema newSchema = Schema.of(fieldList);
 
