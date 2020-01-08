@@ -21,6 +21,7 @@ import static junit.framework.TestCase.assertNotNull;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.UUID;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -59,7 +60,8 @@ public class AddEmptyColumnIT {
 
   @Test
   public void addEmptyColumn() {
-    AddEmptyColumn.addEmptyColumn(BIGQUERY_DATASET_NAME, BIGQUERY_TEST_TABLE);
+    String randomColumnName = "new_" + UUID.randomUUID().toString().replace('-', '_');
+    AddEmptyColumn.addEmptyColumn(randomColumnName, BIGQUERY_DATASET_NAME, BIGQUERY_TEST_TABLE);
     assertThat(bout.toString()).contains("Empty column successfully added to table");
   }
 }

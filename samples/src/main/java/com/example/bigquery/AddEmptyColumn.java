@@ -28,7 +28,6 @@ import com.google.cloud.bigquery.StandardTableDefinition;
 import com.google.cloud.bigquery.Table;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class AddEmptyColumn {
 
@@ -36,10 +35,11 @@ public class AddEmptyColumn {
     // TODO(developer): Replace these variables before running the sample.
     String datasetName = "MY_DATASET_NAME";
     String tableId = "MY_TABLE_NAME";
-    addEmptyColumn(datasetName, tableId);
+    String newColumnName = "NEW_COLUMN_NAME";
+    addEmptyColumn(newColumnName, datasetName, tableId);
   }
 
-  public static void addEmptyColumn(String datasetName, String tableId) {
+  public static void addEmptyColumn(String newColumnName, String datasetName, String tableId) {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
@@ -50,8 +50,7 @@ public class AddEmptyColumn {
       FieldList fields = schema.getFields();
 
       // Create the new field/column
-      String randomColumnName = "new_" + UUID.randomUUID().toString().replace('-', '_');
-      Field newField = Field.of(randomColumnName, LegacySQLTypeName.STRING);
+      Field newField = Field.of(newColumnName, LegacySQLTypeName.STRING);
 
       // Create a new schema adding the current fields, plus the new one
       List<Field> fieldList = new ArrayList<Field>();
@@ -62,7 +61,9 @@ public class AddEmptyColumn {
       Schema newSchema = Schema.of(fieldList);
 
       // Update the table with the new schema
-      table.toBuilder().setDefinition(StandardTableDefinition.of(newSchema)).build().update();
+      Table updatedTable =
+          table.toBuilder().setDefinition(StandardTableDefinition.of(newSchema)).build();
+      updatedTable.update();
       System.out.println("Empty column successfully added to table");
     } catch (BigQueryException e) {
       System.out.println("Empty column was not added. \n" + e.toString());
