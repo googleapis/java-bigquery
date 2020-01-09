@@ -853,18 +853,6 @@ public interface BigQuery extends Service<BigQueryOptions> {
   /**
    * Deletes the requested table.
    *
-   * @deprecated Now that BigQuery datasets contain multiple resource types, this invocation is
-   *     ambiguous. Please use more strongly typed version of {@code #delete} that leverages an
-   *     non-ambiguous resource type identifier such as {@code TableId}.
-   * @return {@code true} if table was deleted, {@code false} if it was not found
-   * @throws BigQueryException upon failure
-   */
-  @Deprecated
-  boolean delete(String datasetId, String tableId);
-
-  /**
-   * Deletes the requested table.
-   *
    * <p>Example of deleting a table.
    *
    * <pre>{@code

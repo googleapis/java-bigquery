@@ -457,11 +457,6 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   }
 
   @Override
-  public boolean delete(String datasetId, String tableId) {
-    return delete(TableId.of(datasetId, tableId));
-  }
-
-  @Override
   public boolean delete(TableId tableId) {
     final TableId completeTableId =
         tableId.setProjectId(
