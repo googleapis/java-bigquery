@@ -17,7 +17,6 @@
 package com.example.bigquery;
 
 import static junit.framework.TestCase.assertNotNull;
-import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
