@@ -44,6 +44,6 @@ public class RunLegacyQueryIT {
   @Test
   public void testRunLegacyQuery() {
     RunLegacyQuery.runLegacyQuery();
-    assertThat(bout.toString()).contains("Legacy query run successfully");
+    assertThat(bout.toString()).contains("Legacy query ran successfully");
   }
 }
