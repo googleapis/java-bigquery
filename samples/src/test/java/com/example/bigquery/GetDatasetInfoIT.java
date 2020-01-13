@@ -16,6 +16,7 @@
 
 package com.example.bigquery;
 
+import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertNotNull;
 
 import java.io.ByteArrayOutputStream;
@@ -59,5 +60,6 @@ public class GetDatasetInfoIT {
   @Test
   public void getDatasetInfo() {
     GetDatasetInfo.getDatasetInfo(GOOGLE_CLOUD_PROJECT, BIGQUERY_DATASET_NAME);
+    assertThat(bout.toString()).contains("Dataset info retrieved successfully.");
   }
 }

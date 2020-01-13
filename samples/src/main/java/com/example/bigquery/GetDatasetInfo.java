@@ -16,10 +16,14 @@
 
 package com.example.bigquery;
 
+import com.google.api.gax.paging.Page;
 import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.BigQuery.TableListOption;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
+import com.google.cloud.bigquery.Dataset;
 import com.google.cloud.bigquery.DatasetId;
+import com.google.cloud.bigquery.Table;
 
 // [START bigquery_get_dataset]
 public class GetDatasetInfo {
@@ -37,7 +41,19 @@ public class GetDatasetInfo {
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
       DatasetId datasetId = DatasetId.of(projectId, datasetName);
-      bigquery.getDataset(datasetId);
+      Dataset dataset = bigquery.getDataset(datasetId);
+
+      // View dataset properties
+      String description = dataset.getDescription();
+      System.out.println(description);
+
+      // View tables in the dataset
+      // For more information on listing tables see:
+      // https://javadoc.io/static/com.google.cloud/google-cloud-bigquery/0.22.0-beta/com/google/cloud/bigquery/BigQuery.html
+      Page<Table> tables = bigquery.listTables(datasetName, TableListOption.pageSize(100));
+
+      tables.iterateAll().forEach(table -> System.out.print(table.getTableId().getTable() + "\n"));
+
       System.out.println("Dataset info retrieved successfully.");
     } catch (BigQueryException e) {
       System.out.println("Dataset info not retrieved. \n" + e.toString());
