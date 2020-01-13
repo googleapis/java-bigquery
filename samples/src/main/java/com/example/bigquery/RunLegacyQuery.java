@@ -21,12 +21,9 @@ import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.TableResult;
 
 public class RunLegacyQuery {
-
-  public static void runRunLegacyQuery() {
-    runLegacyQuery();
-  }
 
   public static void runLegacyQuery() {
     try {
@@ -40,8 +37,17 @@ public class RunLegacyQuery {
       QueryJobConfiguration queryConfig =
           // To use legacy SQL syntax, set useLegacySql to true.
           QueryJobConfiguration.newBuilder(query).setUseLegacySql(true).build();
+
+      // Execute the query.
+      TableResult result = bigquery.query(queryConfig);
+
+      // Print the results.
+      result
+          .iterateAll()
+          .forEach(row -> row.forEach(val -> System.out.println(val.getStringValue())));
+
       System.out.println("Legacy query ran successfully");
-    } catch (BigQueryException e) {
+    } catch (BigQueryException | InterruptedException e) {
       System.out.println("Legacy query did not run \n" + e.toString());
     }
   }
