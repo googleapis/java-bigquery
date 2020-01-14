@@ -31,20 +31,17 @@ public class RunLegacyQuery {
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
+      // To use legacy SQL syntax, set useLegacySql to true.
       String query =
           "SELECT corpus FROM [bigquery-public-data:samples.shakespeare] GROUP BY corpus;";
-
       QueryJobConfiguration queryConfig =
-          // To use legacy SQL syntax, set useLegacySql to true.
           QueryJobConfiguration.newBuilder(query).setUseLegacySql(true).build();
 
       // Execute the query.
       TableResult result = bigquery.query(queryConfig);
 
       // Print the results.
-      result
-          .iterateAll()
-          .forEach(row -> row.forEach(val -> System.out.println(val.getStringValue())));
+      result.iterateAll().forEach(rows -> rows.forEach(row -> System.out.println(row.getValue())));
 
       System.out.println("Legacy query ran successfully");
     } catch (BigQueryException | InterruptedException e) {
