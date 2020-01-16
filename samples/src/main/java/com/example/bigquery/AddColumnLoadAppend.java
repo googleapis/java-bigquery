@@ -70,15 +70,16 @@ public class AddColumnLoadAppend {
               Field.newBuilder("corpus_date", LegacySQLTypeName.STRING)
                   .setMode(Field.Mode.REQUIRED)
                   .build(),
+              // Adding below additional column during the load job
               Field.newBuilder("custom_column", LegacySQLTypeName.STRING)
                   .setMode(Field.Mode.NULLABLE)
                   .build());
 
-      // Job job = table.load(FormatOptions.csv(), sourceUri, JobInfo.of(configuration));
       LoadJobConfiguration configuration =
           LoadJobConfiguration.builder(tableId, sourceUri)
               .setFormatOptions(FormatOptions.csv())
               .setWriteDisposition(WriteDisposition.WRITE_APPEND)
+              //TODO:investigate these two configs and why they don't work
               .setSchema(newSchema)
               .setSchemaUpdateOptions(ImmutableList.of(SchemaUpdateOption.ALLOW_FIELD_ADDITION))
               .build();
