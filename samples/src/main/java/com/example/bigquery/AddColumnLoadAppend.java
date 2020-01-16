@@ -18,13 +18,10 @@ package com.example.bigquery;
 
 // [START bigquery_relax_column_load_append]
 
-import com.google.cloud.RetryOption;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.Field.Mode;
-import com.google.cloud.bigquery.FieldList;
 import com.google.cloud.bigquery.FormatOptions;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.JobInfo;
@@ -36,9 +33,6 @@ import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableId;
 import com.google.common.collect.ImmutableList;
-import java.util.ArrayList;
-import java.util.List;
-import org.threeten.bp.Duration;
 
 public class AddColumnLoadAppend {
 
@@ -60,7 +54,8 @@ public class AddColumnLoadAppend {
       Table table = bigquery.getTable(tableId);
 
       // Add a new column to a BigQuery table while appending rows via a load job.
-      // 'REQUIRED' fields cannot  be added to an existing schema, so the additional column must be 'NULLABLE'.
+      // 'REQUIRED' fields cannot  be added to an existing schema, so the additional column must be
+      // 'NULLABLE'.
       Schema newSchema =
           Schema.of(
               Field.newBuilder("word", LegacySQLTypeName.STRING)
@@ -77,25 +72,22 @@ public class AddColumnLoadAppend {
                   .build(),
               Field.newBuilder("custom_column", LegacySQLTypeName.STRING)
                   .setMode(Field.Mode.NULLABLE)
-                  .build()
-          );
+                  .build());
 
-      //Job job = table.load(FormatOptions.csv(), sourceUri);
+      // Job job = table.load(FormatOptions.csv(), sourceUri, JobInfo.of(configuration));
       LoadJobConfiguration configuration =
           LoadJobConfiguration.builder(tableId, sourceUri)
               .setFormatOptions(FormatOptions.csv())
+              .setWriteDisposition(WriteDisposition.WRITE_APPEND)
               .setSchema(newSchema)
               .setSchemaUpdateOptions(ImmutableList.of(SchemaUpdateOption.ALLOW_FIELD_ADDITION))
-              .setWriteDisposition(WriteDisposition.WRITE_APPEND)
               .build();
 
       Job job = bigquery.create(JobInfo.of(configuration));
 
       // Load data from a GCS parquet file into the table
       // Blocks until this load table job completes its execution, either failing or succeeding.
-      Job completedJob = job.waitFor(
-          RetryOption.initialRetryDelay(Duration.ofSeconds(1)),
-          RetryOption.totalTimeout(Duration.ofMinutes(3)));
+      Job completedJob = job.waitFor();
       if (completedJob == null) {
         System.out.println("Job not executed since it no longer exists.");
         return;

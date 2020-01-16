@@ -20,14 +20,10 @@ import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.*;
 
 import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.Field.Mode;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.Schema;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.UUID;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -69,9 +65,7 @@ public class AddColumnLoadAppendIT {
     String tableName = "ADD_COLUMN_LOAD_APPEND_TEST";
     Schema originalSchema =
         Schema.of(
-            Field.newBuilder("word", LegacySQLTypeName.STRING)
-                .setMode(Field.Mode.REQUIRED)
-                .build(),
+            Field.newBuilder("word", LegacySQLTypeName.STRING).setMode(Field.Mode.REQUIRED).build(),
             Field.newBuilder("word_count", LegacySQLTypeName.STRING)
                 .setMode(Field.Mode.REQUIRED)
                 .build(),

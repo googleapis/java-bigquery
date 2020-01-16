@@ -31,7 +31,7 @@ public class CreateDatasetIT {
   private ByteArrayOutputStream bout;
   private PrintStream out;
 
-  private static final String GOOGLE_CLOUD_PROJECT= System.getenv("GOOGLE_CLOUD_PROJECT");
+  private static final String GOOGLE_CLOUD_PROJECT = System.getenv("GOOGLE_CLOUD_PROJECT");
 
   private static void requireEnvVar(String varName) {
     assertNotNull(
