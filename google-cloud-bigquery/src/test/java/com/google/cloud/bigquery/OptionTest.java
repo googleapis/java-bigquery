@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class OptionTest {
@@ -46,13 +47,18 @@ public class OptionTest {
     assertEquals(OPTION.hashCode(), OPTION_EQUALS.hashCode());
   }
 
-  @Test(expected = NullPointerException.class)
+  @Test
   public void testConstructor() {
     assertEquals(RPC_OPTION, OPTION.getRpcOption());
     assertEquals(VALUE, OPTION.getValue());
     Option option = new Option(RPC_OPTION, null) {};
     assertEquals(RPC_OPTION, option.getRpcOption());
     assertNull(option.getValue());
-    new Option(null, VALUE) {};
+    try {
+      new Option(null, VALUE) {};
+      Assert.fail();
+    } catch (NullPointerException ex) {
+      assertNull(ex.getMessage());
+    }
   }
 }
