@@ -17,7 +17,6 @@
 package com.example.bigquery;
 
 import static junit.framework.TestCase.assertNotNull;
-import static org.junit.Assert.*;
 
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.LegacySQLTypeName;
