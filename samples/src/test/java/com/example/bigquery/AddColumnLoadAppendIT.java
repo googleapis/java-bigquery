@@ -32,7 +32,6 @@ public class AddColumnLoadAppendIT {
   private PrintStream out;
 
   private static final String BIGQUERY_DATASET_NAME = System.getenv("BIGQUERY_DATASET_NAME");
-  private static final String GCS_BUCKET = System.getenv("GCS_BUCKET");
 
   private static void requireEnvVar(String varName) {
     assertNotNull(
@@ -43,7 +42,6 @@ public class AddColumnLoadAppendIT {
   @BeforeClass
   public static void checkRequirements() {
     requireEnvVar("BIGQUERY_DATASET_NAME");
-    requireEnvVar("GCS_BUCKET");
   }
 
   // @Before
@@ -60,21 +58,16 @@ public class AddColumnLoadAppendIT {
 
   @Test
   public void testAddColumnLoadAppend() {
-    String sourceUri = "gs://" + GCS_BUCKET + "/extractTest.csv";
+    String sourceUri = "gs://cloud-samples-data/bigquery/us-states/us-states.csv";
 
     String tableName = "ADD_COLUMN_LOAD_APPEND_TEST";
     Schema originalSchema =
         Schema.of(
-            Field.newBuilder("word", LegacySQLTypeName.STRING).setMode(Field.Mode.REQUIRED).build(),
-            Field.newBuilder("word_count", LegacySQLTypeName.STRING)
+            Field.newBuilder("name", LegacySQLTypeName.STRING).setMode(Field.Mode.REQUIRED).build(),
+            Field.newBuilder("post_abbr", LegacySQLTypeName.STRING)
                 .setMode(Field.Mode.REQUIRED)
-                .build(),
-            Field.newBuilder("corpus", LegacySQLTypeName.STRING)
-                .setMode(Field.Mode.REQUIRED)
-                .build(),
-            Field.newBuilder("corpus_date", LegacySQLTypeName.STRING)
-                .setMode(Field.Mode.REQUIRED)
-                .build());
+                .build()
+        );
 
     CreateTable.createTable(BIGQUERY_DATASET_NAME, tableName, originalSchema);
 

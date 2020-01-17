@@ -24,6 +24,7 @@ import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.FormatOptions;
 import com.google.cloud.bigquery.Job;
+import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.JobInfo.SchemaUpdateOption;
 import com.google.cloud.bigquery.JobInfo.WriteDisposition;
@@ -33,6 +34,7 @@ import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableId;
 import com.google.common.collect.ImmutableList;
+import java.util.UUID;
 
 public class AddColumnLoadAppend {
 
@@ -58,16 +60,10 @@ public class AddColumnLoadAppend {
       // 'NULLABLE'.
       Schema newSchema =
           Schema.of(
-              Field.newBuilder("word", LegacySQLTypeName.STRING)
+              Field.newBuilder("name", LegacySQLTypeName.STRING)
                   .setMode(Field.Mode.REQUIRED)
                   .build(),
-              Field.newBuilder("word_count", LegacySQLTypeName.STRING)
-                  .setMode(Field.Mode.REQUIRED)
-                  .build(),
-              Field.newBuilder("corpus", LegacySQLTypeName.STRING)
-                  .setMode(Field.Mode.REQUIRED)
-                  .build(),
-              Field.newBuilder("corpus_date", LegacySQLTypeName.STRING)
+              Field.newBuilder("post_abbr", LegacySQLTypeName.STRING)
                   .setMode(Field.Mode.REQUIRED)
                   .build(),
               // Adding below additional column during the load job
@@ -75,28 +71,30 @@ public class AddColumnLoadAppend {
                   .setMode(Field.Mode.NULLABLE)
                   .build());
 
-      LoadJobConfiguration configuration =
+      LoadJobConfiguration loadJobConfig =
           LoadJobConfiguration.builder(tableId, sourceUri)
               .setFormatOptions(FormatOptions.csv())
               .setWriteDisposition(WriteDisposition.WRITE_APPEND)
-              //TODO:investigate these two configs and why they don't work
               .setSchema(newSchema)
               .setSchemaUpdateOptions(ImmutableList.of(SchemaUpdateOption.ALLOW_FIELD_ADDITION))
               .build();
 
-      Job job = bigquery.create(JobInfo.of(configuration));
+      // Create a job ID so that we can safely retry.
+      JobId jobId = JobId.of(UUID.randomUUID().toString());
+      Job loadJob = bigquery.create(JobInfo.newBuilder(loadJobConfig).setJobId(jobId).build());
+      System.out.println(loadJob.getJobId());
 
       // Load data from a GCS parquet file into the table
       // Blocks until this load table job completes its execution, either failing or succeeding.
-      Job completedJob = job.waitFor();
+      Job completedJob = loadJob.waitFor();
+
+      // Check for errors
       if (completedJob == null) {
-        System.out.println("Job not executed since it no longer exists.");
-        return;
+        throw new RuntimeException("Job no longer exists");
       } else if (completedJob.getStatus().getError() != null) {
-        System.out.println(
-            "BigQuery was unable to load into the table due to an error: \n"
-                + job.getStatus().getError());
-        return;
+        // You can also look at queryJob.getStatus().getExecutionErrors() for all
+        // errors, not just the latest one.
+        throw new RuntimeException(loadJob.getStatus().getError().toString());
       }
 
       System.out.println("Column successfully added during load append job");
