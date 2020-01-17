@@ -17,7 +17,6 @@
 package com.example.bigquery;
 
 // [START bigquery_relax_column_load_append]
-
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
@@ -63,11 +62,8 @@ public class AddColumnLoadAppend {
               Field.newBuilder("name", LegacySQLTypeName.STRING)
                   .setMode(Field.Mode.REQUIRED)
                   .build(),
-              Field.newBuilder("post_abbr", LegacySQLTypeName.STRING)
-                  .setMode(Field.Mode.REQUIRED)
-                  .build(),
               // Adding below additional column during the load job
-              Field.newBuilder("custom_column", LegacySQLTypeName.STRING)
+              Field.newBuilder("post_abbr", LegacySQLTypeName.STRING)
                   .setMode(Field.Mode.NULLABLE)
                   .build());
 

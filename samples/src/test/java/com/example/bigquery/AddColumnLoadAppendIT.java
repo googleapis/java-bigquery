@@ -24,6 +24,8 @@ import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.Schema;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -44,17 +46,17 @@ public class AddColumnLoadAppendIT {
     requireEnvVar("BIGQUERY_DATASET_NAME");
   }
 
-  // @Before
-  // public void setUp() {
-  //   bout = new ByteArrayOutputStream();
-  //   out = new PrintStream(bout);
-  //   System.setOut(out);
-  // }
-  //
-  // @After
-  // public void tearDown() {
-  //   System.setOut(null);
-  // }
+  @Before
+  public void setUp() {
+    bout = new ByteArrayOutputStream();
+    out = new PrintStream(bout);
+    System.setOut(out);
+  }
+
+  @After
+  public void tearDown() {
+    System.setOut(null);
+  }
 
   @Test
   public void testAddColumnLoadAppend() {
@@ -63,11 +65,9 @@ public class AddColumnLoadAppendIT {
     String tableName = "ADD_COLUMN_LOAD_APPEND_TEST";
     Schema originalSchema =
         Schema.of(
-            Field.newBuilder("name", LegacySQLTypeName.STRING).setMode(Field.Mode.REQUIRED).build(),
-            Field.newBuilder("post_abbr", LegacySQLTypeName.STRING)
+            Field.newBuilder("name", LegacySQLTypeName.STRING)
                 .setMode(Field.Mode.REQUIRED)
-                .build()
-        );
+                .build());
 
     CreateTable.createTable(BIGQUERY_DATASET_NAME, tableName, originalSchema);
 
