@@ -57,8 +57,8 @@ public class OptionTest {
     try {
       new Option(null, VALUE) {};
       Assert.fail();
-    } catch (NullPointerException ex) {
-      assertNull(ex.getMessage());
+    } catch (NullPointerException expected) {
+
     }
   }
 }
