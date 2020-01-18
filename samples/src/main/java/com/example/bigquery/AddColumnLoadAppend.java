@@ -86,7 +86,8 @@ public class AddColumnLoadAppend {
 
       // Check for errors
       if (completedJob == null) {
-        throw new RuntimeException("Job no longer exists");
+        System.out.println("Job not executed since it no longer exists.");
+        return;
       } else if (completedJob.getStatus().getError() != null) {
         // You can also look at queryJob.getStatus().getExecutionErrors() for all
         // errors, not just the latest one.
