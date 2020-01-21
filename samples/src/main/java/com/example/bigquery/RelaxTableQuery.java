@@ -37,22 +37,22 @@ public class RelaxTableQuery {
     // TODO(developer): Replace these variables before running the sample.
     String datasetName = "MY_DATASET_NAME";
     String tableName = "MY_TABLE_NAME";
-    relaxTableQuery(datasetName, tableName);
+    String query =
+        "SELECT "
+            + "word "
+            // TODO(developer): Replace projectId.dataset.tableName with yours
+            + "FROM `java-docs-samples-testing.bigquery_test_dataset.RELAX_TABLE_QUERY_TEST` "
+            + "WHERE word like '%is%' ";
+    relaxTableQuery(datasetName, tableName, query);
   }
 
-  public static void relaxTableQuery(String datasetName, String tableName) {
+  public static void relaxTableQuery(String datasetName, String tableName, String query) {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
       TableId tableId = TableId.of(datasetName, tableName);
-      String query =
-          "SELECT "
-              + "word "
-              // TODO(developer): Replace projectId.dataset.tableName with yours
-              + "FROM `java-docs-samples-testing.bigquery_test_dataset.RELAX_TABLE_QUERY_TEST` "
-              + "WHERE word like '%is%' ";
 
       QueryJobConfiguration queryConfig =
           QueryJobConfiguration.newBuilder(query)

@@ -74,9 +74,15 @@ public class RelaxTableQueryIT {
                 .setMode(Field.Mode.REQUIRED)
                 .build());
 
+    String query =
+        "SELECT "
+            + "word "
+            + "FROM `java-docs-samples-testing.bigquery_test_dataset.RELAX_TABLE_QUERY_TEST` "
+            + "WHERE word like '%is%' ";
+
     CreateTable.createTable(BIGQUERY_DATASET_NAME, tableName, originalSchema);
 
-    RelaxTableQuery.relaxTableQuery(BIGQUERY_DATASET_NAME, tableName);
+    RelaxTableQuery.relaxTableQuery(BIGQUERY_DATASET_NAME, tableName, query);
     assertThat(bout.toString())
         .contains("Successfully relaxed all columns in destination table during query job");
 
