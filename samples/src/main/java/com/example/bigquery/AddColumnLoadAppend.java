@@ -91,7 +91,10 @@ public class AddColumnLoadAppend {
       } else if (completedJob.getStatus().getError() != null) {
         // You can also look at queryJob.getStatus().getExecutionErrors() for all
         // errors, not just the latest one.
-        throw new RuntimeException(loadJob.getStatus().getError().toString());
+        System.out.println(
+            "BigQuery was unable to load into the table due to an error: \n"
+                + loadJob.getStatus().getError());
+        return;
       }
 
       System.out.println("Column successfully added during load append job");
