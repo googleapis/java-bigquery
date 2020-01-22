@@ -59,7 +59,7 @@ public class RelaxTableQueryIT {
   }
 
   @Test
-  public void testRelaxTableQuery() {
+  public void testRelaxTableQuery() throws Exception {
     String tableName = "RELAX_TABLE_QUERY_TEST";
     Schema originalSchema =
         Schema.of(

@@ -33,7 +33,7 @@ import java.util.UUID;
 
 public class RelaxTableQuery {
 
-  public static void runRelaxTableQuery() {
+  public static void runRelaxTableQuery() throws Exception {
     // TODO(developer): Replace these variables before running the sample.
     String datasetName = "MY_DATASET_NAME";
     String tableName = "MY_TABLE_NAME";
@@ -46,7 +46,8 @@ public class RelaxTableQuery {
     relaxTableQuery(datasetName, tableName, query);
   }
 
-  public static void relaxTableQuery(String datasetName, String tableName, String query) {
+  public static void relaxTableQuery(String datasetName, String tableName, String query)
+      throws Exception {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
@@ -72,11 +73,11 @@ public class RelaxTableQuery {
 
       // Check for errors
       if (queryJob == null) {
-        throw new RuntimeException("Job no longer exists");
+        throw new Exception("Job no longer exists");
       } else if (queryJob.getStatus().getError() != null) {
         // You can also look at queryJob.getStatus().getExecutionErrors() for all
         // errors, not just the latest one.
-        throw new RuntimeException(queryJob.getStatus().getError().toString());
+        throw new Exception(queryJob.getStatus().getError().toString());
       }
 
       // Get the results.
