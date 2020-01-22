@@ -58,7 +58,7 @@ public class AddColumnLoadAppendIT {
   }
 
   @Test
-  public void testAddColumnLoadAppend() {
+  public void testAddColumnLoadAppend() throws Exception {
     String sourceUri = "gs://cloud-samples-data/bigquery/us-states/us-states.csv";
 
     String tableName = "ADD_COLUMN_LOAD_APPEND_TEST";

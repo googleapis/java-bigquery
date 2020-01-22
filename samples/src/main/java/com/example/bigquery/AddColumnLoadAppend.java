@@ -37,7 +37,7 @@ import java.util.UUID;
 
 public class AddColumnLoadAppend {
 
-  public static void runAddColumnLoadAppend() {
+  public static void runAddColumnLoadAppend() throws Exception {
     // TODO(developer): Replace these variables before running the sample.
     String datasetName = "MY_DATASET_NAME";
     String tableName = "MY_TABLE_NAME";
@@ -45,7 +45,8 @@ public class AddColumnLoadAppend {
     addColumnLoadAppend(datasetName, tableName, sourceUri);
   }
 
-  public static void addColumnLoadAppend(String datasetName, String tableName, String sourceUri) {
+  public static void addColumnLoadAppend(String datasetName, String tableName, String sourceUri)
+      throws Exception {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
@@ -91,10 +92,9 @@ public class AddColumnLoadAppend {
       } else if (completedJob.getStatus().getError() != null) {
         // You can also look at queryJob.getStatus().getExecutionErrors() for all
         // errors, not just the latest one.
-        System.out.println(
+        throw new Exception(
             "BigQuery was unable to load into the table due to an error: \n"
                 + loadJob.getStatus().getError());
-        return;
       }
 
       System.out.println("Column successfully added during load append job");
