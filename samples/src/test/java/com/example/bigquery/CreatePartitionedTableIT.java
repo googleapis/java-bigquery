@@ -19,9 +19,6 @@ package com.example.bigquery;
 import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertNotNull;
 
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.Schema;
-import com.google.cloud.bigquery.StandardSQLTypeName;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import org.junit.After;
@@ -61,12 +58,8 @@ public class CreatePartitionedTableIT {
   @Test
   public void testCreatePartitionedTable() {
     String tableName = "MY_PARTITIONED_TABLE";
-    Schema schema =
-        Schema.of(
-            Field.of("stringField", StandardSQLTypeName.STRING),
-            Field.of("booleanField", StandardSQLTypeName.BOOL));
-    Field.of("dateField", StandardSQLTypeName.DATE);
-    CreatePartitionedTable.createPartitionedTable(BIGQUERY_DATASET_NAME, tableName, schema);
+
+    CreatePartitionedTable.createPartitionedTable(BIGQUERY_DATASET_NAME, tableName);
 
     assertThat(bout.toString()).contains("Partitioned table created successfully");
 

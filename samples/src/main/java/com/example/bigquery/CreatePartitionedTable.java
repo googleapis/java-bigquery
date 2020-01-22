@@ -34,15 +34,10 @@ public class CreatePartitionedTable {
     // TODO(developer): Replace these variables before running the sample.
     String datasetName = "MY_DATASET_NAME";
     String tableName = "MY_TABLE_NAME";
-    Schema schema =
-        Schema.of(
-            Field.of("stringField", StandardSQLTypeName.STRING),
-            Field.of("booleanField", StandardSQLTypeName.BOOL));
-    Field.of("dateField", StandardSQLTypeName.DATE);
-    createPartitionedTable(datasetName, tableName, schema);
+    createPartitionedTable(datasetName, tableName);
   }
 
-  public static void createPartitionedTable(String datasetName, String tableName, Schema schema) {
+  public static void createPartitionedTable(String datasetName, String tableName) {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
@@ -51,6 +46,12 @@ public class CreatePartitionedTable {
       TableId tableId = TableId.of(datasetName, tableName);
 
       TimePartitioning partitioning = TimePartitioning.of(TimePartitioning.Type.DAY);
+
+      Schema schema =
+          Schema.of(
+              Field.of("stringField", StandardSQLTypeName.STRING),
+              Field.of("booleanField", StandardSQLTypeName.BOOL));
+      Field.of("dateField", StandardSQLTypeName.DATE);
 
       StandardTableDefinition tableDefinition =
           StandardTableDefinition.newBuilder()
