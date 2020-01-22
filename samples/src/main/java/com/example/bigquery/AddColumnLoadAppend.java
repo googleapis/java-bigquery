@@ -87,8 +87,7 @@ public class AddColumnLoadAppend {
 
       // Check for errors
       if (completedJob == null) {
-        System.out.println("Job not executed since it no longer exists.");
-        return;
+        throw new Exception("Job not executed since it no longer exists.");
       } else if (completedJob.getStatus().getError() != null) {
         // You can also look at queryJob.getStatus().getExecutionErrors() for all
         // errors, not just the latest one.
@@ -96,7 +95,6 @@ public class AddColumnLoadAppend {
             "BigQuery was unable to load into the table due to an error: \n"
                 + loadJob.getStatus().getError());
       }
-
       System.out.println("Column successfully added during load append job");
     } catch (BigQueryException | InterruptedException e) {
       System.out.println("Column not added during load append \n" + e.toString());
