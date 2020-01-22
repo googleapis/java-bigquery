@@ -16,6 +16,7 @@
 
 package com.example.bigquery;
 
+// [START bigquery_create_table_clustered]
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
@@ -71,3 +72,4 @@ public class CreateClusteredTable {
     }
   }
 }
+// [END bigquery_create_table_clustered]

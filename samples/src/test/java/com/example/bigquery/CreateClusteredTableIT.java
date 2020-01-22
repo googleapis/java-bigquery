@@ -16,11 +16,8 @@
 
 package com.example.bigquery;
 
-// [START bigquery_create_table_clustered]
-
 import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertNotNull;
-import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -70,4 +67,3 @@ public class CreateClusteredTableIT {
     DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, tableName);
   }
 }
-// [END bigquery_create_table_clustered]
