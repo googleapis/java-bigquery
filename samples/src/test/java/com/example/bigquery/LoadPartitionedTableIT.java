@@ -18,11 +18,7 @@ package com.example.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertNotNull;
-import static org.junit.Assert.*;
 
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.Schema;
-import com.google.cloud.bigquery.StandardSQLTypeName;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import org.junit.After;
@@ -67,7 +63,8 @@ public class LoadPartitionedTableIT {
 
     LoadPartitionedTable.loadPartitionedTable(BIGQUERY_DATASET_NAME, tableName, sourceUri);
 
-    assertThat(bout.toString()).contains("Data successfully loaded into time partitioned table during load job");
+    assertThat(bout.toString())
+        .contains("Data successfully loaded into time partitioned table during load job");
 
     // Clean up
     DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, tableName);
