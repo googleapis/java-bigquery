@@ -42,12 +42,11 @@ public class QueryClusteredTableIT {
 
   @Test
   public void queryClusteredTable() {
-    String query =
-        "SELECT word, word_count\n"
-            + "FROM `java-docs-samples-testing.bigquery_test_dataset.clustered_shakespeare`\n"
-            + "WHERE corpus = 'romeoandjuliet'\n"
-            + "AND word_count >= 1";
-    QueryClusteredTable.queryClusteredTable(query);
+    String projectId = "java-docs-samples-testing";
+    String datasetName = "bigquery_test_dataset";
+    String tableName = "clustered_shakespeare";
+
+    QueryClusteredTable.queryClusteredTable(projectId, datasetName, tableName);
     assertThat(bout.toString()).contains("Query clustered table performed successfully.");
   }
 }

@@ -27,22 +27,27 @@ public class QueryClusteredTable {
 
   public static void runQueryClusteredTable() throws Exception {
     // TODO(developer): Replace these variables before running the sample.
-    String query =
-        "SELECT word, word_count\n"
-            // TODO: Replace below with your partitioned and clustered table:
-            // projectId.datasetName.tableName
-            + "FROM `java-docs-samples-testing.bigquery_test_dataset.clustered_shakespeare`\n"
-            // Optimize query performance by filtering the clustered columns in sort order
-            + "WHERE corpus = 'romeoandjuliet'\n"
-            + "AND word_count >= 1";
-    queryClusteredTable(query);
+    String projectId = "MY_PROJECT_ID";
+    String datasetName = "MY_DATASET_NAME";
+    String tableName = "MY_TABLE_NAME";
+    queryClusteredTable(projectId, datasetName, tableName);
   }
 
-  public static void queryClusteredTable(String query) {
+  public static void queryClusteredTable(String projectId, String datasetName, String tableName) {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
+
+      String sourceTable = "`" + projectId + "." + datasetName + "." + tableName + "`";
+      String query =
+          "SELECT word, word_count\n"
+              + "FROM "
+              + sourceTable
+              + "\n"
+              // Optimize query performance by filtering the clustered columns in sort order
+              + "WHERE corpus = 'romeoandjuliet'\n"
+              + "AND word_count >= 1";
 
       QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query).build();
 
