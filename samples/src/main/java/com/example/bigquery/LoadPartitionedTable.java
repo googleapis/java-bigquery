@@ -30,6 +30,8 @@ import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.StandardSQLTypeName;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TimePartitioning;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 public class LoadPartitionedTable {
@@ -62,7 +64,7 @@ public class LoadPartitionedTable {
       TimePartitioning partitioning =
           TimePartitioning.newBuilder(TimePartitioning.Type.DAY)
               .setField("date")
-              .setExpirationMs(7776000000L)
+              .setExpirationMs(Duration.of(90, ChronoUnit.DAYS).toMillis())
               .build();
 
       LoadJobConfiguration loadJobConfig =
