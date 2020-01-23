@@ -24,6 +24,7 @@ import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.Schema;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.UUID;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -32,6 +33,7 @@ import org.junit.Test;
 public class RelaxTableQueryIT {
   private ByteArrayOutputStream bout;
   private PrintStream out;
+  private String tableName;
 
   private static final String BIGQUERY_PROJECT_ID = System.getenv("BIGQUERY_PROJECT_ID");
   private static final String BIGQUERY_DATASET_NAME = System.getenv("BIGQUERY_DATASET_NAME");
@@ -52,17 +54,18 @@ public class RelaxTableQueryIT {
   public void setUp() throws Exception {
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
+    tableName = "RELAX_TABLE_QUERY_TEST" + UUID.randomUUID().toString().replace('-', '_');
     System.setOut(out);
   }
 
   @After
   public void tearDown() {
+    DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, tableName);
     System.setOut(null);
   }
 
   @Test
   public void testRelaxTableQuery() throws Exception {
-    String tableName = "RELAX_TABLE_QUERY_TEST";
     Schema originalSchema =
         Schema.of(
             Field.newBuilder("word", LegacySQLTypeName.STRING).setMode(Field.Mode.REQUIRED).build(),
@@ -81,8 +84,5 @@ public class RelaxTableQueryIT {
     RelaxTableQuery.relaxTableQuery(BIGQUERY_PROJECT_ID, BIGQUERY_DATASET_NAME, tableName);
     assertThat(bout.toString())
         .contains("Successfully relaxed all columns in destination table during query job");
-
-    // Clean up
-    DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, tableName);
   }
 }
