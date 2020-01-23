@@ -52,7 +52,7 @@ public class RelaxTableQueryIT {
   }
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     System.out.println("BIGQUERY_DATASET_NAME: " + BIGQUERY_DATASET_NAME);
     System.out.println("TABLE_NAME: " + TABLE_NAME);
 
