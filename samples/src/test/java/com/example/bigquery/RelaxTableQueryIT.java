@@ -33,6 +33,7 @@ public class RelaxTableQueryIT {
   private ByteArrayOutputStream bout;
   private PrintStream out;
 
+  private static final String BIGQUERY_PROJECT_ID = System.getenv("BIGQUERY_PROJECT_ID");
   private static final String BIGQUERY_DATASET_NAME = System.getenv("BIGQUERY_DATASET_NAME");
 
   private static void requireEnvVar(String varName) {
@@ -43,6 +44,7 @@ public class RelaxTableQueryIT {
 
   @BeforeClass
   public static void checkRequirements() {
+    requireEnvVar("BIGQUERY_PROJECT_ID");
     requireEnvVar("BIGQUERY_DATASET_NAME");
   }
 
@@ -74,15 +76,9 @@ public class RelaxTableQueryIT {
                 .setMode(Field.Mode.REQUIRED)
                 .build());
 
-    String query =
-        "SELECT "
-            + "word "
-            + "FROM `java-docs-samples-testing.bigquery_test_dataset.RELAX_TABLE_QUERY_TEST` "
-            + "WHERE word like '%is%' ";
-
     CreateTable.createTable(BIGQUERY_DATASET_NAME, tableName, originalSchema);
 
-    RelaxTableQuery.relaxTableQuery(BIGQUERY_DATASET_NAME, tableName, query);
+    RelaxTableQuery.relaxTableQuery(BIGQUERY_PROJECT_ID, BIGQUERY_DATASET_NAME, tableName);
     assertThat(bout.toString())
         .contains("Successfully relaxed all columns in destination table during query job");
 

@@ -35,18 +35,13 @@ public class RelaxTableQuery {
 
   public static void runRelaxTableQuery() throws Exception {
     // TODO(developer): Replace these variables before running the sample.
+    String projectId = "MY_PROJECT_ID";
     String datasetName = "MY_DATASET_NAME";
     String tableName = "MY_TABLE_NAME";
-    String query =
-        "SELECT "
-            + "word "
-            // TODO(developer): Replace projectId.dataset.tableName with yours
-            + "FROM `java-docs-samples-testing.bigquery_test_dataset.RELAX_TABLE_QUERY_TEST` "
-            + "WHERE word like '%is%' ";
-    relaxTableQuery(datasetName, tableName, query);
+    relaxTableQuery(projectId, datasetName, tableName);
   }
 
-  public static void relaxTableQuery(String datasetName, String tableName, String query)
+  public static void relaxTableQuery(String projectId, String datasetName, String tableName)
       throws Exception {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
@@ -54,6 +49,10 @@ public class RelaxTableQuery {
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
       TableId tableId = TableId.of(datasetName, tableName);
+
+      String sourceTable = "`" + projectId + "." + datasetName + "." + tableName + "`";
+      String query =
+          "SELECT " + "word\n" + "FROM " + sourceTable + "\n" + "WHERE word like '%is%' ";
 
       QueryJobConfiguration queryConfig =
           QueryJobConfiguration.newBuilder(query)
