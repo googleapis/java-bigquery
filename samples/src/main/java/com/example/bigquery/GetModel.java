@@ -47,6 +47,5 @@ public class GetModel {
       System.out.println("Cannot retrieve model \n" + e.toString());
     }
   }
-
 }
 // [END bigquery_get_model]

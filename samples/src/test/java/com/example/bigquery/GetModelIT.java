@@ -30,7 +30,8 @@ public class GetModelIT {
   private ByteArrayOutputStream bout;
   private PrintStream out;
 
-  private static final String BIGQUERY_MODEL_TEST_PROJECT_ID = System.getenv("BIGQUERY_MODEL_TEST_PROJECT_ID");
+  private static final String BIGQUERY_MODEL_TEST_PROJECT_ID =
+      System.getenv("BIGQUERY_MODEL_TEST_PROJECT_ID");
 
   private static void requireEnvVar(String varName) {
     assertNotNull(
@@ -60,7 +61,6 @@ public class GetModelIT {
     String datasetName = "samples";
     String modelName = "model";
     GetModel.getModel(datasetName, modelName);
-    assertThat(bout.toString())
-        .contains("Successfully retrieved model");
+    assertThat(bout.toString()).contains("Successfully retrieved model");
   }
 }
