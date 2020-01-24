@@ -16,9 +16,10 @@
 
 package com.example.bigquery;
 
-import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertNotNull;
-import static org.hamcrest.core.StringContains.containsString;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.either;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -31,7 +32,7 @@ public class ListModelsIT {
   private ByteArrayOutputStream bout;
   private PrintStream out;
 
-  private static final String BIGQUERY_MODEL_TEST_PROJECT_ID = System.getenv("BIGQUERY_MODEL_TEST_PROJECT_ID");
+  private static final String BIGQUERY_DATASET_NAME = System.getenv("BIGQUERY_DATASET_NAME");
 
   private static void requireEnvVar(String varName) {
     assertNotNull(
@@ -41,7 +42,7 @@ public class ListModelsIT {
 
   @BeforeClass
   public static void checkRequirements() {
-    requireEnvVar("BIGQUERY_MODEL_TEST_PROJECT_ID");
+    requireEnvVar("BIGQUERY_DATASET_NAME");
   }
 
   @Before
@@ -58,9 +59,10 @@ public class ListModelsIT {
 
   @Test
   public void testListModels() {
-    String datasetName = "samples";
-    ListModels.listModels(datasetName);
-    assertThat(bout.toString()), either(containsString("color")).or(containsString("colour")));
-    assertThat(bout.toString()).contains("models in dataset listed successfully.") || bout.toString().contains("models in dataset listed successfully."));
+    ListModels.listModels(BIGQUERY_DATASET_NAME);
+    assertThat(
+        bout.toString(),
+        either(containsString("models in dataset listed successfully"))
+            .or(containsString("Dataset does not contain any models")));
   }
 }
