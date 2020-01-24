@@ -53,6 +53,7 @@ public class RelaxTableQueryIT {
 
   @Before
   public void setUp() {
+    System.out.println("env var: " + System.getenv("BIGQUERY_DATASET_NAME"));
     System.out.println("BIGQUERY_DATASET_NAME: " + BIGQUERY_DATASET_NAME);
     System.out.println("TABLE_NAME: " + TABLE_NAME);
 
