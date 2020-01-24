@@ -37,10 +37,9 @@ public class RelaxTableQueryIT {
   private ByteArrayOutputStream bout;
   private PrintStream out;
 
-  private static final String BIGQUERY_PROJECT_ID = requireEnvVar("BIGQUERY_PROJECT_ID");
-  private static final String BIGQUERY_DATASET_NAME = requireEnvVar("BIGQUERY_DATASET_NAME");
-  private static final String TABLE_NAME =
-      "RELAX_TABLE_QUERY_TEST_" + UUID.randomUUID().toString().replace('-', '_');
+  private static String BIGQUERY_PROJECT_ID;
+  private static String BIGQUERY_DATASET_NAME;
+  private static String TABLE_NAME;
 
   private static String requireEnvVar(String varName) {
     String val = System.getenv(varName);
@@ -48,6 +47,14 @@ public class RelaxTableQueryIT {
         "Environment variable " + varName + " is required to perform these tests.",
         val);
     return val;
+  }
+
+  @BeforeClass
+  public static void classSetUp() {
+    BIGQUERY_PROJECT_ID = requireEnvVar("BIGQUERY_PROJECT_ID");
+    BIGQUERY_DATASET_NAME = requireEnvVar("BIGQUERY_DATASET_NAME");
+    TABLE_NAME =
+        "RELAX_TABLE_QUERY_TEST_" + UUID.randomUUID().toString().replace('-', '_');
   }
 
   @Before
