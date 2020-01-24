@@ -34,21 +34,17 @@ public class RelaxTableQueryIT {
   private ByteArrayOutputStream bout;
   private PrintStream out;
 
-  private static final String BIGQUERY_PROJECT_ID = System.getenv("BIGQUERY_PROJECT_ID");
-  private static final String BIGQUERY_DATASET_NAME = System.getenv("BIGQUERY_DATASET_NAME");
+  private static final String BIGQUERY_PROJECT_ID = requireEnvVar("BIGQUERY_PROJECT_ID");
+  private static final String BIGQUERY_DATASET_NAME = requireEnvVar("BIGQUERY_DATASET_NAME");
   private static final String TABLE_NAME =
       "RELAX_TABLE_QUERY_TEST_" + UUID.randomUUID().toString().replace('-', '_');
 
-  private static void requireEnvVar(String varName) {
+  private static String requireEnvVar(String varName) {
+    String val = System.getenv(varName);
     assertNotNull(
         "Environment variable " + varName + " is required to perform these tests.",
-        System.getenv(varName));
-  }
-
-  @BeforeClass
-  public static void checkRequirements() {
-    requireEnvVar("BIGQUERY_PROJECT_ID");
-    requireEnvVar("BIGQUERY_DATASET_NAME");
+        val);
+    return val;
   }
 
   @Before
