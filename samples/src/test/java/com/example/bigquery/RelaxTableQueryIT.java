@@ -24,6 +24,7 @@ import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.Schema;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.UUID;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -62,7 +63,7 @@ public class RelaxTableQueryIT {
 
   @Test
   public void testRelaxTableQuery() throws Exception {
-    String tableName = "RELAX_TABLE_QUERY_TEST";
+    String tableName = "RELAX_TABLE_QUERY_TEST" + UUID.randomUUID().toString().replace('-', '_');
     Schema originalSchema =
         Schema.of(
             Field.newBuilder("word", LegacySQLTypeName.STRING).setMode(Field.Mode.REQUIRED).build(),
