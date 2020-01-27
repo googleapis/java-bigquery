@@ -146,7 +146,7 @@ public abstract class TableDefinition implements Serializable {
   }
 
   @SuppressWarnings("unchecked")
-  static <T extends TableDefinition> T fromPb(Table tablePb) throws IOException {
+  static <T extends TableDefinition> T fromPb(Table tablePb) throws IOException, Throwable {
     switch (Type.valueOf(tablePb.getType()).toString()) {
       case "TABLE":
         return (T) StandardTableDefinition.fromPb(tablePb);

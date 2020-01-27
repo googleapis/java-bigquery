@@ -20,7 +20,6 @@ import com.google.api.services.bigquery.model.Streamingbuffer;
 import com.google.api.services.bigquery.model.Table;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.MoreObjects;
-import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Objects;
@@ -264,7 +263,7 @@ public abstract class StandardTableDefinition extends TableDefinition {
   }
 
   @SuppressWarnings("unchecked")
-  static StandardTableDefinition fromPb(Table tablePb) throws IOException {
+  static StandardTableDefinition fromPb(Table tablePb) throws Throwable {
     Builder builder = newBuilder().table(tablePb);
     if (tablePb.getNumRows() != null) {
       builder.setNumRows(tablePb.getNumRows().longValue());
@@ -280,13 +279,15 @@ public abstract class StandardTableDefinition extends TableDefinition {
             "Got unexpected time partitioning "
                 + tablePb.getTimePartitioning().toPrettyString()
                 + " in table "
-                + tablePb.getTableReference().toPrettyString());
+                + tablePb.getTableReference().toPrettyString(),
+            e);
       } catch (NullPointerException e) {
         throw new NullPointerException(
-            "Got unexpected time partitioning "
-                + tablePb.getTimePartitioning().toPrettyString()
-                + " in table "
-                + tablePb.getTableReference().toPrettyString());
+                "Got unexpected time partitioning "
+                    + tablePb.getTimePartitioning().toPrettyString()
+                    + " in table "
+                    + tablePb.getTableReference().toPrettyString())
+            .initCause(e);
       }
     }
     if (tablePb.getRangePartitioning() != null) {
