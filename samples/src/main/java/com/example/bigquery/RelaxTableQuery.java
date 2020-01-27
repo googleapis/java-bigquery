@@ -21,7 +21,6 @@ import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Job;
-import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.JobInfo.SchemaUpdateOption;
 import com.google.cloud.bigquery.JobInfo.WriteDisposition;
@@ -29,7 +28,6 @@ import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableResult;
 import com.google.common.collect.ImmutableList;
-import java.util.UUID;
 
 public class RelaxTableQuery {
 
@@ -52,8 +50,7 @@ public class RelaxTableQuery {
       TableId tableId = TableId.of(datasetName, tableName);
 
       String sourceTable = "`" + projectId + "." + datasetName + "." + tableName + "`";
-      String query =
-          "SELECT " + "word\n" + "FROM " + sourceTable + "\n" + "WHERE word like '%is%' ";
+      String query = "SELECT word FROM " + sourceTable + " WHERE word like '%is%'";
 
       QueryJobConfiguration queryConfig =
           QueryJobConfiguration.newBuilder(query)
@@ -65,9 +62,7 @@ public class RelaxTableQuery {
               .setDestinationTable(tableId)
               .build();
 
-      // Create a job ID so that we can safely retry.
-      JobId jobId = JobId.of(UUID.randomUUID().toString());
-      Job queryJob = bigquery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
+      Job queryJob = bigquery.create(JobInfo.newBuilder(queryConfig).build());
 
       queryJob = queryJob.waitFor();
 
