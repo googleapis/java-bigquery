@@ -44,6 +44,6 @@ public class ListDatasetsIT {
   public void listDatasets() {
     // List datasets in bigquery-public-data project
     ListDatasets.listDatasets("bigquery-public-data");
-    assertThat(bout.toString()).contains("dataset in project listed successfully");
+    assertThat(bout.toString()).contains("Success! Dataset ID");
   }
 }
