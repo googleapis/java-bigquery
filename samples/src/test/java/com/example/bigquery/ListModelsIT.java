@@ -58,6 +58,6 @@ public class ListModelsIT {
   @Test
   public void testListModels() {
     ListModels.listModels(BIGQUERY_DATASET_NAME);
-    Truth.assertThat(bout.toString()).contains("models in dataset listed successfully");
+    Truth.assertThat(bout.toString()).contains("model in dataset listed successfully");
   }
 }
