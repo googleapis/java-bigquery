@@ -17,10 +17,8 @@
 package com.example.bigquery;
 
 import static junit.framework.TestCase.assertNotNull;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.either;
-import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.google.common.truth.Truth;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import org.junit.After;
@@ -60,9 +58,6 @@ public class ListModelsIT {
   @Test
   public void testListModels() {
     ListModels.listModels(BIGQUERY_DATASET_NAME);
-    assertThat(
-        bout.toString(),
-        either(containsString("models in dataset listed successfully"))
-            .or(containsString("Dataset does not contain any models")));
+    Truth.assertThat(bout.toString()).contains("models in dataset listed successfully");
   }
 }

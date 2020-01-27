@@ -47,7 +47,7 @@ public class ListModels {
                     System.out.println(
                         model.getModelId() + " models in dataset listed successfully."));
       } catch (NullPointerException e) {
-        System.out.print("Dataset does not contain any models");
+        throw new NullPointerException("Dataset does not contain any models");
       }
     } catch (BigQueryException e) {
       System.out.println("Models not listed in dataset due to error: \n" + e.toString());
