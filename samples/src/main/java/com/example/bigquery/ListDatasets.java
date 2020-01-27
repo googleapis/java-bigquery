@@ -39,12 +39,16 @@ public class ListDatasets {
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
       Page<Dataset> datasets = bigquery.listDatasets(projectId, DatasetListOption.pageSize(100));
-      datasets
-          .iterateAll()
-          .forEach(
-              dataset ->
-                  System.out.println(
-                      dataset.getDatasetId() + " dataset in project listed successfully"));
+      if (datasets == null) {
+        System.out.println("Dataset does not contain any models");
+      } else {
+        datasets
+            .iterateAll()
+            .forEach(
+                dataset ->
+                    System.out.println(
+                        dataset.getDatasetId() + " dataset in project listed successfully"));
+      }
     } catch (BigQueryException e) {
       System.out.println("Project does not contain any datasets \n" + e.toString());
     }

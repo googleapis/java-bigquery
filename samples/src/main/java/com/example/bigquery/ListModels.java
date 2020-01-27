@@ -38,16 +38,16 @@ public class ListModels {
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
-      try {
-        Page<Model> models = bigquery.listModels(datasetName, ModelListOption.pageSize(100));
+      Page<Model> models = bigquery.listModels(datasetName, ModelListOption.pageSize(100));
+      if (models == null) {
+        System.out.println("Dataset does not contain any models");
+      } else {
         models
             .iterateAll()
             .forEach(
                 model ->
                     System.out.println(
                         model.getModelId() + " models in dataset listed successfully."));
-      } catch (NullPointerException e) {
-        throw new NullPointerException("Dataset does not contain any models");
       }
     } catch (BigQueryException e) {
       System.out.println("Models not listed in dataset due to error: \n" + e.toString());
