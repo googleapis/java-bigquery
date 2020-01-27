@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Google LLC
+ * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,32 +17,16 @@
 package com.example.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
-import static junit.framework.TestCase.assertNotNull;
 
-import com.google.cloud.bigquery.testing.RemoteBigQueryHelper;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class CreateDatasetIT {
+public class QueryClusteredTableIT {
   private ByteArrayOutputStream bout;
   private PrintStream out;
-
-  private static final String GOOGLE_CLOUD_PROJECT = System.getenv("GOOGLE_CLOUD_PROJECT");
-
-  private static void requireEnvVar(String varName) {
-    assertNotNull(
-        "Environment variable " + varName + " is required to perform these tests.",
-        System.getenv(varName));
-  }
-
-  @BeforeClass
-  public static void checkRequirements() {
-    requireEnvVar("GOOGLE_CLOUD_PROJECT");
-  }
 
   @Before
   public void setUp() {
@@ -57,12 +41,12 @@ public class CreateDatasetIT {
   }
 
   @Test
-  public void testCreateDataset() {
-    String generatedDatasetName = RemoteBigQueryHelper.generateDatasetName();
-    CreateDataset.createDataset(generatedDatasetName);
-    assertThat(bout.toString()).contains(generatedDatasetName + " created successfully");
+  public void queryClusteredTable() {
+    String projectId = "java-docs-samples-testing";
+    String datasetName = "bigquery_test_dataset";
+    String tableName = "clustered_shakespeare";
 
-    // Clean up
-    DeleteDataset.deleteDataset(GOOGLE_CLOUD_PROJECT, generatedDatasetName);
+    QueryClusteredTable.queryClusteredTable(projectId, datasetName, tableName);
+    assertThat(bout.toString()).contains("Query clustered table performed successfully.");
   }
 }
