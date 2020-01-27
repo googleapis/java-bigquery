@@ -20,7 +20,6 @@ import com.google.api.core.ApiFunction;
 import com.google.api.services.bigquery.model.Table;
 import com.google.cloud.StringEnumType;
 import com.google.cloud.StringEnumValue;
-import java.io.IOException;
 import java.io.Serializable;
 import javax.annotation.Nullable;
 
@@ -146,7 +145,7 @@ public abstract class TableDefinition implements Serializable {
   }
 
   @SuppressWarnings("unchecked")
-  static <T extends TableDefinition> T fromPb(Table tablePb) throws IOException, Throwable {
+  static <T extends TableDefinition> T fromPb(Table tablePb) {
     switch (Type.valueOf(tablePb.getType()).toString()) {
       case "TABLE":
         return (T) StandardTableDefinition.fromPb(tablePb);

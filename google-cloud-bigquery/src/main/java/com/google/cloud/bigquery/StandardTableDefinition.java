@@ -263,7 +263,7 @@ public abstract class StandardTableDefinition extends TableDefinition {
   }
 
   @SuppressWarnings("unchecked")
-  static StandardTableDefinition fromPb(Table tablePb) throws Throwable {
+  static StandardTableDefinition fromPb(Table tablePb) {
     Builder builder = newBuilder().table(tablePb);
     if (tablePb.getNumRows() != null) {
       builder.setNumRows(tablePb.getNumRows().longValue());
@@ -277,17 +277,21 @@ public abstract class StandardTableDefinition extends TableDefinition {
       } catch (IllegalArgumentException e) {
         throw new IllegalArgumentException(
             "Got unexpected time partitioning "
-                + tablePb.getTimePartitioning().toPrettyString()
+                + tablePb.getTimePartitioning()
                 + " in table "
-                + tablePb.getTableReference().toPrettyString(),
+                + tablePb.getTableReference(),
             e);
       } catch (NullPointerException e) {
-        throw new NullPointerException(
-                "Got unexpected time partitioning "
-                    + tablePb.getTimePartitioning().toPrettyString()
-                    + " in table "
-                    + tablePb.getTableReference().toPrettyString())
-            .initCause(e);
+        try {
+          throw new NullPointerException(
+                  "Got unexpected time partitioning "
+                      + tablePb.getTimePartitioning()
+                      + " in table "
+                      + tablePb.getTableReference())
+              .initCause(e);
+        } catch (Throwable throwable) {
+          throwable.printStackTrace();
+        }
       }
     }
     if (tablePb.getRangePartitioning() != null) {
