@@ -20,6 +20,7 @@ import com.google.api.services.bigquery.model.Streamingbuffer;
 import com.google.api.services.bigquery.model.Table;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.MoreObjects;
+import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Objects;
@@ -263,7 +264,7 @@ public abstract class StandardTableDefinition extends TableDefinition {
   }
 
   @SuppressWarnings("unchecked")
-  static StandardTableDefinition fromPb(Table tablePb) {
+  static StandardTableDefinition fromPb(Table tablePb) throws IOException {
     Builder builder = newBuilder().table(tablePb);
     if (tablePb.getNumRows() != null) {
       builder.setNumRows(tablePb.getNumRows().longValue());
@@ -272,7 +273,21 @@ public abstract class StandardTableDefinition extends TableDefinition {
       builder.setStreamingBuffer(StreamingBuffer.fromPb(tablePb.getStreamingBuffer()));
     }
     if (tablePb.getTimePartitioning() != null) {
-      builder.setTimePartitioning(TimePartitioning.fromPb(tablePb.getTimePartitioning()));
+      try {
+        builder.setTimePartitioning(TimePartitioning.fromPb(tablePb.getTimePartitioning()));
+      } catch (IllegalArgumentException e) {
+        throw new IllegalArgumentException(
+            "Got unexpected time partitioning "
+                + tablePb.getTimePartitioning().toPrettyString()
+                + " in table "
+                + tablePb.getTableReference().toPrettyString());
+      } catch (NullPointerException e) {
+        throw new NullPointerException(
+            "Got unexpected time partitioning "
+                + tablePb.getTimePartitioning().toPrettyString()
+                + " in table "
+                + tablePb.getTableReference().toPrettyString());
+      }
     }
     if (tablePb.getRangePartitioning() != null) {
       builder.setRangePartitioning(RangePartitioning.fromPb(tablePb.getRangePartitioning()));
