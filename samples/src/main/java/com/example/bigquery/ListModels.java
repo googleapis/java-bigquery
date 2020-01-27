@@ -47,7 +47,7 @@ public class ListModels {
             .forEach(
                 model ->
                     System.out.println(
-                        model.getModelId() + " models in dataset listed successfully."));
+                        model.getModelId() + " model in dataset listed successfully."));
       }
     } catch (BigQueryException e) {
       System.out.println("Models not listed in dataset due to error: \n" + e.toString());
