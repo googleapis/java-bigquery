@@ -277,7 +277,7 @@ public abstract class StandardTableDefinition extends TableDefinition {
       } catch (IllegalArgumentException e) {
         throw new IllegalArgumentException(
             "Illegal Argument - Got unexpected time partitioning "
-                + tablePb.getTimePartitioning().getType()
+                + tablePb.getTimePartitioning().toString()
                 + " in project "
                 + tablePb.getTableReference().getProjectId()
                 + " in dataset "
@@ -288,7 +288,7 @@ public abstract class StandardTableDefinition extends TableDefinition {
       } catch (NullPointerException e) {
         throw new NullPointerException(
             "Null pointer - Got unexpected time partitioning "
-                + tablePb.getTimePartitioning().getType()
+                + tablePb.getTimePartitioning().toString()
                 + " in project "
                 + tablePb.getTableReference().getProjectId()
                 + " in dataset "
