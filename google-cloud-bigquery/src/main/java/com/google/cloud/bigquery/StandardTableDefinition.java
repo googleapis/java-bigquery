@@ -276,23 +276,26 @@ public abstract class StandardTableDefinition extends TableDefinition {
         builder.setTimePartitioning(TimePartitioning.fromPb(tablePb.getTimePartitioning()));
       } catch (IllegalArgumentException e) {
         throw new IllegalArgumentException(
-            "Got unexpected time partitioning "
-                + tablePb.getTimePartitioning()
+            "Illegal Argument - Got unexpected time partitioning "
+                + tablePb.getTimePartitioning().getType()
+                + " in project "
+                + tablePb.getTableReference().getProjectId()
+                + " in dataset "
+                + tablePb.getTableReference().getDatasetId()
                 + " in table "
-                + tablePb.getTableReference(),
+                + tablePb.getTableReference().getTableId(),
             e);
       } catch (NullPointerException e) {
-        try {
-          throw new NullPointerException(
-                  "Got unexpected time partitioning "
-                      + tablePb.getTimePartitioning()
-                      + " in table "
-                      + tablePb.getTableReference())
-              .initCause(e);
-          // catching Throwable due to adding initCause
-        } catch (Throwable throwable) {
-          throwable.printStackTrace();
-        }
+        throw new NullPointerException(
+            "Null pointer - Got unexpected time partitioning "
+                + tablePb.getTimePartitioning().getType()
+                + " in project "
+                + tablePb.getTableReference().getProjectId()
+                + " in dataset "
+                + tablePb.getTableReference().getDatasetId()
+                + " in table "
+                + tablePb.getTableReference().getTableId()
+                + e.toString());
       }
     }
     if (tablePb.getRangePartitioning() != null) {
