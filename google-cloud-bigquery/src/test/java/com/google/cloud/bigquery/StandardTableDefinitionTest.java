@@ -64,6 +64,13 @@ public class StandardTableDefinitionTest {
           .setClustering(CLUSTERING)
           .build();
 
+  // to test invalid time partitioning type set in table definition
+  private static final StandardTableDefinition INVALID_TABLE_DEFINITION =
+      StandardTableDefinition.newBuilder()
+          .setSchema(TABLE_SCHEMA)
+          .setTimePartitioning(null)
+          .build();
+
   @Test
   public void testToBuilder() {
     compareStandardTableDefinition(TABLE_DEFINITION, TABLE_DEFINITION.toBuilder().build());
@@ -116,6 +123,12 @@ public class StandardTableDefinitionTest {
     assertTrue(TableDefinition.fromPb(definition.toPb()) instanceof StandardTableDefinition);
     compareStandardTableDefinition(
         definition, TableDefinition.<StandardTableDefinition>fromPb(definition.toPb()));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testInvalidTableDef() {
+    // not supposed to have this time partitioning type
+    StandardTableDefinition.fromPb(INVALID_TABLE_DEFINITION.toPb());
   }
 
   @Test

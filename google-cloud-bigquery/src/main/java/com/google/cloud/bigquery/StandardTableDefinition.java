@@ -289,7 +289,7 @@ public abstract class StandardTableDefinition extends TableDefinition {
                       + " in table "
                       + tablePb.getTableReference())
               .initCause(e);
-          //catching Throwable due to adding initCause
+          // catching Throwable due to adding initCause
         } catch (Throwable throwable) {
           throwable.printStackTrace();
         }
