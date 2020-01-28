@@ -43,7 +43,9 @@ public class ListModels {
         System.out.println("Dataset does not contain any models.");
         return;
       }
-      models.iterateAll().forEach(model -> System.out.printf("Success! Model ID: %s", model.getModelId()));
+      models
+          .iterateAll()
+          .forEach(model -> System.out.printf("Success! Model ID: %s", model.getModelId()));
     } catch (BigQueryException e) {
       System.out.println("Models not listed in dataset due to error: \n" + e.toString());
     }

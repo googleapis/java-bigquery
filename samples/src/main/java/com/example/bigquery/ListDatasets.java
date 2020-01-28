@@ -45,7 +45,8 @@ public class ListDatasets {
       }
       datasets
           .iterateAll()
-          .forEach(dataset -> System.out.printf("Success! Dataset ID: %s ", dataset.getDatasetId()));
+          .forEach(
+              dataset -> System.out.printf("Success! Dataset ID: %s ", dataset.getDatasetId()));
     } catch (BigQueryException e) {
       System.out.println("Project does not contain any datasets \n" + e.toString());
     }
