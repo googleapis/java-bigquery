@@ -60,7 +60,7 @@ public abstract class MaterializedViewDefinition extends TableDefinition {
   @Nullable
   public abstract String getQuery();
 
-  /** Returns a builder for the {@code ViewInfo} object. */
+  /** Returns a builder for the {@code MaterializedViewDefinition} object. */
   public abstract Builder toBuilder();
 
   @Override
