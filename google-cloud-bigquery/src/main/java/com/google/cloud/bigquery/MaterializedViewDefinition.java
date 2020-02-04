@@ -38,6 +38,18 @@ public abstract class MaterializedViewDefinition extends TableDefinition {
     /** Sets the query whose result is persisted. */
     public abstract Builder setQuery(String query);
 
+    /**
+     * Set enable automatic refresh of the materialized view when the base table is updated. The
+     * default value is "true".
+     */
+    public abstract Builder setEnableRefresh(Boolean enableRefresh);
+
+    /**
+     * Set a maximum frequency at which this materialized view will be refreshed. The default value
+     * is "1800000" (30 minutes).
+     */
+    public abstract Builder setRefreshIntervalMs(Long refreshIntervalMs);
+
     /** Sets the table schema. */
     @Override
     public abstract Builder setSchema(Schema schema);
@@ -60,6 +72,20 @@ public abstract class MaterializedViewDefinition extends TableDefinition {
   @Nullable
   public abstract String getQuery();
 
+  /**
+   * Returns enable automatic refresh of the materialized view when the base table is updated. The
+   * default value is "true".
+   */
+  @Nullable
+  public abstract Boolean getEnableRefresh();
+
+  /**
+   * Returns a maximum frequency at which this materialized view will be refreshed. The default
+   * value is "1800000" (30 minutes).
+   */
+  @Nullable
+  public abstract Long getRefreshIntervalMs();
+
   /** Returns a builder for the {@code MaterializedViewDefinition} object. */
   public abstract Builder toBuilder();
 
@@ -73,6 +99,12 @@ public abstract class MaterializedViewDefinition extends TableDefinition {
     }
     if (getLastRefreshTime() != null) {
       materializedViewDefinition.setLastRefreshTime(getLastRefreshTime());
+    }
+    if (getEnableRefresh() != null) {
+      materializedViewDefinition.setEnableRefresh(getEnableRefresh());
+    }
+    if (getRefreshIntervalMs() != null) {
+      materializedViewDefinition.setRefreshIntervalMs(getRefreshIntervalMs());
     }
     tablePb.setMaterializedView(materializedViewDefinition);
     return tablePb;
@@ -109,6 +141,12 @@ public abstract class MaterializedViewDefinition extends TableDefinition {
     }
     if (materializedViewDefinition.getLastRefreshTime() != null) {
       builder.setLastRefreshTime(materializedViewDefinition.getLastRefreshTime());
+    }
+    if (materializedViewDefinition.getEnableRefresh() != null) {
+      builder.setEnableRefresh(materializedViewDefinition.getEnableRefresh());
+    }
+    if (materializedViewDefinition.getRefreshIntervalMs() != null) {
+      builder.setRefreshIntervalMs(materializedViewDefinition.getRefreshIntervalMs());
     }
     return builder.build();
   }

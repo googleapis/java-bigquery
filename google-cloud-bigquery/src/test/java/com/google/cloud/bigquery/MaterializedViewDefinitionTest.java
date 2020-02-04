@@ -25,10 +25,16 @@ public class MaterializedViewDefinitionTest {
 
   private static final String MATERIALIZED_VIEW_QUERY = "MATERIALIZED_VIEW_QUERY";
   private static final Long LAST_REFRESH_TIME = 1580302008L;
+  private static final Boolean ENABLE_REFRESH = false;
+  private static final Long REFRESH_INTERVAL_MS = 60000L;
+  private static final Schema SCHEMA = Schema.of();
   private static final MaterializedViewDefinition MATERIALIZED_VIEW_DEFINITION =
       MaterializedViewDefinition.newBuilder()
+          .setSchema(SCHEMA)
           .setQuery(MATERIALIZED_VIEW_QUERY)
           .setLastRefreshTime(LAST_REFRESH_TIME)
+          .setEnableRefresh(ENABLE_REFRESH)
+          .setRefreshIntervalMs(REFRESH_INTERVAL_MS)
           .build();
 
   @Test
@@ -57,8 +63,11 @@ public class MaterializedViewDefinitionTest {
     assertEquals(LAST_REFRESH_TIME, MATERIALIZED_VIEW_DEFINITION.getLastRefreshTime());
     MaterializedViewDefinition materializedViewDefinition =
         MaterializedViewDefinition.newBuilder()
+            .setSchema(SCHEMA)
             .setQuery(MATERIALIZED_VIEW_QUERY)
             .setLastRefreshTime(LAST_REFRESH_TIME)
+            .setEnableRefresh(ENABLE_REFRESH)
+            .setRefreshIntervalMs(REFRESH_INTERVAL_MS)
             .build();
     assertEquals(MATERIALIZED_VIEW_DEFINITION, materializedViewDefinition);
   }
@@ -77,7 +86,14 @@ public class MaterializedViewDefinitionTest {
 
   private void compareMaterializedView(
       MaterializedViewDefinition expected, MaterializedViewDefinition actual) {
+    assertEquals(expected.getType(), actual.getType());
+    assertEquals(expected.getSchema(), actual.getSchema());
     assertEquals(expected.getQuery(), actual.getQuery());
     assertEquals(expected.getLastRefreshTime(), actual.getLastRefreshTime());
+    assertEquals(expected.getEnableRefresh(), actual.getEnableRefresh());
+    assertEquals(expected.getRefreshIntervalMs(), actual.getRefreshIntervalMs());
+    assertEquals(expected.toString(), actual.toString());
+    assertEquals(expected.hashCode(), actual.hashCode());
+    assertEquals(expected, actual);
   }
 }
