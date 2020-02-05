@@ -139,7 +139,7 @@ public class Table extends TableInfo {
     }
 
     @Override
-    public TableInfo.Builder setEncryptionConfiguration(EncryptionConfiguration configuration) {
+    public Builder setEncryptionConfiguration(EncryptionConfiguration configuration) {
       infoBuilder.setEncryptionConfiguration(configuration);
       return this;
     }
@@ -147,6 +147,12 @@ public class Table extends TableInfo {
     @Override
     public Builder setLabels(Map<String, String> labels) {
       infoBuilder.setLabels(labels);
+      return this;
+    }
+
+    @Override
+    public Builder setRequirePartitionFilter(Boolean requirePartitionFilter) {
+      infoBuilder.setRequirePartitionFilter(requirePartitionFilter);
       return this;
     }
 
