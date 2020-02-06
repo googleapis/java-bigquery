@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- see http://mojo.codehaus.org/clirr-maven-plugin/examples/ignored-differences.html -->
+<differences>
+  <difference>
+    <className>com/google/cloud/bigquery/Table$Builder</className>
+    <method>com.google.cloud.bigquery.TableInfo$Builder setEncryptionConfiguration(com.google.cloud.bigquery.EncryptionConfiguration)</method>
+    <to>com.google.cloud.bigquery.Table$Builder</to>
+    <differenceType>7006</differenceType>
+  </difference>
+  <difference>
+    <className>com/google/cloud/bigquery/TableInfo$Builder</className>
+    <method>com.google.cloud.bigquery.TableInfo$Builder setRequirePartitionFilter(java.lang.Boolean)</method>
+    <differenceType>7013</differenceType>
+  </difference>
+</differences>
