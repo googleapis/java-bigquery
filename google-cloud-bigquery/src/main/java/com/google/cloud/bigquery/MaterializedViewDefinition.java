@@ -134,19 +134,21 @@ public abstract class MaterializedViewDefinition extends TableDefinition {
 
   static MaterializedViewDefinition fromPb(Table tablePb) {
     Builder builder = newBuilder().table(tablePb);
-    com.google.api.services.bigquery.model.MaterializedViewDefinition materializedViewDefinition =
-        tablePb.getMaterializedView();
-    if (materializedViewDefinition.getQuery() != null) {
-      builder.setQuery(materializedViewDefinition.getQuery());
-    }
-    if (materializedViewDefinition.getLastRefreshTime() != null) {
-      builder.setLastRefreshTime(materializedViewDefinition.getLastRefreshTime());
-    }
-    if (materializedViewDefinition.getEnableRefresh() != null) {
-      builder.setEnableRefresh(materializedViewDefinition.getEnableRefresh());
-    }
-    if (materializedViewDefinition.getRefreshIntervalMs() != null) {
-      builder.setRefreshIntervalMs(materializedViewDefinition.getRefreshIntervalMs());
+    if (tablePb.getMaterializedView() != null) {
+      com.google.api.services.bigquery.model.MaterializedViewDefinition materializedViewDefinition =
+          tablePb.getMaterializedView();
+      if (materializedViewDefinition.getQuery() != null) {
+        builder.setQuery(materializedViewDefinition.getQuery());
+      }
+      if (materializedViewDefinition.getLastRefreshTime() != null) {
+        builder.setLastRefreshTime(materializedViewDefinition.getLastRefreshTime());
+      }
+      if (materializedViewDefinition.getEnableRefresh() != null) {
+        builder.setEnableRefresh(materializedViewDefinition.getEnableRefresh());
+      }
+      if (materializedViewDefinition.getRefreshIntervalMs() != null) {
+        builder.setRefreshIntervalMs(materializedViewDefinition.getRefreshIntervalMs());
+      }
     }
     return builder.build();
   }
