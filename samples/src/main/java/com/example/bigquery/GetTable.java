@@ -38,10 +38,10 @@ public class GetTable {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
+
       TableId tableId = TableId.of(projectId, datasetName, tableName);
       Table table = bigquery.getTable(tableId);
       System.out.println("Table info: " + table.getDescription());
-      System.out.println("Table retrieved successfully.");
     } catch (BigQueryException e) {
       System.out.println("Table not retrieved. \n" + e.toString());
     }

@@ -44,6 +44,6 @@ public class GetTableIT {
   public void testGetTable() {
     // Get shakespeare table from bigquery-public-data:samples dataset
     GetTable.getTable("bigquery-public-data", "samples", "shakespeare");
-    assertThat(bout.toString()).contains("Table retrieved successfully.");
+    assertThat(bout.toString()).contains("Table info:");
   }
 }
