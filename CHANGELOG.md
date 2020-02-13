@@ -1,5 +1,20 @@
 # Changelog
 
+### [1.106.1](https://www.github.com/googleapis/java-bigquery/compare/v1.106.0...v1.106.1) (2020-02-13)
+
+
+### Dependencies
+
+* update core dependencies to v1.92.5 ([#162](https://www.github.com/googleapis/java-bigquery/issues/162)) ([6ea4141](https://www.github.com/googleapis/java-bigquery/commit/6ea41413aed3d6cc81b9c4995a21f1017e268c74))
+* update dependency com.google.apis:google-api-services-bigquery to v2-rev20191211-1.30.8 ([#161](https://www.github.com/googleapis/java-bigquery/issues/161)) ([54872ba](https://www.github.com/googleapis/java-bigquery/commit/54872ba95ff0903817df217dfa6da883d43e6ace))
+* update dependency com.google.cloud:libraries-bom to v4 ([#159](https://www.github.com/googleapis/java-bigquery/issues/159)) ([95e4ff0](https://www.github.com/googleapis/java-bigquery/commit/95e4ff068dd8650ec0acebbe23e958c6e361ed36))
+* update dependency com.google.cloud:libraries-bom to v4.0.1 ([#167](https://www.github.com/googleapis/java-bigquery/issues/167)) ([633ea52](https://www.github.com/googleapis/java-bigquery/commit/633ea52ddc3677e8091c1f69283a864929227a17))
+
+
+### Documentation
+
+* broken links ([#154](https://www.github.com/googleapis/java-bigquery/issues/154)) ([e060aba](https://www.github.com/googleapis/java-bigquery/commit/e060aba2ed030a13e50f5e0f5597b3e04ad9c292))
+
 ## [1.106.0](https://www.github.com/googleapis/java-bigquery/compare/v1.105.0...v1.106.0) (2020-02-03)
 
 
