@@ -139,7 +139,7 @@ public class Table extends TableInfo {
     }
 
     @Override
-    public Builder setEncryptionConfiguration(EncryptionConfiguration configuration) {
+    public TableInfo.Builder setEncryptionConfiguration(EncryptionConfiguration configuration) {
       infoBuilder.setEncryptionConfiguration(configuration);
       return this;
     }
