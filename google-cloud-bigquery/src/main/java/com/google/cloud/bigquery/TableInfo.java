@@ -132,7 +132,9 @@ public class TableInfo implements Serializable {
 
     public abstract Builder setEncryptionConfiguration(EncryptionConfiguration configuration);
 
-    public abstract Builder setRequirePartitionFilter(Boolean requirePartitionFilter);
+    public Builder setRequirePartitionFilter(Boolean requirePartitionFilter) {
+      return this;
+    }
   }
 
   static class BuilderImpl extends Builder {
