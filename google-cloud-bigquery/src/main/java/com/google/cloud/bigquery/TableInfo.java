@@ -415,8 +415,8 @@ public class TableInfo implements Serializable {
   }
 
   /**
-   * Returns true if a partition filter (that can be used for partition elimination) is required to
-   * be specified for queries over this table.
+   * Returns true if a partition filter (that can be used for partition elimination) is required
+   * for queries over this table.
    */
   public Boolean getRequirePartitionFilter() {
     return requirePartitionFilter;
