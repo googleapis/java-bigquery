@@ -314,6 +314,7 @@
         <jdk>1.7</jdk>
       </activation>
       <properties>
+        <auto-value-annotations.version>1.7</auto-value-annotations.version>
         <auto-value.version>1.4</auto-value.version>
       </properties>
       <build>
