@@ -63,8 +63,10 @@ public class LoadLocalFile {
       // Imports a local file into a table.
       try (OutputStream stream = Channels.newOutputStream(writer)) {
         Files.copy(csvPath, stream);
+      } finally {
+        writer.close();
       }
-      // Get load job
+
       Job job = writer.getJob();
       Job completedJob = job.waitFor();
       if (completedJob == null) {
