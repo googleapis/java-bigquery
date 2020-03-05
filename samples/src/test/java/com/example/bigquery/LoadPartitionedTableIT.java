@@ -62,7 +62,6 @@ public class LoadPartitionedTableIT {
 
     String tableName =
         "LOAD_PARTITIONED_TABLE_TEST_" + UUID.randomUUID().toString().replace('-', '_');
-    ;
 
     LoadPartitionedTable.loadPartitionedTable(BIGQUERY_DATASET_NAME, tableName, sourceUri);
 
