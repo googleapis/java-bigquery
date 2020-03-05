@@ -58,16 +58,14 @@ public class LoadLocalFile {
       // The location must be specified; other fields can be auto-detected.
       JobId jobId = JobId.newBuilder().setLocation("us").build();
 
-      TableDataWriteChannel writer = bigquery.writer(jobId, writeChannelConfiguration);
-
       // Imports a local file into a table.
-      try (OutputStream stream = Channels.newOutputStream(writer)) {
+      try (TableDataWriteChannel writer = bigquery.writer(jobId, writeChannelConfiguration);
+          OutputStream stream = Channels.newOutputStream(writer);
+      ) {
         Files.copy(csvPath, stream);
-      } finally {
-        writer.close();
       }
 
-      Job job = writer.getJob();
+      Job job = bigquery.getJob(jobId);
       Job completedJob = job.waitFor();
       if (completedJob == null) {
         System.out.println("Job not executed since it no longer exists.");
