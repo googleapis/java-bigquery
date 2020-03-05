@@ -67,6 +67,7 @@ public class LoadLocalFile {
         Files.copy(csvPath, stream);
       }
 
+      // Get the Job created by the TableDataWriteChannel and wait for it to complete.
       Job job = bigquery.getJob(jobId);
       Job completedJob = job.waitFor();
       if (completedJob == null) {
