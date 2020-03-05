@@ -23,6 +23,7 @@ import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.Schema;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -62,7 +63,7 @@ public class LoadLocalFileIT {
   }
 
   @Test
-  public void loadLocalFile() {
+  public void loadLocalFile() throws IOException, InterruptedException {
     String tableName = "LoadLocalFileTestTable_" + UUID.randomUUID().toString().replace('-', '_');
     Schema schema =
         Schema.of(

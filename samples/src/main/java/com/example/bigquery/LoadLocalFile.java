@@ -33,17 +33,19 @@ import java.nio.channels.Channels;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.UUID;
 
 public class LoadLocalFile {
 
-  public static void runLoadLocalFile() {
+  public static void runLoadLocalFile() throws IOException, InterruptedException {
     String datasetName = "MY_DATASET_NAME";
     String tableName = "MY_TABLE_NAME";
     Path csvPath = FileSystems.getDefault().getPath(".", "my-data.csv");
     loadLocalFile(datasetName, tableName, csvPath);
   }
 
-  public static void loadLocalFile(String datasetName, String tableName, Path csvPath) {
+  public static void loadLocalFile(String datasetName, String tableName, Path csvPath)
+      throws IOException, InterruptedException {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
@@ -55,13 +57,13 @@ public class LoadLocalFile {
               .setFormatOptions(FormatOptions.csv())
               .build();
 
-      // The location must be specified; other fields can be auto-detected.
-      JobId jobId = JobId.newBuilder().setLocation("us").build();
+      // The location and JobName must be specified; other fields can be auto-detected.
+      String jobName = "jobId_" + UUID.randomUUID().toString();
+      JobId jobId = JobId.newBuilder().setLocation("us").setJob(jobName).build();
 
       // Imports a local file into a table.
       try (TableDataWriteChannel writer = bigquery.writer(jobId, writeChannelConfiguration);
-          OutputStream stream = Channels.newOutputStream(writer);
-      ) {
+          OutputStream stream = Channels.newOutputStream(writer)) {
         Files.copy(csvPath, stream);
       }
 
@@ -80,7 +82,7 @@ public class LoadLocalFile {
       // Get output status
       LoadStatistics stats = job.getStatistics();
       System.out.printf("Successfully loaded %d rows. \n", stats.getOutputRows());
-    } catch (BigQueryException | IOException | InterruptedException e) {
+    } catch (BigQueryException e) {
       System.out.println("Local file not loaded. \n" + e.toString());
     }
   }
