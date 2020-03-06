@@ -30,11 +30,12 @@ public class AuthDriveScope {
   public static void setAuthDriveScope() throws IOException {
     // Create credentials with Drive & BigQuery API scopes.
     // Both APIs must be enabled for your project before running this code.
-    String BIGQUERY_SCOPE = "https://www.googleapis.com/auth/bigquery";
-    String GOOGLE_DRIVE_SCOPE = "https://www.googleapis.com/auth/drive";
     GoogleCredentials credentials =
         ServiceAccountCredentials.getApplicationDefault()
-            .createScoped(ImmutableSet.of(BIGQUERY_SCOPE, GOOGLE_DRIVE_SCOPE));
+            .createScoped(
+                ImmutableSet.of(
+                    "https://www.googleapis.com/auth/bigquery",
+                    "https://www.googleapis.com/auth/drive"));
 
     // Instantiate a client.
     BigQuery bigquery =
