@@ -51,7 +51,7 @@ public class AuthSnippets {
   public static void explicit() throws IOException {
     // TODO(developer): Replace these variables before running the sample.
     String projectId = "MY_PROJECT_ID";
-    File credentialsPath = new File("service_account.json");
+    File credentialsPath = new File("path/to/your/service_account.json");
 
     // Load credentials from JSON key file. If you can't set the GOOGLE_APPLICATION_CREDENTIALS
     // environment variable, you can explicitly load the credentials file to construct the
