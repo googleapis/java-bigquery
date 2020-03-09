@@ -20,6 +20,7 @@ package com.example.bigquery;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Dataset;
 import com.google.common.collect.ImmutableSet;
@@ -37,15 +38,19 @@ public class AuthDriveScope {
                     "https://www.googleapis.com/auth/bigquery",
                     "https://www.googleapis.com/auth/drive"));
 
-    // Instantiate a client.
-    BigQuery bigquery =
-        BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
+    try {
+      // Initialize client that will be used to send requests. This client only needs to be created
+      // once, and can be reused for multiple requests.
+      BigQuery bigquery =
+          BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
 
-    // Use the client.
-    System.out.println("Auth succeeded with multiple scopes. Datasets:");
-    for (Dataset dataset : bigquery.listDatasets().iterateAll()) {
-      System.out.printf(
-          "Dataset: %s%n", dataset.getDatasetId().getDataset());
+      // Use the client.
+      System.out.println("Auth succeeded with multiple scopes. Datasets:");
+      for (Dataset dataset : bigquery.listDatasets().iterateAll()) {
+        System.out.printf("Dataset: %s%n", dataset.getDatasetId().getDataset());
+      }
+    } catch (BigQueryException e) {
+      System.out.println("Auth failed due to error: \n" + e.toString());
     }
   }
 }
