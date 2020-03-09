@@ -45,7 +45,7 @@ public class AuthDriveScope {
     System.out.println("Auth succeeded with multiple scopes. Datasets:");
     for (Dataset dataset : bigquery.listDatasets().iterateAll()) {
       System.out.printf(
-          "Auth succeeded with multiple scopes. Dataset %s%n", dataset.getDatasetId().getDataset());
+          "Dataset: %s%n", dataset.getDatasetId().getDataset());
     }
   }
 }
