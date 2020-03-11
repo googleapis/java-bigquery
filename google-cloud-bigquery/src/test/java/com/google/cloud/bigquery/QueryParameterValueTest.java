@@ -23,6 +23,7 @@ import static org.threeten.bp.temporal.ChronoField.NANO_OF_SECOND;
 import static org.threeten.bp.temporal.ChronoField.SECOND_OF_MINUTE;
 
 import com.google.api.services.bigquery.model.QueryParameterType;
+import com.google.common.collect.ImmutableMap;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.Date;
@@ -376,6 +377,24 @@ public class QueryParameterValueTest {
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.ARRAY);
     assertThat(value.getArrayType()).isEqualTo(StandardSQLTypeName.INT64);
     assertThat(value.getArrayValues()).isEmpty();
+  }
+
+  @Test
+  public void testStruct() {
+    QueryParameterValue booleanField = QueryParameterValue.bool(true);
+    QueryParameterValue integerField = QueryParameterValue.int64(15);
+    QueryParameterValue stringField = QueryParameterValue.string("test-string");
+    QueryParameterValue recordField =
+        QueryParameterValue.struct(
+            ImmutableMap.of(
+                "booleanField",
+                booleanField,
+                "integerField",
+                integerField,
+                "stringField",
+                stringField));
+    assertThat(recordField.getValue()).isNull();
+    assertThat(recordField.getType()).isEqualTo(StandardSQLTypeName.STRUCT);
   }
 
   private static void assertArrayDataEquals(

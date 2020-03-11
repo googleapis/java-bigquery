@@ -26,13 +26,16 @@ import com.google.auto.value.AutoValue;
 import com.google.cloud.Timestamp;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.BaseEncoding;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 import org.threeten.bp.Instant;
 import org.threeten.bp.ZoneOffset;
@@ -127,11 +130,22 @@ public abstract class QueryParameterValue implements Serializable {
 
     abstract Builder setArrayValuesInner(ImmutableList<QueryParameterValue> arrayValues);
 
+    /** Sets struct values. The type must set to STRUCT. */
+    public Builder setStructValues(Map<String, QueryParameterValue> structValues) {
+      setStructTypes(ImmutableMap.copyOf(structValues));
+      return setStructValuesInner(ImmutableMap.copyOf(structValues));
+    }
+
+    abstract Builder setStructValuesInner(Map<String, QueryParameterValue> structValues);
+
     /** Sets the parameter data type. */
     public abstract Builder setType(StandardSQLTypeName type);
 
     /** Sets the data type of the array elements. The type must set to ARRAY. */
     public abstract Builder setArrayType(StandardSQLTypeName arrayType);
+
+    /** Sets the data type of the struct elements. The type must set to STRUCT. */
+    abstract Builder setStructTypes(Map<String, QueryParameterValue> structTypes);
 
     /** Creates a {@code QueryParameterValue} object. */
     public abstract QueryParameterValue build();
@@ -154,12 +168,25 @@ public abstract class QueryParameterValue implements Serializable {
   @Nullable
   abstract ImmutableList<QueryParameterValue> getArrayValuesInner();
 
+  /** Returns the struct values of this parameter. The returned map, if not null, is immutable. */
+  @Nullable
+  public Map<String, QueryParameterValue> getStructValues() {
+    return getStructValuesInner();
+  }
+
+  @Nullable
+  abstract Map<String, QueryParameterValue> getStructValuesInner();
+
   /** Returns the data type of this parameter. */
   public abstract StandardSQLTypeName getType();
 
   /** Returns the data type of the array elements. */
   @Nullable
   public abstract StandardSQLTypeName getArrayType();
+
+  /** Returns the data type of the struct elements. */
+  @Nullable
+  public abstract Map<String, QueryParameterValue> getStructTypes();
 
   /** Creates a {@code QueryParameterValue} object with the given value and type. */
   public static <T> QueryParameterValue of(T value, Class<T> type) {
@@ -271,6 +298,18 @@ public abstract class QueryParameterValue implements Serializable {
         .setArrayValues(listValues)
         .setType(StandardSQLTypeName.ARRAY)
         .setArrayType(type)
+        .build();
+  }
+
+  /**
+   * Creates a map with {@code QueryParameterValue} object and a type of STRUCT the given struct
+   * element type.
+   */
+  public static QueryParameterValue struct(Map<String, QueryParameterValue> struct) {
+    return QueryParameterValue.newBuilder()
+        .setStructValues(struct)
+        .setType(StandardSQLTypeName.STRUCT)
+        .setStructTypes(struct)
         .build();
   }
 
@@ -398,6 +437,14 @@ public abstract class QueryParameterValue implements Serializable {
       valuePb.setArrayValues(
           Lists.transform(getArrayValues(), QueryParameterValue.TO_VALUE_PB_FUNCTION));
     }
+    if (getStructValues() != null) {
+      Map<String, com.google.api.services.bigquery.model.QueryParameterValue> valueMap =
+          new HashMap<>();
+      for (Map.Entry<String, QueryParameterValue> map : getStructValues().entrySet()) {
+        valueMap.put(map.getKey(), map.getValue().toValuePb());
+      }
+      valuePb.setStructValues(valueMap);
+    }
     return valuePb;
   }
 
@@ -409,6 +456,16 @@ public abstract class QueryParameterValue implements Serializable {
       arrayTypePb.setType(getArrayType().toString());
       typePb.setArrayType(arrayTypePb);
     }
+    if (getStructTypes() != null) {
+      List<QueryParameterType.StructTypes> structTypes = new ArrayList<>();
+      for (Map.Entry<String, QueryParameterValue> entry : getStructTypes().entrySet()) {
+        QueryParameterType.StructTypes structType = new QueryParameterType.StructTypes();
+        structType.setName(entry.getKey());
+        structType.setType(entry.getValue().toTypePb());
+        structTypes.add(structType);
+      }
+      typePb.setStructTypes(structTypes);
+    }
     return typePb;
   }
 
@@ -416,7 +473,7 @@ public abstract class QueryParameterValue implements Serializable {
       com.google.api.services.bigquery.model.QueryParameterValue valuePb,
       QueryParameterType typePb) {
     Builder valueBuilder = newBuilder();
-
+    Map<String, QueryParameterType> parameterTypes = new HashMap<>();
     StandardSQLTypeName type = StandardSQLTypeName.valueOf(typePb.getType());
     valueBuilder.setType(type);
     if (type == StandardSQLTypeName.ARRAY) {
@@ -430,6 +487,31 @@ public abstract class QueryParameterValue implements Serializable {
           arrayValues.add(fromPb(elementValuePb, typePb.getArrayType()));
         }
         valueBuilder.setArrayValues(arrayValues.build());
+      }
+    } else if (type == StandardSQLTypeName.STRUCT) {
+      Map<String, QueryParameterValue> structValues = new HashMap<>();
+      Map<String, QueryParameterValue> structTypes = new HashMap<>();
+      for (QueryParameterType.StructTypes types : typePb.getStructTypes()) {
+        structTypes.put(
+            types.getName(),
+            QueryParameterValue.newBuilder()
+                .setType(StandardSQLTypeName.valueOf(types.getType().getType()))
+                .build());
+      }
+      valueBuilder.setStructTypes(structTypes);
+      if (valuePb == null || valuePb.getStructValues() == null) {
+        valueBuilder.setStructValues(ImmutableMap.<String, QueryParameterValue>of());
+      } else {
+        for (QueryParameterType.StructTypes structType : typePb.getStructTypes()) {
+          parameterTypes.put(structType.getName(), structType.getType());
+        }
+        for (Map.Entry<String, com.google.api.services.bigquery.model.QueryParameterValue> entry :
+            valuePb.getStructValues().entrySet()) {
+          structValues.put(
+              entry.getKey(),
+              QueryParameterValue.fromPb(entry.getValue(), parameterTypes.get(entry.getKey())));
+        }
+        valueBuilder.setStructValues(structValues);
       }
     } else {
       valueBuilder.setValue(valuePb == null ? "" : valuePb.getValue());
