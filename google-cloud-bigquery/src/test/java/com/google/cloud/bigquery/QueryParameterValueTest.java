@@ -393,8 +393,16 @@ public class QueryParameterValueTest {
                 integerField,
                 "stringField",
                 stringField));
+    com.google.api.services.bigquery.model.QueryParameterValue parameterValue =
+        recordField.toValuePb();
+    QueryParameterType parameterType = recordField.toTypePb();
+    QueryParameterValue queryParameterValue =
+        QueryParameterValue.fromPb(parameterValue, parameterType);
+    assertThat(queryParameterValue).isEqualTo(recordField);
     assertThat(recordField.getValue()).isNull();
     assertThat(recordField.getType()).isEqualTo(StandardSQLTypeName.STRUCT);
+    assertThat(recordField.getStructTypes()).isNotNull();
+    assertThat(recordField.getStructValues()).isNotNull();
   }
 
   private static void assertArrayDataEquals(

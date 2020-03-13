@@ -1430,34 +1430,15 @@ public class ITBigQueryTest {
 
   @Test
   public void testStructNamedQueryParameters() throws InterruptedException {
-    String tableName = "test_record_type_table_struct_named_query";
-    TableId tableId = TableId.of(DATASET, tableName);
-    Field integerField = Field.of("integerField", LegacySQLTypeName.INTEGER);
-    Field booleanField = Field.of("booleanField", LegacySQLTypeName.BOOLEAN);
-    Field stringField = Field.of("stringField", LegacySQLTypeName.STRING);
-    Field recordField =
-        Field.of("recordField", LegacySQLTypeName.RECORD, integerField, booleanField, stringField);
-    Schema schema = Schema.of(recordField);
-    Table createTable = bigquery.create(TableInfo.of(tableId, StandardTableDefinition.of(schema)));
-    assertNotNull(createTable);
-    // Insert Dummy data
-    for (int i = 0; i < 10; i++) {
-      Map<String, Object> rows = new HashMap<>();
-      rows.put("booleanField", i % 2 == 0 ? true : false);
-      rows.put("stringField", "test-stringField-" + i);
-      rows.put("integerField", i * 2);
-      Map<String, Object> record = new HashMap<>();
-      record.put("recordField", rows);
-      bigquery.insertAll(InsertAllRequest.newBuilder(tableId).addRow(record).build());
-    }
-    // Query Struct
     QueryParameterValue booleanValue = QueryParameterValue.bool(true);
     QueryParameterValue stringValue = QueryParameterValue.string("test-stringField-5");
+    QueryParameterValue integerValue = QueryParameterValue.int64(10);
     Map<String, QueryParameterValue> struct = new HashMap<>();
     struct.put("booleanField", booleanValue);
+    struct.put("integerField", integerValue);
     struct.put("stringField", stringValue);
     QueryParameterValue recordValue = QueryParameterValue.struct(struct);
-    String query = "SELECT STRUCT(@recordField) FROM " + tableId.getTable();
+    String query = "SELECT STRUCT(@recordField) AS record";
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query)
             .setDefaultDataset(DATASET)
@@ -1465,7 +1446,6 @@ public class ITBigQueryTest {
             .addNamedParameter("recordField", recordValue)
             .build();
     TableResult result = bigquery.query(config);
-    assertEquals(schema, result.getSchema());
     assertEquals(1, Iterables.size(result.getValues()));
   }
 

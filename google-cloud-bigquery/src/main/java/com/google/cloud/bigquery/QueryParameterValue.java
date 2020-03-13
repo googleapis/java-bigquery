@@ -309,7 +309,6 @@ public abstract class QueryParameterValue implements Serializable {
     return QueryParameterValue.newBuilder()
         .setStructValues(struct)
         .setType(StandardSQLTypeName.STRUCT)
-        .setStructTypes(struct)
         .build();
   }
 
@@ -438,12 +437,12 @@ public abstract class QueryParameterValue implements Serializable {
           Lists.transform(getArrayValues(), QueryParameterValue.TO_VALUE_PB_FUNCTION));
     }
     if (getStructValues() != null) {
-      Map<String, com.google.api.services.bigquery.model.QueryParameterValue> valueMap =
+      Map<String, com.google.api.services.bigquery.model.QueryParameterValue> structValues =
           new HashMap<>();
-      for (Map.Entry<String, QueryParameterValue> map : getStructValues().entrySet()) {
-        valueMap.put(map.getKey(), map.getValue().toValuePb());
+      for (Map.Entry<String, QueryParameterValue> structValue : getStructValues().entrySet()) {
+        structValues.put(structValue.getKey(), structValue.getValue().toValuePb());
       }
-      valuePb.setStructValues(valueMap);
+      valuePb.setStructValues(structValues);
     }
     return valuePb;
   }
@@ -505,11 +504,12 @@ public abstract class QueryParameterValue implements Serializable {
         for (QueryParameterType.StructTypes structType : typePb.getStructTypes()) {
           parameterTypes.put(structType.getName(), structType.getType());
         }
-        for (Map.Entry<String, com.google.api.services.bigquery.model.QueryParameterValue> entry :
-            valuePb.getStructValues().entrySet()) {
+        for (Map.Entry<String, com.google.api.services.bigquery.model.QueryParameterValue>
+            structValue : valuePb.getStructValues().entrySet()) {
           structValues.put(
-              entry.getKey(),
-              QueryParameterValue.fromPb(entry.getValue(), parameterTypes.get(entry.getKey())));
+              structValue.getKey(),
+              QueryParameterValue.fromPb(
+                  structValue.getValue(), parameterTypes.get(structValue.getKey())));
         }
         valueBuilder.setStructValues(structValues);
       }
