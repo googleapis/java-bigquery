@@ -488,7 +488,6 @@ public abstract class QueryParameterValue implements Serializable {
         valueBuilder.setArrayValues(arrayValues.build());
       }
     } else if (type == StandardSQLTypeName.STRUCT) {
-      Map<String, QueryParameterValue> structValues = new HashMap<>();
       Map<String, QueryParameterValue> structTypes = new HashMap<>();
       for (QueryParameterType.StructTypes types : typePb.getStructTypes()) {
         structTypes.put(
@@ -501,6 +500,7 @@ public abstract class QueryParameterValue implements Serializable {
       if (valuePb == null || valuePb.getStructValues() == null) {
         valueBuilder.setStructValues(ImmutableMap.<String, QueryParameterValue>of());
       } else {
+        Map<String, QueryParameterValue> structValues = new HashMap<>();
         for (QueryParameterType.StructTypes structType : typePb.getStructTypes()) {
           parameterTypes.put(structType.getName(), structType.getType());
         }
@@ -516,7 +516,6 @@ public abstract class QueryParameterValue implements Serializable {
     } else {
       valueBuilder.setValue(valuePb == null ? "" : valuePb.getValue());
     }
-
     return valueBuilder.build();
   }
 }
