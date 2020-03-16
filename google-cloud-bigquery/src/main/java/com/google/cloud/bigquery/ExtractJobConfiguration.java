@@ -318,15 +318,11 @@ public final class ExtractJobConfiguration extends JobConfiguration {
 
   @Override
   ExtractJobConfiguration setProjectId(String projectId) {
-    if (getSourceTable() != null) {
-      if (Strings.isNullOrEmpty(getSourceTable().getProject())) {
-        return toBuilder().setSourceTable(getSourceTable().setProjectId(projectId)).build();
-      }
+    if (getSourceTable() != null && Strings.isNullOrEmpty(getSourceTable().getProject())) {
+      return toBuilder().setSourceTable(getSourceTable().setProjectId(projectId)).build();
     }
-    if (getSourceModel() != null) {
-      if (Strings.isNullOrEmpty(getSourceModel().getProject())) {
-        return toBuilder().setSourceModel(getSourceModel().setProjectId(projectId)).build();
-      }
+    if (getSourceModel() != null && Strings.isNullOrEmpty(getSourceModel().getProject())) {
+      return toBuilder().setSourceModel(getSourceModel().setProjectId(projectId)).build();
     }
     return this;
   }
