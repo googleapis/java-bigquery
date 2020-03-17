@@ -145,7 +145,11 @@ public abstract class QueryParameterValue implements Serializable {
     public abstract Builder setArrayType(StandardSQLTypeName arrayType);
 
     /** Sets the data type of the struct elements. The type must set to STRUCT. */
-    abstract Builder setStructTypes(Map<String, QueryParameterValue> structTypes);
+    public Builder setStructTypes(Map<String, QueryParameterValue> structTypes) {
+      return setStructTypesInner(structTypes);
+    }
+
+    abstract Builder setStructTypesInner(Map<String, QueryParameterValue> structTypes);
 
     /** Creates a {@code QueryParameterValue} object. */
     public abstract QueryParameterValue build();
@@ -186,7 +190,12 @@ public abstract class QueryParameterValue implements Serializable {
 
   /** Returns the data type of the struct elements. */
   @Nullable
-  public abstract Map<String, QueryParameterValue> getStructTypes();
+  public Map<String, QueryParameterValue> getStructTypes() {
+    return getStructTypesInner();
+  }
+
+  @Nullable
+  abstract Map<String, QueryParameterValue> getStructTypesInner();
 
   /** Creates a {@code QueryParameterValue} object with the given value and type. */
   public static <T> QueryParameterValue of(T value, Class<T> type) {
