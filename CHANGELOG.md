@@ -1,5 +1,18 @@
 # Changelog
 
+### [1.108.2](https://www.github.com/googleapis/java-bigquery/compare/v1.108.1...v1.108.2) (2020-03-18)
+
+
+### Dependencies
+
+* update core dependencies ([#218](https://www.github.com/googleapis/java-bigquery/issues/218)) ([3573899](https://www.github.com/googleapis/java-bigquery/commit/3573899485431f57703c2dc1615df79a3a37d075))
+* update core dependencies to v1.93.3 ([#224](https://www.github.com/googleapis/java-bigquery/issues/224)) ([0338e39](https://www.github.com/googleapis/java-bigquery/commit/0338e397f61fc87d048f2869e5ee5bba2e584caa))
+* update dependency com.google.apis:google-api-services-bigquery to v2-rev20191211-1.30.9 ([#212](https://www.github.com/googleapis/java-bigquery/issues/212)) ([8475bd9](https://www.github.com/googleapis/java-bigquery/commit/8475bd9e39b5ec0ebbb43ab12beba43de3bff139))
+* update dependency com.google.cloud:google-cloud-storage to v1.105.1 ([#216](https://www.github.com/googleapis/java-bigquery/issues/216)) ([f4a1199](https://www.github.com/googleapis/java-bigquery/commit/f4a11991ae129ef1da2764b163d82838e59737ac))
+* update dependency com.google.cloud:google-cloud-storage to v1.105.2 ([#220](https://www.github.com/googleapis/java-bigquery/issues/220)) ([42f6529](https://www.github.com/googleapis/java-bigquery/commit/42f6529d54abdc91111187d026bd256905d7c83d))
+* update dependency com.google.cloud:google-cloud-storage to v1.106.0 ([#226](https://www.github.com/googleapis/java-bigquery/issues/226)) ([b78aa00](https://www.github.com/googleapis/java-bigquery/commit/b78aa00519c8af7777ef9015364d6b0259296170))
+* update dependency com.google.cloud.samples:shared-configuration to v1.0.12 ([#210](https://www.github.com/googleapis/java-bigquery/issues/210)) ([40a96a0](https://www.github.com/googleapis/java-bigquery/commit/40a96a0dcea2ec56e50479d92d02b58c8972ac36))
+
 ### [1.108.1](https://www.github.com/googleapis/java-bigquery/compare/v1.108.0...v1.108.1) (2020-03-03)
 
 
