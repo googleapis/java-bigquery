@@ -19,9 +19,7 @@ package com.google.cloud.bigquery;
 import com.google.common.base.MoreObjects;
 import java.util.Objects;
 
-/**
- * HivePartitioningOptions for currently supported types include: AVRO, CSV, JSON, ORC and Parquet.
- */
+/** HivePartitioningOptions currently supported types include: AVRO, CSV, JSON, ORC and Parquet. */
 public final class HivePartitioningOptions {
 
   private final String mode;
@@ -39,11 +37,28 @@ public final class HivePartitioningOptions {
       this.sourceUriPrefix = options.sourceUriPrefix;
     }
 
+    /**
+     * [Optional] When set, what mode of hive partitioning to use when reading data. Two modes are
+     * supported. (1) AUTO: automatically infer partition key name(s) and type(s). (2) STRINGS:
+     * automatically infer partition key name(s). All types are interpreted as strings. Not all
+     * storage formats support hive partitioning. Requesting hive partitioning on an unsupported
+     * format will lead to an error. Currently supported types include: AVRO, CSV, JSON, ORC and
+     * Parquet.
+     */
     public Builder setMode(String mode) {
       this.mode = mode;
       return this;
     }
 
+    /**
+     * [Optional] When hive partition detection is requested, a common prefix for all source uris
+     * should be supplied. The prefix must end immediately before the partition key encoding begins.
+     * For example, consider files following this data layout.
+     * gs://bucket/path_to_table/dt=2019-01-01/country=BR/id=7/file.avro
+     * gs://bucket/path_to_table/dt=2018-12-31/country=CA/id=3/file.avro When hive partitioning is
+     * requested with either AUTO or STRINGS detection, the common prefix can be either of
+     * gs://bucket/path_to_table or gs://bucket/path_to_table/ (trailing slash does not matter).
+     */
     public Builder setSourceUriPrefix(String sourceUriPrefix) {
       this.sourceUriPrefix = sourceUriPrefix;
       return this;
@@ -60,10 +75,12 @@ public final class HivePartitioningOptions {
     this.sourceUriPrefix = builder.sourceUriPrefix;
   }
 
+  /* Returns the mode of hive partitioning */
   public String getMode() {
     return mode;
   }
 
+  /* Returns the sourceUriPrefix of hive partitioning */
   public String getSourceUriPrefix() {
     return sourceUriPrefix;
   }
