@@ -1450,6 +1450,33 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testNestedStructNamedQueryParameters() throws InterruptedException {
+    QueryParameterValue booleanValue = QueryParameterValue.bool(true);
+    QueryParameterValue stringValue = QueryParameterValue.string("test-stringField-5");
+    QueryParameterValue integerValue = QueryParameterValue.int64(10);
+    Map<String, QueryParameterValue> struct = new HashMap<>();
+    struct.put("booleanField", booleanValue);
+    struct.put("integerField", integerValue);
+    struct.put("stringField", stringValue);
+    QueryParameterValue recordValue = QueryParameterValue.struct(struct);
+    Map<String, QueryParameterValue> structValue = new HashMap<>();
+    structValue.put("bool", booleanValue);
+    structValue.put("int", integerValue);
+    structValue.put("string", stringValue);
+    structValue.put("struct", recordValue);
+    QueryParameterValue nestedRecordField = QueryParameterValue.struct(structValue);
+    String query = "SELECT STRUCT(@nestedRecordField) AS record";
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query)
+            .setDefaultDataset(DATASET)
+            .setUseLegacySql(false)
+            .addNamedParameter("nestedRecordField", nestedRecordField)
+            .build();
+    TableResult result = bigquery.query(config);
+    assertEquals(1, Iterables.size(result.getValues()));
+  }
+
+  @Test
   public void testBytesParameter() throws Exception {
     String query = "SELECT BYTE_LENGTH(@p) AS length";
     QueryParameterValue bytesParameter = QueryParameterValue.bytes(new byte[] {1, 3});
