@@ -1431,7 +1431,7 @@ public class ITBigQueryTest {
   @Test
   public void testStructNamedQueryParameters() throws InterruptedException {
     QueryParameterValue booleanValue = QueryParameterValue.bool(true);
-    QueryParameterValue stringValue = QueryParameterValue.string("test-stringField-5");
+    QueryParameterValue stringValue = QueryParameterValue.string("test-stringField");
     QueryParameterValue integerValue = QueryParameterValue.int64(10);
     Map<String, QueryParameterValue> struct = new HashMap<>();
     struct.put("booleanField", booleanValue);
@@ -1447,12 +1447,22 @@ public class ITBigQueryTest {
             .build();
     TableResult result = bigquery.query(config);
     assertEquals(1, Iterables.size(result.getValues()));
+    for (FieldValueList values : result.iterateAll()) {
+      for (FieldValue value : values) {
+        for (FieldValue record : value.getRecordValue()) {
+          assertEquals(FieldValue.Attribute.RECORD, record.getAttribute());
+          assertEquals(true, record.getRecordValue().get(0).getBooleanValue());
+          assertEquals(10, record.getRecordValue().get(1).getLongValue());
+          assertEquals("test-stringField", record.getRecordValue().get(2).getStringValue());
+        }
+      }
+    }
   }
 
   @Test
   public void testNestedStructNamedQueryParameters() throws InterruptedException {
     QueryParameterValue booleanValue = QueryParameterValue.bool(true);
-    QueryParameterValue stringValue = QueryParameterValue.string("test-stringField-5");
+    QueryParameterValue stringValue = QueryParameterValue.string("test-stringField");
     QueryParameterValue integerValue = QueryParameterValue.int64(10);
     Map<String, QueryParameterValue> struct = new HashMap<>();
     struct.put("booleanField", booleanValue);
@@ -1474,6 +1484,22 @@ public class ITBigQueryTest {
             .build();
     TableResult result = bigquery.query(config);
     assertEquals(1, Iterables.size(result.getValues()));
+    for (FieldValueList values : result.iterateAll()) {
+      for (FieldValue value : values) {
+        assertEquals(FieldValue.Attribute.RECORD, value.getAttribute());
+        for (FieldValue record : value.getRecordValue()) {
+          assertEquals(
+              true, record.getRecordValue().get(0).getRecordValue().get(0).getBooleanValue());
+          assertEquals(10, record.getRecordValue().get(0).getRecordValue().get(1).getLongValue());
+          assertEquals(
+              "test-stringField",
+              record.getRecordValue().get(0).getRecordValue().get(2).getStringValue());
+          assertEquals(true, record.getRecordValue().get(1).getBooleanValue());
+          assertEquals("test-stringField", record.getRecordValue().get(2).getStringValue());
+          assertEquals(10, record.getRecordValue().get(3).getLongValue());
+        }
+      }
+    }
   }
 
   @Test
