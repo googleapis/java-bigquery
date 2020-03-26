@@ -32,7 +32,7 @@ gcloud auth activate-service-account \
 # Get the directory of the build script
 scriptDir=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 # Move into the samples directory
-cd ${scriptDir}/../samples/
+cd ${scriptDir}/../samples/snippets
 
 echo -e "\n******************** RUNNING SAMPLE TESTS ********************"
 
