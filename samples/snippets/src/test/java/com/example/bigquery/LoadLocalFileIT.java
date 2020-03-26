@@ -74,7 +74,7 @@ public class LoadLocalFileIT {
 
     CreateTable.createTable(BIGQUERY_DATASET_NAME, tableName, schema);
 
-    Path csvPath = FileSystems.getDefault().getPath("snippets/src/test/resources", "bigquery_noheader.csv");
+    Path csvPath = FileSystems.getDefault().getPath("src/test/resources", "bigquery_noheader.csv");
 
     LoadLocalFile.loadLocalFile(BIGQUERY_DATASET_NAME, tableName, csvPath);
 
