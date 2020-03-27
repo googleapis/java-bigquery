@@ -56,21 +56,6 @@
       <artifactId>google-cloud-bigquery</artifactId>
     </dependency>
     <!-- [END bigquery_install_with_bom] -->
-    <dependency>
-      <groupId>com.google.api</groupId>
-      <artifactId>gax</artifactId>
-      <version>1.54.0</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.cloud</groupId>
-      <artifactId>google-cloud-core</artifactId>
-      <version>1.93.3</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.auth</groupId>
-      <artifactId>google-auth-library-oauth2-http</artifactId>
-      <version>0.20.0</version>
-    </dependency>
 
     <!-- Test dependencies -->
     <dependency>
