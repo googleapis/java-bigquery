@@ -21,7 +21,10 @@ import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.QueryParameterValue;
 import com.google.cloud.bigquery.TableResult;
+import java.util.HashMap;
+import java.util.Map;
 
 public class QueryWithStructsParameters {
 
@@ -31,15 +34,28 @@ public class QueryWithStructsParameters {
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
-      String query = "SELECT [STRUCT(word AS w, word_count AS wc)]";
+      QueryParameterValue booleanValue = QueryParameterValue.bool(true);
+      QueryParameterValue stringValue = QueryParameterValue.string("test-stringField");
+      QueryParameterValue integerValue = QueryParameterValue.int64(10);
+      // Create struct
+      Map<String, QueryParameterValue> struct = new HashMap<>();
+      struct.put("booleanField", booleanValue);
+      struct.put("integerField", integerValue);
+      struct.put("stringField", stringValue);
+      QueryParameterValue recordValue = QueryParameterValue.struct(struct);
 
-      QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query)
-          //TODO: ADD IN STRUCT PARAM
-          .build();
+      String query = "SELECT STRUCT(@recordField) AS record";
+      QueryJobConfiguration queryConfig =
+          QueryJobConfiguration.newBuilder(query)
+              .setUseLegacySql(false)
+              .addNamedParameter("recordField", recordValue)
+              .build();
 
       TableResult results = bigquery.query(queryConfig);
 
-      results.iterateAll().forEach(row -> row.forEach(val-> System.out.printf("%s", val.toString())));
+      results
+          .iterateAll()
+          .forEach(row -> row.forEach(val -> System.out.printf("%s", val.toString())));
 
       System.out.println("Query with struct parameter performed successfully.");
     } catch (BigQueryException | InterruptedException e) {
