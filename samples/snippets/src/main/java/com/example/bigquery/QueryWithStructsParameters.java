@@ -34,14 +34,11 @@ public class QueryWithStructsParameters {
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
-      QueryParameterValue booleanValue = QueryParameterValue.bool(true);
-      QueryParameterValue stringValue = QueryParameterValue.string("test-stringField");
-      QueryParameterValue integerValue = QueryParameterValue.int64(10);
       // Create struct
       Map<String, QueryParameterValue> struct = new HashMap<>();
       struct.put("booleanField", QueryParameterValue.bool(true));
-      struct.put("integerField", integerValue);
-      struct.put("stringField", stringValue);
+      struct.put("integerField", QueryParameterValue.string("test-stringField"));
+      struct.put("stringField", QueryParameterValue.int64(10));
       QueryParameterValue recordValue = QueryParameterValue.struct(struct);
 
       String query = "SELECT STRUCT(@recordField) AS record";
