@@ -21,8 +21,8 @@ import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.Schema;
+import com.google.cloud.bigquery.StandardSQLTypeName;
 import com.google.cloud.bigquery.StandardTableDefinition;
 import com.google.cloud.bigquery.TableDefinition;
 import com.google.cloud.bigquery.TableId;
@@ -36,9 +36,8 @@ public class CreateTable {
     String tableName = "MY_TABLE_NAME";
     Schema schema =
         Schema.of(
-            // INFO: LegacySQLTypeName will be updated to StandardSQLTypeName in release 1.103.0
-            Field.of("stringField", LegacySQLTypeName.STRING),
-            Field.of("booleanField", LegacySQLTypeName.BOOLEAN));
+            Field.of("stringField", StandardSQLTypeName.STRING),
+            Field.of("booleanField", StandardSQLTypeName.BOOL));
     createTable(datasetName, tableName, schema);
   }
 

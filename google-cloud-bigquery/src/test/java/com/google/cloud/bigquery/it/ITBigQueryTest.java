@@ -32,6 +32,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.Date;
 import com.google.cloud.RetryOption;
+import com.google.cloud.ServiceOptions;
 import com.google.cloud.bigquery.Acl;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQuery.DatasetDeleteOption;
@@ -65,6 +66,7 @@ import com.google.cloud.bigquery.JobStatistics;
 import com.google.cloud.bigquery.JobStatistics.LoadStatistics;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.LoadJobConfiguration;
+import com.google.cloud.bigquery.MaterializedViewDefinition;
 import com.google.cloud.bigquery.Model;
 import com.google.cloud.bigquery.ModelId;
 import com.google.cloud.bigquery.ModelInfo;
@@ -134,6 +136,7 @@ public class ITBigQueryTest {
   private static final String OTHER_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String MODEL_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String ROUTINE_DATASET = RemoteBigQueryHelper.generateDatasetName();
+  private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
   private static final Map<String, String> LABELS =
       ImmutableMap.of(
           "example-label1", "example-value1",
@@ -209,6 +212,17 @@ public class ITBigQueryTest {
           NUMERIC_FIELD_SCHEMA);
   private static final Schema SIMPLE_SCHEMA = Schema.of(STRING_FIELD_SCHEMA);
   private static final Schema QUERY_RESULT_SCHEMA =
+      Schema.of(
+          Field.newBuilder("TimestampField", LegacySQLTypeName.TIMESTAMP)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("StringField", LegacySQLTypeName.STRING)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("BooleanField", LegacySQLTypeName.BOOLEAN)
+              .setMode(Field.Mode.NULLABLE)
+              .build());
+  private static final Schema VIEW_SCHEMA =
       Schema.of(
           Field.newBuilder("TimestampField", LegacySQLTypeName.TIMESTAMP)
               .setMode(Field.Mode.NULLABLE)
@@ -640,18 +654,7 @@ public class ITBigQueryTest {
     assertNotNull(remoteTable);
     assertEquals(createdTable.getTableId(), remoteTable.getTableId());
     assertTrue(remoteTable.getDefinition() instanceof ViewDefinition);
-    Schema expectedSchema =
-        Schema.of(
-            Field.newBuilder("TimestampField", LegacySQLTypeName.TIMESTAMP)
-                .setMode(Field.Mode.NULLABLE)
-                .build(),
-            Field.newBuilder("StringField", LegacySQLTypeName.STRING)
-                .setMode(Field.Mode.NULLABLE)
-                .build(),
-            Field.newBuilder("BooleanField", LegacySQLTypeName.BOOLEAN)
-                .setMode(Field.Mode.NULLABLE)
-                .build());
-    assertEquals(expectedSchema, remoteTable.getDefinition().getSchema());
+    assertEquals(VIEW_SCHEMA, remoteTable.getDefinition().getSchema());
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder("SELECT * FROM " + tableName)
             .setDefaultDataset(DatasetId.of(DATASET))
@@ -675,6 +678,30 @@ public class ITBigQueryTest {
       rowCount++;
     }
     assertEquals(2, rowCount);
+    assertTrue(remoteTable.delete());
+  }
+
+  @Test
+  public void testCreateMaterializedViewTable() {
+    String tableName = "test_materialized_view_table";
+    TableId tableId = TableId.of(DATASET, tableName);
+    MaterializedViewDefinition viewDefinition =
+        MaterializedViewDefinition.newBuilder(
+                String.format(
+                    "SELECT MAX(TimestampField) AS TimestampField,StringField, MAX(BooleanField) AS BooleanField FROM %s.%s.%s GROUP BY StringField",
+                    PROJECT_ID, DATASET, TABLE_ID.getTable()))
+            .build();
+    TableInfo tableInfo = TableInfo.of(tableId, viewDefinition);
+    Table createdTable = bigquery.create(tableInfo);
+    assertNotNull(createdTable);
+    assertEquals(DATASET, createdTable.getTableId().getDataset());
+    assertEquals(tableName, createdTable.getTableId().getTable());
+    Table remoteTable = bigquery.getTable(DATASET, tableName);
+    assertNotNull(remoteTable);
+    assertEquals(createdTable.getTableId(), remoteTable.getTableId());
+    assertEquals(createdTable.getTableId(), remoteTable.getTableId());
+    assertTrue(remoteTable.getDefinition() instanceof MaterializedViewDefinition);
+    assertEquals(VIEW_SCHEMA, remoteTable.getDefinition().getSchema());
     assertTrue(remoteTable.delete());
   }
 
@@ -1426,6 +1453,80 @@ public class ITBigQueryTest {
     TableResult result = bigquery.query(config);
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
     assertEquals(2, Iterables.size(result.getValues()));
+  }
+
+  @Test
+  public void testStructNamedQueryParameters() throws InterruptedException {
+    QueryParameterValue booleanValue = QueryParameterValue.bool(true);
+    QueryParameterValue stringValue = QueryParameterValue.string("test-stringField");
+    QueryParameterValue integerValue = QueryParameterValue.int64(10);
+    Map<String, QueryParameterValue> struct = new HashMap<>();
+    struct.put("booleanField", booleanValue);
+    struct.put("integerField", integerValue);
+    struct.put("stringField", stringValue);
+    QueryParameterValue recordValue = QueryParameterValue.struct(struct);
+    String query = "SELECT STRUCT(@recordField) AS record";
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query)
+            .setDefaultDataset(DATASET)
+            .setUseLegacySql(false)
+            .addNamedParameter("recordField", recordValue)
+            .build();
+    TableResult result = bigquery.query(config);
+    assertEquals(1, Iterables.size(result.getValues()));
+    for (FieldValueList values : result.iterateAll()) {
+      for (FieldValue value : values) {
+        for (FieldValue record : value.getRecordValue()) {
+          assertEquals(FieldValue.Attribute.RECORD, record.getAttribute());
+          assertEquals(true, record.getRecordValue().get(0).getBooleanValue());
+          assertEquals(10, record.getRecordValue().get(1).getLongValue());
+          assertEquals("test-stringField", record.getRecordValue().get(2).getStringValue());
+        }
+      }
+    }
+  }
+
+  @Test
+  public void testNestedStructNamedQueryParameters() throws InterruptedException {
+    QueryParameterValue booleanValue = QueryParameterValue.bool(true);
+    QueryParameterValue stringValue = QueryParameterValue.string("test-stringField");
+    QueryParameterValue integerValue = QueryParameterValue.int64(10);
+    Map<String, QueryParameterValue> struct = new HashMap<>();
+    struct.put("booleanField", booleanValue);
+    struct.put("integerField", integerValue);
+    struct.put("stringField", stringValue);
+    QueryParameterValue recordValue = QueryParameterValue.struct(struct);
+    Map<String, QueryParameterValue> structValue = new HashMap<>();
+    structValue.put("bool", booleanValue);
+    structValue.put("int", integerValue);
+    structValue.put("string", stringValue);
+    structValue.put("struct", recordValue);
+    QueryParameterValue nestedRecordField = QueryParameterValue.struct(structValue);
+    String query = "SELECT STRUCT(@nestedRecordField) AS record";
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query)
+            .setDefaultDataset(DATASET)
+            .setUseLegacySql(false)
+            .addNamedParameter("nestedRecordField", nestedRecordField)
+            .build();
+    TableResult result = bigquery.query(config);
+    assertEquals(1, Iterables.size(result.getValues()));
+    for (FieldValueList values : result.iterateAll()) {
+      for (FieldValue value : values) {
+        assertEquals(FieldValue.Attribute.RECORD, value.getAttribute());
+        for (FieldValue record : value.getRecordValue()) {
+          assertEquals(
+              true, record.getRecordValue().get(0).getRecordValue().get(0).getBooleanValue());
+          assertEquals(10, record.getRecordValue().get(0).getRecordValue().get(1).getLongValue());
+          assertEquals(
+              "test-stringField",
+              record.getRecordValue().get(0).getRecordValue().get(2).getStringValue());
+          assertEquals(true, record.getRecordValue().get(1).getBooleanValue());
+          assertEquals("test-stringField", record.getRecordValue().get(2).getStringValue());
+          assertEquals(10, record.getRecordValue().get(3).getLongValue());
+        }
+      }
+    }
   }
 
   @Test

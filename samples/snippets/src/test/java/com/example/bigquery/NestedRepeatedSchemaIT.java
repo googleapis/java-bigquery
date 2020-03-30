@@ -21,12 +21,13 @@ import static junit.framework.TestCase.assertNotNull;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.UUID;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class LoadPartitionedTableIT {
+public class NestedRepeatedSchemaIT {
   private ByteArrayOutputStream bout;
   private PrintStream out;
 
@@ -56,15 +57,12 @@ public class LoadPartitionedTableIT {
   }
 
   @Test
-  public void loadPartitionedTable() throws Exception {
-    String sourceUri = "gs://cloud-samples-data/bigquery/us-states/us-states-by-date-no-header.csv";
-
-    String tableName = "LOAD_PARTITIONED_TABLE_TEST";
-
-    LoadPartitionedTable.loadPartitionedTable(BIGQUERY_DATASET_NAME, tableName, sourceUri);
+  public void createTableWithNestedRepeatedSchema() {
+    String tableName = "NESTED_REPEATED_" + UUID.randomUUID().toString().replace("-", "_");
+    NestedRepeatedSchema.createTableWithNestedRepeatedSchema(BIGQUERY_DATASET_NAME, tableName);
 
     assertThat(bout.toString())
-        .contains("Data successfully loaded into time partitioned table during load job");
+        .contains("Table with nested and repeated schema created successfully");
 
     // Clean up
     DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, tableName);

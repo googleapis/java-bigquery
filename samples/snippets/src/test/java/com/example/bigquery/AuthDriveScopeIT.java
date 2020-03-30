@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Google LLC
+ * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,22 +18,19 @@ package com.example.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.LegacySQLTypeName;
-import com.google.cloud.bigquery.Schema;
-import com.google.cloud.bigquery.testing.RemoteBigQueryHelper;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class CreateTableIT {
+public class AuthDriveScopeIT {
   private ByteArrayOutputStream bout;
   private PrintStream out;
 
   @Before
-  public void setUp() {
+  public void setUp() throws Exception {
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
     System.setOut(out);
@@ -45,23 +42,8 @@ public class CreateTableIT {
   }
 
   @Test
-  public void testCreateTable() {
-    String generatedDatasetName = RemoteBigQueryHelper.generateDatasetName();
-
-    // Create a new dataset to create a table in
-    CreateDataset.createDataset(generatedDatasetName);
-
-    // Create an empty table with specific schema in the dataset just created
-    String tableName = "MY_TABLE_NAME";
-    Schema schema =
-        Schema.of(
-            Field.of("stringField", LegacySQLTypeName.STRING),
-            Field.of("booleanField", LegacySQLTypeName.BOOLEAN));
-    CreateTable.createTable(generatedDatasetName, tableName, schema);
-
-    assertThat(bout.toString()).contains("Table created successfully");
-
-    // Clean up
-    DeleteTable.deleteTable(generatedDatasetName, tableName);
+  public void setAuthDriveScope() throws IOException {
+    AuthDriveScope.setAuthDriveScope();
+    assertThat(bout.toString()).contains("Auth succeeded with multiple scopes.");
   }
 }
