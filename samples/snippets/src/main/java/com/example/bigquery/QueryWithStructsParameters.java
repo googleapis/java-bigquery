@@ -39,7 +39,7 @@ public class QueryWithStructsParameters {
       QueryParameterValue integerValue = QueryParameterValue.int64(10);
       // Create struct
       Map<String, QueryParameterValue> struct = new HashMap<>();
-      struct.put("booleanField", booleanValue);
+      struct.put("booleanField", QueryParameterValue.bool(true));
       struct.put("integerField", integerValue);
       struct.put("stringField", stringValue);
       QueryParameterValue recordValue = QueryParameterValue.struct(struct);
