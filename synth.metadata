@@ -1,12 +1,18 @@
 {
-  "updateTime": "2020-03-25T16:37:15.579976Z",
   "sources": [
+    {
+      "git": {
+        "name": ".",
+        "remote": "https://github.com/googleapis/java-bigquery.git",
+        "sha": "3afaf8a0cabacfc0cb01ce6a033bd666e0dfce24"
+      }
+    },
     {
       "git": {
         "name": "synthtool",
         "remote": "https://github.com/googleapis/synthtool.git",
-        "sha": "e36822bfa0acb355502dab391b8ef9c4f30208d8",
-        "log": "e36822bfa0acb355502dab391b8ef9c4f30208d8\nchore(java): treat samples shared configuration dependency update as chore (#457)\n\n\n1b4cc80a7aaf164f6241937dd87f3bd1f4149e0c\nfix: do not run node 8 CI (#456)\n\n\n"
+        "sha": "3df869dd6eb546ef13beeb7a9efa6ee0226afafd",
+        "log": "3df869dd6eb546ef13beeb7a9efa6ee0226afafd\nci: add dependency list completeness check (#490)\n\n\n682c0c37d1054966ca662a44259e96cc7aea4413\nbuild(nodejs): update lint ignore rules (#488)\n\n\n97c7ccfdceb927db1cbe6f3bb09616aa02bafd89\ndoc: document context-aware commit flags (#481)\n\nAlso, delete obsolete blurb about cleaning up old, dead files.\n\nCo-authored-by: Jeff Ching <chingor@google.com>\n8eff3790f88b50706a0c4b6a20b385f24e9ac4e7\nfeat: common postprocessing for node libraries (#485)\n\nCo-authored-by: Justin Beckwith <justin.beckwith@gmail.com>\n21c3b57ae54ae9db6a3a6b48b31c970c6ab56f19\nbuild(nodejs): remove unused codecov config (#486)\n\n\n6f32150677c9784f3c3a7e1949472bd29c9d72c5\nfix: installs test_utils from its common repo (#480)\n\n\n74ce986d3b5431eb66985e9a00c4eb45295a4020\nfix: stop recording update_time in synth.metadata (#478)\n\n\n7f8e62aa3edd225f76347a16f92e400661fdfb52\nchore(java): release-please only updates non maven versions in README (#476)\n\nPrevent release-please and synthtool from fighting over the released library version. Synthtool updates the install snippets from the samples pom.xml files so the bots fight if they are temporarily out of sync after a release.\n"
       }
     }
   ]
