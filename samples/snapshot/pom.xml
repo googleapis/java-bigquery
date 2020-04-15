@@ -40,7 +40,7 @@
   </properties>
 
   <dependencies>
-    <!-- {x-version-update-start::current} -->
+    <!-- {x-version-update-start:google-cloud-bigquery:current} -->
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-bigquery</artifactId>
