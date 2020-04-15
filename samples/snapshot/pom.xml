@@ -39,12 +39,12 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-  <!-- {x-version-update-start::current} -->
   <dependencies>
+    <!-- {x-version-update-start::current} -->
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-bigquery</artifactId>
-      <version>1.110.2-SNAPSHOT</version>
+      <version>1.110.1</version>
     </dependency>
 
     <!-- Test dependencies -->
