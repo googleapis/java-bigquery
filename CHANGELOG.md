@@ -1,5 +1,13 @@
 # Changelog
 
+### [1.110.2](https://www.github.com/googleapis/java-bigquery/compare/v1.110.1...v1.110.2) (2020-04-15)
+
+
+### Dependencies
+
+* update dependency com.google.cloud:google-cloud-storage to v1.107.0 ([#273](https://www.github.com/googleapis/java-bigquery/issues/273)) ([6ef0502](https://www.github.com/googleapis/java-bigquery/commit/6ef0502ebb9ba56c896e028ca884efadbdce3303))
+* update dependency com.google.guava:guava-bom to v29 ([#267](https://www.github.com/googleapis/java-bigquery/issues/267)) ([a115c6b](https://www.github.com/googleapis/java-bigquery/commit/a115c6b5ed2c391f4837936f28467b67f323900a))
+
 ### [1.110.1](https://www.github.com/googleapis/java-bigquery/compare/v1.110.0...v1.110.1) (2020-04-06)
 
 
