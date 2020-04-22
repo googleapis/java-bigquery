@@ -72,7 +72,6 @@
     <junit.version>4.13</junit.version>
     <guava.version>29.0-android</guava.version>
     <threeten.version>1.4.3</threeten.version>
-    <javax.annotations.version>1.3.2</javax.annotations.version>
     <animal-sniffer.version>1.18</animal-sniffer.version>
     <google-api-services-bigquery.version>v2-rev20200324-1.30.9
     </google-api-services-bigquery.version>
@@ -160,11 +159,6 @@
         <groupId>org.threeten</groupId>
         <artifactId>threetenbp</artifactId>
         <version>${threeten.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>javax.annotation</groupId>
-        <artifactId>javax.annotation-api</artifactId>
-        <version>${javax.annotations.version}</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.mojo</groupId>
