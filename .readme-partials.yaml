@@ -16,7 +16,7 @@ custom_content: |
 
   #### Creating a table
   With BigQuery you can create different types of tables: normal tables with an associated schema,
-  external tables backed by data stored on [Google Cloud Storage][cloud-storage] and view tables that
+  external tables backed by data stored on [Google Cloud Storage](https://cloud.google.com/storage/) and view tables that
   are created from a BigQuery SQL query. In this code snippet we show how to create a normal table
   with only one string field. Add the following imports at the top of your file:
 
