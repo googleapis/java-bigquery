@@ -142,8 +142,10 @@ public class ITBigQueryTest {
       ImmutableMap.of(
           "example-label1", "example-value1",
           "example-label2", "example-value2");
-  private static final String sampleTag = String.format("projects/%s/locations/us/taxonomies/1/policyTags/2", PROJECT_ID);
-  private static final PolicyTags POLICY_TAGS = PolicyTags.newBuilder().setNames(ImmutableList.of(sampleTag)).build();
+  private static final String sampleTag =
+      String.format("projects/%s/locations/us/taxonomies/1/policyTags/2", PROJECT_ID);
+  private static final PolicyTags POLICY_TAGS =
+      PolicyTags.newBuilder().setNames(ImmutableList.of(sampleTag)).build();
   private static final Field TIMESTAMP_FIELD_SCHEMA =
       Field.newBuilder("TimestampField", LegacySQLTypeName.TIMESTAMP)
           .setMode(Field.Mode.NULLABLE)
@@ -201,7 +203,7 @@ public class ITBigQueryTest {
           .setMode(Field.Mode.NULLABLE)
           .setDescription("NumericDescription")
           .build();
-  private static final Field STRING_FIELD_SCHEMA_WITH_POLICY = 
+  private static final Field STRING_FIELD_SCHEMA_WITH_POLICY =
       Field.newBuilder("StringFieldWithPolicy", LegacySQLTypeName.STRING)
           .setMode(Field.Mode.NULLABLE)
           .setDescription("field has a policy")
@@ -220,10 +222,8 @@ public class ITBigQueryTest {
           GEOGRAPHY_FIELD_SCHEMA,
           NUMERIC_FIELD_SCHEMA);
   private static final Schema SIMPLE_SCHEMA = Schema.of(STRING_FIELD_SCHEMA);
-  private static final Schema POLICY_SCHEMA = Schema.of(
-          STRING_FIELD_SCHEMA,
-          STRING_FIELD_SCHEMA_WITH_POLICY,
-          INTEGER_FIELD_SCHEMA);
+  private static final Schema POLICY_SCHEMA =
+      Schema.of(STRING_FIELD_SCHEMA, STRING_FIELD_SCHEMA_WITH_POLICY, INTEGER_FIELD_SCHEMA);
   private static final Schema QUERY_RESULT_SCHEMA =
       Schema.of(
           Field.newBuilder("TimestampField", LegacySQLTypeName.TIMESTAMP)
@@ -532,15 +532,11 @@ public class ITBigQueryTest {
     TableId tableId = TableId.of(DATASET, tableName);
     try {
       StandardTableDefinition tableDefinition =
-          StandardTableDefinition.newBuilder()
-              .setSchema(POLICY_SCHEMA)
-              .build();
+          StandardTableDefinition.newBuilder().setSchema(POLICY_SCHEMA).build();
       Table createdTable = bigquery.create(TableInfo.of(tableId, tableDefinition));
       assertNotNull(createdTable);
       Table remoteTable = bigquery.getTable(DATASET, tableName);
-      assertEquals(
-          POLICY_SCHEMA,
-          remoteTable.<StandardTableDefinition>getDefinition().getSchema());
+      assertEquals(POLICY_SCHEMA, remoteTable.<StandardTableDefinition>getDefinition().getSchema());
     } finally {
       bigquery.delete(tableId);
     }

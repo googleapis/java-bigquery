@@ -58,7 +58,8 @@ public abstract class PolicyTags implements Serializable {
     return tagPb;
   }
 
-  static PolicyTags fromPb(com.google.api.services.bigquery.model.TableFieldSchema.PolicyTags tagPb) {
+  static PolicyTags fromPb(
+      com.google.api.services.bigquery.model.TableFieldSchema.PolicyTags tagPb) {
     return newBuilder().setNames(tagPb.getNames()).build();
   }
 }

@@ -25,7 +25,7 @@ import org.junit.Test;
 
 public class SchemaTest {
 
-  private static PolicyTags POLICY_TAGS = 
+  private static PolicyTags POLICY_TAGS =
       PolicyTags.newBuilder().setNames(ImmutableList.of("someTag")).build();
 
   private static final Field FIELD_SCHEMA1 =
@@ -44,7 +44,7 @@ public class SchemaTest {
           .setMode(Field.Mode.REQUIRED)
           .setDescription("FieldDescription3")
           .build();
-      
+
   private static final List<Field> FIELDS =
       ImmutableList.of(FIELD_SCHEMA1, FIELD_SCHEMA2, FIELD_SCHEMA3);
   private static final Schema TABLE_SCHEMA = Schema.of(FIELDS);
