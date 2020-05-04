@@ -1,5 +1,20 @@
 # Changelog
 
+### [1.111.2](https://www.github.com/googleapis/java-bigquery/compare/v1.111.1...v1.111.2) (2020-05-04)
+
+
+### Bug Fixes
+
+* null type in timepartitioning frompb ([#305](https://www.github.com/googleapis/java-bigquery/issues/305)) ([6315842](https://www.github.com/googleapis/java-bigquery/commit/6315842dfa62a433a1ba507b861cf96a3d7cb03d))
+
+
+### Dependencies
+
+* update core transport dependencies to v1.35.0 ([#298](https://www.github.com/googleapis/java-bigquery/issues/298)) ([95f9443](https://www.github.com/googleapis/java-bigquery/commit/95f9443fad2f561df8f8108c3e323729d8195d46))
+* update dependency com.google.apis:google-api-services-bigquery to v2-rev20200415-1.30.9 ([#307](https://www.github.com/googleapis/java-bigquery/issues/307)) ([fccb0b4](https://www.github.com/googleapis/java-bigquery/commit/fccb0b4d08b41e4836ac9490befca47306f14afd))
+* update dependency com.google.auto.value:auto-value to v1.7.1 ([#308](https://www.github.com/googleapis/java-bigquery/issues/308)) ([5a0ed06](https://www.github.com/googleapis/java-bigquery/commit/5a0ed060eb2c966092af66bfae2896ea8af70c7e))
+* update dependency org.threeten:threetenbp to v1.4.4 ([#293](https://www.github.com/googleapis/java-bigquery/issues/293)) ([21d0c58](https://www.github.com/googleapis/java-bigquery/commit/21d0c588d61ded31cb45ff10bf7824f8203c9314))
+
 ### [1.111.2](https://www.github.com/googleapis/java-bigquery/compare/v1.111.1...v1.111.2) (2020-04-29)
 
 
