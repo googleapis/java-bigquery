@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.112.0](https://www.github.com/googleapis/java-bigquery/compare/v1.111.3...v1.112.0) (2020-05-05)
+
+
+### Features
+
+* add support connection properties for job and query ([#320](https://www.github.com/googleapis/java-bigquery/issues/320)) ([dcd3663](https://www.github.com/googleapis/java-bigquery/commit/dcd366373f5804da1e8226c110e89c3de5749926))
+
+
+### Dependencies
+
+* update dependency com.google.api.grpc:proto-google-common-protos to v1.18.0 ([#318](https://www.github.com/googleapis/java-bigquery/issues/318)) ([3dade31](https://www.github.com/googleapis/java-bigquery/commit/3dade31ce828322753dd40f90e2e019cad40f83a))
+* update dependency com.google.cloud:google-cloud-storage to v1.108.0 ([#317](https://www.github.com/googleapis/java-bigquery/issues/317)) ([63563e6](https://www.github.com/googleapis/java-bigquery/commit/63563e646e85a6caa1eb28819be9fad0083100d7))
+
+### [1.111.3](https://www.github.com/googleapis/java-bigquery/compare/v1.111.2...v1.111.3) (2020-05-04)
+
+
+### Bug Fixes
+
+* null type in timepartitioning frompb ([#305](https://www.github.com/googleapis/java-bigquery/issues/305)) ([6315842](https://www.github.com/googleapis/java-bigquery/commit/6315842dfa62a433a1ba507b861cf96a3d7cb03d))
+
+
+### Dependencies
+
+* update dependency com.google.apis:google-api-services-bigquery to v2-rev20200415-1.30.9 ([#307](https://www.github.com/googleapis/java-bigquery/issues/307)) ([fccb0b4](https://www.github.com/googleapis/java-bigquery/commit/fccb0b4d08b41e4836ac9490befca47306f14afd))
+* update dependency com.google.auto.value:auto-value to v1.7.1 ([#308](https://www.github.com/googleapis/java-bigquery/issues/308)) ([5a0ed06](https://www.github.com/googleapis/java-bigquery/commit/5a0ed060eb2c966092af66bfae2896ea8af70c7e))
+
 ### [1.111.2](https://www.github.com/googleapis/java-bigquery/compare/v1.111.1...v1.111.2) (2020-04-29)
 
 
