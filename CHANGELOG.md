@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.111.4](https://www.github.com/googleapis/java-bigquery/compare/v1.111.3...v1.111.4) (2020-05-05)
+
+
+### Dependencies
+
+* update dependency com.google.api.grpc:proto-google-common-protos to v1.18.0 ([#318](https://www.github.com/googleapis/java-bigquery/issues/318)) ([3dade31](https://www.github.com/googleapis/java-bigquery/commit/3dade31ce828322753dd40f90e2e019cad40f83a))
+
 ### [1.111.3](https://www.github.com/googleapis/java-bigquery/compare/v1.111.2...v1.111.3) (2020-05-04)
 
 
