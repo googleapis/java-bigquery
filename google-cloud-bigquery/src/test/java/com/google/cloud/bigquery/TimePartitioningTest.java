@@ -92,7 +92,8 @@ public class TimePartitioningTest {
 
   @Test
   public void testToAndFromPb() {
-    compareTimePartitioning(TIME_PARTITIONING_DAY, TimePartitioning.fromPb(TIME_PARTITIONING_DAY.toPb()));
+    compareTimePartitioning(
+        TIME_PARTITIONING_DAY, TimePartitioning.fromPb(TIME_PARTITIONING_DAY.toPb()));
     TimePartitioning partitioning = TimePartitioning.of(TYPE_DAY);
     compareTimePartitioning(partitioning, TimePartitioning.fromPb(partitioning.toPb()));
   }
