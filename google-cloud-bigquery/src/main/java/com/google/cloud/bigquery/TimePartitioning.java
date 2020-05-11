@@ -38,8 +38,8 @@ public abstract class TimePartitioning implements Serializable {
 
   /**
    * The supported types are DAY, which will generate one partition per day, and HOUR, which will
-   * generate one partition per hour. (-- Providing an empty string used to cause an error, but in
-   * OnePlatform the field will be treated as unset. --)
+   * generate one partition per hour. (Providing an empty string used to cause an error, but in
+   * OnePlatform the field will be treated as unset.)
    */
   public enum Type {
 
