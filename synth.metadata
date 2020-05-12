@@ -3,15 +3,15 @@
     {
       "git": {
         "name": ".",
-        "remote": "https://github.com/googleapis/java-bigquery.git",
-        "sha": "9e8cd76759e584d743a1d5c310d8cd7299b3a39d"
+        "remote": "git@github.com:stephaniewang526/java-bigquery.git",
+        "sha": "d41369fa2a4f55ba5407799bf1d19b5f96d9620a"
       }
     },
     {
       "git": {
         "name": "synthtool",
         "remote": "https://github.com/googleapis/synthtool.git",
-        "sha": "716f741f2d307b48cbe8a5bc3bc883571212344a"
+        "sha": "98c50772ec23295c64cf0d2ddf199ea52961fd4c"
       }
     }
   ]
