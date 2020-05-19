@@ -24,8 +24,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -63,8 +63,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryImplTest {
@@ -1421,7 +1420,7 @@ public class BigQueryImplTest {
     when(bigqueryRpcMock.create(jobCapture.capture(), eq(EMPTY_RPC_OPTIONS)))
         .thenThrow(new BigQueryException(409, "already exists, for some reason"));
     when(bigqueryRpcMock.getJob(
-            Mockito.anyString(), eq(id), eq((String) null), eq(EMPTY_RPC_OPTIONS)))
+            any(String.class), eq(id), eq((String) null), eq(EMPTY_RPC_OPTIONS)))
         .thenReturn(newJobPb());
 
     bigquery = options.getService();
@@ -1429,7 +1428,7 @@ public class BigQueryImplTest {
     assertThat(jobCapture.getValue().getJobReference().getJobId()).isEqualTo(id);
     verify(bigqueryRpcMock).create(jobCapture.capture(), eq(EMPTY_RPC_OPTIONS));
     verify(bigqueryRpcMock)
-        .getJob(Mockito.anyString(), eq(id), eq((String) null), eq(EMPTY_RPC_OPTIONS));
+        .getJob(any(String.class), eq(id), eq((String) null), eq(EMPTY_RPC_OPTIONS));
   }
 
   @Test
@@ -1774,6 +1773,8 @@ public class BigQueryImplTest {
             .setConfiguration(QUERY_JOB_CONFIGURATION_FOR_QUERY.toPb())
             .setJobReference(queryJob.toPb())
             .setId(JOB);
+    jobResponsePb1.setStatus(
+        new com.google.api.services.bigquery.model.JobStatus().setState("DONE"));
     jobResponsePb1.getConfiguration().getQuery().setDestinationTable(TABLE_ID.toPb());
 
     GetQueryResultsResponse responsePb1 =
@@ -1793,9 +1794,6 @@ public class BigQueryImplTest {
     when(bigqueryRpcMock.create(
             JOB_INFO.toPb(), Collections.<BigQueryRpc.Option, Object>emptyMap()))
         .thenReturn(jobResponsePb1);
-    when(bigqueryRpcMock.getJob(eq(PROJECT), eq(JOB), Mockito.anyString(), any(Map.class)))
-        .thenReturn(jobResponsePb1);
-
     when(bigqueryRpcMock.getQueryResults(
             PROJECT, JOB, null, BigQueryImpl.optionMap(Job.DEFAULT_QUERY_WAIT_OPTIONS)))
         .thenReturn(responsePb1);
@@ -1820,7 +1818,6 @@ public class BigQueryImplTest {
     }
     verify(bigqueryRpcMock)
         .create(JOB_INFO.toPb(), Collections.<BigQueryRpc.Option, Object>emptyMap());
-    verify(bigqueryRpcMock).getJob(eq(PROJECT), eq(JOB), Mockito.anyString(), any(Map.class));
     verify(bigqueryRpcMock)
         .getQueryResults(
             PROJECT, JOB, null, BigQueryImpl.optionMap(Job.DEFAULT_QUERY_WAIT_OPTIONS));

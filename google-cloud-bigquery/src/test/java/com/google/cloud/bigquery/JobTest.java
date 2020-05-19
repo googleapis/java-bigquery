@@ -23,8 +23,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -42,8 +42,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.junit.MockitoRule;
-import org.mockito.runners.MockitoJUnitRunner;
 import org.threeten.bp.Duration;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -254,10 +254,10 @@ public class JobTest {
             .build();
 
     JobStatus status = mock(JobStatus.class);
-    when(status.getState()).thenReturn(JobStatus.State.RUNNING);
     when(bigquery.getOptions()).thenReturn(mockOptions);
     when(mockOptions.getClock()).thenReturn(CurrentMillisClock.getDefaultClock());
-    Job completedJob = expectedJob.toBuilder().setStatus(status).build();
+    Job completedJob =
+        expectedJob.toBuilder().setStatus(new JobStatus(JobStatus.State.RUNNING)).build();
     QueryResponse completedQuery =
         QueryResponse.newBuilder()
             .setCompleted(true)
@@ -301,10 +301,10 @@ public class JobTest {
             .build();
 
     JobStatus status = mock(JobStatus.class);
-    when(status.getState()).thenReturn(JobStatus.State.RUNNING);
     when(bigquery.getOptions()).thenReturn(mockOptions);
     when(mockOptions.getClock()).thenReturn(CurrentMillisClock.getDefaultClock());
-    Job completedJob = expectedJob.toBuilder().setStatus(status).build();
+    Job completedJob =
+        expectedJob.toBuilder().setStatus(new JobStatus(JobStatus.State.RUNNING)).build();
     // TODO(pongad): remove when we bump gax to 1.15.
     Page<FieldValueList> singlePage =
         new Page<FieldValueList>() {
