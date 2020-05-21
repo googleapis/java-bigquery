@@ -96,6 +96,8 @@ public class BigtableOptionsTest {
     assertThat(expected.getQualifierEncoded()).isEqualTo(value.getQualifierEncoded());
     assertThat(expected.getOnlyReadLatest()).isEqualTo(value.getOnlyReadLatest());
     assertThat(expected.getType()).isEqualTo(value.getType());
+    assertThat(expected.toString()).isEqualTo(value.toString());
+    assertThat(expected.hashCode()).isEqualTo(value.hashCode());
   }
 
   private void compareBigtableColumnFamily(
@@ -106,6 +108,8 @@ public class BigtableOptionsTest {
     assertThat(expected.getColumns()).isEqualTo(value.getColumns());
     assertThat(expected.getEncoding()).isEqualTo(value.getEncoding());
     assertThat(expected.getType()).isEqualTo(value.getType());
+    assertThat(expected.toString()).isEqualTo(value.toString());
+    assertThat(expected.hashCode()).isEqualTo(value.hashCode());
   }
 
   private void compareBigtableOptions(BigtableOptions expected, BigtableOptions value) {
