@@ -35,7 +35,7 @@ public class UpdateTableExpiration {
   }
 
   public static void updateTableExpiration(String datasetName, String tableName,
-       Long newExpiration) {
+     Long newExpiration) {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
