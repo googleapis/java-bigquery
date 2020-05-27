@@ -158,6 +158,7 @@ public class QueryStageTest {
   @Test
   public void testNotEquals() {
     assertNotEquals(QUERY_STAGE, QUERY_STEP1);
+    assertNotEquals(QUERY_STEP1, QUERY_STAGE);
   }
 
   private void compareQueryStage(QueryStage expected, QueryStage value) {

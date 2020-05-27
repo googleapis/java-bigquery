@@ -80,6 +80,7 @@ public class QueryJobConfigurationTest {
   private static final boolean FLATTEN_RESULTS = true;
   private static final boolean USE_LEGACY_SQL = true;
   private static final Integer MAX_BILLING_TIER = 123;
+  private static final Long MAX_BYTES_BILL = 12345L;
   private static final List<SchemaUpdateOption> SCHEMA_UPDATE_OPTIONS =
       ImmutableList.of(SchemaUpdateOption.ALLOW_FIELD_RELAXATION);
   private static final List<UserDefinedFunction> USER_DEFINED_FUNCTIONS =
@@ -111,6 +112,7 @@ public class QueryJobConfigurationTest {
           .setDryRun(true)
           .setUseLegacySql(USE_LEGACY_SQL)
           .setMaximumBillingTier(MAX_BILLING_TIER)
+          .setMaximumBytesBilled(MAX_BYTES_BILL)
           .setSchemaUpdateOptions(SCHEMA_UPDATE_OPTIONS)
           .setDestinationEncryptionConfiguration(JOB_ENCRYPTION_CONFIGURATION)
           .setTimePartitioning(TIME_PARTITIONING)
@@ -203,6 +205,7 @@ public class QueryJobConfigurationTest {
     assertEquals(expected.getWriteDisposition(), value.getWriteDisposition());
     assertEquals(expected.useLegacySql(), value.useLegacySql());
     assertEquals(expected.getMaximumBillingTier(), value.getMaximumBillingTier());
+    assertEquals(expected.getMaximumBytesBilled(), value.getMaximumBytesBilled());
     assertEquals(expected.getSchemaUpdateOptions(), value.getSchemaUpdateOptions());
     assertEquals(
         expected.getDestinationEncryptionConfiguration(),
