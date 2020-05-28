@@ -97,6 +97,14 @@ public class QueryJobConfigurationTest {
       RangePartitioning.Range.newBuilder().setStart(1L).setInterval(2L).setEnd(10L).build();
   private static final RangePartitioning RANGE_PARTITIONING =
       RangePartitioning.newBuilder().setField("IntegerField").setRange(RANGE).build();
+  private static final QueryParameterValue STRING_PARAMETER =
+      QueryParameterValue.string("stringValue");
+  private static final QueryParameterValue TIMESTAMP_PARAMETER =
+      QueryParameterValue.timestamp("2014-01-01 07:00:00.000000+00:00");
+  private static final List<QueryParameterValue> POSITIONAL_PARAMETER =
+      ImmutableList.of(STRING_PARAMETER, TIMESTAMP_PARAMETER);
+  private static final Map<String, QueryParameterValue> NAME_PARAMETER =
+      ImmutableMap.of("string", STRING_PARAMETER, "timestamp", TIMESTAMP_PARAMETER);
   private static final QueryJobConfiguration QUERY_JOB_CONFIGURATION =
       QueryJobConfiguration.newBuilder(QUERY)
           .setUseQueryCache(USE_QUERY_CACHE)
@@ -121,6 +129,19 @@ public class QueryJobConfigurationTest {
           .setLabels(LABELS)
           .setRangePartitioning(RANGE_PARTITIONING)
           .setConnectionProperties(CONNECTION_PROPERTIES)
+          .setPositionalParameters(POSITIONAL_PARAMETER)
+          .build();
+  private static final QueryJobConfiguration QUERY_JOB_CONFIGURATION_ADD_POSITIONAL_PARAMETER =
+      QUERY_JOB_CONFIGURATION
+          .toBuilder()
+          .setPositionalParameters(ImmutableList.<QueryParameterValue>of())
+          .addPositionalParameter(STRING_PARAMETER)
+          .build();
+  private static final QueryJobConfiguration QUERY_JOB_CONFIGURATION_SET_NAME_PARAMETER =
+      QUERY_JOB_CONFIGURATION
+          .toBuilder()
+          .setPositionalParameters(ImmutableList.<QueryParameterValue>of())
+          .setNamedParameters(NAME_PARAMETER)
           .build();
 
   @Test
@@ -156,6 +177,8 @@ public class QueryJobConfigurationTest {
     assertNotNull(QUERY_JOB_CONFIGURATION.getLabels());
     assertNotNull(QUERY_JOB_CONFIGURATION.getRangePartitioning());
     assertNotNull(QUERY_JOB_CONFIGURATION.getConnectionProperties());
+    assertNotNull(QUERY_JOB_CONFIGURATION.getPositionalParameters());
+    assertNotNull(QUERY_JOB_CONFIGURATION.getNamedParameters());
     compareQueryJobConfiguration(
         QUERY_JOB_CONFIGURATION, QueryJobConfiguration.fromPb(QUERY_JOB_CONFIGURATION.toPb()));
     QueryJobConfiguration job = QueryJobConfiguration.of(QUERY);
@@ -184,6 +207,20 @@ public class QueryJobConfigurationTest {
   @Test
   public void testGetType() {
     assertEquals(JobConfiguration.Type.QUERY, QUERY_JOB_CONFIGURATION.getType());
+  }
+
+  @Test
+  public void testPositionalParameter() {
+    compareQueryJobConfiguration(
+        QUERY_JOB_CONFIGURATION_ADD_POSITIONAL_PARAMETER,
+        QUERY_JOB_CONFIGURATION_ADD_POSITIONAL_PARAMETER.toBuilder().build());
+  }
+
+  @Test
+  public void testNamedParameter() {
+    compareQueryJobConfiguration(
+        QUERY_JOB_CONFIGURATION_SET_NAME_PARAMETER,
+        QUERY_JOB_CONFIGURATION_SET_NAME_PARAMETER.toBuilder().build());
   }
 
   private void compareQueryJobConfiguration(
@@ -216,5 +253,7 @@ public class QueryJobConfigurationTest {
     assertEquals(expected.getLabels(), value.getLabels());
     assertEquals(expected.getRangePartitioning(), value.getRangePartitioning());
     assertEquals(expected.getConnectionProperties(), value.getConnectionProperties());
+    assertEquals(expected.getPositionalParameters(), value.getPositionalParameters());
+    assertEquals(expected.getNamedParameters(), value.getNamedParameters());
   }
 }

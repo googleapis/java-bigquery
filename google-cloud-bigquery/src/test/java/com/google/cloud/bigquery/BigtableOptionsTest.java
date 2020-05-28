@@ -18,6 +18,7 @@ package com.google.cloud.bigquery;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class BigtableOptionsTest {
@@ -61,6 +62,8 @@ public class BigtableOptionsTest {
     assertThat(COL1.getOnlyReadLatest()).isEqualTo(true);
     assertThat(COL1.getEncoding()).isEqualTo("BINARY");
     assertThat(COL1.getType()).isEqualTo("BYTES");
+    assertThat(COL1.equals(COL1)).isTrue();
+    assertThat(COL1).isNotEqualTo(TESTFAMILY);
 
     // family
     assertThat(TESTFAMILY.getFamilyID()).isEqualTo("fooFamily");
@@ -73,6 +76,50 @@ public class BigtableOptionsTest {
     assertThat(OPTIONS.getIgnoreUnspecifiedColumnFamilies()).isEqualTo(true);
     assertThat(OPTIONS.getReadRowkeyAsString()).isEqualTo(true);
     assertThat(OPTIONS.getColumnFamilies()).isEqualTo(ImmutableList.of(TESTFAMILY));
+    compareBigtableOptions(OPTIONS, OPTIONS.toBuilder().build());
+  }
+
+  @Test
+  public void testNullPointerException() {
+    try {
+      BigtableColumnFamily.newBuilder().setFamilyID(null).build();
+      Assert.fail();
+    } catch (NullPointerException ex) {
+      assertThat(ex.getMessage()).isNotNull();
+    }
+    try {
+      BigtableColumnFamily.newBuilder().setColumns(null).build();
+      Assert.fail();
+    } catch (NullPointerException ex) {
+      assertThat(ex.getMessage()).isNotNull();
+    }
+    try {
+      BigtableColumnFamily.newBuilder().setEncoding(null).build();
+      Assert.fail();
+    } catch (NullPointerException ex) {
+      assertThat(ex.getMessage()).isNotNull();
+    }
+    try {
+      BigtableColumnFamily.newBuilder().setOnlyReadLatest(null).build();
+      Assert.fail();
+    } catch (NullPointerException ex) {
+      assertThat(ex.getMessage()).isNotNull();
+    }
+    try {
+      BigtableColumnFamily.newBuilder().setType(null).build();
+      Assert.fail();
+    } catch (NullPointerException ex) {
+      assertThat(ex.getMessage()).isNotNull();
+    }
+  }
+
+  @Test
+  public void testIllegalStateException() {
+    try {
+      BigtableColumnFamily.newBuilder().build();
+    } catch (IllegalStateException ex) {
+      assertThat(ex.getMessage()).isNotNull();
+    }
   }
 
   @Test
@@ -86,6 +133,10 @@ public class BigtableOptionsTest {
   public void testEquals() {
     compareBigtableColumn(COL1, COL1);
     compareBigtableColumnFamily(TESTFAMILY, TESTFAMILY);
+    assertThat(TESTFAMILY.equals(TESTFAMILY)).isTrue();
+    assertThat(TESTFAMILY).isNotEqualTo(COL1);
+    assertThat(OPTIONS.equals(OPTIONS)).isTrue();
+    assertThat(OPTIONS).isNotEqualTo(TESTFAMILY);
     compareBigtableOptions(OPTIONS, OPTIONS);
   }
 
@@ -118,5 +169,7 @@ public class BigtableOptionsTest {
         .isEqualTo(value.getIgnoreUnspecifiedColumnFamilies());
     assertThat(expected.getReadRowkeyAsString()).isEqualTo(value.getReadRowkeyAsString());
     assertThat(expected.getColumnFamilies()).isEqualTo(value.getColumnFamilies());
+    assertThat(expected.hashCode()).isEqualTo(value.hashCode());
+    assertThat(expected.toString()).isEqualTo(value.toString());
   }
 }
