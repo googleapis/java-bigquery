@@ -34,15 +34,19 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class UpdateTableDMLIT {
+
+  private String tableName;
   private ByteArrayOutputStream bout;
   private PrintStream out;
 
-  private static final String BIGQUERY_DATASET_NAME = System.getenv("BIGQUERY_DATASET_NAME");
+  private static final String BIGQUERY_DATASET_NAME = requireEnvVar("BIGQUERY_DATASET_NAME");
 
-  private static void requireEnvVar(String varName) {
+  private static String requireEnvVar(String varName) {
+    String value =  System.getenv(varName);
     assertNotNull(
         "Environment variable " + varName + " is required to perform these tests.",
         System.getenv(varName));
+    return value;
   }
 
   @BeforeClass
@@ -55,16 +59,9 @@ public class UpdateTableDMLIT {
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
     System.setOut(out);
-  }
 
-  @After
-  public void tearDown() {
-    System.setOut(null);
-  }
-
-  @Test
-  public void testUpdateTableDML() throws IOException, InterruptedException {
-    String tableName = "UserSessions_TEST_" + UUID.randomUUID().toString().replace('-', '_');
+    // Create a test table
+    tableName = "UserSessions_TEST_" + UUID.randomUUID().toString().replace('-', '_');
     Schema schema =
         Schema.of(
             Field.of("id", LegacySQLTypeName.STRING),
@@ -75,11 +72,21 @@ public class UpdateTableDMLIT {
 
     CreateTable.createTable(BIGQUERY_DATASET_NAME, tableName, schema);
 
-    UpdateTableDML.updateTableDML(BIGQUERY_DATASET_NAME, tableName);
+    bout = new ByteArrayOutputStream();
+    out = new PrintStream(bout);
+    System.setOut(out);
+  }
 
-    assertThat(bout.toString()).contains("Table updated successfully using DML");
-
+  @After
+  public void tearDown() {
     // Clean up
     DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, tableName);
+    System.setOut(null);
+  }
+
+  @Test
+  public void testUpdateTableDML() throws IOException, InterruptedException {
+    UpdateTableDML.updateTableDML(BIGQUERY_DATASET_NAME, tableName);
+    assertThat(bout.toString()).contains("Table updated successfully using DML");
   }
 }
