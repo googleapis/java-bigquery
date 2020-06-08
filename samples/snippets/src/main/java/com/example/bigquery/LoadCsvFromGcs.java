@@ -28,6 +28,7 @@ import com.google.cloud.bigquery.Table;
 public class LoadCsvFromGcs {
 
   public static void runLoadCsvFromGcs() throws Exception {
+    // TODO(developer): Replace these variables before running the sample.
     String datasetName = "MY_DATASET_NAME";
     String tableName = "MY_TABLE_NAME";
     String sourceUri = "gs://cloud-samples-data/bigquery/us-states/us-states.csv";
