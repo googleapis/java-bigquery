@@ -1,5 +1,13 @@
 # Changelog
 
+### [1.116.3](https://www.github.com/googleapis/java-bigquery/compare/v1.116.2...v1.116.3) (2020-06-15)
+
+
+### Dependencies
+
+* bump libraries-bom version ([#434](https://www.github.com/googleapis/java-bigquery/issues/434)) ([2ee010c](https://www.github.com/googleapis/java-bigquery/commit/2ee010cdffb6ed3bdae54d77d63bfb41eace3098))
+* update dependency com.google.cloud:google-cloud-storage to v1.109.0 ([#446](https://www.github.com/googleapis/java-bigquery/issues/446)) ([1f2846c](https://www.github.com/googleapis/java-bigquery/commit/1f2846c5d0ca43655bdeb223b9d62de1f88fe4b9))
+
 ### [1.116.2](https://www.github.com/googleapis/java-bigquery/compare/v1.116.1...v1.116.2) (2020-06-09)
 
 
