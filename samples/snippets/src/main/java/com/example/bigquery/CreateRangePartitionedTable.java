@@ -16,6 +16,7 @@
 
 package com.example.bigquery;
 
+// [START bigquery_create_table_range_partitioned]
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
@@ -27,7 +28,7 @@ import com.google.cloud.bigquery.StandardTableDefinition;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableInfo;
 
-// [START bigquery_create_table_range_partitioned]
+// Sample to create a range partitioned table
 public class CreateRangePartitionedTable {
 
   public static void runCreateRangePartitionedTable() {

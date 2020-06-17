@@ -24,21 +24,26 @@ import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.StandardSQLTypeName;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.UUID;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class CreateRangePartitionedTableIT {
+
+  private String tableName;
   private ByteArrayOutputStream bout;
   private PrintStream out;
 
-  private static final String BIGQUERY_DATASET_NAME = System.getenv("BIGQUERY_DATASET_NAME");
+  private static final String BIGQUERY_DATASET_NAME = requireEnvVar("BIGQUERY_DATASET_NAME");
 
-  private static void requireEnvVar(String varName) {
+  private static String requireEnvVar(String varName) {
+    String value = System.getenv(varName);
     assertNotNull(
         "Environment variable " + varName + " is required to perform these tests.",
         System.getenv(varName));
+    return value;
   }
 
   @BeforeClass
@@ -48,6 +53,7 @@ public class CreateRangePartitionedTableIT {
 
   @Before
   public void setUp() {
+    tableName = "RANGE_PARTITIONED_TABLE_TEST" + UUID.randomUUID().toString().replace('-', '_');
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
     System.setOut(out);
@@ -55,12 +61,13 @@ public class CreateRangePartitionedTableIT {
 
   @After
   public void tearDown() {
+    // Clean up
+    DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, tableName);
     System.setOut(null);
   }
 
   @Test
   public void testCreateRangePartitionedTable() {
-    String tableName = "RANGE_PARTITIONED_TABLE";
     Schema schema =
         Schema.of(
             Field.of("integerField", StandardSQLTypeName.INT64),
@@ -72,8 +79,5 @@ public class CreateRangePartitionedTableIT {
         BIGQUERY_DATASET_NAME, tableName, schema);
 
     assertThat(bout.toString()).contains("Range partitioned table created successfully");
-
-    // Clean up
-    DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, tableName);
   }
 }
