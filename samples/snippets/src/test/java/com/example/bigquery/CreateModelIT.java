@@ -50,7 +50,7 @@ public class CreateModelIT {
 
   @Before
   public void setUp() {
-    modelName = "MY_MODEL_NAME_" + UUID.randomUUID().toString().replace('-', '_');
+    modelName = "MY_MODEL_NAME_TEST_" + UUID.randomUUID().toString().replace('-', '_');
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
     System.setOut(out);
@@ -82,7 +82,6 @@ public class CreateModelIT {
             + "SELECT 'b' AS f1, 3.8 AS label "
             + ")";
     CreateModel.createModel(sql);
-
     assertThat(bout.toString()).contains("Model created successfully");
   }
 }

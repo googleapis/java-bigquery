@@ -51,7 +51,7 @@ public class DeleteModelIT {
   @Before
   public void setUp() {
     // Create a new model to be deleted
-    modelName = "MY_MODEL_NAME_" + UUID.randomUUID().toString().replace('-', '_');
+    modelName = "MY_MODEL_NAME_TEST_" + UUID.randomUUID().toString().replace('-', '_');
     String sql =
         "CREATE MODEL `"
             + BIGQUERY_DATASET_NAME
@@ -68,7 +68,6 @@ public class DeleteModelIT {
             + "UNION ALL "
             + "SELECT 'b' AS f1, 3.8 AS label "
             + ")";
-
     CreateModel.createModel(sql);
 
     bout = new ByteArrayOutputStream();
@@ -85,7 +84,6 @@ public class DeleteModelIT {
   public void testDeleteModel() {
     // Delete the model that was just created
     DeleteModel.deleteModel(BIGQUERY_DATASET_NAME, modelName);
-
     assertThat(bout.toString()).contains("Model deleted successfully");
   }
 }
