@@ -23,6 +23,7 @@ import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.TableResult;
 
+// Sample to query in a table
 public class Query {
 
   public static void runQuery() {
