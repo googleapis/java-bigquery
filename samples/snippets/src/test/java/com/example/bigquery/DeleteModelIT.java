@@ -50,8 +50,12 @@ public class DeleteModelIT {
 
   @Before
   public void setUp() {
+    bout = new ByteArrayOutputStream();
+    out = new PrintStream(bout);
+    System.setOut(out);
+
     // Create a new model to be deleted
-    modelName = "MY_MODEL_NAME_TEST_" + UUID.randomUUID().toString().replace('-', '_');
+    modelName = "MY_MODEL_NAME_TEST_" + UUID.randomUUID().toString().substring(0, 8);
     String sql =
         "CREATE MODEL `"
             + BIGQUERY_DATASET_NAME

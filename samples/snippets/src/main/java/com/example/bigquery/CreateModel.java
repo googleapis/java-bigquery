@@ -21,7 +21,6 @@ import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Job;
-import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 
@@ -60,9 +59,9 @@ public class CreateModel {
       QueryJobConfiguration config = QueryJobConfiguration.newBuilder(sql).build();
 
       // create a model using query and it will wait to complete job.
-      Job job = bigquery.create(JobInfo.of(JobId.of(), config));
+      Job job = bigquery.create(JobInfo.of(config));
       job = job.waitFor();
-      if (job.getStatus().getError() == null && job.isDone()) {
+      if (job.isDone()) {
         System.out.println("Model created successfully");
       } else {
         System.out.println("Model was not created");
