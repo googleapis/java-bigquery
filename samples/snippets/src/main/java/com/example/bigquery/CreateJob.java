@@ -48,7 +48,8 @@ public class CreateJob {
               .setLabels(ImmutableMap.of("example-label", "example-value"))
               .build();
 
-      // The location and JobName must be specified; other fields can be auto-detected.
+      // The location and job name are optional,
+      // if both are not specified then client will auto-create.
       String jobName = "jobId_" + UUID.randomUUID().toString();
       JobId jobId = JobId.newBuilder().setLocation("us").setJob(jobName).build();
 
