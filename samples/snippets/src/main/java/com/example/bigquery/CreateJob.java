@@ -27,16 +27,12 @@ import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.common.collect.ImmutableMap;
 import java.util.UUID;
 
+// Sample to create a job
 public class CreateJob {
 
   public static void runCreateJob() {
     // TODO(developer): Replace these variables before running the sample.
-    String projectId = "MY_PROJECT_ID";
-    String datasetName = "MY_DATASET_NAME";
-    String tableName = "MY_TABLE_NAME";
-    // i.e. SELECT country_name from `bigquery-public-data.utility_us.country_code_iso`
-    String query =
-        "SELECT country_name from `" + projectId + "." + datasetName + "." + tableName + "`";
+    String query = "SELECT country_name from `bigquery-public-data.utility_us.country_code_iso`";
     createJob(query);
   }
 
@@ -52,17 +48,21 @@ public class CreateJob {
               .setLabels(ImmutableMap.of("example-label", "example-value"))
               .build();
 
-      // The client libraries automatically generate a job ID.
-      // Override the generated ID with either the job_id_prefix or job_id parameters.
-      String jobId = "code_sample_" + UUID.randomUUID().toString().substring(0, 8);
-      Job job = bigquery.create(JobInfo.of(JobId.of(jobId), queryConfig));
-      job = job.waitFor();
-      if (job.isDone()) {
+      // The location and JobName must be specified; other fields can be auto-detected.
+      String jobName = "jobId_" + UUID.randomUUID().toString();
+      JobId jobId = JobId.newBuilder().setLocation("us").setJob(jobName).build();
+
+      // Create a job with job ID
+      bigquery.create(JobInfo.of(jobId, queryConfig));
+
+      // Get a job that was just created
+      Job job = bigquery.getJob(jobId);
+      if (job.getJobId().getJob().equals(jobId.getJob())) {
         System.out.println("Job created successfully");
       } else {
         System.out.println("Job was not created");
       }
-    } catch (BigQueryException | InterruptedException e) {
+    } catch (BigQueryException e) {
       System.out.println("Job was not created. \n" + e.toString());
     }
   }
