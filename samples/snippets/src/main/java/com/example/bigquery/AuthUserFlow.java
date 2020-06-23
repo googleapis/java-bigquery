@@ -50,7 +50,7 @@ public class AuthUserFlow {
   // i.e redirect_uri http://localhost:61984/Callback
   private static final int LOCAL_RECEIVER_PORT = 61984;
 
-  public static void main(String[] args) {
+  public static void runAuthUserFlow() {
     // TODO(developer): Replace these variables before running the sample.
     /**
      * Download your OAuth2 configuration from the Google Developers Console API Credentials page.
