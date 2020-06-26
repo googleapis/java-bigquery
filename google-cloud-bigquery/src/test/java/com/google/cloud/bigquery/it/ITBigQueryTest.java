@@ -1381,6 +1381,35 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testFastQuery() throws InterruptedException {
+    String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
+    TableResult result = bigquery.query(config);
+    assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
+    assertNull(result.getNextPage());
+    assertNull(result.getNextPageToken());
+    assertFalse(result.hasNextPage());
+    int rowCount = 0;
+    for (FieldValueList row : result.getValues()) {
+      FieldValue timestampCell = row.get(0);
+      assertEquals(timestampCell, row.get("TimestampField"));
+      FieldValue stringCell = row.get(1);
+      assertEquals(stringCell, row.get("StringField"));
+      FieldValue booleanCell = row.get(2);
+      assertEquals(booleanCell, row.get("BooleanField"));
+      assertEquals(FieldValue.Attribute.PRIMITIVE, timestampCell.getAttribute());
+      assertEquals(FieldValue.Attribute.PRIMITIVE, stringCell.getAttribute());
+      assertEquals(FieldValue.Attribute.PRIMITIVE, booleanCell.getAttribute());
+      assertEquals(1408452095220000L, timestampCell.getTimestampValue());
+      assertEquals("stringValue", stringCell.getStringValue());
+      assertEquals(false, booleanCell.getBooleanValue());
+      rowCount++;
+    }
+    assertEquals(2, rowCount);
+  }
+
+  @Test
   public void testScriptStatistics() throws InterruptedException {
     String script =
         "-- Declare a variable to hold names as an array.\n"

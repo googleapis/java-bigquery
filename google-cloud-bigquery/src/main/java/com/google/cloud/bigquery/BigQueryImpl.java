@@ -24,6 +24,7 @@ import com.google.api.core.InternalApi;
 import com.google.api.gax.paging.Page;
 import com.google.api.services.bigquery.model.ErrorProto;
 import com.google.api.services.bigquery.model.GetQueryResultsResponse;
+import com.google.api.services.bigquery.model.QueryRequest;
 import com.google.api.services.bigquery.model.TableDataInsertAllRequest;
 import com.google.api.services.bigquery.model.TableDataInsertAllRequest.Rows;
 import com.google.api.services.bigquery.model.TableDataInsertAllResponse;
@@ -1170,7 +1171,54 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   public TableResult query(QueryJobConfiguration configuration, JobOption... options)
       throws InterruptedException, JobException {
     Job.checkNotDryRun(configuration, "query");
+
+    // If all parameters passed in configuration are supported by the query() method on the backend,
+    // put on fast path
+    QueryRequestInfo requestInfo = new QueryRequestInfo(configuration);
+    if (requestInfo.isFastQuerySupported()) {
+      String projectId = getOptions().getProjectId();
+      QueryRequest content = requestInfo.toPb();
+      return fastQuery(projectId, content, options);
+    }
+    // Otherwise, fall back to the existing create query job logic
     return create(JobInfo.of(configuration), options).getQueryResults();
+  }
+
+  private TableResult fastQuery(
+      final String projectId, final QueryRequest content, JobOption... options)
+      throws InterruptedException {
+    try {
+      com.google.api.services.bigquery.model.QueryResponse queryResponse =
+          runWithRetries(
+              new Callable<com.google.api.services.bigquery.model.QueryResponse>() {
+                @Override
+                public com.google.api.services.bigquery.model.QueryResponse call() {
+                  return bigQueryRpc.fastQuery(projectId, content);
+                }
+              },
+              getOptions().getRetrySettings(),
+              EXCEPTION_HANDLER,
+              getOptions().getClock());
+
+      // Return result if there is only 1 page, otherwise use jobId returned from backend to return
+      // full results
+      if (queryResponse.getPageToken() == null) {
+        return new TableResult(
+            Schema.fromPb(queryResponse.getSchema()),
+            queryResponse.getTotalRows().longValue(),
+            new PageImpl<>(
+                new TableDataPageFetcher(null, getOptions(), null, optionMap(options)),
+                null,
+                transformTableData(queryResponse.getRows())));
+      } else {
+        String jobId = queryResponse.getJobReference().getJobId();
+        Job job = getJob(JobId.of(jobId));
+        job.waitFor();
+        return job.getQueryResults();
+      }
+    } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    }
   }
 
   @Override
