@@ -16,16 +16,40 @@
 
 package com.example.bigquery;
 
+import static com.google.common.truth.Truth.assertThat;
+import static junit.framework.TestCase.assertNotNull;
+
+import com.google.cloud.storage.contrib.nio.CloudStorageFileSystem;
+import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Path;
+import java.util.List;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class AuthUserFlowIT {
 
   private ByteArrayOutputStream bout;
   private PrintStream out;
+
+  private static final String GCS_BUCKET = System.getenv("GCS_BUCKET");
+
+  private static String requireEnvVar(String varName) {
+    String value = System.getenv(varName);
+    assertNotNull(
+        "Environment variable " + varName + " is required to perform these tests.",
+        System.getenv(varName));
+    return value;
+  }
+
+  @BeforeClass
+  public static void checkRequirements() {
+    requireEnvVar("GCS_BUCKET");
+  }
 
   @Before
   public void setUp() {
@@ -40,11 +64,12 @@ public class AuthUserFlowIT {
   }
 
   @Test
-  public void testAuthUserFlow() {
-    // TODO(stephaniewang526): Replace client_secret.json
-    /*File credentialsPath = new File(""path/to/your/client_secret.json");
-    List<String> scopes = ImmutableList.of("https://www.googleapis.com/auth/bigquery");
-    AuthUserFlow.authUserFlow(credentialsPath, scopes);
-    assertThat(bout.toString()).contains("Success! Dataset ID");*/
+  public void testAuthUserFlow() throws IOException {
+    try (CloudStorageFileSystem fs = CloudStorageFileSystem.forBucket(GCS_BUCKET)) {
+      Path credentialsPath = fs.getPath("client_secret.json");
+      List<String> scopes = ImmutableList.of("https://www.googleapis.com/auth/bigquery");
+      AuthUserFlow.authUserFlow(credentialsPath, scopes);
+    }
+    assertThat(bout.toString()).contains("Success! Dataset ID");
   }
 }

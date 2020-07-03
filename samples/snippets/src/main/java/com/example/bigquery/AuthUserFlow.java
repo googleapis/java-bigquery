@@ -35,9 +35,12 @@ import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Dataset;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.util.List;
 
@@ -56,18 +59,18 @@ public class AuthUserFlow {
      * Download your OAuth2 configuration from the Google Developers Console API Credentials page.
      * https://console.cloud.google.com/apis/credentials
      */
-    File credentialsPath = new File("path/to/your/client_secret.json");
+    Path credentialsPath = Paths.get("path/to/your/client_secret.json");
     List<String> scopes = ImmutableList.of("https://www.googleapis.com/auth/bigquery");
     authUserFlow(credentialsPath, scopes);
   }
 
-  public static void authUserFlow(File credentialsPath, List<String> selectedScopes) {
-    try {
+  public static void authUserFlow(Path credentialsPath, List<String> selectedScopes) {
+    // Reading credentials file
+    try (InputStream inputStream = Files.newInputStream(credentialsPath)) {
 
       // Load client_secret.json file
       GoogleClientSecrets clientSecrets =
-          GoogleClientSecrets.load(
-              JSON_FACTORY, new InputStreamReader(new FileInputStream(credentialsPath)));
+          GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(inputStream));
       String clientId = clientSecrets.getDetails().getClientId();
       String clientSecret = clientSecrets.getDetails().getClientSecret();
 
