@@ -83,7 +83,7 @@ public class AuthUserFlow {
                   selectedScopes)
               .setDataStoreFactory(new FileDataStoreFactory(DATA_STORE_DIR))
               .setAccessType("offline")
-              .setApprovalPrompt("force")
+              .setApprovalPrompt("auto")
               .build();
 
       // Exchange an authorization code for  refresh token
