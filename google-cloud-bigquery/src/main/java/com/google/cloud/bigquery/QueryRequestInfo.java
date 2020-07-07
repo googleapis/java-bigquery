@@ -16,17 +16,40 @@
 
 package com.google.cloud.bigquery;
 
-import com.google.api.services.bigquery.model.JobConfiguration;
-import com.google.api.services.bigquery.model.JobConfigurationQuery;
+import com.google.api.services.bigquery.model.QueryParameter;
 import com.google.api.services.bigquery.model.QueryRequest;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 final class QueryRequestInfo {
 
+  private static final String REQUEST_ID = UUID.randomUUID().toString();
   private QueryJobConfiguration config;
+  private final List<ConnectionProperty> connectionProperties;
+  private final DatasetId defaultDataset;
+  private final Boolean dryRun;
+  private final Map<String, String> labels;
+  private final Long maximumBytesBilled;
+  private final String query;
+  private final List<QueryParameter> queryParameters;
+  private final Boolean useQueryCache;
+  private final Boolean useLegacySql;
 
   QueryRequestInfo(QueryJobConfiguration config) {
     this.config = config;
+    this.connectionProperties = config.getConnectionProperties();
+    this.defaultDataset = config.getDefaultDataset();
+    this.dryRun = config.dryRun();
+    this.labels = config.getLabels();
+    this.maximumBytesBilled = config.getMaximumBytesBilled();
+    this.query = config.getQuery();
+    this.queryParameters = config.toPb().getQuery().getQueryParameters();
+    this.useLegacySql = config.useLegacySql();
+    this.useQueryCache = config.useQueryCache();
   }
 
   boolean isFastQuerySupported() {
@@ -45,37 +68,73 @@ final class QueryRequestInfo {
   }
 
   QueryRequest toPb() {
-    QueryRequest query = new QueryRequest();
-    if (config.getConnectionProperties() != null) {
-      query.setConnectionProperties(
-          Lists.transform(config.getConnectionProperties(), ConnectionProperty.TO_PB_FUNCTION));
+    QueryRequest request = new QueryRequest();
+    if (connectionProperties != null) {
+      request.setConnectionProperties(
+          Lists.transform(connectionProperties, ConnectionProperty.TO_PB_FUNCTION));
     }
-    if (config.getDefaultDataset() != null) {
-      query.setDefaultDataset(config.getDefaultDataset().toPb());
+    if (defaultDataset != null) {
+      request.setDefaultDataset(defaultDataset.toPb());
     }
-    if (config.dryRun() != null) {
-      query.setDryRun(config.dryRun());
+    if (dryRun != null) {
+      request.setDryRun(dryRun);
     }
-    if (config.getLabels() != null) {
-      query.setLabels(config.getLabels());
+    if (labels != null) {
+      request.setLabels(labels);
     }
-    if (config.getMaximumBytesBilled() != null) {
-      query.setMaximumBytesBilled(config.getMaximumBytesBilled());
+    if (maximumBytesBilled != null) {
+      request.setMaximumBytesBilled(maximumBytesBilled);
     }
-    query.setQuery(config.getQuery());
-    // TODO: add back when supported
-    // query.setRequestId(UUID.randomUUID().toString());
-    JobConfiguration jobConfiguration = config.toPb();
-    JobConfigurationQuery configurationQuery = jobConfiguration.getQuery();
-    if (configurationQuery.getQueryParameters() != null) {
-      query.setQueryParameters(configurationQuery.getQueryParameters());
+    request.setQuery(query);
+    request.setRequestId(REQUEST_ID);
+    if (queryParameters != null) {
+      request.setQueryParameters(queryParameters);
     }
-    if (config.useLegacySql() != null) {
-      query.setUseLegacySql(config.useLegacySql());
+    if (useLegacySql != null) {
+      request.setUseLegacySql(useLegacySql);
     }
-    if (config.useQueryCache() != null) {
-      query.setUseQueryCache(config.useQueryCache());
+    if (useQueryCache != null) {
+      request.setUseQueryCache(useQueryCache);
     }
-    return query;
+    return request;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("connectionProperties", connectionProperties)
+        .add("defaultDataset", defaultDataset)
+        .add("dryRun", dryRun)
+        .add("labels", labels)
+        .add("maximumBytesBilled", maximumBytesBilled)
+        .add("query", query)
+        .add("requestId", REQUEST_ID)
+        .add("queryParameters", queryParameters)
+        .add("useQueryCache", useQueryCache)
+        .add("useLegacySql", useLegacySql)
+        .toString();
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(
+        connectionProperties,
+        defaultDataset,
+        dryRun,
+        labels,
+        maximumBytesBilled,
+        query,
+        queryParameters,
+        REQUEST_ID,
+        useQueryCache,
+        useLegacySql);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return obj == this
+        || obj != null
+            && obj.getClass().equals(QueryRequestInfo.class)
+            && java.util.Objects.equals(toPb(), ((QueryRequestInfo) obj).toPb());
   }
 }

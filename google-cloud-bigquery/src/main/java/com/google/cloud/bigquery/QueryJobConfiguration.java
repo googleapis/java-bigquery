@@ -851,7 +851,7 @@ public final class QueryJobConfiguration extends JobConfiguration {
         .add("flattenResults", flattenResults)
         .add("priority", priority)
         .add("tableDefinitions", tableDefinitions)
-        .add("userQueryCache", useQueryCache)
+        .add("useQueryCache", useQueryCache)
         .add("userDefinedFunctions", userDefinedFunctions)
         .add("createDisposition", createDisposition)
         .add("writeDisposition", writeDisposition)

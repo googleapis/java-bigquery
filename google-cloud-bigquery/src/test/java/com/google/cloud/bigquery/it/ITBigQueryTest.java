@@ -81,6 +81,7 @@ import com.google.cloud.bigquery.RoutineId;
 import com.google.cloud.bigquery.RoutineInfo;
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.StandardSQLDataType;
+import com.google.cloud.bigquery.StandardSQLTypeName;
 import com.google.cloud.bigquery.StandardTableDefinition;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableDataWriteChannel;
@@ -257,6 +258,7 @@ public class ITBigQueryTest {
   private static final String EXTRACT_MODEL_FILE = "extract_model.csv";
   private static final String BUCKET = RemoteStorageHelper.generateBucketName();
   private static final TableId TABLE_ID = TableId.of(DATASET, "testing_table");
+  private static final TableId TABLE_ID_FASTQUERY = TableId.of(DATASET, "fastquery_testing_table");
   private static final String CSV_CONTENT = "StringValue1\nStringValue2\n";
   private static final String JSON_CONTENT =
       "{"
@@ -353,6 +355,17 @@ public class ITBigQueryTest {
     assertNull(job.getStatus().getError());
     LoadJobConfiguration loadJobConfiguration = job.getConfiguration();
     assertEquals(labels, loadJobConfiguration.getLabels());
+
+    LoadJobConfiguration configurationFastQuery =
+        LoadJobConfiguration.newBuilder(
+                TABLE_ID_FASTQUERY, "gs://" + BUCKET + "/" + JSON_LOAD_FILE, FormatOptions.json())
+            .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
+            .setSchema(TABLE_SCHEMA)
+            .setLabels(labels)
+            .build();
+    Job jobFastQuery = bigquery.create(JobInfo.of(configurationFastQuery));
+    jobFastQuery = jobFastQuery.waitFor();
+    assertNull(jobFastQuery.getStatus().getError());
   }
 
   @AfterClass
@@ -1407,6 +1420,44 @@ public class ITBigQueryTest {
       rowCount++;
     }
     assertEquals(2, rowCount);
+  }
+
+  @Test
+  public void testFastQueryMultiPages() throws InterruptedException {
+    String query =
+        "SELECT date, state_name, confirmed_cases FROM `bigquery-public-data.covid19_nyt.us_counties`";
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
+    TableResult result = bigquery.query(config);
+    assertNotNull(result.getNextPage());
+    assertNotNull(result.getNextPageToken());
+    assertTrue(result.hasNextPage());
+  }
+
+  @Test
+  public void testFastDMLQuery() throws InterruptedException {
+    String tableName = TABLE_ID_FASTQUERY.getTable();
+    String dmlQuery =
+        String.format("UPDATE %s.%s SET StringField = 'hello' WHERE TRUE", DATASET, tableName);
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(dmlQuery).setDefaultDataset(DatasetId.of(DATASET)).build();
+    TableResult result = bigquery.query(config);
+    assertEquals(TABLE_SCHEMA, result.getSchema());
+    assertEquals(2, result.getTotalRows());
+  }
+
+  @Test
+  public void testFastDDLQuery() throws InterruptedException {
+    String tableName = "test_table_fast_query_ddl";
+    String ddlQuery =
+        String.format("CREATE OR REPLACE TABLE  %s.%s ( StringField STRING )", DATASET, tableName);
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(ddlQuery).setDefaultDataset(DatasetId.of(DATASET)).build();
+    TableResult result = bigquery.query(config);
+    assertEquals(
+        Schema.of(Field.newBuilder("StringField", StandardSQLTypeName.STRING).build()),
+        result.getSchema());
+    assertEquals(0, result.getTotalRows());
   }
 
   @Test

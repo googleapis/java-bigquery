@@ -36,6 +36,7 @@ import com.google.api.gax.paging.Page;
 import com.google.api.services.bigquery.model.ErrorProto;
 import com.google.api.services.bigquery.model.GetQueryResultsResponse;
 import com.google.api.services.bigquery.model.JobConfigurationQuery;
+import com.google.api.services.bigquery.model.QueryRequest;
 import com.google.api.services.bigquery.model.TableCell;
 import com.google.api.services.bigquery.model.TableDataInsertAllRequest;
 import com.google.api.services.bigquery.model.TableDataInsertAllResponse;
@@ -209,6 +210,16 @@ public class BigQueryImplTest {
 
   private static final QueryJobConfiguration QUERY_JOB_CONFIGURATION_FOR_QUERY =
       QueryJobConfiguration.newBuilder("SQL")
+          .setDefaultDataset(DatasetId.of(PROJECT, DATASET))
+          .setUseQueryCache(false)
+          .build();
+  private static final QueryJobConfiguration QUERY_JOB_CONFIGURATION_FOR_DMLQUERY =
+      QueryJobConfiguration.newBuilder("DML")
+          .setDefaultDataset(DatasetId.of(PROJECT, DATASET))
+          .setUseQueryCache(false)
+          .build();
+  private static final QueryJobConfiguration QUERY_JOB_CONFIGURATION_FOR_DDLQUERY =
+      QueryJobConfiguration.newBuilder("DDL")
           .setDefaultDataset(DatasetId.of(PROJECT, DATASET))
           .setUseQueryCache(false)
           .build();
@@ -1815,12 +1826,10 @@ public class BigQueryImplTest {
 
   @Test
   public void testFastQueryRequestCompleted() throws InterruptedException {
-    JobId queryJob = JobId.of(PROJECT, JOB);
     com.google.api.services.bigquery.model.QueryResponse queryResponsePb =
         new com.google.api.services.bigquery.model.QueryResponse()
             .setCacheHit(false)
             .setJobComplete(true)
-            .setJobReference(queryJob.toPb())
             .setKind("bigquery#queryResponse")
             .setPageToken(null)
             .setRows(ImmutableList.of(TABLE_ROW))
@@ -2107,6 +2116,113 @@ public class BigQueryImplTest {
     } catch (UnsupportedOperationException ex) {
       Assert.assertNotNull(ex.getMessage());
     }
+  }
+
+  @Test
+  public void testFastQuerySQLShouldRetry() throws Exception {
+    com.google.api.services.bigquery.model.QueryResponse responsePb =
+        new com.google.api.services.bigquery.model.QueryResponse()
+            .setCacheHit(false)
+            .setJobComplete(true)
+            .setRows(ImmutableList.of(TABLE_ROW))
+            .setPageToken(null)
+            .setTotalBytesProcessed(42L)
+            .setTotalRows(BigInteger.valueOf(1L))
+            .setSchema(TABLE_SCHEMA.toPb())
+            .setErrors(ImmutableList.of(new ErrorProto().setMessage("ErrorMessage")));
+
+    QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_QUERY);
+    QueryRequest requestPb = requestInfo.toPb();
+
+    when(bigqueryRpcMock.fastQuery(PROJECT, requestPb))
+        .thenThrow(new BigQueryException(500, "InternalError"))
+        .thenThrow(new BigQueryException(502, "Bad Gateway"))
+        .thenThrow(new BigQueryException(503, "Service Unavailable"))
+        .thenThrow(new BigQueryException(504, "Gateway Timeout"))
+        .thenReturn(responsePb);
+
+    bigquery =
+        options
+            .toBuilder()
+            .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
+            .build()
+            .getService();
+
+    TableResult response = bigquery.query(QUERY_JOB_CONFIGURATION_FOR_QUERY);
+    assertEquals(TABLE_SCHEMA, response.getSchema());
+    assertEquals(1, response.getTotalRows());
+    verify(bigqueryRpcMock, times(5)).fastQuery(PROJECT, requestPb);
+  }
+
+  @Test
+  public void testFastQueryDMLShouldRetry() throws Exception {
+    com.google.api.services.bigquery.model.QueryResponse responsePb =
+        new com.google.api.services.bigquery.model.QueryResponse()
+            .setCacheHit(false)
+            .setJobComplete(true)
+            .setRows(ImmutableList.of(TABLE_ROW))
+            .setPageToken(null)
+            .setTotalBytesProcessed(42L)
+            .setNumDmlAffectedRows(1L)
+            .setSchema(TABLE_SCHEMA.toPb())
+            .setErrors(ImmutableList.of(new ErrorProto().setMessage("ErrorMessage")));
+
+    QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY);
+    QueryRequest requestPb = requestInfo.toPb();
+
+    when(bigqueryRpcMock.fastQuery(PROJECT, requestPb))
+        .thenThrow(new BigQueryException(500, "InternalError"))
+        .thenThrow(new BigQueryException(502, "Bad Gateway"))
+        .thenThrow(new BigQueryException(503, "Service Unavailable"))
+        .thenThrow(new BigQueryException(504, "Gateway Timeout"))
+        .thenReturn(responsePb);
+
+    bigquery =
+        options
+            .toBuilder()
+            .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
+            .build()
+            .getService();
+
+    TableResult response = bigquery.query(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY);
+    assertEquals(TABLE_SCHEMA, response.getSchema());
+    assertEquals(1, response.getTotalRows());
+    verify(bigqueryRpcMock, times(5)).fastQuery(PROJECT, requestPb);
+  }
+
+  @Test
+  public void testFastQueryDDLShouldRetry() throws Exception {
+    com.google.api.services.bigquery.model.QueryResponse responsePb =
+        new com.google.api.services.bigquery.model.QueryResponse()
+            .setCacheHit(false)
+            .setJobComplete(true)
+            .setRows(ImmutableList.of(TABLE_ROW))
+            .setPageToken(null)
+            .setTotalBytesProcessed(42L)
+            .setSchema(TABLE_SCHEMA.toPb())
+            .setErrors(ImmutableList.of(new ErrorProto().setMessage("ErrorMessage")));
+
+    QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_DDLQUERY);
+    QueryRequest requestPb = requestInfo.toPb();
+
+    when(bigqueryRpcMock.fastQuery(PROJECT, requestPb))
+        .thenThrow(new BigQueryException(500, "InternalError"))
+        .thenThrow(new BigQueryException(502, "Bad Gateway"))
+        .thenThrow(new BigQueryException(503, "Service Unavailable"))
+        .thenThrow(new BigQueryException(504, "Gateway Timeout"))
+        .thenReturn(responsePb);
+
+    bigquery =
+        options
+            .toBuilder()
+            .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
+            .build()
+            .getService();
+
+    TableResult response = bigquery.query(QUERY_JOB_CONFIGURATION_FOR_DDLQUERY);
+    assertEquals(TABLE_SCHEMA, response.getSchema());
+    assertEquals(0, response.getTotalRows());
+    verify(bigqueryRpcMock, times(5)).fastQuery(PROJECT, requestPb);
   }
 
   @Test

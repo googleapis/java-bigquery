@@ -1187,8 +1187,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   private TableResult fastQuery(
       final String projectId, final QueryRequest content, JobOption... options)
       throws InterruptedException {
+    com.google.api.services.bigquery.model.QueryResponse results;
     try {
-      com.google.api.services.bigquery.model.QueryResponse queryResponse =
+      results =
           runWithRetries(
               new Callable<com.google.api.services.bigquery.model.QueryResponse>() {
                 @Override
@@ -1199,25 +1200,36 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               getOptions().getRetrySettings(),
               EXCEPTION_HANDLER,
               getOptions().getClock());
-
-      // Return result if there is only 1 page, otherwise use jobId returned from backend to return
-      // full results
-      if (queryResponse.getPageToken() == null) {
-        return new TableResult(
-            Schema.fromPb(queryResponse.getSchema()),
-            queryResponse.getTotalRows().longValue(),
-            new PageImpl<>(
-                new TableDataPageFetcher(null, getOptions(), null, optionMap(options)),
-                null,
-                transformTableData(queryResponse.getRows())));
-      } else {
-        String jobId = queryResponse.getJobReference().getJobId();
-        Job job = getJob(JobId.of(jobId));
-        job.waitFor();
-        return job.getQueryResults();
-      }
-    } catch (RetryHelper.RetryHelperException e) {
+    } catch (RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    }
+    Long numRows;
+    if (results.getNumDmlAffectedRows() == null && results.getTotalRows() == null) {
+      // DDL queries
+      numRows = 0L;
+    } else if (results.getNumDmlAffectedRows() != null) {
+      // DML queries
+      numRows = results.getNumDmlAffectedRows();
+    } else {
+      // SQL queries
+      numRows = results.getTotalRows().longValue();
+    }
+
+    // Return result if there is only 1 page, otherwise use jobId returned from backend to return
+    // full results
+    if (results.getPageToken() == null) {
+      return new TableResult(
+          Schema.fromPb(results.getSchema()),
+          numRows,
+          new PageImpl<>(
+              new TableDataPageFetcher(null, getOptions(), null, optionMap(options)),
+              null,
+              transformTableData(results.getRows())));
+    } else {
+      String jobId = results.getJobReference().getJobId();
+      Job job = getJob(JobId.of(jobId));
+      job.waitFor();
+      return job.getQueryResults();
     }
   }
 
