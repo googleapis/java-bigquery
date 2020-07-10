@@ -51,8 +51,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuery {
+
+  private static final Logger LOGGER = Logger.getLogger(BigQueryImpl.class.getName());
 
   private static class DatasetPageFetcher implements NextPageFetcher<Dataset> {
 
@@ -1203,33 +1207,48 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     } catch (RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
     }
-    Long numRows;
-    if (results.getNumDmlAffectedRows() == null && results.getTotalRows() == null) {
-      // DDL queries
-      numRows = 0L;
-    } else if (results.getNumDmlAffectedRows() != null) {
-      // DML queries
-      numRows = results.getNumDmlAffectedRows();
-    } else {
-      // SQL queries
-      numRows = results.getTotalRows().longValue();
-    }
 
-    // Return result if there is only 1 page, otherwise use jobId returned from backend to return
-    // full results
-    if (results.getPageToken() == null) {
+    // If fast query completed and has only one page in results
+    if (results.getJobComplete() && results.getPageToken() == null) {
+      // Check for errors
+      ImmutableList.Builder<BigQueryError> errors = ImmutableList.builder();
+      if (results.getErrors() != null) {
+        for (ErrorProto error : results.getErrors()) {
+          errors.add(BigQueryError.fromPb(error));
+        }
+        // Since there is no setError method in TableResult, we log the errors
+        LOGGER.log(Level.WARNING, errors.toString());
+      }
+
+      // If there is no error, we construct TableResult
+      TableSchema schemaPb = results.getSchema();
+
+      Long numRows;
+      if (results.getNumDmlAffectedRows() == null && results.getTotalRows() == null) {
+        // DDL queries
+        numRows = 0L;
+      } else if (results.getNumDmlAffectedRows() != null) {
+        // DML queries
+        numRows = results.getNumDmlAffectedRows();
+      } else {
+        // SQL queries
+        numRows = results.getTotalRows().longValue();
+      }
+
       return new TableResult(
-          Schema.fromPb(results.getSchema()),
+          schemaPb == null ? null : Schema.fromPb(schemaPb),
           numRows,
           new PageImpl<>(
               new TableDataPageFetcher(null, getOptions(), null, optionMap(options)),
               null,
               transformTableData(results.getRows())));
     } else {
+      // Use jobId returned from backend to return full TableResult
       String jobId = results.getJobReference().getJobId();
       Job job = getJob(JobId.of(jobId));
       job.waitFor();
-      return job.getQueryResults();
+      TableResult result = job.getQueryResults();
+      return result;
     }
   }
 
