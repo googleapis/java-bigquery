@@ -1471,15 +1471,17 @@ public class ITBigQueryTest {
 
   @Test
   public void testFastSQLQuery() throws InterruptedException {
-    String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
+    String query =
+        "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID_FASTQUERY.getTable();
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
     TableResult result = bigquery.query(config);
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
+    assertEquals(2, result.getTotalRows());
     assertNull(result.getNextPage());
     assertNull(result.getNextPageToken());
     assertFalse(result.hasNextPage());
-    int rowCount = 0;
+    // Verify correctness of table content
     for (FieldValueList row : result.getValues()) {
       FieldValue timestampCell = row.get(0);
       assertEquals(timestampCell, row.get("TimestampField"));
@@ -1493,9 +1495,7 @@ public class ITBigQueryTest {
       assertEquals(1408452095220000L, timestampCell.getTimestampValue());
       assertEquals("stringValue", stringCell.getStringValue());
       assertEquals(false, booleanCell.getBooleanValue());
-      rowCount++;
     }
-    assertEquals(2, rowCount);
   }
 
   @Test
@@ -1576,6 +1576,20 @@ public class ITBigQueryTest {
       assertEquals(1408452095220000L, timestampCell.getTimestampValue());
       assertEquals("stringValue", stringCell.getStringValue());
       assertEquals(false, booleanCell.getBooleanValue());
+    }
+  }
+
+  @Test
+  public void testBadFastQuery() throws InterruptedException {
+    String query =
+        "CREATE OR REPLACE SELECT * FROM UPDATE REUREIJO SET " + TABLE_ID_FASTQUERY.getTable();
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
+    try {
+      bigquery.query(config);
+      fail();
+    } catch (BigQueryException e) {
+      assertNotNull(e.getMessage());
     }
   }
 
