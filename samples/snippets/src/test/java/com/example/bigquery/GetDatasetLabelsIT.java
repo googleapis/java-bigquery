@@ -16,17 +16,16 @@
 
 package com.example.bigquery;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import static com.google.common.truth.Truth.assertThat;
+import static junit.framework.TestCase.assertNotNull;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.UUID;
-
-import static com.google.common.truth.Truth.assertThat;
-import static junit.framework.TestCase.assertNotNull;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class GetDatasetLabelsIT {
 
