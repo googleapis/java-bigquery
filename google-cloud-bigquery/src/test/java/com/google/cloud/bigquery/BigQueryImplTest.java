@@ -507,6 +507,9 @@ public class BigQueryImplTest {
   @Captor private ArgumentCaptor<com.google.api.services.bigquery.model.Job> jobCapture;
   @Captor private ArgumentCaptor<byte[]> capturedBuffer;
 
+  @Captor
+  private ArgumentCaptor<com.google.api.services.bigquery.model.QueryRequest> requestPbCapture;
+
   private TableDataWriteChannel writer;
 
   private BigQueryOptions createBigQueryOptionsForProject(
@@ -2134,7 +2137,7 @@ public class BigQueryImplTest {
     QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_QUERY);
     QueryRequest requestPb = requestInfo.toPb();
 
-    when(bigqueryRpcMock.fastQuery(PROJECT, requestPb))
+    when(bigqueryRpcMock.fastQuery(eq(PROJECT), requestPbCapture.capture()))
         .thenThrow(new BigQueryException(500, "InternalError"))
         .thenThrow(new BigQueryException(502, "Bad Gateway"))
         .thenThrow(new BigQueryException(503, "Service Unavailable"))
@@ -2151,6 +2154,15 @@ public class BigQueryImplTest {
     TableResult response = bigquery.query(QUERY_JOB_CONFIGURATION_FOR_QUERY);
     assertEquals(TABLE_SCHEMA, response.getSchema());
     assertEquals(1, response.getTotalRows());
+
+    List<QueryRequest> allRequests = requestPbCapture.getAllValues();
+    boolean idempotent = true;
+    String requestId = requestPb.getRequestId();
+    for (QueryRequest request : allRequests) {
+      idempotent = request.getRequestId().equals(requestId);
+    }
+    assertTrue(idempotent);
+
     verify(bigqueryRpcMock, times(5)).fastQuery(PROJECT, requestPb);
   }
 
@@ -2170,7 +2182,7 @@ public class BigQueryImplTest {
     QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY);
     QueryRequest requestPb = requestInfo.toPb();
 
-    when(bigqueryRpcMock.fastQuery(PROJECT, requestPb))
+    when(bigqueryRpcMock.fastQuery(eq(PROJECT), requestPbCapture.capture()))
         .thenThrow(new BigQueryException(500, "InternalError"))
         .thenThrow(new BigQueryException(502, "Bad Gateway"))
         .thenThrow(new BigQueryException(503, "Service Unavailable"))
@@ -2187,6 +2199,15 @@ public class BigQueryImplTest {
     TableResult response = bigquery.query(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY);
     assertEquals(TABLE_SCHEMA, response.getSchema());
     assertEquals(1, response.getTotalRows());
+
+    List<QueryRequest> allRequests = requestPbCapture.getAllValues();
+    boolean idempotent = true;
+    String requestId = requestPb.getRequestId();
+    for (QueryRequest request : allRequests) {
+      idempotent = request.getRequestId().equals(requestId);
+    }
+    assertTrue(idempotent);
+
     verify(bigqueryRpcMock, times(5)).fastQuery(PROJECT, requestPb);
   }
 
@@ -2205,7 +2226,7 @@ public class BigQueryImplTest {
     QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_DDLQUERY);
     QueryRequest requestPb = requestInfo.toPb();
 
-    when(bigqueryRpcMock.fastQuery(PROJECT, requestPb))
+    when(bigqueryRpcMock.fastQuery(eq(PROJECT), requestPbCapture.capture()))
         .thenThrow(new BigQueryException(500, "InternalError"))
         .thenThrow(new BigQueryException(502, "Bad Gateway"))
         .thenThrow(new BigQueryException(503, "Service Unavailable"))
@@ -2222,6 +2243,15 @@ public class BigQueryImplTest {
     TableResult response = bigquery.query(QUERY_JOB_CONFIGURATION_FOR_DDLQUERY);
     assertEquals(TABLE_SCHEMA, response.getSchema());
     assertEquals(0, response.getTotalRows());
+
+    List<QueryRequest> allRequests = requestPbCapture.getAllValues();
+    boolean idempotent = true;
+    String requestId = requestPb.getRequestId();
+    for (QueryRequest request : allRequests) {
+      idempotent = request.getRequestId().equals(requestId);
+    }
+    assertTrue(idempotent);
+
     verify(bigqueryRpcMock, times(5)).fastQuery(PROJECT, requestPb);
   }
 
