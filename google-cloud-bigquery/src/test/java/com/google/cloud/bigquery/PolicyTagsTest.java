@@ -51,7 +51,7 @@ public class PolicyTagsTest {
   public void testWithoutNames() {
     com.google.api.services.bigquery.model.TableFieldSchema.PolicyTags PARTIALTAG =
         new com.google.api.services.bigquery.model.TableFieldSchema.PolicyTags();
-    assertNull(PolicyTags.fromPb(PARTIALTAG));
+    assertNull(PolicyTags.fromPb(PARTIALTAG).getNames());
   }
 
   @Test
