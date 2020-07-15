@@ -138,7 +138,6 @@ public class QueryRequestInfoTest {
           .setDryRun(true)
           .setUseLegacySql(USE_LEGACY_SQL)
           .setMaximumBytesBilled(MAX_BYTES_BILL)
-          .setJobTimeoutMs(TIMEOUT)
           .setLabels(LABELS)
           .setConnectionProperties(CONNECTION_PROPERTIES)
           .setPositionalParameters(POSITIONAL_PARAMETER)

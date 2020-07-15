@@ -223,6 +223,11 @@ public class BigQueryImplTest {
           .setDefaultDataset(DatasetId.of(PROJECT, DATASET))
           .setUseQueryCache(false)
           .build();
+  private static final QueryJobConfiguration QUERY_JOB_CONFIGURATION_FOR_INVALIDQUERY =
+      QueryJobConfiguration.newBuilder("INVALID_SQL")
+          .setDefaultDataset(DatasetId.of(PROJECT, DATASET))
+          .setUseQueryCache(false)
+          .build();
   private static final JobInfo JOB_INFO =
       JobInfo.newBuilder(QUERY_JOB_CONFIGURATION_FOR_QUERY)
           .setJobId(JobId.of(PROJECT, JOB))

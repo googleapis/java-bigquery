@@ -1580,16 +1580,35 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testBadFastQuery() throws InterruptedException {
-    String query =
-        "CREATE OR REPLACE SELECT * FROM UPDATE REUREIJO SET " + TABLE_ID_FASTQUERY.getTable();
-    QueryJobConfiguration config =
-        QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
+  public void testFastQueryHTTPException() throws InterruptedException {
+    String queryInvalid =
+        "CREATE OR REPLACE SELECT * FROM UPDATE TABLE SET " + TABLE_ID_FASTQUERY.getTable();
+    QueryJobConfiguration configInvalidQuery =
+        QueryJobConfiguration.newBuilder(queryInvalid)
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .build();
     try {
-      bigquery.query(config);
-      fail();
+      bigquery.query(configInvalidQuery);
+      fail("\"BigQueryException was expected\"");
     } catch (BigQueryException e) {
-      assertNotNull(e.getMessage());
+      BigQueryError error = e.getError();
+      assertNotNull(error.getMessage());
+      assertEquals("invalidQuery", error.getReason());
+    }
+
+    String queryMissingTable =
+        "SELECT * FROM " + TableId.of(DATASET, "non_existing_table").getTable();
+    QueryJobConfiguration configMissingTable =
+        QueryJobConfiguration.newBuilder(queryMissingTable)
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .build();
+    try {
+      bigquery.query(configMissingTable);
+      fail("\"BigQueryException was expected\"");
+    } catch (BigQueryException e) {
+      BigQueryError error = e.getError();
+      assertNotNull(error.getMessage());
+      assertEquals("notFound", error.getReason());
     }
   }
 

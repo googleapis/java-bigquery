@@ -57,6 +57,7 @@ final class QueryRequestInfo {
         && config.getCreateDisposition() == null
         && config.getDestinationEncryptionConfiguration() == null
         && config.getDestinationTable() == null
+        && config.getJobTimeoutMs() == null
         && config.getMaximumBillingTier() == null
         && config.getPriority() == null
         && config.getRangePartitioning() == null

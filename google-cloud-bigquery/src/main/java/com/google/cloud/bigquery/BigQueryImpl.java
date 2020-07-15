@@ -51,7 +51,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuery {
@@ -1210,14 +1209,14 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
     // If fast query completed and has only one page in results
     if (results.getJobComplete() && results.getPageToken() == null) {
-      // Check for errors
+      // If there are errors, Job exception is thrown
       ImmutableList.Builder<BigQueryError> errors = ImmutableList.builder();
       if (results.getErrors() != null) {
         for (ErrorProto error : results.getErrors()) {
           errors.add(BigQueryError.fromPb(error));
         }
-        // Since there is no setError method in TableResult, we log the errors
-        LOGGER.log(Level.WARNING, errors.toString());
+        throw new JobException(
+            JobId.of(results.getJobReference().getJobId()), ImmutableList.copyOf(errors.build()));
       }
 
       // If there is no error, we construct TableResult
@@ -1225,13 +1224,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
       Long numRows;
       if (results.getNumDmlAffectedRows() == null && results.getTotalRows() == null) {
-        // DDL queries
         numRows = 0L;
       } else if (results.getNumDmlAffectedRows() != null) {
-        // DML queries
         numRows = results.getNumDmlAffectedRows();
       } else {
-        // SQL queries
         numRows = results.getTotalRows().longValue();
       }
 
