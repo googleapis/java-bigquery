@@ -16,7 +16,8 @@
 
 package com.example.bigquery;
 
-import com.google.common.truth.Truth;
+import static com.google.common.truth.Truth.assertThat;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import org.junit.After;
@@ -56,6 +57,6 @@ public class ListJobsIT {
   @Test
   public void testListJobs() {
     ListJobs.listJobs();
-    Truth.assertThat(bout.toString()).contains("Success! Job ID");
+    assertThat(bout.toString()).contains("Success! Job ID");
   }
 }
