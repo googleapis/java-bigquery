@@ -36,6 +36,7 @@ import com.google.api.gax.paging.Page;
 import com.google.api.services.bigquery.model.ErrorProto;
 import com.google.api.services.bigquery.model.GetQueryResultsResponse;
 import com.google.api.services.bigquery.model.JobConfigurationQuery;
+import com.google.api.services.bigquery.model.JobReference;
 import com.google.api.services.bigquery.model.QueryRequest;
 import com.google.api.services.bigquery.model.TableCell;
 import com.google.api.services.bigquery.model.TableDataInsertAllRequest;
@@ -227,6 +228,8 @@ public class BigQueryImplTest {
       JobInfo.newBuilder(QUERY_JOB_CONFIGURATION_FOR_QUERY)
           .setJobId(JobId.of(PROJECT, JOB))
           .build();
+  private static final JobReference JOB_REFERENCE =
+      new JobReference().setJobId(JOB).setLocation(LOCATION).setProjectId(PROJECT);
   private static final String CURSOR = "cursor";
   private static final TableCell CELL_PB1 = new TableCell().setV("Value1");
   private static final TableCell CELL_PB2 = new TableCell().setV("Value2");
@@ -2257,34 +2260,34 @@ public class BigQueryImplTest {
 
   @Test
   public void testFastQueryJobException() throws InterruptedException {
+    List<ErrorProto> errorProtoList = ImmutableList.of(
+        new ErrorProto()
+            .setMessage("Backend Query Job Error in responsePb")
+            .setLocation("testLocation")
+            .setReason("JobException in responsePb"));
     com.google.api.services.bigquery.model.QueryResponse responsePb =
         new com.google.api.services.bigquery.model.QueryResponse()
-            .setCacheHit(false)
-            .setJobReference(JOB_INFO.getJobId().toPb())
             .setJobComplete(true)
-            .setRows(ImmutableList.of(TABLE_ROW))
             .setPageToken(null)
-            .setTotalBytesProcessed(42L)
-            .setSchema(TABLE_SCHEMA.toPb())
-            .setErrors(ImmutableList.of(new ErrorProto().setMessage("Backend Query Job Error")));
+            .setJobReference(JOB_REFERENCE)
+            .setErrors(errorProtoList);
 
     QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_QUERY);
     QueryRequest requestPb = requestInfo.toPb();
 
-    when(bigqueryRpcMock.fastQuery(PROJECT, requestPb))
-        .thenReturn(responsePb)
-        .thenThrow(
-            new JobException(
-                JOB_INFO.getJobId(),
-                ImmutableList.of(
-                    new BigQueryError(null, null, "Backend Query Job Error"))));
+    when(bigqueryRpcMock.fastQuery(PROJECT, requestPb)).thenReturn(responsePb);
 
     bigquery = options.getService();
     try {
       bigquery.query(QUERY_JOB_CONFIGURATION_FOR_QUERY);
+      fail("JobException expected");
     } catch (JobException ex) {
-      Assert.assertNotNull(ex.getMessage());
+      assertEquals(JOB_REFERENCE.getJobId(), ex.getId().getJob());
+      assertEquals(JOB_REFERENCE.getLocation(), ex.getId().getLocation());
+      assertEquals(JOB_REFERENCE.getProjectId(), ex.getId().getProject());
+      assertEquals(Lists.transform(errorProtoList, BigQueryError.FROM_PB_FUNCTION), ex.getErrors());
     }
+    verify(bigqueryRpcMock).fastQuery(PROJECT, requestPb);
   }
 
   @Test

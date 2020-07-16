@@ -24,6 +24,7 @@ import com.google.api.core.InternalApi;
 import com.google.api.gax.paging.Page;
 import com.google.api.services.bigquery.model.ErrorProto;
 import com.google.api.services.bigquery.model.GetQueryResultsResponse;
+import com.google.api.services.bigquery.model.JobReference;
 import com.google.api.services.bigquery.model.QueryRequest;
 import com.google.api.services.bigquery.model.TableDataInsertAllRequest;
 import com.google.api.services.bigquery.model.TableDataInsertAllRequest.Rows;
@@ -1215,8 +1216,14 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         for (ErrorProto error : results.getErrors()) {
           errors.add(BigQueryError.fromPb(error));
         }
+        JobReference jobRef = results.getJobReference();
         throw new JobException(
-            JobId.of(results.getJobReference().getJobId()), ImmutableList.copyOf(errors.build()));
+            JobId.newBuilder()
+                .setJob(jobRef.getJobId())
+                .setProject(jobRef.getProjectId())
+                .setLocation(jobRef.getLocation())
+                .build(),
+            ImmutableList.copyOf(errors.build()));
       }
 
       // If there is no error, we construct TableResult
