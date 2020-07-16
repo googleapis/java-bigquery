@@ -2134,8 +2134,7 @@ public class BigQueryImplTest {
             .setPageToken(null)
             .setTotalBytesProcessed(42L)
             .setTotalRows(BigInteger.valueOf(1L))
-            .setSchema(TABLE_SCHEMA.toPb())
-            .setErrors(ImmutableList.of(new ErrorProto().setMessage("ErrorMessage")));
+            .setSchema(TABLE_SCHEMA.toPb());
 
     QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_QUERY);
     QueryRequest requestPb = requestInfo.toPb();
@@ -2179,8 +2178,7 @@ public class BigQueryImplTest {
             .setPageToken(null)
             .setTotalBytesProcessed(42L)
             .setNumDmlAffectedRows(1L)
-            .setSchema(TABLE_SCHEMA.toPb())
-            .setErrors(ImmutableList.of(new ErrorProto().setMessage("ErrorMessage")));
+            .setSchema(TABLE_SCHEMA.toPb());
 
     QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY);
     QueryRequest requestPb = requestInfo.toPb();
@@ -2223,8 +2221,7 @@ public class BigQueryImplTest {
             .setRows(ImmutableList.of(TABLE_ROW))
             .setPageToken(null)
             .setTotalBytesProcessed(42L)
-            .setSchema(TABLE_SCHEMA.toPb())
-            .setErrors(ImmutableList.of(new ErrorProto().setMessage("ErrorMessage")));
+            .setSchema(TABLE_SCHEMA.toPb());
 
     QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_DDLQUERY);
     QueryRequest requestPb = requestInfo.toPb();
@@ -2260,11 +2257,12 @@ public class BigQueryImplTest {
 
   @Test
   public void testFastQueryJobException() throws InterruptedException {
-    List<ErrorProto> errorProtoList = ImmutableList.of(
-        new ErrorProto()
-            .setMessage("Backend Query Job Error in responsePb")
-            .setLocation("testLocation")
-            .setReason("JobException in responsePb"));
+    List<ErrorProto> errorProtoList =
+        ImmutableList.of(
+            new ErrorProto()
+                .setMessage("Backend Query Job Error in responsePb")
+                .setLocation("testLocation")
+                .setReason("JobException in responsePb"));
     com.google.api.services.bigquery.model.QueryResponse responsePb =
         new com.google.api.services.bigquery.model.QueryResponse()
             .setJobComplete(true)
