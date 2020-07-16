@@ -32,6 +32,7 @@ import java.io.IOException;
  */
 public class AuthSnippets {
 
+  
   // [START bigquery_client_default_credentials]
   public static void implicit() {
     // Instantiate a client. If you don't specify credentials when constructing a client, the
