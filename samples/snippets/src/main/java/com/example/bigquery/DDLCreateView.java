@@ -32,7 +32,7 @@ public class DDLCreateView {
     String projectId = "MY_PROJECT_ID";
     String datasetId = "MY_DATASET_ID";
     String tableId = "MY_VIEW_ID";
-    String sql =
+    String ddl =
         "CREATE VIEW "
             + "`"
             + projectId
@@ -51,16 +51,16 @@ public class DDLCreateView {
             + " AS SELECT name, state, year, number"
             + " FROM `bigquery-public-data.usa_names.usa_1910_current`"
             + " WHERE state LIKE 'W%'`";
-    ddlCreateView(sql);
+    ddlCreateView(ddl);
   }
 
-  public static void ddlCreateView(String sql) {
+  public static void ddlCreateView(String ddl) {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
-      QueryJobConfiguration config = QueryJobConfiguration.newBuilder(sql).build();
+      QueryJobConfiguration config = QueryJobConfiguration.newBuilder(ddl).build();
 
       // create a view using query and it will wait to complete job.
       Job job = bigquery.create(JobInfo.of(config));
