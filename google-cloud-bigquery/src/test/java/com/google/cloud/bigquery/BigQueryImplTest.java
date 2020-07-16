@@ -223,11 +223,6 @@ public class BigQueryImplTest {
           .setDefaultDataset(DatasetId.of(PROJECT, DATASET))
           .setUseQueryCache(false)
           .build();
-  private static final QueryJobConfiguration QUERY_JOB_CONFIGURATION_FOR_INVALIDQUERY =
-      QueryJobConfiguration.newBuilder("INVALID_SQL")
-          .setDefaultDataset(DatasetId.of(PROJECT, DATASET))
-          .setUseQueryCache(false)
-          .build();
   private static final JobInfo JOB_INFO =
       JobInfo.newBuilder(QUERY_JOB_CONFIGURATION_FOR_QUERY)
           .setJobId(JobId.of(PROJECT, JOB))
@@ -2258,6 +2253,38 @@ public class BigQueryImplTest {
     assertTrue(idempotent);
 
     verify(bigqueryRpcMock, times(5)).fastQuery(PROJECT, requestPb);
+  }
+
+  @Test
+  public void testFastQueryJobException() throws InterruptedException {
+    com.google.api.services.bigquery.model.QueryResponse responsePb =
+        new com.google.api.services.bigquery.model.QueryResponse()
+            .setCacheHit(false)
+            .setJobReference(JOB_INFO.getJobId().toPb())
+            .setJobComplete(true)
+            .setRows(ImmutableList.of(TABLE_ROW))
+            .setPageToken(null)
+            .setTotalBytesProcessed(42L)
+            .setSchema(TABLE_SCHEMA.toPb())
+            .setErrors(ImmutableList.of(new ErrorProto().setMessage("Backend Query Job Error")));
+
+    QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_QUERY);
+    QueryRequest requestPb = requestInfo.toPb();
+
+    when(bigqueryRpcMock.fastQuery(PROJECT, requestPb))
+        .thenReturn(responsePb)
+        .thenThrow(
+            new JobException(
+                JOB_INFO.getJobId(),
+                ImmutableList.of(
+                    new BigQueryError(null, null, "Backend Query Job Error"))));
+
+    bigquery = options.getService();
+    try {
+      bigquery.query(QUERY_JOB_CONFIGURATION_FOR_QUERY);
+    } catch (JobException ex) {
+      Assert.assertNotNull(ex.getMessage());
+    }
   }
 
   @Test
