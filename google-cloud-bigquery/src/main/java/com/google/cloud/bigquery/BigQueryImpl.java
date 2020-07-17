@@ -24,7 +24,6 @@ import com.google.api.core.InternalApi;
 import com.google.api.gax.paging.Page;
 import com.google.api.services.bigquery.model.ErrorProto;
 import com.google.api.services.bigquery.model.GetQueryResultsResponse;
-import com.google.api.services.bigquery.model.JobReference;
 import com.google.api.services.bigquery.model.QueryRequest;
 import com.google.api.services.bigquery.model.TableDataInsertAllRequest;
 import com.google.api.services.bigquery.model.TableDataInsertAllRequest.Rows;
@@ -47,6 +46,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.ArrayList;
 import java.util.List;
@@ -1173,7 +1173,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   @Override
   public TableResult query(QueryJobConfiguration configuration, JobOption... options)
-      throws InterruptedException, JobException {
+      throws InterruptedException {
     Job.checkNotDryRun(configuration, "query");
 
     // If all parameters passed in configuration are supported by the query() method on the backend,
@@ -1210,20 +1210,14 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
     // If fast query completed and has only one page in results
     if (results.getJobComplete() && results.getPageToken() == null) {
-      // If there are errors, Job exception is thrown
+      // If there are errors, BigQueryException is thrown
       ImmutableList.Builder<BigQueryError> errors = ImmutableList.builder();
       if (results.getErrors() != null) {
-        for (ErrorProto error : results.getErrors()) {
-          errors.add(BigQueryError.fromPb(error));
-        }
-        JobReference jobRef = results.getJobReference();
-        throw new JobException(
-            JobId.newBuilder()
-                .setJob(jobRef.getJobId())
-                .setProject(jobRef.getProjectId())
-                .setLocation(jobRef.getLocation())
-                .build(),
-            ImmutableList.copyOf(errors.build()));
+        List<BigQueryError> bigQueryErrors =
+            Lists.transform(results.getErrors(), BigQueryError.FROM_PB_FUNCTION);
+        // Throwing BigQueryException since there may be no JobId and we want to stay consistent
+        // with the case where there there is a HTTP error
+        throw new BigQueryException(bigQueryErrors);
       }
 
       // If there is no error, we construct TableResult
