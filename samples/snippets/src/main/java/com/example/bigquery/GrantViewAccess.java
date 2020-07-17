@@ -27,6 +27,7 @@ import com.google.cloud.bigquery.Table;
 import java.util.ArrayList;
 import java.util.List;
 
+// Sample to grant view access on dataset
 public class GrantViewAccess {
 
   public static void runGrantViewAccess() {
