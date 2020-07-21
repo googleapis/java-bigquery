@@ -44,6 +44,7 @@ public class TableInsertRowsWithoutRowIds {
     rowContent2.put("stringField", "Wylma Phlyntstone");
     rowContent2.put("numericField", 29);
     List<InsertAllRequest.RowToInsert> rowContent = new ArrayList<>();
+    // insertId is null if not specified
     rowContent.add(InsertAllRequest.RowToInsert.of(rowContent1));
     rowContent.add(InsertAllRequest.RowToInsert.of(rowContent2));
     tableInsertRowsWithoutRowIds(datasetName, tableName, rowContent);
