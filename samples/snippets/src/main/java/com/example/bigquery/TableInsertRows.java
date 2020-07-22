@@ -59,8 +59,8 @@ public class TableInsertRows {
               InsertAllRequest.newBuilder(tableId)
                   // More rows can be added in the same RPC by invoking .addRow() on the builder.
                   // You can also supply optional unique row keys to support de-duplication
-                  // scenarios.
-                  .addRow(rowContent)
+                  // scenarios. create a row Id so that we can safely retry.
+                  .addRow("1", rowContent)
                   .build());
 
       if (response.hasErrors()) {
