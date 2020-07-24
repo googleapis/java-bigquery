@@ -20,8 +20,6 @@ package com.example.bigquery;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
-import com.google.cloud.bigquery.Job;
-import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableResult;
@@ -30,33 +28,32 @@ import com.google.cloud.bigquery.TableResult;
 public class QueryPagination {
 
   public static void runQueryPagination() {
+    String datasetName = "MY_DATASET_NAME";
+    String tableName = "MY_TABLE_NAME";
     String query =
         "SELECT name, SUM(number) as total_people"
             + " FROM `bigquery-public-data.usa_names.usa_1910_2013`"
             + " GROUP BY name"
             + " ORDER BY total_people DESC"
             + " LIMIT 100";
-    queryPagination(query);
+    queryPagination(datasetName, tableName, query);
   }
 
-  public static void queryPagination(String query) {
+  public static void queryPagination(String datasetName, String tableName, String query) {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
-      QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query).build();
+      TableId tableId = TableId.of(datasetName, tableName);
+      QueryJobConfiguration queryConfig =
+          QueryJobConfiguration.newBuilder(query)
+              // save results into a table.
+              .setDestinationTable(tableId)
+              .build();
 
-      Job queryJob = bigquery.create(JobInfo.of(queryConfig));
+      bigquery.query(queryConfig);
 
-      // Get the destination table for the query job.
-      // All queries write to a destination table. If a destination table is not
-      // specified, the BigQuery populates it with a reference to a temporary
-      // anonymous table after the query completes.
-      TableId tableId = ((QueryJobConfiguration) queryJob.getConfiguration()).getDestinationTable();
-
-      // Download rows.
-      // The client library automatically handles pagination.
       TableResult results =
           bigquery.listTableData(tableId, BigQuery.TableDataListOption.pageSize(20));
 
@@ -66,7 +63,7 @@ public class QueryPagination {
           .forEach(row -> row.forEach(val -> System.out.printf("%s,", val.toString())));
 
       System.out.println("Query pagination performed successfully.");
-    } catch (BigQueryException e) {
+    } catch (BigQueryException | InterruptedException e) {
       System.out.println("Query not performed \n" + e.toString());
     }
   }

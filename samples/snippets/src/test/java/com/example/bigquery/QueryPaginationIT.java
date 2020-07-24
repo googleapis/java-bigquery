@@ -17,20 +17,41 @@
 package com.example.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
+import static junit.framework.TestCase.assertNotNull;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.UUID;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class QueryPaginationIT {
 
+  private String tableName;
   private ByteArrayOutputStream bout;
   private PrintStream out;
 
+  private static final String BIGQUERY_DATASET_NAME = requireEnvVar("BIGQUERY_DATASET_NAME");
+
+  private static String requireEnvVar(String varName) {
+    String value = System.getenv(varName);
+    assertNotNull(
+        "Environment variable " + varName + " is required to perform these tests.",
+        System.getenv(varName));
+    return value;
+  }
+
+  @BeforeClass
+  public static void checkRequirements() {
+    requireEnvVar("BIGQUERY_DATASET_NAME");
+  }
+
   @Before
   public void setUp() {
+    tableName =
+        "QUERY_PAGINATION_TABLE_FROM_GCS_TEST_" + UUID.randomUUID().toString().substring(0, 8);
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
     System.setOut(out);
@@ -38,6 +59,8 @@ public class QueryPaginationIT {
 
   @After
   public void tearDown() {
+    // Clean up
+    DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, tableName);
     System.setOut(null);
   }
 
@@ -49,7 +72,7 @@ public class QueryPaginationIT {
             + " GROUP BY name"
             + " ORDER BY total_people DESC"
             + " LIMIT 100";
-    QueryPagination.queryPagination(query);
+    QueryPagination.queryPagination(BIGQUERY_DATASET_NAME, tableName, query);
     assertThat(bout.toString()).contains("Query pagination performed successfully.");
   }
 }
