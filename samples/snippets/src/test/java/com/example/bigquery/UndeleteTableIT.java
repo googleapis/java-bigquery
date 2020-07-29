@@ -54,8 +54,8 @@ public class UndeleteTableIT {
     out = new PrintStream(bout);
     System.setOut(out);
 
-    tableName = "UNDELETE_TABLE_TEST" + UUID.randomUUID().toString().substring(0, 8);
-    recoverTableName = "RECOVER_DELETE_TABLE_TEST" + UUID.randomUUID().toString().substring(0, 8);
+    tableName = "UNDELETE_TABLE_TEST_" + UUID.randomUUID().toString().substring(0, 8);
+    recoverTableName = "RECOVER_DELETE_TABLE_TEST_" + UUID.randomUUID().toString().substring(0, 8);
     // Create table in dataset for testing
     CreateTable.createTable(BIGQUERY_DATASET_NAME, tableName, Schema.of());
 
@@ -67,7 +67,6 @@ public class UndeleteTableIT {
   @After
   public void tearDown() {
     // Clean up
-    DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, tableName);
     DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, recoverTableName);
     System.setOut(null);
   }
