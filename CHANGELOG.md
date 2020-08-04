@@ -1,5 +1,21 @@
 # Changelog
 
+### [1.116.9](https://www.github.com/googleapis/java-bigquery/compare/v1.116.8...v1.116.9) (2020-08-04)
+
+
+### Dependencies
+
+* update dependency com.google.cloud:google-cloud-shared-dependencies to v0.8.4 ([#639](https://www.github.com/googleapis/java-bigquery/issues/639)) ([46f929b](https://www.github.com/googleapis/java-bigquery/commit/46f929b1ac9a4a731c98e83b444d29573ab8572d))
+
+
+### Documentation
+
+* **samples:** add authorized view tutorial ([#637](https://www.github.com/googleapis/java-bigquery/issues/637)) ([91cdf72](https://www.github.com/googleapis/java-bigquery/commit/91cdf72efc93dc9fcf06a25b06ef227fa43359ed))
+* **samples:** add delete dataset and contents ([#629](https://www.github.com/googleapis/java-bigquery/issues/629)) ([209d035](https://www.github.com/googleapis/java-bigquery/commit/209d035c66fe776ad31db848d4d1b7c669f73595))
+* **samples:** add query with name types parameters ([#633](https://www.github.com/googleapis/java-bigquery/issues/633)) ([082f1a2](https://www.github.com/googleapis/java-bigquery/commit/082f1a2c2aeeaf1243681bee921fc54328969728))
+* **samples:** add query with positional type parameters ([#634](https://www.github.com/googleapis/java-bigquery/issues/634)) ([208883c](https://www.github.com/googleapis/java-bigquery/commit/208883c2205abeeaee6c5162253eefc569fcba78))
+* **samples:** update view query ([#625](https://www.github.com/googleapis/java-bigquery/issues/625)) ([8d71720](https://www.github.com/googleapis/java-bigquery/commit/8d717202ed36f55dd141ba45243f2dc30b597d99))
+
 ### [1.116.7](https://www.github.com/googleapis/java-bigquery/compare/v1.116.6...v1.116.7) (2020-07-21)
 
 
