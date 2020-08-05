@@ -42,12 +42,12 @@ public class UndeleteTable {
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
+      // "Accidentally" delete the table.
+      bigquery.delete(TableId.of(datasetName, tableName));
+
       // Record the current time.  We'll use this as the snapshot time
       // for recovering the table.
       long snapTime = System.currentTimeMillis();
-
-      // "Accidentally" delete the table.
-      bigquery.delete(TableId.of(datasetName, tableName));
 
       // Construct the restore-from tableID using a snapshot decorator.
       String snapshotTableId = String.format("%s@%d", tableName, snapTime);
