@@ -17,36 +17,30 @@
 package com.example.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
+import static junit.framework.TestCase.assertNotNull;
 
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.Schema;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class AddColumnLoadAppendIT {
+public class UndeleteTableIT {
 
   private String tableName;
-  private Schema schema;
+  private String recoverTableName;
   private ByteArrayOutputStream bout;
   private PrintStream out;
 
-  private static final String BIGQUERY_DATASET_NAME = requireEnvVar("BIGQUERY_DATASET_NAME");
+  private static final String BIGQUERY_DATASET_NAME = System.getenv("BIGQUERY_DATASET_NAME");
 
-  private static String requireEnvVar(String varName) {
-    String value = System.getenv(varName);
-    Assert.assertNotNull(
+  private static void requireEnvVar(String varName) {
+    assertNotNull(
         "Environment variable " + varName + " is required to perform these tests.",
         System.getenv(varName));
-    return value;
   }
 
   @BeforeClass
@@ -60,15 +54,10 @@ public class AddColumnLoadAppendIT {
     out = new PrintStream(bout);
     System.setOut(out);
 
-    // create a test table.
-    tableName = "ADD_COLUMN_LOAD_APPEND_TEST_" + UUID.randomUUID().toString().substring(0, 8);
-    schema =
-        Schema.of(
-            Field.newBuilder("name", LegacySQLTypeName.STRING)
-                .setMode(Field.Mode.REQUIRED)
-                .build());
-
-    CreateTable.createTable(BIGQUERY_DATASET_NAME, tableName, schema);
+    tableName = "UNDELETE_TABLE_TEST_" + UUID.randomUUID().toString().substring(0, 8);
+    recoverTableName = "RECOVER_DELETE_TABLE_TEST_" + UUID.randomUUID().toString().substring(0, 8);
+    // Create table in dataset for testing
+    CreateTable.createTable(BIGQUERY_DATASET_NAME, tableName, Schema.of());
 
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
@@ -78,22 +67,13 @@ public class AddColumnLoadAppendIT {
   @After
   public void tearDown() {
     // Clean up
-    DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, tableName);
+    DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, recoverTableName);
     System.setOut(null);
   }
 
   @Test
-  public void testAddColumnLoadAppend() {
-    String sourceUri = "gs://cloud-samples-data/bigquery/us-states/us-states.csv";
-    // Adding below additional column during the load job
-    Field newField =
-        Field.newBuilder("post_abbr", LegacySQLTypeName.STRING)
-            .setMode(Field.Mode.NULLABLE)
-            .build();
-    List<Field> newFields = new ArrayList<>(schema.getFields());
-    newFields.add(newField);
-    AddColumnLoadAppend.addColumnLoadAppend(
-        BIGQUERY_DATASET_NAME, tableName, sourceUri, Schema.of(newFields));
-    assertThat(bout.toString()).contains("Column successfully added during load append job");
+  public void testUndeleteTable() {
+    UndeleteTable.undeleteTable(BIGQUERY_DATASET_NAME, tableName, recoverTableName);
+    assertThat(bout.toString()).contains("Undelete table recovered successfully.");
   }
 }

@@ -17,25 +17,19 @@
 package com.example.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
+import static junit.framework.TestCase.assertNotNull;
 
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.LegacySQLTypeName;
-import com.google.cloud.bigquery.Schema;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class AddColumnLoadAppendIT {
+public class UpdateRoutineIT {
 
-  private String tableName;
-  private Schema schema;
+  private String routineName;
   private ByteArrayOutputStream bout;
   private PrintStream out;
 
@@ -43,7 +37,7 @@ public class AddColumnLoadAppendIT {
 
   private static String requireEnvVar(String varName) {
     String value = System.getenv(varName);
-    Assert.assertNotNull(
+    assertNotNull(
         "Environment variable " + varName + " is required to perform these tests.",
         System.getenv(varName));
     return value;
@@ -60,15 +54,9 @@ public class AddColumnLoadAppendIT {
     out = new PrintStream(bout);
     System.setOut(out);
 
-    // create a test table.
-    tableName = "ADD_COLUMN_LOAD_APPEND_TEST_" + UUID.randomUUID().toString().substring(0, 8);
-    schema =
-        Schema.of(
-            Field.newBuilder("name", LegacySQLTypeName.STRING)
-                .setMode(Field.Mode.REQUIRED)
-                .build());
-
-    CreateTable.createTable(BIGQUERY_DATASET_NAME, tableName, schema);
+    // create a temporary routine
+    routineName = "MY_ROUTINE_NAME_TEST_" + UUID.randomUUID().toString().substring(0, 8);
+    CreateRoutine.createRoutine(BIGQUERY_DATASET_NAME, routineName);
 
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
@@ -78,22 +66,13 @@ public class AddColumnLoadAppendIT {
   @After
   public void tearDown() {
     // Clean up
-    DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, tableName);
+    DeleteRoutine.deleteRoutine(BIGQUERY_DATASET_NAME, routineName);
     System.setOut(null);
   }
 
   @Test
-  public void testAddColumnLoadAppend() {
-    String sourceUri = "gs://cloud-samples-data/bigquery/us-states/us-states.csv";
-    // Adding below additional column during the load job
-    Field newField =
-        Field.newBuilder("post_abbr", LegacySQLTypeName.STRING)
-            .setMode(Field.Mode.NULLABLE)
-            .build();
-    List<Field> newFields = new ArrayList<>(schema.getFields());
-    newFields.add(newField);
-    AddColumnLoadAppend.addColumnLoadAppend(
-        BIGQUERY_DATASET_NAME, tableName, sourceUri, Schema.of(newFields));
-    assertThat(bout.toString()).contains("Column successfully added during load append job");
+  public void testUpdateRoutine() {
+    UpdateRoutine.updateRoutine(BIGQUERY_DATASET_NAME, routineName);
+    assertThat(bout.toString()).contains("Routine updated successfully");
   }
 }

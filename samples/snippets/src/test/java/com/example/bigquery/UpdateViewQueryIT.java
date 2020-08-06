@@ -17,25 +17,23 @@
 package com.example.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
+import static junit.framework.TestCase.assertNotNull;
 
 import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.Schema;
+import com.google.cloud.bigquery.StandardSQLTypeName;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class AddColumnLoadAppendIT {
+public class UpdateViewQueryIT {
 
   private String tableName;
-  private Schema schema;
+  private String viewName;
   private ByteArrayOutputStream bout;
   private PrintStream out;
 
@@ -43,7 +41,7 @@ public class AddColumnLoadAppendIT {
 
   private static String requireEnvVar(String varName) {
     String value = System.getenv(varName);
-    Assert.assertNotNull(
+    assertNotNull(
         "Environment variable " + varName + " is required to perform these tests.",
         System.getenv(varName));
     return value;
@@ -60,15 +58,23 @@ public class AddColumnLoadAppendIT {
     out = new PrintStream(bout);
     System.setOut(out);
 
-    // create a test table.
-    tableName = "ADD_COLUMN_LOAD_APPEND_TEST_" + UUID.randomUUID().toString().substring(0, 8);
-    schema =
-        Schema.of(
-            Field.newBuilder("name", LegacySQLTypeName.STRING)
-                .setMode(Field.Mode.REQUIRED)
-                .build());
+    tableName = "MY_TABLE_NAME_TEST_" + UUID.randomUUID().toString().substring(0, 8);
+    viewName = "MY_VIEW_NAME_TEST_" + UUID.randomUUID().toString().substring(0, 8);
 
+    // create a test table.
+    Schema schema =
+        Schema.of(
+            Field.of("timestampField", StandardSQLTypeName.TIMESTAMP),
+            Field.of("stringField", StandardSQLTypeName.STRING),
+            Field.of("booleanField", StandardSQLTypeName.BOOL));
     CreateTable.createTable(BIGQUERY_DATASET_NAME, tableName, schema);
+
+    // create a test view
+    String query =
+        String.format(
+            "SELECT timestampField, stringField, booleanField FROM %s.%s",
+            BIGQUERY_DATASET_NAME, tableName);
+    CreateView.createView(BIGQUERY_DATASET_NAME, viewName, query);
 
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
@@ -78,22 +84,17 @@ public class AddColumnLoadAppendIT {
   @After
   public void tearDown() {
     // Clean up
+    DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, viewName);
     DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, tableName);
     System.setOut(null);
   }
 
   @Test
-  public void testAddColumnLoadAppend() {
-    String sourceUri = "gs://cloud-samples-data/bigquery/us-states/us-states.csv";
-    // Adding below additional column during the load job
-    Field newField =
-        Field.newBuilder("post_abbr", LegacySQLTypeName.STRING)
-            .setMode(Field.Mode.NULLABLE)
-            .build();
-    List<Field> newFields = new ArrayList<>(schema.getFields());
-    newFields.add(newField);
-    AddColumnLoadAppend.addColumnLoadAppend(
-        BIGQUERY_DATASET_NAME, tableName, sourceUri, Schema.of(newFields));
-    assertThat(bout.toString()).contains("Column successfully added during load append job");
+  public void testUpdateViewQuery() {
+    String updateQuery =
+        String.format(
+            "SELECT TimestampField, StringField FROM %s.%s", BIGQUERY_DATASET_NAME, tableName);
+    UpdateViewQuery.updateViewQuery(BIGQUERY_DATASET_NAME, viewName, updateQuery);
+    assertThat(bout.toString()).contains("View query updated successfully");
   }
 }

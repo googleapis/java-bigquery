@@ -19,10 +19,6 @@ package com.example.bigquery;
 import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertNotNull;
 
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.Schema;
-import com.google.cloud.bigquery.StandardSQLTypeName;
-import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.UUID;
@@ -31,13 +27,16 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class LoadTableClusteredIT {
+public class AuthorizedViewTutorialIT {
 
-  private String tableName;
+  private String sourceDatasetId;
+  private String sourceTableId;
+  private String sharedDatasetId;
+  private String sharedViewId;
   private ByteArrayOutputStream bout;
   private PrintStream out;
 
-  private static final String BIGQUERY_DATASET_NAME = requireEnvVar("BIGQUERY_DATASET_NAME");
+  private static final String PROJECT_ID = requireEnvVar("GOOGLE_CLOUD_PROJECT");
 
   private static String requireEnvVar(String varName) {
     String value = System.getenv(varName);
@@ -49,12 +48,16 @@ public class LoadTableClusteredIT {
 
   @BeforeClass
   public static void checkRequirements() {
-    requireEnvVar("BIGQUERY_DATASET_NAME");
+    requireEnvVar("GOOGLE_CLOUD_PROJECT");
   }
 
   @Before
   public void setUp() {
-    tableName = "LOAD_CLUSTERED_TABLE_TEST_" + UUID.randomUUID().toString().substring(0, 8);
+    sourceDatasetId = "SOURCE_DATASET_TEST_" + UUID.randomUUID().toString().substring(0, 8);
+    sourceTableId = "SOURCE_TABLE_TEST_" + UUID.randomUUID().toString().substring(0, 8);
+    sharedDatasetId = "SHARED_DATASET_TEST_" + UUID.randomUUID().toString().substring(0, 8);
+    sharedViewId = "SHARED_VIEW_TEST_" + UUID.randomUUID().toString().substring(0, 8);
+
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
     System.setOut(out);
@@ -63,22 +66,15 @@ public class LoadTableClusteredIT {
   @After
   public void tearDown() {
     // Clean up
-    DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, tableName);
+    DeleteDataset.deleteDataset(PROJECT_ID, sourceDatasetId);
+    DeleteDataset.deleteDataset(PROJECT_ID, sharedDatasetId);
     System.setOut(null);
   }
 
   @Test
-  public void testLoadTableClustered() {
-    String sourceUri = "gs://cloud-samples-data/bigquery/us-states/us-states-by-date-no-header.csv";
-    Schema schema =
-        Schema.of(
-            Field.of("name", StandardSQLTypeName.STRING),
-            Field.of("post_abbr", StandardSQLTypeName.STRING),
-            Field.of("date", StandardSQLTypeName.DATE));
-
-    LoadTableClustered.loadTableClustered(
-        BIGQUERY_DATASET_NAME, tableName, sourceUri, schema, ImmutableList.of("name", "post_abbr"));
-    assertThat(bout.toString())
-        .contains("Data successfully loaded into clustered table during load job");
+  public void testAuthorizedViewTutorial() {
+    AuthorizedViewTutorial.authorizedViewTutorial(
+        PROJECT_ID, sourceDatasetId, sourceTableId, sharedDatasetId, sharedViewId);
+    assertThat(bout.toString()).contains("Authorized view tutorial successfully");
   }
 }

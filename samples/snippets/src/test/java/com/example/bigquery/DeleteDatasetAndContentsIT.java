@@ -17,33 +17,27 @@
 package com.example.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
+import static junit.framework.TestCase.assertNotNull;
 
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.LegacySQLTypeName;
-import com.google.cloud.bigquery.Schema;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class AddColumnLoadAppendIT {
+public class DeleteDatasetAndContentsIT {
 
-  private String tableName;
-  private Schema schema;
+  private String datasetName;
   private ByteArrayOutputStream bout;
   private PrintStream out;
 
-  private static final String BIGQUERY_DATASET_NAME = requireEnvVar("BIGQUERY_DATASET_NAME");
+  private static final String PROJECT_ID = requireEnvVar("GOOGLE_CLOUD_PROJECT");
 
   private static String requireEnvVar(String varName) {
     String value = System.getenv(varName);
-    Assert.assertNotNull(
+    assertNotNull(
         "Environment variable " + varName + " is required to perform these tests.",
         System.getenv(varName));
     return value;
@@ -51,7 +45,7 @@ public class AddColumnLoadAppendIT {
 
   @BeforeClass
   public static void checkRequirements() {
-    requireEnvVar("BIGQUERY_DATASET_NAME");
+    requireEnvVar("GOOGLE_CLOUD_PROJECT");
   }
 
   @Before
@@ -59,16 +53,9 @@ public class AddColumnLoadAppendIT {
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
     System.setOut(out);
-
-    // create a test table.
-    tableName = "ADD_COLUMN_LOAD_APPEND_TEST_" + UUID.randomUUID().toString().substring(0, 8);
-    schema =
-        Schema.of(
-            Field.newBuilder("name", LegacySQLTypeName.STRING)
-                .setMode(Field.Mode.REQUIRED)
-                .build());
-
-    CreateTable.createTable(BIGQUERY_DATASET_NAME, tableName, schema);
+    // create a temporary dataset
+    datasetName = "MY_DATASET_TEST_" + UUID.randomUUID().toString().substring(0, 8);
+    CreateDataset.createDataset(datasetName);
 
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
@@ -77,23 +64,12 @@ public class AddColumnLoadAppendIT {
 
   @After
   public void tearDown() {
-    // Clean up
-    DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, tableName);
     System.setOut(null);
   }
 
   @Test
-  public void testAddColumnLoadAppend() {
-    String sourceUri = "gs://cloud-samples-data/bigquery/us-states/us-states.csv";
-    // Adding below additional column during the load job
-    Field newField =
-        Field.newBuilder("post_abbr", LegacySQLTypeName.STRING)
-            .setMode(Field.Mode.NULLABLE)
-            .build();
-    List<Field> newFields = new ArrayList<>(schema.getFields());
-    newFields.add(newField);
-    AddColumnLoadAppend.addColumnLoadAppend(
-        BIGQUERY_DATASET_NAME, tableName, sourceUri, Schema.of(newFields));
-    assertThat(bout.toString()).contains("Column successfully added during load append job");
+  public void testDeleteDatasetAndContents() {
+    DeleteDatasetAndContents.deleteDatasetAndContents(PROJECT_ID, datasetName);
+    assertThat(bout.toString()).contains("Dataset deleted with contents successfully");
   }
 }
