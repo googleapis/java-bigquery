@@ -18,17 +18,21 @@ package com.google.cloud.bigquery.spi.v2;
 
 import com.google.api.core.InternalExtensionOnly;
 import com.google.api.services.bigquery.model.Dataset;
+import com.google.api.services.bigquery.model.GetPolicyOptions;
 import com.google.api.services.bigquery.model.GetQueryResultsResponse;
 import com.google.api.services.bigquery.model.Job;
 import com.google.api.services.bigquery.model.Model;
+import com.google.api.services.bigquery.model.Policy;
 import com.google.api.services.bigquery.model.Routine;
 import com.google.api.services.bigquery.model.Table;
 import com.google.api.services.bigquery.model.TableDataInsertAllRequest;
 import com.google.api.services.bigquery.model.TableDataInsertAllResponse;
 import com.google.api.services.bigquery.model.TableDataList;
+import com.google.api.services.bigquery.model.TestIamPermissionsResponse;
 import com.google.cloud.ServiceRpc;
 import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.BigQueryException;
+import java.util.List;
 import java.util.Map;
 
 @InternalExtensionOnly
@@ -300,4 +304,25 @@ public interface BigQueryRpc extends ServiceRpc {
       long destOffset,
       int length,
       boolean last);
+
+  /**
+   * Returns the IAM Policy for the specified resource.
+   *
+   * @throws BigQueryException upon failure
+   */
+  Policy getIamPolicy(String resourceId, GetPolicyOptions options);
+
+  /**
+   * Updates the IAM policy for the specified resource.
+   *
+   * @throws BigQueryException upon failure
+   */
+  Policy setIamPolicy(String resourceId, Policy policy);
+
+  /**
+   * Tests whether the called holds the listed permissions for the specified resource.
+   *
+   * @throws BigQueryException upon failure
+   */
+  TestIamPermissionsResponse testIamPermissions(String resourceId, List<String> permissions);
 }

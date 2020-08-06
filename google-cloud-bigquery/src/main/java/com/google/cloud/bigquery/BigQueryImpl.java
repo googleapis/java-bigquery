@@ -17,6 +17,8 @@
 package com.google.cloud.bigquery;
 
 import static com.google.cloud.RetryHelper.runWithRetries;
+import static com.google.cloud.bigquery.PolicyHelper.convertFromApiPolicy;
+import static com.google.cloud.bigquery.PolicyHelper.convertToApiPolicy;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
@@ -33,6 +35,7 @@ import com.google.api.services.bigquery.model.TableSchema;
 import com.google.cloud.BaseService;
 import com.google.cloud.PageImpl;
 import com.google.cloud.PageImpl.NextPageFetcher;
+import com.google.cloud.Policy;
 import com.google.cloud.RetryHelper;
 import com.google.cloud.RetryHelper.RetryHelperException;
 import com.google.cloud.Tuple;
@@ -338,9 +341,11 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       throw createException;
     }
 
-    // If create RPC fails, it's still possible that the job has been successfully created,
+    // If create RPC fails, it's still possible that the job has been successfully
+    // created,
     // and get might work.
-    // We can only do this if we randomly generated the ID. Otherwise we might mistakenly
+    // We can only do this if we randomly generated the ID. Otherwise we might
+    // mistakenly
     // fetch a job created by someone else.
     Job job;
     try {
@@ -653,7 +658,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   @Override
   public Table getTable(TableId tableId, TableOption... options) {
-    // More context about why this: https://github.com/googleapis/google-cloud-java/issues/3808
+    // More context about why this:
+    // https://github.com/googleapis/google-cloud-java/issues/3808
     final TableId completeTableId =
         tableId.setProjectId(
             Strings.isNullOrEmpty(tableId.getProject())
@@ -941,7 +947,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     requestPb.setIgnoreUnknownValues(request.ignoreUnknownValues());
     requestPb.setSkipInvalidRows(request.skipInvalidRows());
     requestPb.setTemplateSuffix(request.getTemplateSuffix());
-    // Using an array of size 1 here to have a mutable boolean variable, which can be modified in
+    // Using an array of size 1 here to have a mutable boolean variable, which can
+    // be modified in
     // an anonymous inner class.
     final boolean[] allInsertIdsSet = {true};
     List<Rows> rowsPb =
@@ -1257,5 +1264,66 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       checkArgument(prev == null, "Duplicate option %s", option);
     }
     return optionMap;
+  }
+
+  @Override
+  public Policy getIamPolicy(TableId tableId) {
+    final TableId completeTableId =
+        tableId.setProjectId(
+            Strings.isNullOrEmpty(tableId.getProject())
+                ? getOptions().getProjectId()
+                : tableId.getProject());
+
+    try {
+      return convertFromApiPolicy(
+          runWithRetries(
+              new Callable<com.google.api.services.bigquery.model.Policy>() {
+                @Override
+                public com.google.api.services.bigquery.model.Policy call() {
+                  return bigQueryRpc.getIamPolicy(completeTableId.getIAMResourceName(), null);
+                }
+              },
+              getOptions().getRetrySettings(),
+              EXCEPTION_HANDLER,
+              getOptions().getClock()));
+    } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    }
+  }
+
+  public Policy setIamPolicy(TableId tableId, Policy policy) {
+    final TableId completeTableId =
+        tableId.setProjectId(
+            Strings.isNullOrEmpty(tableId.getProject())
+                ? getOptions().getProjectId()
+                : tableId.getProject());
+
+    try {
+      return convertFromApiPolicy(
+          runWithRetries(
+              new Callable<com.google.api.services.bigquery.model.Policy>() {
+                @Override
+                public com.google.api.services.bigquery.model.Policy call() {
+                  return bigqueryRpc.setIamPolicy(
+                      completeTableId.getIAMResourceName(), convertToApiPolicy(policy), optionsMap);
+                }
+              },
+              getOptions().getRetrySettings(),
+              EXCEPTION_HANDLER,
+              getOptions().getClock()));
+    } catch (RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    }
+  }
+
+  @Override
+  public List<Boolean> testIamPermissions(TableId tableId, List<String> permissions) {
+    final TableId completeTableId =
+        tableId.setProjectId(
+            Strings.isNullOrEmpty(tableId.getProject())
+                ? getOptions().getProjectId()
+                : tableId.getProject());
+    // TODO(shollyman): confirm we want to mirror this signature, seems odd
+    return null;
   }
 }
