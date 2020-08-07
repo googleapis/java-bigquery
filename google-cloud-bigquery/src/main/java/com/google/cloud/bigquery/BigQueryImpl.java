@@ -52,11 +52,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.logging.Logger;
 
 final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuery {
-
-  private static final Logger LOGGER = Logger.getLogger(BigQueryImpl.class.getName());
 
   private static class DatasetPageFetcher implements NextPageFetcher<Dataset> {
 
