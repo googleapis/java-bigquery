@@ -590,7 +590,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @Override
-  public QueryResponse fastQuery(String projectId, QueryRequest content) {
+  public QueryResponse queryRpc(String projectId, QueryRequest content) {
     try {
       return bigquery.jobs().query(projectId, content).execute();
     } catch (IOException ex) {

@@ -1845,7 +1845,7 @@ public class BigQueryImplTest {
 
     QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_QUERY);
 
-    when(bigqueryRpcMock.fastQuery(PROJECT, requestInfo.toPb())).thenReturn(queryResponsePb);
+    when(bigqueryRpcMock.queryRpc(PROJECT, requestInfo.toPb())).thenReturn(queryResponsePb);
 
     bigquery = options.getService();
     TableResult result = bigquery.query(QUERY_JOB_CONFIGURATION_FOR_QUERY);
@@ -1858,7 +1858,7 @@ public class BigQueryImplTest {
       assertThat(row.get(0).getBooleanValue()).isFalse();
       assertThat(row.get(1).getLongValue()).isEqualTo(1);
     }
-    verify(bigqueryRpcMock).fastQuery(PROJECT, requestInfo.toPb());
+    verify(bigqueryRpcMock).queryRpc(PROJECT, requestInfo.toPb());
   }
 
   @Test
@@ -2139,7 +2139,7 @@ public class BigQueryImplTest {
     QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_QUERY);
     QueryRequest requestPb = requestInfo.toPb();
 
-    when(bigqueryRpcMock.fastQuery(eq(PROJECT), requestPbCapture.capture()))
+    when(bigqueryRpcMock.queryRpc(eq(PROJECT), requestPbCapture.capture()))
         .thenThrow(new BigQueryException(500, "InternalError"))
         .thenThrow(new BigQueryException(502, "Bad Gateway"))
         .thenThrow(new BigQueryException(503, "Service Unavailable"))
@@ -2165,7 +2165,7 @@ public class BigQueryImplTest {
     }
     assertTrue(idempotent);
 
-    verify(bigqueryRpcMock, times(5)).fastQuery(PROJECT, requestPb);
+    verify(bigqueryRpcMock, times(5)).queryRpc(PROJECT, requestPb);
   }
 
   @Test
@@ -2183,7 +2183,7 @@ public class BigQueryImplTest {
     QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY);
     QueryRequest requestPb = requestInfo.toPb();
 
-    when(bigqueryRpcMock.fastQuery(eq(PROJECT), requestPbCapture.capture()))
+    when(bigqueryRpcMock.queryRpc(eq(PROJECT), requestPbCapture.capture()))
         .thenThrow(new BigQueryException(500, "InternalError"))
         .thenThrow(new BigQueryException(502, "Bad Gateway"))
         .thenThrow(new BigQueryException(503, "Service Unavailable"))
@@ -2209,7 +2209,7 @@ public class BigQueryImplTest {
     }
     assertTrue(idempotent);
 
-    verify(bigqueryRpcMock, times(5)).fastQuery(PROJECT, requestPb);
+    verify(bigqueryRpcMock, times(5)).queryRpc(PROJECT, requestPb);
   }
 
   @Test
@@ -2226,7 +2226,7 @@ public class BigQueryImplTest {
     QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_DDLQUERY);
     QueryRequest requestPb = requestInfo.toPb();
 
-    when(bigqueryRpcMock.fastQuery(eq(PROJECT), requestPbCapture.capture()))
+    when(bigqueryRpcMock.queryRpc(eq(PROJECT), requestPbCapture.capture()))
         .thenThrow(new BigQueryException(500, "InternalError"))
         .thenThrow(new BigQueryException(502, "Bad Gateway"))
         .thenThrow(new BigQueryException(503, "Service Unavailable"))
@@ -2252,7 +2252,7 @@ public class BigQueryImplTest {
     }
     assertTrue(idempotent);
 
-    verify(bigqueryRpcMock, times(5)).fastQuery(PROJECT, requestPb);
+    verify(bigqueryRpcMock, times(5)).queryRpc(PROJECT, requestPb);
   }
 
   @Test
@@ -2276,7 +2276,7 @@ public class BigQueryImplTest {
     QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_QUERY);
     QueryRequest requestPb = requestInfo.toPb();
 
-    when(bigqueryRpcMock.fastQuery(PROJECT, requestPb)).thenReturn(responsePb);
+    when(bigqueryRpcMock.queryRpc(PROJECT, requestPb)).thenReturn(responsePb);
 
     bigquery = options.getService();
     try {
@@ -2285,7 +2285,7 @@ public class BigQueryImplTest {
     } catch (BigQueryException ex) {
       assertEquals(Lists.transform(errorProtoList, BigQueryError.FROM_PB_FUNCTION), ex.getErrors());
     }
-    verify(bigqueryRpcMock).fastQuery(PROJECT, requestPb);
+    verify(bigqueryRpcMock).queryRpc(PROJECT, requestPb);
   }
 
   @Test

@@ -3,7 +3,7 @@
 <differences>
   <difference>
     <className>com/google/cloud/bigquery/spi/v2/BigQueryRpc</className>
-    <method>com.google.api.services.bigquery.model.QueryResponse fastQuery(java.lang.String, com.google.api.services.bigquery.model.QueryRequest)</method>
+    <method>com.google.api.services.bigquery.model.QueryResponse queryRpc(java.lang.String, com.google.api.services.bigquery.model.QueryRequest)</method>
     <differenceType>7012</differenceType>
   </difference>
 </differences>

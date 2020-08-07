@@ -287,7 +287,7 @@ public interface BigQueryRpc extends ServiceRpc {
    * @param content the {@link com.google.api.services.bigquery.model.QueryRequest}
    * @return the request
    */
-  QueryResponse fastQuery(String projectId, QueryRequest content);
+  QueryResponse queryRpc(String projectId, QueryRequest content);
 
   /**
    * Opens a resumable upload session to load data into a BigQuery table and returns an upload URI.

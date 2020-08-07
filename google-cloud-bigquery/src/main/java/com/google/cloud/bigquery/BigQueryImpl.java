@@ -1173,7 +1173,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   @Override
   public TableResult query(QueryJobConfiguration configuration, JobOption... options)
-      throws InterruptedException {
+      throws InterruptedException, JobException {
     Job.checkNotDryRun(configuration, "query");
 
     // If all parameters passed in configuration are supported by the query() method on the backend,
@@ -1198,7 +1198,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               new Callable<com.google.api.services.bigquery.model.QueryResponse>() {
                 @Override
                 public com.google.api.services.bigquery.model.QueryResponse call() {
-                  return bigQueryRpc.fastQuery(projectId, content);
+                  return bigQueryRpc.queryRpc(projectId, content);
                 }
               },
               getOptions().getRetrySettings(),
@@ -1208,10 +1208,15 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       throw BigQueryException.translateAndThrow(e);
     }
 
-    // If fast query completed and has only one page in results
-    if (results.getJobComplete() && results.getPageToken() == null) {
-      // If there are errors, BigQueryException is thrown
-      ImmutableList.Builder<BigQueryError> errors = ImmutableList.builder();
+    // classic path
+    if (!results.getJobComplete() || results.getPageToken() != null) {
+      // Use jobId returned from backend to return full TableResult
+      String jobId = results.getJobReference().getJobId();
+      Job job = getJob(JobId.of(jobId));
+      TableResult result = job.getQueryResults();
+      return result;
+    } else { // fast path
+      // If there are errors, throw BigQueryException
       if (results.getErrors() != null) {
         List<BigQueryError> bigQueryErrors =
             Lists.transform(results.getErrors(), BigQueryError.FROM_PB_FUNCTION);
@@ -1239,13 +1244,6 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               new TableDataPageFetcher(null, getOptions(), null, optionMap(options)),
               null,
               transformTableData(results.getRows())));
-    } else {
-      // Use jobId returned from backend to return full TableResult
-      String jobId = results.getJobReference().getJobId();
-      Job job = getJob(JobId.of(jobId));
-      job.waitFor();
-      TableResult result = job.getQueryResults();
-      return result;
     }
   }
 
