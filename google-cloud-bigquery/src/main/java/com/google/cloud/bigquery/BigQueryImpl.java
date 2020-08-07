@@ -1179,13 +1179,13 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     if (requestInfo.isFastQuerySupported()) {
       String projectId = getOptions().getProjectId();
       QueryRequest content = requestInfo.toPb();
-      return fastQuery(projectId, content, options);
+      return queryRpc(projectId, content, options);
     }
     // Otherwise, fall back to the existing create query job logic
     return create(JobInfo.of(configuration), options).getQueryResults();
   }
 
-  private TableResult fastQuery(
+  private TableResult queryRpc(
       final String projectId, final QueryRequest content, JobOption... options)
       throws InterruptedException {
     com.google.api.services.bigquery.model.QueryResponse results;
@@ -1212,36 +1212,34 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       Job job = getJob(JobId.of(jobId));
       TableResult result = job.getQueryResults();
       return result;
-    } else { // fast path
-      // If there are errors, throw BigQueryException
-      if (results.getErrors() != null) {
-        List<BigQueryError> bigQueryErrors =
-            Lists.transform(results.getErrors(), BigQueryError.FROM_PB_FUNCTION);
-        // Throwing BigQueryException since there may be no JobId and we want to stay consistent
-        // with the case where there there is a HTTP error
-        throw new BigQueryException(bigQueryErrors);
-      }
-
-      // If there is no error, we construct TableResult
-      TableSchema schemaPb = results.getSchema();
-
-      Long numRows;
-      if (results.getNumDmlAffectedRows() == null && results.getTotalRows() == null) {
-        numRows = 0L;
-      } else if (results.getNumDmlAffectedRows() != null) {
-        numRows = results.getNumDmlAffectedRows();
-      } else {
-        numRows = results.getTotalRows().longValue();
-      }
-
-      return new TableResult(
-          schemaPb == null ? null : Schema.fromPb(schemaPb),
-          numRows,
-          new PageImpl<>(
-              new TableDataPageFetcher(null, getOptions(), null, optionMap(options)),
-              null,
-              transformTableData(results.getRows())));
     }
+    // fast path
+    if (results.getErrors() != null) {
+      List<BigQueryError> bigQueryErrors =
+          Lists.transform(results.getErrors(), BigQueryError.FROM_PB_FUNCTION);
+      // Throwing BigQueryException since there may be no JobId and we want to stay consistent
+      // with the case where there there is a HTTP error
+      throw new BigQueryException(bigQueryErrors);
+    }
+
+    TableSchema schemaPb = results.getSchema();
+
+    Long numRows;
+    if (results.getNumDmlAffectedRows() == null && results.getTotalRows() == null) {
+      numRows = 0L;
+    } else if (results.getNumDmlAffectedRows() != null) {
+      numRows = results.getNumDmlAffectedRows();
+    } else {
+      numRows = results.getTotalRows().longValue();
+    }
+
+    return new TableResult(
+        schemaPb == null ? null : Schema.fromPb(schemaPb),
+        numRows,
+        new PageImpl<>(
+            new TableDataPageFetcher(null, getOptions(), null, optionMap(options)),
+            null,
+            transformTableData(results.getRows())));
   }
 
   @Override
