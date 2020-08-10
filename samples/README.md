@@ -2,11 +2,11 @@
 
 ## Running a sample using Cloud Shell
 
-The Google Cloud Shell has application default credentials from its compute instance which will allow you to run an integration test without having to obtain `GOOGLE_APPLICATION_CREDENTIANS`. Go to [BigQuery Client Readme](https://github.com/googleapis/java-bigquery#samples) to run each sample in the Cloud Shell.
+The Google Cloud Shell has application default credentials from its compute instance which will allow you to run an integration test without having to obtain `GOOGLE_APPLICATION_CREDENTIALS`. Go to [BigQuery Client Readme](https://github.com/googleapis/java-bigquery#samples) to run each sample in the Cloud Shell.
 
 ## Running a sample using command line
 
-First set up `GOOGLE_APPLICATION_CREDENTIANS` and `GOOGLE_CLOUD_PROJECT` environment variables before running any samples.
+First set up `GOOGLE_APPLICATION_CREDENTIALS` and `GOOGLE_CLOUD_PROJECT` environment variables before running any samples.
 
 To run a sample:
 1. `cd samples/snippets` - all samples are located in `java-bigquery/samples/snippets` directory.
