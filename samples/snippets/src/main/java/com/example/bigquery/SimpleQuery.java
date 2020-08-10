@@ -26,9 +26,15 @@ import com.google.cloud.bigquery.TableResult;
 public class SimpleQuery {
 
   public static void main(String[] args) {
-    // TODO(developer): Replace this query before running the sample.
-    String query = "SELECT corpus FROM `bigquery-public-data.samples.shakespeare` GROUP BY corpus;";
-    simpleQuery(query);
+    if (args.length == 0) {
+      // no command-line args passed
+      // TODO(developer): Replace this query before running the sample.
+      String query = "SELECT corpus FROM bigquery-public-data.samples.shakespeare GROUP BY corpus;";
+      simpleQuery(query);
+    } else {
+      // use command-line args
+      simpleQuery(args[0]);
+    }
   }
 
   public static void simpleQuery(String query) {
