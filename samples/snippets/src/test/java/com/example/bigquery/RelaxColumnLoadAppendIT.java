@@ -24,8 +24,6 @@ import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.StandardSQLTypeName;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
 import java.util.UUID;
 import org.junit.After;
 import org.junit.Before;
@@ -61,18 +59,15 @@ public class RelaxColumnLoadAppendIT {
 
     // Create a test table
     tableName = "RELAX_COLUMN_LOAD_APPEND_TEST_" + UUID.randomUUID().toString().substring(0, 8);
+    Field id =
+        Field.newBuilder("id", StandardSQLTypeName.INT64).setMode(Field.Mode.REQUIRED).build();
     Field name =
-        Field.newBuilder("Name", StandardSQLTypeName.STRING).setMode(Field.Mode.REQUIRED).build();
-    Field age =
-        Field.newBuilder("Age", StandardSQLTypeName.INT64).setMode(Field.Mode.REQUIRED).build();
-    Field weight =
-        Field.newBuilder("Weight", StandardSQLTypeName.FLOAT64)
+        Field.newBuilder("name", StandardSQLTypeName.STRING).setMode(Field.Mode.REQUIRED).build();
+    Field postAbbr =
+        Field.newBuilder("post_abbr", StandardSQLTypeName.STRING)
             .setMode(Field.Mode.REQUIRED)
             .build();
-    Field isMagic =
-        Field.newBuilder("IsMagic", StandardSQLTypeName.BOOL).setMode(Field.Mode.REQUIRED).build();
-    CreateTable.createTable(
-        BIGQUERY_DATASET_NAME, tableName, Schema.of(name, age, weight, isMagic));
+    CreateTable.createTable(BIGQUERY_DATASET_NAME, tableName, Schema.of(id, name, postAbbr));
 
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
@@ -88,8 +83,8 @@ public class RelaxColumnLoadAppendIT {
 
   @Test
   public void testRelaxColumnLoadAppend() {
-    Path csvPath = FileSystems.getDefault().getPath("src/test/resources", "partialdata.csv");
-    RelaxColumnLoadAppend.relaxColumnLoadAppend(BIGQUERY_DATASET_NAME, tableName, csvPath);
+    String sourceUri = "gs://cloud-samples-data/bigquery/us-states/us-states.csv";
+    RelaxColumnLoadAppend.relaxColumnLoadAppend(BIGQUERY_DATASET_NAME, tableName, sourceUri);
     assertThat(bout.toString()).contains("Relax column append successfully loaded in a table");
   }
 }
