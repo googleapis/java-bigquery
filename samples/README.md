@@ -11,7 +11,6 @@ First set up `GOOGLE_APPLICATION_CREDENTIALS` and `GOOGLE_CLOUD_PROJECT` environ
 To run a sample:
 1. `cd samples/snippets` - all samples are located in `java-bigquery/samples/snippets` directory.
 2. `mvn compile exec:java -Dexec.mainClass=com.example.bigquery.SimpleQuery` - this runs the [SimpleQuery sample](https://github.com/googleapis/java-bigquery/blob/master/samples/snippets/src/main/java/com/example/bigquery/SimpleQuery.java) which runs the BigQuery query method. You can update the developer's `TODO` section in the snippet if you wish to run a different query.
-3. `mvn compile exec:java -Dexec.mainClass=com.example.bigquery.SimpleQuery -Dexec.args="'SELECT word_count FROM bigquery-public-data.samples.shakespeare GROUP BY word_count;'"` - this will run the [SimpleQuery sample](https://github.com/googleapis/java-bigquery/blob/master/samples/snippets/src/main/java/com/example/bigquery/SimpleQuery.java) with your command line arguments.
 
 ## Running a sample integration test using command line
 
