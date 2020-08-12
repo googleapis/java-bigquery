@@ -666,11 +666,11 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @Override
-  public Policy getIamPolicy(String resourceId, GetPolicyOptions options) {
+  public Policy getIamPolicy(String resourceId, Map<Option, ?> options) {
     try {
       GetIamPolicyRequest policyRequest = new GetIamPolicyRequest();
-      if (null != options) {
-        policyRequest = policyRequest.setOptions(options);
+      if (null != Option.REQUESTED_POLCIY_VERSION.) {
+        policyRequest = policyRequest.setOptions(new GetPolicyOptions().setRequestedPolicyVersion(Option.REQUESTED_POLICY_VERSION.getLong(options).intValue()));
       }
       return bigquery.tables().getIamPolicy(resourceId, policyRequest).execute();
     } catch (IOException ex) {
@@ -679,7 +679,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @Override
-  public Policy setIamPolicy(String resourceId, Policy policy) {
+  public Policy setIamPolicy(String resourceId, Policy policy, Map<Option, ?> options) {
     try {
       SetIamPolicyRequest policyRequest = new SetIamPolicyRequest().setPolicy(policy);
       return bigquery.tables().setIamPolicy(resourceId, policyRequest).execute();
@@ -690,7 +690,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
 
   @Override
   public TestIamPermissionsResponse testIamPermissions(
-      String resourceId, List<String> permissions) {
+      String resourceId, List<String> permissions, Map<Option, ?> options) {
     try {
       TestIamPermissionsRequest permissionsRequest =
           new TestIamPermissionsRequest().setPermissions(permissions);

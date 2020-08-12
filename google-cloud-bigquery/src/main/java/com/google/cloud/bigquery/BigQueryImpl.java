@@ -1267,7 +1267,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   }
 
   @Override
-  public Policy getIamPolicy(TableId tableId) {
+  public Policy getIamPolicy(TableId tableId, IAMOption... options) {
     final TableId completeTableId =
         tableId.setProjectId(
             Strings.isNullOrEmpty(tableId.getProject())
@@ -1275,12 +1275,13 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 : tableId.getProject());
 
     try {
+      final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
       return convertFromApiPolicy(
           runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Policy>() {
                 @Override
                 public com.google.api.services.bigquery.model.Policy call() {
-                  return bigQueryRpc.getIamPolicy(completeTableId.getIAMResourceName(), null);
+                  return bigQueryRpc.getIamPolicy(completeTableId.getIAMResourceName(), optionsMap);
                 }
               },
               getOptions().getRetrySettings(),
@@ -1291,7 +1292,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     }
   }
 
-  public Policy setIamPolicy(TableId tableId, Policy policy) {
+  public Policy setIamPolicy(TableId tableId, final Policy policy, IAMOption... options) {
     final TableId completeTableId =
         tableId.setProjectId(
             Strings.isNullOrEmpty(tableId.getProject())
@@ -1299,12 +1300,13 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 : tableId.getProject());
 
     try {
+      final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
       return convertFromApiPolicy(
           runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Policy>() {
                 @Override
                 public com.google.api.services.bigquery.model.Policy call() {
-                  return bigqueryRpc.setIamPolicy(
+                  return BigQueryRpc.setIamPolicy(
                       completeTableId.getIAMResourceName(), convertToApiPolicy(policy), optionsMap);
                 }
               },
@@ -1317,13 +1319,15 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   }
 
   @Override
-  public List<Boolean> testIamPermissions(TableId tableId, List<String> permissions) {
+  public List<Boolean> testIamPermissions(TableId tableId, List<String> permissions, IAMOption... options) {
     final TableId completeTableId =
         tableId.setProjectId(
             Strings.isNullOrEmpty(tableId.getProject())
                 ? getOptions().getProjectId()
                 : tableId.getProject());
     // TODO(shollyman): confirm we want to mirror this signature, seems odd
+    // final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
+
     return null;
   }
 }

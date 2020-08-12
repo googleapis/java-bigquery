@@ -52,7 +52,8 @@ public interface BigQueryRpc extends ServiceRpc {
     PARENT_JOB_ID("parentJobId"),
     START_INDEX("startIndex"),
     STATE_FILTER("stateFilter"),
-    TIMEOUT("timeoutMs");
+    TIMEOUT("timeoutMs"),
+    REQUESTED_POLICY_VERSION("requestedPolicyVersion");
 
     private final String value;
 
@@ -306,23 +307,23 @@ public interface BigQueryRpc extends ServiceRpc {
       boolean last);
 
   /**
-   * Returns the IAM Policy for the specified resource.
+   * Returns the IAM Policy for the specified resource, using Policy V1.
    *
    * @throws BigQueryException upon failure
    */
-  Policy getIamPolicy(String resourceId, GetPolicyOptions options);
+  Policy getIamPolicy(String resourceId, Map<Option, ?> options);
 
   /**
    * Updates the IAM policy for the specified resource.
    *
    * @throws BigQueryException upon failure
    */
-  Policy setIamPolicy(String resourceId, Policy policy);
+  Policy setIamPolicy(String resourceId, Policy policy, Map<Option, ?> options);
 
   /**
    * Tests whether the called holds the listed permissions for the specified resource.
    *
    * @throws BigQueryException upon failure
    */
-  TestIamPermissionsResponse testIamPermissions(String resourceId, List<String> permissions);
+  TestIamPermissionsResponse testIamPermissions(String resourceId, List<String> permissions, Map<Option, ?> options);
 }
