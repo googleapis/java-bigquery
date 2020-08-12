@@ -669,7 +669,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   public Policy getIamPolicy(String resourceId, Map<Option, ?> options) {
     try {
       GetIamPolicyRequest policyRequest = new GetIamPolicyRequest();
-      if (null != Option.REQUESTED_POLCIY_VERSION.) {
+      if (null != Option.REQUESTED_POLICY_VERSION.getLong(options)) {
         policyRequest = policyRequest.setOptions(new GetPolicyOptions().setRequestedPolicyVersion(Option.REQUESTED_POLICY_VERSION.getLong(options).intValue()));
       }
       return bigquery.tables().getIamPolicy(resourceId, policyRequest).execute();
