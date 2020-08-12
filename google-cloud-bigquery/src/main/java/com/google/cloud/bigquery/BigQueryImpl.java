@@ -1306,7 +1306,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               new Callable<com.google.api.services.bigquery.model.Policy>() {
                 @Override
                 public com.google.api.services.bigquery.model.Policy call() {
-                  return BigQueryRpc.setIamPolicy(
+                  return bigQueryRpc.setIamPolicy(
                       completeTableId.getIAMResourceName(), convertToApiPolicy(policy), optionsMap);
                 }
               },
