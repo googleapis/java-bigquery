@@ -16,63 +16,59 @@
 
 package com.example.bigquery;
 
-// [START bigquery_undelete_table]
+// [START bigquery_load_table_gcs_csv_autodetect]
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
-import com.google.cloud.bigquery.CopyJobConfiguration;
+import com.google.cloud.bigquery.CsvOptions;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.JobInfo;
+import com.google.cloud.bigquery.LoadJobConfiguration;
 import com.google.cloud.bigquery.TableId;
 
-// Sample to undeleting a table
-public class UndeleteTable {
+// Sample to load CSV data with autodetect schema from Cloud Storage into a new BigQuery table
+public class LoadCsvFromGCSAutodetect {
 
   public static void main(String[] args) {
     // TODO(developer): Replace these variables before running the sample.
     String datasetName = "MY_DATASET_NAME";
-    String tableName = "MY_TABLE_TABLE";
-    String recoverTableName = "MY_RECOVER_TABLE_TABLE";
-    undeleteTable(datasetName, tableName, recoverTableName);
+    String tableName = "MY_TABLE_NAME";
+    String sourceUri = "gs://cloud-samples-data/bigquery/us-states/us-states.csv";
+    loadCsvFromGCSAutodetect(datasetName, tableName, sourceUri);
   }
 
-  public static void undeleteTable(String datasetName, String tableName, String recoverTableName) {
+  public static void loadCsvFromGCSAutodetect(
+      String datasetName, String tableName, String sourceUri) {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
-      // "Accidentally" delete the table.
-      bigquery.delete(TableId.of(datasetName, tableName));
+      TableId tableId = TableId.of(datasetName, tableName);
 
-      // Record the current time.  We'll use this as the snapshot time
-      // for recovering the table.
-      long snapTime = System.currentTimeMillis();
+      // Skip header row in the file.
+      CsvOptions csvOptions = CsvOptions.newBuilder().setSkipLeadingRows(1).build();
 
-      // Construct the restore-from tableID using a snapshot decorator.
-      String snapshotTableId = String.format("%s@%d", tableName, snapTime);
-
-      // Construct and run a copy job.
-      CopyJobConfiguration configuration =
-          CopyJobConfiguration.newBuilder(
-                  // Choose a new table ID for the recovered table data.
-                  TableId.of(datasetName, recoverTableName),
-                  TableId.of(datasetName, snapshotTableId))
+      LoadJobConfiguration loadConfig =
+          LoadJobConfiguration.newBuilder(tableId, sourceUri)
+              .setFormatOptions(csvOptions)
+              .setAutodetect(true)
               .build();
 
-      Job job = bigquery.create(JobInfo.of(configuration));
+      // Load data from a GCS CSV file into the table
+      Job job = bigquery.create(JobInfo.of(loadConfig));
+      // Blocks until this load table job completes its execution, either failing or succeeding.
       job = job.waitFor();
       if (job.isDone() && job.getStatus().getError() == null) {
-        System.out.println("Undelete table recovered successfully.");
+        System.out.println("CSV Autodetect from GCS successfully loaded in a table");
       } else {
         System.out.println(
-            "BigQuery was unable to copy the table due to an error: \n"
+            "BigQuery was unable to load into the table due to an error:"
                 + job.getStatus().getError());
-        return;
       }
     } catch (BigQueryException | InterruptedException e) {
-      System.out.println("Table not found. \n" + e.toString());
+      System.out.println("Column not added during load append \n" + e.toString());
     }
   }
 }
-// [END bigquery_undelete_table]
+// [END bigquery_load_table_gcs_csv_autodetect]

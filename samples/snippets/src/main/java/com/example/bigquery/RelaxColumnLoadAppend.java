@@ -16,56 +16,69 @@
 
 package com.example.bigquery;
 
-// [START bigquery_load_table_gcs_json_truncate]
+// [START bigquery_relax_column_load_append]
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
+import com.google.cloud.bigquery.CsvOptions;
 import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.FormatOptions;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.LoadJobConfiguration;
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.StandardSQLTypeName;
+import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableId;
+import com.google.common.collect.ImmutableList;
 
-// Sample to overwrite the BigQuery table data by loading a JSON file from GCS
-public class LoadJsonFromGCSTruncate {
+// Sample to append relax column in a table.
+public class RelaxColumnLoadAppend {
 
   public static void main(String[] args) {
     // TODO(developer): Replace these variables before running the sample.
     String datasetName = "MY_DATASET_NAME";
     String tableName = "MY_TABLE_NAME";
-    String sourceUri = "gs://cloud-samples-data/bigquery/us-states/us-states.json";
-    Schema schema =
-        Schema.of(
-            Field.of("name", StandardSQLTypeName.STRING),
-            Field.of("post_abbr", StandardSQLTypeName.STRING));
-    loadJsonFromGCSTruncate(datasetName, tableName, sourceUri, schema);
+    String sourceUri = "gs://cloud-samples-data/bigquery/us-states/us-states.csv";
+    relaxColumnLoadAppend(datasetName, tableName, sourceUri);
   }
 
-  public static void loadJsonFromGCSTruncate(
-      String datasetName, String tableName, String sourceUri, Schema schema) {
+  public static void relaxColumnLoadAppend(String datasetName, String tableName, String sourceUri) {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
-      TableId tableId = TableId.of(datasetName, tableName);
+      // Retrieve destination table reference
+      Table table = bigquery.getTable(TableId.of(datasetName, tableName));
+
+      // column as a 'REQUIRED' field.
+      Field name =
+          Field.newBuilder("name", StandardSQLTypeName.STRING).setMode(Field.Mode.REQUIRED).build();
+      Field postAbbr =
+          Field.newBuilder("post_abbr", StandardSQLTypeName.STRING)
+              .setMode(Field.Mode.REQUIRED)
+              .build();
+      Schema schema = Schema.of(name, postAbbr);
+
+      // Skip header row in the file.
+      CsvOptions csvOptions = CsvOptions.newBuilder().setSkipLeadingRows(1).build();
+
+      // Set job options
       LoadJobConfiguration loadConfig =
-          LoadJobConfiguration.newBuilder(tableId, sourceUri)
-              .setFormatOptions(FormatOptions.json())
-              // Set the write disposition to overwrite existing table data
-              .setWriteDisposition(JobInfo.WriteDisposition.WRITE_TRUNCATE)
+          LoadJobConfiguration.newBuilder(table.getTableId(), sourceUri)
               .setSchema(schema)
+              .setFormatOptions(csvOptions)
+              .setSchemaUpdateOptions(
+                  ImmutableList.of(JobInfo.SchemaUpdateOption.ALLOW_FIELD_RELAXATION))
+              .setWriteDisposition(JobInfo.WriteDisposition.WRITE_APPEND)
               .build();
 
-      // Load data from a GCS JSON file into the table
+      // Create a load job and wait for it to complete.
       Job job = bigquery.create(JobInfo.of(loadConfig));
-      // Blocks until this load table job completes its execution, either failing or succeeding.
       job = job.waitFor();
-      if (job.isDone()) {
-        System.out.println("Table is successfully overwritten by JSON file loaded from GCS");
+      // Check the job's status for errors
+      if (job.isDone() && job.getStatus().getError() == null) {
+        System.out.println("Relax column append successfully loaded in a table");
       } else {
         System.out.println(
             "BigQuery was unable to load into the table due to an error:"
@@ -76,4 +89,4 @@ public class LoadJsonFromGCSTruncate {
     }
   }
 }
-// [END bigquery_load_table_gcs_json_truncate]
+// [END bigquery_relax_column_load_append]
