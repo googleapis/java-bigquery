@@ -15,10 +15,51 @@
  */
 package com.google.cloud.bigquery;
 
+import static org.junit.Assert.assertEquals;
+
+import com.google.api.services.bigquery.model.Binding;
+import com.google.cloud.Identity;
+import com.google.cloud.Policy;
+import com.google.cloud.Role;
+import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 
 public class PolicyHelperTest {
 
+  public static final String ETAG = "etag";
+  public static final String ROLE1 = "roles/bigquery.admin";
+  public static final String ROLE2 = "roles/bigquery.dataEditor";
+  public static final String USER1 = "user1@gmail.com";
+  public static final String USER2 = "user2@gmail.com";
+
+  static final com.google.api.services.bigquery.model.Policy API_POLICY =
+      new com.google.api.services.bigquery.model.Policy()
+          .setBindings(
+              ImmutableList.of(
+                  new Binding()
+                      .setRole(ROLE1)
+                      .setMembers(ImmutableList.of(String.format("user:%s", USER1))),
+                  new Binding()
+                      .setRole(ROLE2)
+                      .setMembers(ImmutableList.of(String.format("user:%s", USER2), "allUsers"))))
+          .setEtag(ETAG)
+          .setVersion(1);
+
+  static final Policy IAM_POLICY =
+      Policy.newBuilder()
+          .addIdentity(Role.of(ROLE1), Identity.user(USER1))
+          .addIdentity(Role.of(ROLE2), Identity.user(USER2), Identity.allUsers())
+          .setEtag(ETAG)
+          .setVersion(1)
+          .build();
+
   @Test
-  public void testTheThings() {}
+  public void testConversion() {
+    assertEquals(IAM_POLICY, PolicyHelper.convertFromApiPolicy(API_POLICY));
+    assertEquals(API_POLICY, PolicyHelper.convertToApiPolicy(IAM_POLICY));
+    assertEquals(
+        IAM_POLICY, PolicyHelper.convertFromApiPolicy(PolicyHelper.convertToApiPolicy(IAM_POLICY)));
+    assertEquals(
+        API_POLICY, PolicyHelper.convertToApiPolicy(PolicyHelper.convertFromApiPolicy(API_POLICY)));
+  }
 }

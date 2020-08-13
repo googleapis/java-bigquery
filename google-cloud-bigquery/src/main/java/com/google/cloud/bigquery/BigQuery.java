@@ -374,20 +374,19 @@ public interface BigQuery extends Service<BigQueryOptions> {
     }
   }
 
-    /*  Class for specifying IAM options. */
-    class IAMOption extends Option {
+  /*  Class for specifying IAM options. */
+  class IAMOption extends Option {
 
-      private static final long serialVersionUID = 8607992885371024269L;
-  
-      private IAMOption(BigQueryRpc.Option option, Object value) {
-          super(option, value);
-        }
-      
-        public static IAMOption requestedPolicyVersion(long version) {
-          return new IAMOption(BigQueryRpc.Option.REQUESTED_POLICY_VERSION, version);
-        }
-        
+    private static final long serialVersionUID = 8607992885371024269L;
+
+    private IAMOption(BigQueryRpc.Option option, Object value) {
+      super(option, value);
     }
+
+    public static IAMOption requestedPolicyVersion(long version) {
+      return new IAMOption(BigQueryRpc.Option.REQUESTED_POLICY_VERSION, version);
+    }
+  }
 
   /** Class for specifying model get, create and update options. */
   class ModelOption extends Option {

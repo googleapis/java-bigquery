@@ -1319,7 +1319,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   }
 
   @Override
-  public List<Boolean> testIamPermissions(TableId tableId, List<String> permissions, IAMOption... options) {
+  public List<Boolean> testIamPermissions(
+      TableId tableId, List<String> permissions, IAMOption... options) {
     final TableId completeTableId =
         tableId.setProjectId(
             Strings.isNullOrEmpty(tableId.getProject())

@@ -18,7 +18,6 @@ package com.google.cloud.bigquery.spi.v2;
 
 import com.google.api.core.InternalExtensionOnly;
 import com.google.api.services.bigquery.model.Dataset;
-import com.google.api.services.bigquery.model.GetPolicyOptions;
 import com.google.api.services.bigquery.model.GetQueryResultsResponse;
 import com.google.api.services.bigquery.model.Job;
 import com.google.api.services.bigquery.model.Model;
@@ -325,5 +324,6 @@ public interface BigQueryRpc extends ServiceRpc {
    *
    * @throws BigQueryException upon failure
    */
-  TestIamPermissionsResponse testIamPermissions(String resourceId, List<String> permissions, Map<Option, ?> options);
+  TestIamPermissionsResponse testIamPermissions(
+      String resourceId, List<String> permissions, Map<Option, ?> options);
 }
