@@ -2259,6 +2259,7 @@ public class BigQueryImplTest {
         PolicyHelper.convertToApiPolicy(SAMPLE_IAM_POLICY);
     when(bigqueryRpcMock.setIamPolicy(resourceId, apiPolicy, EMPTY_RPC_OPTIONS))
         .thenReturn(apiPolicy);
+    bigquery = options.getService();
     Policy returnedPolicy = bigquery.setIamPolicy(TABLE_ID, SAMPLE_IAM_POLICY);
     assertEquals(returnedPolicy, SAMPLE_IAM_POLICY);
     verify(bigqueryRpcMock).setIamPolicy(resourceId, apiPolicy, EMPTY_RPC_OPTIONS);
