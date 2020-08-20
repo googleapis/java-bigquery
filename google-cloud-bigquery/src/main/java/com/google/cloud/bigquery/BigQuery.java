@@ -1654,27 +1654,15 @@ public interface BigQuery extends Service<BigQueryOptions> {
    */
   TableDataWriteChannel writer(JobId jobId, WriteChannelConfiguration writeChannelConfiguration);
 
-  /**
-   * Gets the IAM policy for a specified table.
-   *
-   * <p>TODO(shollyman): decide on where to expose the option (part of table or in a new iam
-   * namespace).
-   */
+  /** Gets the IAM policy for a specified table. */
   Policy getIamPolicy(TableId tableId, IAMOption... options);
 
-  /**
-   * Sets the IAM policy for a specified table.
-   *
-   * <p>TODO(shollyman): decide on where to expose the option (part of table or in a new iam
-   * namespace).
-   */
+  /** Sets the IAM policy for a specified table. */
   Policy setIamPolicy(TableId tableId, Policy policy, IAMOption... options);
 
   /**
-   * Tests whether the caller holds the permissions on the specified bucket.
-   *
-   * <p>* TODO(shollyman): decide on where to expose the option (part of table or in a new iam
-   * namespace).
+   * Tests whether the caller holds specific permissions on a BigQuery table. The returned list
+   * represents the subset of granted permissions.
    */
-  List<Boolean> testIamPermissions(TableId table, List<String> permissions, IAMOption... options);
+  List<String> testIamPermissions(TableId table, List<String> permissions, IAMOption... options);
 }

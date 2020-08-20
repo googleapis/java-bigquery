@@ -1309,17 +1309,31 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   }
 
   @Override
-  public List<Boolean> testIamPermissions(
-      TableId tableId, List<String> permissions, IAMOption... options) {
+  public List<String> testIamPermissions(
+      TableId tableId, final List<String> permissions, IAMOption... options) {
     final TableId completeTableId =
         tableId.setProjectId(
             Strings.isNullOrEmpty(tableId.getProject())
                 ? getOptions().getProjectId()
                 : tableId.getProject());
-    // TODO(shollyman): confirm we want to mirror this signature, seems odd
-    // final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-
-    return null;
+    try {
+      final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
+      com.google.api.services.bigquery.model.TestIamPermissionsResponse response =
+          runWithRetries(
+              new Callable<com.google.api.services.bigquery.model.TestIamPermissionsResponse>() {
+                @Override
+                public com.google.api.services.bigquery.model.TestIamPermissionsResponse call() {
+                  return bigQueryRpc.testIamPermissions(
+                      completeTableId.getIAMResourceName(), permissions, optionsMap);
+                }
+              },
+              getOptions().getRetrySettings(),
+              EXCEPTION_HANDLER,
+              getOptions().getClock());
+      return ImmutableList.copyOf(response.getPermissions());
+    } catch (RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    }
   }
 
   @VisibleForTesting

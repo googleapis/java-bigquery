@@ -320,7 +320,8 @@ public interface BigQueryRpc extends ServiceRpc {
   Policy setIamPolicy(String resourceId, Policy policy, Map<Option, ?> options);
 
   /**
-   * Tests whether the called holds the listed permissions for the specified resource.
+   * Tests whether the caller holds the provided permissions for the specified resource. Returns the
+   * subset of permissions the caller actually holds.
    *
    * @throws BigQueryException upon failure
    */

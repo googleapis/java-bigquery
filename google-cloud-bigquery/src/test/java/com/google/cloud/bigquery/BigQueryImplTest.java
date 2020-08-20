@@ -529,7 +529,7 @@ public class BigQueryImplTest {
   @Before
   public void setUp() {
     rpcFactoryMock = mock(BigQueryRpcFactory.class);
-    bigqueryRpcMock = mock(BigQueryRpc.class, org.mockito.Mockito.withSettings().verboseLogging());
+    bigqueryRpcMock = mock(BigQueryRpc.class);
     when(rpcFactoryMock.create(any(BigQueryOptions.class))).thenReturn(bigqueryRpcMock);
     options = createBigQueryOptionsForProject(PROJECT, rpcFactoryMock);
   }
@@ -2263,5 +2263,22 @@ public class BigQueryImplTest {
     Policy returnedPolicy = bigquery.setIamPolicy(TABLE_ID, SAMPLE_IAM_POLICY);
     assertEquals(returnedPolicy, SAMPLE_IAM_POLICY);
     verify(bigqueryRpcMock).setIamPolicy(resourceId, apiPolicy, EMPTY_RPC_OPTIONS);
+  }
+
+  @Test
+  public void testTestIamPermissions() {
+    final String resourceId =
+        String.format("projects/%s/datasets/%s/tables/%s", PROJECT, DATASET, TABLE);
+    final List<String> checkedPermissions = ImmutableList.<String>of("foo", "bar", "baz");
+    final List<String> grantedPermissions = ImmutableList.<String>of("foo", "bar");
+    final com.google.api.services.bigquery.model.TestIamPermissionsResponse response =
+        new com.google.api.services.bigquery.model.TestIamPermissionsResponse()
+            .setPermissions(grantedPermissions);
+    when(bigqueryRpcMock.testIamPermissions(resourceId, checkedPermissions, EMPTY_RPC_OPTIONS))
+        .thenReturn(response);
+    bigquery = options.getService();
+    List<String> perms = bigquery.testIamPermissions(TABLE_ID, checkedPermissions);
+    assertEquals(perms, grantedPermissions);
+    verify(bigqueryRpcMock).testIamPermissions(resourceId, checkedPermissions, EMPTY_RPC_OPTIONS);
   }
 }
