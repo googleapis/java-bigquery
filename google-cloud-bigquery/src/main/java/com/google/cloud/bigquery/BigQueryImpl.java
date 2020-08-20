@@ -1256,16 +1256,6 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         writeChannelConfiguration.setProjectId(getOptions().getProjectId()));
   }
 
-  @VisibleForTesting
-  static Map<BigQueryRpc.Option, ?> optionMap(Option... options) {
-    Map<BigQueryRpc.Option, Object> optionMap = Maps.newEnumMap(BigQueryRpc.Option.class);
-    for (Option option : options) {
-      Object prev = optionMap.put(option.getRpcOption(), option.getValue());
-      checkArgument(prev == null, "Duplicate option %s", option);
-    }
-    return optionMap;
-  }
-
   @Override
   public Policy getIamPolicy(TableId tableId, IAMOption... options) {
     final TableId completeTableId =
@@ -1292,16 +1282,16 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     }
   }
 
+  @Override
   public Policy setIamPolicy(TableId tableId, final Policy policy, IAMOption... options) {
     final TableId completeTableId =
         tableId.setProjectId(
             Strings.isNullOrEmpty(tableId.getProject())
                 ? getOptions().getProjectId()
                 : tableId.getProject());
-
     try {
       final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-      return convertFromApiPolicy(
+      com.google.api.services.bigquery.model.Policy newPolicy =
           runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Policy>() {
                 @Override
@@ -1312,7 +1302,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               },
               getOptions().getRetrySettings(),
               EXCEPTION_HANDLER,
-              getOptions().getClock()));
+              getOptions().getClock());
+      return PolicyHelper.convertFromApiPolicy(newPolicy);
     } catch (RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
     }
@@ -1330,5 +1321,15 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     // final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
 
     return null;
+  }
+
+  @VisibleForTesting
+  static Map<BigQueryRpc.Option, ?> optionMap(Option... options) {
+    Map<BigQueryRpc.Option, Object> optionMap = Maps.newEnumMap(BigQueryRpc.Option.class);
+    for (Option option : options) {
+      Object prev = optionMap.put(option.getRpcOption(), option.getValue());
+      checkArgument(prev == null, "Duplicate option %s", option);
+    }
+    return optionMap;
   }
 }
