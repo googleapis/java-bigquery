@@ -1,5 +1,19 @@
 # Changelog
 
+### [1.116.11](https://www.github.com/googleapis/java-bigquery/compare/v1.116.10...v1.116.11) (2020-08-20)
+
+
+### Documentation
+
+* update samples README.md ([#667](https://www.github.com/googleapis/java-bigquery/issues/667)) ([60d904b](https://www.github.com/googleapis/java-bigquery/commit/60d904b1fc4625f490f9357c486bfe5ef4f36f2c))
+* **samples:** add samples lint job and fix lint issues ([#684](https://www.github.com/googleapis/java-bigquery/issues/684)) ([f08becc](https://www.github.com/googleapis/java-bigquery/commit/f08beccecd00f792c33ac3d2e29a696bd9411fb6))
+* **samples:** fix checkstyle errors ([#682](https://www.github.com/googleapis/java-bigquery/issues/682)) ([fe5abc0](https://www.github.com/googleapis/java-bigquery/commit/fe5abc054c5eb7907ef58d5aa3285b3f10211aa4)), closes [#681](https://www.github.com/googleapis/java-bigquery/issues/681)
+
+
+### Dependencies
+
+* update dependency com.google.apis:google-api-services-bigquery to v2-rev20200805-1.30.10 ([#672](https://www.github.com/googleapis/java-bigquery/issues/672)) ([3e578f4](https://www.github.com/googleapis/java-bigquery/commit/3e578f4337e2d0c41237294ea7889d9efd0eddb0))
+
 ### [1.116.10](https://www.github.com/googleapis/java-bigquery/compare/v1.116.9...v1.116.10) (2020-08-11)
 
 
