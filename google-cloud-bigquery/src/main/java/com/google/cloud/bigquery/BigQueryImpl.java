@@ -1291,7 +1291,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 : tableId.getProject());
     try {
       final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-      com.google.api.services.bigquery.model.Policy newPolicy =
+      return convertFromApiPolicy(
           runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Policy>() {
                 @Override
@@ -1302,8 +1302,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               },
               getOptions().getRetrySettings(),
               EXCEPTION_HANDLER,
-              getOptions().getClock());
-      return PolicyHelper.convertFromApiPolicy(newPolicy);
+              getOptions().getClock()));
     } catch (RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
     }

@@ -2264,14 +2264,3 @@ public class BigQueryImplTest {
     verify(bigqueryRpcMock).setIamPolicy(resourceId, apiPolicy, EMPTY_RPC_OPTIONS);
   }
 }
-
-/**
- * when(bigqueryRpcMock.create(eq(DATASET_INFO_WITH_PROJECT.toPb()), capturedOptions.capture()))
- * .thenReturn(DATASET_INFO_WITH_PROJECT.toPb()); bigquery = options.getService(); Dataset dataset =
- * bigquery.create(DATASET_INFO, DATASET_OPTION_FIELDS); String selector = (String)
- * capturedOptions.getValue().get(DATASET_OPTION_FIELDS.getRpcOption());
- * assertTrue(selector.contains("datasetReference")); assertTrue(selector.contains("access"));
- * assertTrue(selector.contains("etag")); assertEquals(28, selector.length()); assertEquals( new
- * Dataset(bigquery, new DatasetInfo.BuilderImpl(DATASET_INFO_WITH_PROJECT)), dataset);
- * verify(bigqueryRpcMock).create(eq(DATASET_INFO_WITH_PROJECT.toPb()), capturedOptions.capture());
- */
