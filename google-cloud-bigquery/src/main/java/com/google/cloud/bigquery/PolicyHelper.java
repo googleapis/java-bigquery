@@ -28,7 +28,7 @@ class PolicyHelper {
   static Policy convertFromApiPolicy(com.google.api.services.bigquery.model.Policy apiPolicy) {
     Policy.Builder policyBuilder = Policy.newBuilder();
     List<com.google.api.services.bigquery.model.Binding> bindings = apiPolicy.getBindings();
-    if (null != bindings && !bindings.isEmpty()) {
+    if (null != bindings) {
       ImmutableList.Builder<Binding> coreBindings = ImmutableList.builder();
       for (com.google.api.services.bigquery.model.Binding binding : bindings) {
         Binding.Builder bindingBuilder = Binding.newBuilder();
