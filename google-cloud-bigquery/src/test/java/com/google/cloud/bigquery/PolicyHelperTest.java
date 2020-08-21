@@ -44,6 +44,8 @@ public class PolicyHelperTest {
                       .setMembers(ImmutableList.of(String.format("user:%s", USER2), "allUsers"))))
           .setEtag(ETAG)
           .setVersion(1);
+  static final com.google.api.services.bigquery.model.Policy API_POLICY_NO_BINDINGS =
+      new com.google.api.services.bigquery.model.Policy().setEtag(ETAG).setVersion(1);
 
   static final Policy IAM_POLICY =
       Policy.newBuilder()
@@ -52,14 +54,28 @@ public class PolicyHelperTest {
           .setEtag(ETAG)
           .setVersion(1)
           .build();
+  static final Policy IAM_POLICY_NO_BINDINGS =
+      Policy.newBuilder().setEtag(ETAG).setVersion(1).build();
 
   @Test
-  public void testConversion() {
+  public void testConversionWithBindings() {
     assertEquals(IAM_POLICY, PolicyHelper.convertFromApiPolicy(API_POLICY));
     assertEquals(API_POLICY, PolicyHelper.convertToApiPolicy(IAM_POLICY));
     assertEquals(
         IAM_POLICY, PolicyHelper.convertFromApiPolicy(PolicyHelper.convertToApiPolicy(IAM_POLICY)));
     assertEquals(
         API_POLICY, PolicyHelper.convertToApiPolicy(PolicyHelper.convertFromApiPolicy(API_POLICY)));
+  }
+
+  @Test
+  public void testConversionNoBindings() {
+    assertEquals(IAM_POLICY_NO_BINDINGS, PolicyHelper.convertFromApiPolicy(API_POLICY_NO_BINDINGS));
+    assertEquals(API_POLICY_NO_BINDINGS, PolicyHelper.convertToApiPolicy(IAM_POLICY_NO_BINDINGS));
+    assertEquals(
+        IAM_POLICY_NO_BINDINGS,
+        PolicyHelper.convertFromApiPolicy(PolicyHelper.convertToApiPolicy(IAM_POLICY_NO_BINDINGS)));
+    assertEquals(
+        API_POLICY_NO_BINDINGS,
+        PolicyHelper.convertToApiPolicy(PolicyHelper.convertFromApiPolicy(API_POLICY_NO_BINDINGS)));
   }
 }

@@ -28,10 +28,11 @@ class PolicyHelper {
   static Policy convertFromApiPolicy(com.google.api.services.bigquery.model.Policy apiPolicy) {
     Policy.Builder policyBuilder = Policy.newBuilder();
     List<com.google.api.services.bigquery.model.Binding> bindings = apiPolicy.getBindings();
+
     if (null != bindings) {
       ImmutableList.Builder<Binding> coreBindings = ImmutableList.builder();
+      Binding.Builder bindingBuilder = Binding.newBuilder();
       for (com.google.api.services.bigquery.model.Binding binding : bindings) {
-        Binding.Builder bindingBuilder = Binding.newBuilder();
         bindingBuilder.setRole(binding.getRole());
         bindingBuilder.setMembers(binding.getMembers());
         if (binding.getCondition() != null) {
@@ -44,28 +45,29 @@ class PolicyHelper {
         coreBindings.add(bindingBuilder.build());
       }
       policyBuilder.setBindings(coreBindings.build());
-    } else {
-      throw new IllegalStateException("Missing required bindings");
     }
     return policyBuilder.setEtag(apiPolicy.getEtag()).setVersion(apiPolicy.getVersion()).build();
   }
 
   static com.google.api.services.bigquery.model.Policy convertToApiPolicy(Policy policy) {
-    List<com.google.api.services.bigquery.model.Binding> bindings =
-        new ArrayList<>(policy.getBindingsList().size());
-    for (Binding binding : policy.getBindingsList()) {
-      com.google.api.services.bigquery.model.Binding apiBinding =
-          new com.google.api.services.bigquery.model.Binding();
-      apiBinding.setRole(binding.getRole());
-      apiBinding.setMembers(new ArrayList<>(binding.getMembers()));
-      if (binding.getCondition() != null) {
-        Expr expr = new Expr();
-        expr.setTitle(binding.getCondition().getTitle());
-        expr.setDescription(binding.getCondition().getDescription());
-        expr.setExpression(binding.getCondition().getExpression());
-        apiBinding.setCondition(expr);
+    List<com.google.api.services.bigquery.model.Binding> bindings = null;
+    if (policy.getBindingsList().size() != 0) {
+      bindings = new ArrayList<>(policy.getBindingsList().size());
+
+      for (Binding binding : policy.getBindingsList()) {
+        com.google.api.services.bigquery.model.Binding apiBinding =
+            new com.google.api.services.bigquery.model.Binding();
+        apiBinding.setRole(binding.getRole());
+        apiBinding.setMembers(new ArrayList<>(binding.getMembers()));
+        if (binding.getCondition() != null) {
+          Expr expr = new Expr();
+          expr.setTitle(binding.getCondition().getTitle());
+          expr.setDescription(binding.getCondition().getDescription());
+          expr.setExpression(binding.getCondition().getExpression());
+          apiBinding.setCondition(expr);
+        }
+        bindings.add(apiBinding);
       }
-      bindings.add(apiBinding);
     }
     return new com.google.api.services.bigquery.model.Policy()
         .setBindings(bindings)
