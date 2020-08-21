@@ -46,7 +46,10 @@ class PolicyHelper {
       }
       policyBuilder.setBindings(coreBindings.build());
     }
-    return policyBuilder.setEtag(apiPolicy.getEtag()).setVersion(apiPolicy.getVersion()).build();
+    if (null != apiPolicy.getVersion()) {
+      policyBuilder.setVersion(apiPolicy.getVersion());
+    }
+    return policyBuilder.setEtag(apiPolicy.getEtag()).build();
   }
 
   static com.google.api.services.bigquery.model.Policy convertToApiPolicy(Policy policy) {
