@@ -34,6 +34,7 @@ final class QueryRequestInfo {
   private final Boolean dryRun;
   private final Map<String, String> labels;
   private final Long maximumBytesBilled;
+  private final Long maxResults;
   private final String query;
   private final List<QueryParameter> queryParameters;
   private final Boolean useQueryCache;
@@ -46,6 +47,7 @@ final class QueryRequestInfo {
     this.dryRun = config.dryRun();
     this.labels = config.getLabels();
     this.maximumBytesBilled = config.getMaximumBytesBilled();
+    this.maxResults = config.getMaxResults();
     this.query = config.getQuery();
     this.queryParameters = config.toPb().getQuery().getQueryParameters();
     this.useLegacySql = config.useLegacySql();
@@ -86,6 +88,9 @@ final class QueryRequestInfo {
     if (maximumBytesBilled != null) {
       request.setMaximumBytesBilled(maximumBytesBilled);
     }
+    if (maxResults != null) {
+      request.setMaxResults(maxResults);
+    }
     request.setQuery(query);
     request.setRequestId(REQUEST_ID);
     if (queryParameters != null) {
@@ -108,6 +113,7 @@ final class QueryRequestInfo {
         .add("dryRun", dryRun)
         .add("labels", labels)
         .add("maximumBytesBilled", maximumBytesBilled)
+        .add("maxResults", maxResults)
         .add("query", query)
         .add("requestId", REQUEST_ID)
         .add("queryParameters", queryParameters)
@@ -124,6 +130,7 @@ final class QueryRequestInfo {
         dryRun,
         labels,
         maximumBytesBilled,
+        maxResults,
         query,
         queryParameters,
         REQUEST_ID,

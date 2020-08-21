@@ -194,6 +194,42 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     }
   }
 
+  private class QueryPageFetcher implements NextPageFetcher<FieldValueList> {
+
+    private static final long serialVersionUID = -8501991114794410114L;
+    private final Map<BigQueryRpc.Option, ?> requestOptions;
+    private final BigQueryOptions serviceOptions;
+    private final Job job;
+    private final boolean jobStatus;
+    private final TableId table;
+
+    QueryPageFetcher(
+        JobId jobId,
+        boolean jobStatus,
+        BigQueryOptions serviceOptions,
+        String cursor,
+        Map<BigQueryRpc.Option, ?> optionMap) {
+      this.requestOptions =
+          PageImpl.nextRequestOptions(BigQueryRpc.Option.PAGE_TOKEN, cursor, optionMap);
+      this.serviceOptions = serviceOptions;
+      this.job = getJob(jobId);
+      this.jobStatus = jobStatus;
+      this.table = ((QueryJobConfiguration) job.getConfiguration()).getDestinationTable();
+    }
+
+    @Override
+    public Page<FieldValueList> getNextPage() {
+      try {
+        if (!jobStatus) {
+          job.waitFor();
+        }
+      } catch (InterruptedException ex) {
+        throw new RuntimeException(ex);
+      }
+      return listTableData(table, serviceOptions, requestOptions).x();
+    }
+  }
+
   private final BigQueryRpc bigQueryRpc;
 
   BigQueryImpl(BigQueryOptions options) {
@@ -1186,8 +1222,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   }
 
   private TableResult queryRpc(
-      final String projectId, final QueryRequest content, JobOption... options)
-      throws InterruptedException {
+      final String projectId, final QueryRequest content, JobOption... options) {
     com.google.api.services.bigquery.model.QueryResponse results;
     try {
       results =
@@ -1205,15 +1240,6 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       throw BigQueryException.translateAndThrow(e);
     }
 
-    // classic path
-    if (!results.getJobComplete() || results.getPageToken() != null) {
-      // Use jobId returned from backend to return full TableResult
-      String jobId = results.getJobReference().getJobId();
-      Job job = getJob(JobId.of(jobId));
-      TableResult result = job.getQueryResults();
-      return result;
-    }
-    // fast path
     if (results.getErrors() != null) {
       List<BigQueryError> bigQueryErrors =
           Lists.transform(results.getErrors(), BigQueryError.FROM_PB_FUNCTION);
@@ -1222,8 +1248,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       throw new BigQueryException(bigQueryErrors);
     }
 
-    TableSchema schemaPb = results.getSchema();
-
+    Schema schema = results.getSchema() == null ? null : Schema.fromPb(results.getSchema());
     Long numRows;
     if (results.getNumDmlAffectedRows() == null && results.getTotalRows() == null) {
       numRows = 0L;
@@ -1233,8 +1258,23 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       numRows = results.getTotalRows().longValue();
     }
 
+    if (results.getPageToken() != null) {
+      JobId jobId = JobId.fromPb(results.getJobReference());
+      boolean jobStatus = results.getJobComplete();
+      String cursor = results.getPageToken();
+      return new TableResult(
+          schema,
+          numRows,
+          new PageImpl<>(
+              // fetch next pages of results
+              new QueryPageFetcher(jobId, jobStatus, getOptions(), cursor, optionMap(options)),
+              cursor,
+              // cache first page of result
+              transformTableData(results.getRows())));
+    }
+    // only 1 page of result
     return new TableResult(
-        schemaPb == null ? null : Schema.fromPb(schemaPb),
+        schema,
         numRows,
         new PageImpl<>(
             new TableDataPageFetcher(null, getOptions(), null, optionMap(options)),
