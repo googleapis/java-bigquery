@@ -32,9 +32,9 @@ import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 
 @Fork(value = 1)
-@BenchmarkMode(Mode.Throughput)
-@Warmup(iterations = 10)
-@Measurement(iterations = 20)
+@BenchmarkMode(Mode.AverageTime)
+@Warmup(iterations = 5)
+@Measurement(iterations = 5)
 @State(Scope.Benchmark)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 public class QueryBenchmark {
