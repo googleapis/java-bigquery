@@ -208,6 +208,11 @@ public class ITBigQueryTest {
           .setMode(Field.Mode.NULLABLE)
           .setDescription("NumericDescription")
           .build();
+  private static final Field BIGNUMERIC_FIELD_SCHEMA =
+      Field.newBuilder("BigNumericField", LegacySQLTypeName.BIGNUMERIC)
+          .setMode(Field.Mode.NULLABLE)
+          .setDescription("BigNumericDescription")
+          .build();
   private static final Field STRING_FIELD_SCHEMA_WITH_POLICY =
       Field.newBuilder("StringFieldWithPolicy", LegacySQLTypeName.STRING)
           .setMode(Field.Mode.NULLABLE)
@@ -225,7 +230,8 @@ public class ITBigQueryTest {
           INTEGER_FIELD_SCHEMA,
           FLOAT_FIELD_SCHEMA,
           GEOGRAPHY_FIELD_SCHEMA,
-          NUMERIC_FIELD_SCHEMA);
+          NUMERIC_FIELD_SCHEMA,
+          BIGNUMERIC_FIELD_SCHEMA);
   private static final Schema SIMPLE_SCHEMA = Schema.of(STRING_FIELD_SCHEMA);
   private static final Schema POLICY_SCHEMA =
       Schema.of(STRING_FIELD_SCHEMA, STRING_FIELD_SCHEMA_WITH_POLICY, INTEGER_FIELD_SCHEMA);
@@ -283,7 +289,8 @@ public class ITBigQueryTest {
           + "  \"IntegerField\": \"3\","
           + "  \"FloatField\": \"1.2\","
           + "  \"GeographyField\": \"POINT(-122.35022 47.649154)\","
-          + "  \"NumericField\": \"123456.789012345\""
+          + "  \"NumericField\": \"123456.789012345\","
+          + "  \"BigNumericField\": \"0.33333333333333333333333333333333333333\""
           + "}\n"
           + "{"
           + "  \"TimestampField\": \"2014-08-19 07:41:35.220 -05:00\","
@@ -305,7 +312,8 @@ public class ITBigQueryTest {
           + "  \"IntegerField\": \"3\","
           + "  \"FloatField\": \"1.2\","
           + "  \"GeographyField\": \"POINT(-122.35022 47.649154)\","
-          + "  \"NumericField\": \"123456.789012345\""
+          + "  \"NumericField\": \"123456.789012345\","
+          + "  \"BigNumericField\": \"0.33333333333333333333333333333333333333\""
           + "}";
   private static final String KEY = "time_zone";
   private static final String VALUE = "US/Eastern";
@@ -1477,7 +1485,8 @@ public class ITBigQueryTest {
             + " AND IntegerField IN UNNEST(?)"
             + " AND IntegerField < ?"
             + " AND FloatField > ?"
-            + " AND NumericField < ?";
+            + " AND NumericField < ?"
+            + " AND BigNumericField = ?";
     QueryParameterValue stringParameter = QueryParameterValue.string("stringValue");
     QueryParameterValue timestampParameter =
         QueryParameterValue.timestamp("2014-01-01 07:00:00.000000+00:00");
@@ -1487,6 +1496,8 @@ public class ITBigQueryTest {
     QueryParameterValue float64Parameter = QueryParameterValue.float64(0.5);
     QueryParameterValue numericParameter =
         QueryParameterValue.numeric(new BigDecimal("234567890.123456"));
+    QueryParameterValue bigNumericParameter =
+        QueryParameterValue.bigNumeric(new BigDecimal("0.33333333333333333333333333333333333333"));
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query)
             .setDefaultDataset(DatasetId.of(DATASET))
@@ -1497,6 +1508,7 @@ public class ITBigQueryTest {
             .addPositionalParameter(int64Parameter)
             .addPositionalParameter(float64Parameter)
             .addPositionalParameter(numericParameter)
+            .addPositionalParameter(bigNumericParameter)
             .build();
     TableResult result = bigquery.query(config);
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());

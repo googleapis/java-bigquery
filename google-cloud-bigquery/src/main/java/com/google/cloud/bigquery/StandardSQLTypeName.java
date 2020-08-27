@@ -32,6 +32,8 @@ public enum StandardSQLTypeName {
   FLOAT64,
   /** A decimal value with 38 digits of precision and 9 digits of scale. */
   NUMERIC,
+  /** A decimal value with 38 digits of precision and 38 digits of scale. */
+  BIGNUMERIC,
   /** Variable-length character (Unicode) data. */
   STRING,
   /** Variable-length binary data. */

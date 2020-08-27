@@ -142,6 +142,31 @@ public class QueryParameterValueTest {
   }
 
   @Test
+  public void testBigNumeric() {
+    QueryParameterValue value =
+        QueryParameterValue.bigNumeric(new BigDecimal("0.33333333333333333333333333333333333333"));
+    QueryParameterValue value1 =
+        QueryParameterValue.bigNumeric(new BigDecimal("0.50000000000000000000000000000000000000"));
+    QueryParameterValue value2 =
+        QueryParameterValue.bigNumeric(new BigDecimal("0.00000000500000000000000000000000000000"));
+    QueryParameterValue value3 =
+        QueryParameterValue.bigNumeric(new BigDecimal("-0.00000000500000000000000000000000000000"));
+    QueryParameterValue value4 =
+        QueryParameterValue.bigNumeric(
+            new BigDecimal("0.33333333333333333333333333333333333333888888888888888"));
+
+    assertThat(value.getValue()).isEqualTo("0.33333333333333333333333333333333333333");
+    assertThat(value1.getValue()).isEqualTo("0.50000000000000000000000000000000000000");
+    assertThat(value2.getValue()).isEqualTo("5.00000000000000000000000000000E-9");
+    assertThat(value3.getValue()).isEqualTo("-5.00000000000000000000000000000E-9");
+    assertThat(value4.getValue())
+        .isEqualTo("0.33333333333333333333333333333333333333888888888888888");
+    assertThat(value.getType()).isEqualTo(StandardSQLTypeName.BIGNUMERIC);
+    assertThat(value.getArrayType()).isNull();
+    assertThat(value.getArrayValues()).isNull();
+  }
+
+  @Test
   public void testString() {
     QueryParameterValue value = QueryParameterValue.string("foo");
     assertThat(value.getValue()).isEqualTo("foo");
