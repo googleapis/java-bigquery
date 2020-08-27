@@ -16,7 +16,7 @@
 
 package com.example.bigquery;
 
-// [START bigquery_add_column_query_append]
+// [START bigquery_relax_column_query_append]
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
@@ -31,7 +31,7 @@ import com.google.common.collect.ImmutableList;
 
 public class RelaxTableQuery {
 
-  public static void runRelaxTableQuery() throws Exception {
+  public static void main(String[] args) throws Exception {
     // TODO(developer): Replace these variables before running the sample.
     String projectId = "MY_PROJECT_ID";
     String datasetName = "MY_DATASET_NAME";
@@ -92,4 +92,4 @@ public class RelaxTableQuery {
     }
   }
 }
-// [END bigquery_add_column_query_append]
+// [END bigquery_relax_column_query_append]

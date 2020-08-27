@@ -44,7 +44,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>libraries-bom</artifactId>
-        <version>8.0.0</version>
+        <version>9.1.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -58,6 +58,19 @@
     </dependency>
     <!-- [END bigquery_java_dependencies] -->
     <!-- [END bigquery_install_with_bom] -->
+
+    <!-- [START bigquery-enduser-installed-packages] -->
+    <dependency>
+      <groupId>com.google.oauth-client</groupId>
+      <artifactId>google-oauth-client-java6</artifactId>
+      <version>1.31.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.oauth-client</groupId>
+      <artifactId>google-oauth-client-jetty</artifactId>
+      <version>1.31.0</version>
+    </dependency>
+    <!-- [END bigquery-enduser-installed-packages] -->
 
     <!-- Test dependencies -->
     <dependency>
