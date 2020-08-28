@@ -154,6 +154,16 @@ public class QueryParameterValueTest {
     QueryParameterValue value4 =
         QueryParameterValue.bigNumeric(
             new BigDecimal("0.33333333333333333333333333333333333333888888888888888"));
+    QueryParameterValue value5 = QueryParameterValue.bigNumeric(new BigDecimal("1e-38"));
+    QueryParameterValue value6 = QueryParameterValue.bigNumeric(new BigDecimal("-1e38"));
+    QueryParameterValue value7 =
+        QueryParameterValue.bigNumeric(
+            new BigDecimal(
+                "578960446186580977117854925043439539266.34992332820282019728792003956564819967"));
+    QueryParameterValue value8 =
+        QueryParameterValue.bigNumeric(
+            new BigDecimal(
+                "-578960446186580977117854925043439539266.34992332820282019728792003956564819968"));
 
     assertThat(value.getValue()).isEqualTo("0.33333333333333333333333333333333333333");
     assertThat(value1.getValue()).isEqualTo("0.50000000000000000000000000000000000000");
@@ -161,6 +171,14 @@ public class QueryParameterValueTest {
     assertThat(value3.getValue()).isEqualTo("-5.00000000000000000000000000000E-9");
     assertThat(value4.getValue())
         .isEqualTo("0.33333333333333333333333333333333333333888888888888888");
+    assertThat(value5.getValue()).isEqualTo("1E-38");
+    assertThat(value6.getValue()).isEqualTo("-1E+38");
+    assertThat(value7.getValue())
+        .isEqualTo(
+            "578960446186580977117854925043439539266.34992332820282019728792003956564819967");
+    assertThat(value8.getValue())
+        .isEqualTo(
+            "-578960446186580977117854925043439539266.34992332820282019728792003956564819968");
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.BIGNUMERIC);
     assertThat(value.getArrayType()).isNull();
     assertThat(value.getArrayValues()).isNull();

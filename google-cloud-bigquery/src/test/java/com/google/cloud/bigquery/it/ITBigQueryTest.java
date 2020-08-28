@@ -213,6 +213,26 @@ public class ITBigQueryTest {
           .setMode(Field.Mode.NULLABLE)
           .setDescription("BigNumericDescription")
           .build();
+  private static final Field BIGNUMERIC_FIELD_SCHEMA1 =
+      Field.newBuilder("BigNumericField1", LegacySQLTypeName.BIGNUMERIC)
+          .setMode(Field.Mode.NULLABLE)
+          .setDescription("BigNumeric1Description")
+          .build();
+  private static final Field BIGNUMERIC_FIELD_SCHEMA2 =
+      Field.newBuilder("BigNumericField2", LegacySQLTypeName.BIGNUMERIC)
+          .setMode(Field.Mode.NULLABLE)
+          .setDescription("BigNumeric2Description")
+          .build();
+  private static final Field BIGNUMERIC_FIELD_SCHEMA3 =
+      Field.newBuilder("BigNumericField3", LegacySQLTypeName.BIGNUMERIC)
+          .setMode(Field.Mode.NULLABLE)
+          .setDescription("BigNumeric3Description")
+          .build();
+  private static final Field BIGNUMERIC_FIELD_SCHEMA4 =
+      Field.newBuilder("BigNumericField4", LegacySQLTypeName.BIGNUMERIC)
+          .setMode(Field.Mode.NULLABLE)
+          .setDescription("BigNumeric4Description")
+          .build();
   private static final Field STRING_FIELD_SCHEMA_WITH_POLICY =
       Field.newBuilder("StringFieldWithPolicy", LegacySQLTypeName.STRING)
           .setMode(Field.Mode.NULLABLE)
@@ -231,7 +251,11 @@ public class ITBigQueryTest {
           FLOAT_FIELD_SCHEMA,
           GEOGRAPHY_FIELD_SCHEMA,
           NUMERIC_FIELD_SCHEMA,
-          BIGNUMERIC_FIELD_SCHEMA);
+          BIGNUMERIC_FIELD_SCHEMA,
+          BIGNUMERIC_FIELD_SCHEMA1,
+          BIGNUMERIC_FIELD_SCHEMA2,
+          BIGNUMERIC_FIELD_SCHEMA3,
+          BIGNUMERIC_FIELD_SCHEMA4);
   private static final Schema SIMPLE_SCHEMA = Schema.of(STRING_FIELD_SCHEMA);
   private static final Schema POLICY_SCHEMA =
       Schema.of(STRING_FIELD_SCHEMA, STRING_FIELD_SCHEMA_WITH_POLICY, INTEGER_FIELD_SCHEMA);
@@ -244,6 +268,32 @@ public class ITBigQueryTest {
               .setMode(Field.Mode.NULLABLE)
               .build(),
           Field.newBuilder("BooleanField", LegacySQLTypeName.BOOLEAN)
+              .setMode(Field.Mode.NULLABLE)
+              .build());
+  private static final Schema QUERY_RESULT_SCHEMA_BIGNUMERIC =
+      Schema.of(
+          Field.newBuilder("TimestampField", LegacySQLTypeName.TIMESTAMP)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("StringField", LegacySQLTypeName.STRING)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("BooleanField", LegacySQLTypeName.BOOLEAN)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("BigNumericField", LegacySQLTypeName.BIGNUMERIC)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("BigNumericField1", LegacySQLTypeName.BIGNUMERIC)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("BigNumericField2", LegacySQLTypeName.BIGNUMERIC)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("BigNumericField3", LegacySQLTypeName.BIGNUMERIC)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("BigNumericField4", LegacySQLTypeName.BIGNUMERIC)
               .setMode(Field.Mode.NULLABLE)
               .build());
   private static final Schema VIEW_SCHEMA =
@@ -290,7 +340,11 @@ public class ITBigQueryTest {
           + "  \"FloatField\": \"1.2\","
           + "  \"GeographyField\": \"POINT(-122.35022 47.649154)\","
           + "  \"NumericField\": \"123456.789012345\","
-          + "  \"BigNumericField\": \"0.33333333333333333333333333333333333333\""
+          + "  \"BigNumericField\": \"0.33333333333333333333333333333333333333\","
+          + "  \"BigNumericField1\": \"1e-38\","
+          + "  \"BigNumericField2\": \"-1e38\","
+          + "  \"BigNumericField3\": \"578960446186580977117854925043439539266.34992332820282019728792003956564819967\","
+          + "  \"BigNumericField4\": \"-578960446186580977117854925043439539266.34992332820282019728792003956564819968\""
           + "}\n"
           + "{"
           + "  \"TimestampField\": \"2014-08-19 07:41:35.220 -05:00\","
@@ -313,7 +367,11 @@ public class ITBigQueryTest {
           + "  \"FloatField\": \"1.2\","
           + "  \"GeographyField\": \"POINT(-122.35022 47.649154)\","
           + "  \"NumericField\": \"123456.789012345\","
-          + "  \"BigNumericField\": \"0.33333333333333333333333333333333333333\""
+          + "  \"BigNumericField\": \"0.33333333333333333333333333333333333333\","
+          + "  \"BigNumericField1\": \"1e-38\","
+          + "  \"BigNumericField2\": \"-1e38\","
+          + "  \"BigNumericField3\": \"578960446186580977117854925043439539266.34992332820282019728792003956564819967\","
+          + "  \"BigNumericField4\": \"-578960446186580977117854925043439539266.34992332820282019728792003956564819968\""
           + "}";
   private static final String KEY = "time_zone";
   private static final String VALUE = "US/Eastern";
@@ -1478,7 +1536,7 @@ public class ITBigQueryTest {
   @Test
   public void testPositionalQueryParameters() throws InterruptedException {
     String query =
-        "SELECT TimestampField, StringField, BooleanField FROM "
+        "SELECT TimestampField, StringField, BooleanField, BigNumericField, BigNumericField1, BigNumericField2, BigNumericField3, BigNumericField4 FROM "
             + TABLE_ID.getTable()
             + " WHERE StringField = ?"
             + " AND TimestampField > ?"
@@ -1498,6 +1556,18 @@ public class ITBigQueryTest {
         QueryParameterValue.numeric(new BigDecimal("234567890.123456"));
     QueryParameterValue bigNumericParameter =
         QueryParameterValue.bigNumeric(new BigDecimal("0.33333333333333333333333333333333333333"));
+    QueryParameterValue bigNumericParameter1 =
+        QueryParameterValue.bigNumeric(new BigDecimal("1e-38"));
+    QueryParameterValue bigNumericParameter2 =
+        QueryParameterValue.bigNumeric(new BigDecimal("-1e38"));
+    QueryParameterValue bigNumericParameter3 =
+        QueryParameterValue.bigNumeric(
+            new BigDecimal(
+                "578960446186580977117854925043439539266.34992332820282019728792003956564819967"));
+    QueryParameterValue bigNumericParameter4 =
+        QueryParameterValue.bigNumeric(
+            new BigDecimal(
+                "-578960446186580977117854925043439539266.34992332820282019728792003956564819968"));
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query)
             .setDefaultDataset(DatasetId.of(DATASET))
@@ -1509,10 +1579,28 @@ public class ITBigQueryTest {
             .addPositionalParameter(float64Parameter)
             .addPositionalParameter(numericParameter)
             .addPositionalParameter(bigNumericParameter)
+            .addPositionalParameter(bigNumericParameter1)
+            .addPositionalParameter(bigNumericParameter2)
+            .addPositionalParameter(bigNumericParameter3)
+            .addPositionalParameter(bigNumericParameter4)
             .build();
     TableResult result = bigquery.query(config);
-    assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
+    assertEquals(QUERY_RESULT_SCHEMA_BIGNUMERIC, result.getSchema());
     assertEquals(2, Iterables.size(result.getValues()));
+    for (FieldValueList values : result.iterateAll()) {
+      assertEquals("1408452095.22", values.get(0).getValue());
+      assertEquals("stringValue", values.get(1).getValue());
+      assertEquals(false, values.get(2).getBooleanValue());
+      assertEquals("0.33333333333333333333333333333333333333", values.get(3).getValue());
+      assertEquals("0.00000000000000000000000000000000000001", values.get(4).getValue());
+      assertEquals("-100000000000000000000000000000000000000", values.get(5).getValue());
+      assertEquals(
+          "578960446186580977117854925043439539266.34992332820282019728792003956564819967",
+          values.get(6).getValue());
+      assertEquals(
+          "-578960446186580977117854925043439539266.34992332820282019728792003956564819968",
+          values.get(7).getValue());
+    }
   }
 
   @Test
