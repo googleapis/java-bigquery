@@ -26,4 +26,5 @@ java.common_templates(excludes=[
     '.kokoro/presubmit/java8-samples.cfg',
     '.kokoro/presubmit/java11-samples.cfg',
     'codecov.yaml'
+    'renovate.json'
 ])
