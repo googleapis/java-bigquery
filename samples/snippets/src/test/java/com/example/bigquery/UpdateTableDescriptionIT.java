@@ -57,7 +57,7 @@ public class UpdateTableDescriptionIT {
     originalPrintStream = System.out;
     System.setOut(out);
     // Create a table in order to modify its description
-    String tableName = "MY_TABLE_NAME_" + UUID.randomUUID().toString().replace("-", "_");
+    tableName = "MY_TABLE_NAME_" + UUID.randomUUID().toString().replace("-", "_");
     CreateTable.createTable(BIGQUERY_DATASET_NAME, tableName, null);
   }
 
