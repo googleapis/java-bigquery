@@ -1548,11 +1548,7 @@ public class ITBigQueryTest {
     for (FieldValueList values : result.iterateAll()) {
       for (FieldValue value : values) {
         for (FieldValue record : value.getRecordValue()) {
-          assertEquals(FieldValue.Attribute.RECORD, record.getAttribute());
-          assertEquals(true, record.getRecordValue().get("booleanField").getBooleanValue());
-          assertEquals(10, record.getRecordValue().get("integerField").getLongValue());
-          assertEquals(
-              "test-stringField", record.getRecordValue().get("stringField").getStringValue());
+          assertsFieldValue(record);
         }
       }
     }
@@ -1600,16 +1596,19 @@ public class ITBigQueryTest {
       assertEquals(1, Iterables.size(result.getValues()));
       for (FieldValueList values : result.iterateAll()) {
         for (FieldValue record : values) {
-          assertEquals(FieldValue.Attribute.RECORD, record.getAttribute());
-          assertEquals(true, record.getRecordValue().get("booleanField").getBooleanValue());
-          assertEquals(10, record.getRecordValue().get("integerField").getLongValue());
-          assertEquals(
-              "test-stringField", record.getRecordValue().get("stringField").getStringValue());
+          assertsFieldValue(record);
         }
       }
     } finally {
       assertTrue(bigquery.delete(tableId));
     }
+  }
+
+  private static void assertsFieldValue(FieldValue record) {
+    assertEquals(FieldValue.Attribute.RECORD, record.getAttribute());
+    assertEquals(true, record.getRecordValue().get("booleanField").getBooleanValue());
+    assertEquals(10, record.getRecordValue().get("integerField").getLongValue());
+    assertEquals("test-stringField", record.getRecordValue().get("stringField").getStringValue());
   }
 
   @Test
