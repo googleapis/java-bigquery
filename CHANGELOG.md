@@ -1,5 +1,45 @@
 # Changelog
 
+### [1.117.1](https://www.github.com/googleapis/java-bigquery/compare/v1.117.0...v1.117.1) (2020-08-28)
+
+
+### Bug Fixes
+
+* npe for destination table ([#699](https://www.github.com/googleapis/java-bigquery/issues/699)) ([863c9e1](https://www.github.com/googleapis/java-bigquery/commit/863c9e1d7da8a63154677fb32954e2048dd48e9e))
+
+
+### Dependencies
+
+* update dependency com.google.apis:google-api-services-bigquery to v2-rev20200818-1.30.10 ([#705](https://www.github.com/googleapis/java-bigquery/issues/705)) ([127414c](https://www.github.com/googleapis/java-bigquery/commit/127414c4f2cb7ea50dfc0f5cbfcb7f581cf67e63))
+* update dependency com.google.cloud:google-cloud-storage to v1.112.0 ([#708](https://www.github.com/googleapis/java-bigquery/issues/708)) ([0be6a2b](https://www.github.com/googleapis/java-bigquery/commit/0be6a2b8ba47a912d8af7326ebc910d02393f6f5))
+* update jmh.version to v1.25.1 ([#698](https://www.github.com/googleapis/java-bigquery/issues/698)) ([e3a021b](https://www.github.com/googleapis/java-bigquery/commit/e3a021b24cbcdfe23617da1662f438fb2d8699fb))
+
+## [1.117.0](https://www.github.com/googleapis/java-bigquery/compare/v1.116.10...v1.117.0) (2020-08-25)
+
+
+### Features
+
+* add jmh benchmark module ([#686](https://www.github.com/googleapis/java-bigquery/issues/686)) ([a0e760f](https://www.github.com/googleapis/java-bigquery/commit/a0e760fbb1f5a9b169045ceba2dcf682d4736995))
+* support for Table ACLs ([#653](https://www.github.com/googleapis/java-bigquery/issues/653)) ([f0e67d8](https://www.github.com/googleapis/java-bigquery/commit/f0e67d8a63fdfe62bcd285c3bbb04cae79386229))
+
+
+### Bug Fixes
+
+* temporarily disable reporting to unblock releases ([#692](https://www.github.com/googleapis/java-bigquery/issues/692)) ([c1f5533](https://www.github.com/googleapis/java-bigquery/commit/c1f5533ee25907cad5fbae589b5dd08418e3f42b))
+
+
+### Dependencies
+
+* update dependency com.google.apis:google-api-services-bigquery to v2-rev20200805-1.30.10 ([#672](https://www.github.com/googleapis/java-bigquery/issues/672)) ([3e578f4](https://www.github.com/googleapis/java-bigquery/commit/3e578f4337e2d0c41237294ea7889d9efd0eddb0))
+* update jmh.version to v1.25 ([#690](https://www.github.com/googleapis/java-bigquery/issues/690)) ([44f7632](https://www.github.com/googleapis/java-bigquery/commit/44f7632feaeb1e1de8a1f68db972c48786e244de))
+
+
+### Documentation
+
+* update samples README.md ([#667](https://www.github.com/googleapis/java-bigquery/issues/667)) ([60d904b](https://www.github.com/googleapis/java-bigquery/commit/60d904b1fc4625f490f9357c486bfe5ef4f36f2c))
+* **samples:** add samples lint job and fix lint issues ([#684](https://www.github.com/googleapis/java-bigquery/issues/684)) ([f08becc](https://www.github.com/googleapis/java-bigquery/commit/f08beccecd00f792c33ac3d2e29a696bd9411fb6))
+* **samples:** fix checkstyle errors ([#682](https://www.github.com/googleapis/java-bigquery/issues/682)) ([fe5abc0](https://www.github.com/googleapis/java-bigquery/commit/fe5abc054c5eb7907ef58d5aa3285b3f10211aa4)), closes [#681](https://www.github.com/googleapis/java-bigquery/issues/681)
+
 ### [1.116.10](https://www.github.com/googleapis/java-bigquery/compare/v1.116.9...v1.116.10) (2020-08-11)
 
 
