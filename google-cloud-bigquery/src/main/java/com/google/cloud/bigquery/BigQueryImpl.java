@@ -208,10 +208,12 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     private final Job job;
     private final boolean jobStatus;
     private final TableId table;
+    private final Schema schema;
 
     QueryPageFetcher(
         JobId jobId,
         boolean jobStatus,
+        Schema schema,
         BigQueryOptions serviceOptions,
         String cursor,
         Map<BigQueryRpc.Option, ?> optionMap) {
@@ -221,6 +223,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       this.job = getJob(jobId);
       this.jobStatus = jobStatus;
       this.table = ((QueryJobConfiguration) job.getConfiguration()).getDestinationTable();
+      this.schema = schema;
     }
 
     @Override
@@ -232,7 +235,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       } catch (InterruptedException ex) {
         throw new RuntimeException(ex);
       }
-      return listTableData(table, serviceOptions, requestOptions).x();
+      return listTableData(table, schema, serviceOptions, requestOptions).x();
     }
   }
 
@@ -1281,19 +1284,20 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           numRows,
           new PageImpl<>(
               // fetch next pages of results
-              new QueryPageFetcher(jobId, jobStatus, getOptions(), cursor, optionMap(options)),
+              new QueryPageFetcher(
+                  jobId, jobStatus, schema, getOptions(), cursor, optionMap(options)),
               cursor,
               // cache first page of result
-              transformTableData(results.getRows())));
+              transformTableData(results.getRows(), schema)));
     }
     // only 1 page of result
     return new TableResult(
         schema,
         numRows,
         new PageImpl<>(
-            new TableDataPageFetcher(null, getOptions(), null, optionMap(options)),
+            new TableDataPageFetcher(null, schema, getOptions(), null, optionMap(options)),
             null,
-            transformTableData(results.getRows())));
+            transformTableData(results.getRows(), schema)));
   }
 
   @Override
