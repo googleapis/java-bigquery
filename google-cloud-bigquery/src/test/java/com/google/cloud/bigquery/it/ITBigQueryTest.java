@@ -1095,7 +1095,7 @@ public class ITBigQueryTest {
     } catch (BigQueryException e) {
       List<BigQueryError> errors = e.getErrors();
       assertNotNull(errors);
-      for ( BigQueryError error : errors) {
+      for (BigQueryError error : errors) {
         assertEquals("notFound", error.getReason());
         assertNull(error.getLocation());
         assertNotNull(error.getMessage());
