@@ -873,9 +873,7 @@ public class ITBigQueryTest {
     Job job = bigquery.create(JobInfo.of(QueryJobConfiguration.newBuilder(query).build()));
     job.waitFor();
     assertTrue(job.isDone());
-    Table table = bigquery.getTable(tableId);
-    System.out.println(table.getTableId().getTable());
-    Map<String, Object> row = new HashMap<String, Object>();
+    Map<String, Object> row = new HashMap<>();
     row.put("StringField", "StringValue");
     InsertAllRequest request = InsertAllRequest.newBuilder(tableId).addRow(row).build();
     InsertAllResponse response = bigquery.insertAll(request);
