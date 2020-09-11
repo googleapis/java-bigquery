@@ -36,7 +36,6 @@ import com.google.api.gax.paging.Page;
 import com.google.api.services.bigquery.model.ErrorProto;
 import com.google.api.services.bigquery.model.GetQueryResultsResponse;
 import com.google.api.services.bigquery.model.JobConfigurationQuery;
-import com.google.api.services.bigquery.model.JobReference;
 import com.google.api.services.bigquery.model.QueryRequest;
 import com.google.api.services.bigquery.model.TableCell;
 import com.google.api.services.bigquery.model.TableDataInsertAllRequest;
@@ -229,8 +228,6 @@ public class BigQueryImplTest {
       JobInfo.newBuilder(QUERY_JOB_CONFIGURATION_FOR_QUERY)
           .setJobId(JobId.of(PROJECT, JOB))
           .build();
-  private static final JobReference JOB_REFERENCE =
-      new JobReference().setJobId(JOB).setLocation(LOCATION).setProjectId(PROJECT);
   private static final String CURSOR = "cursor";
   private static final TableCell CELL_PB1 = new TableCell().setV("Value1");
   private static final TableCell CELL_PB2 = new TableCell().setV("Value2");
@@ -1868,6 +1865,40 @@ public class BigQueryImplTest {
       assertThat(row.get(0).getBooleanValue()).isFalse();
       assertThat(row.get(1).getLongValue()).isEqualTo(1);
     }
+    verify(bigqueryRpcMock).queryRpc(PROJECT, requestInfo.toPb());
+  }
+
+  @Test
+  public void testFastQueryMultiplePages() throws InterruptedException {
+    JobId queryJob = JobId.of(PROJECT, JOB);
+    com.google.api.services.bigquery.model.Job responseJob =
+        new com.google.api.services.bigquery.model.Job()
+            .setConfiguration(QUERY_JOB_CONFIGURATION_FOR_QUERY.toPb())
+            .setJobReference(queryJob.toPb())
+            .setId(JOB)
+            .setStatus(new com.google.api.services.bigquery.model.JobStatus().setState("DONE"));
+    responseJob.getConfiguration().getQuery().setDestinationTable(TABLE_ID.toPb());
+    when(bigqueryRpcMock.getJob(PROJECT, JOB, null, EMPTY_RPC_OPTIONS)).thenReturn(responseJob);
+    com.google.api.services.bigquery.model.QueryResponse queryResponsePb =
+        new com.google.api.services.bigquery.model.QueryResponse()
+            .setCacheHit(false)
+            .setJobReference(queryJob.toPb())
+            .setJobComplete(true)
+            .setKind("bigquery#queryResponse")
+            .setPageToken(CURSOR)
+            .setRows(ImmutableList.of(TABLE_ROW))
+            .setSchema(TABLE_SCHEMA.toPb())
+            .setTotalBytesProcessed(42L)
+            .setTotalRows(BigInteger.valueOf(1L));
+
+    QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_QUERY);
+    when(bigqueryRpcMock.queryRpc(PROJECT, requestInfo.toPb())).thenReturn(queryResponsePb);
+
+    bigquery = options.getService();
+    TableResult result = bigquery.query(QUERY_JOB_CONFIGURATION_FOR_QUERY);
+    assertTrue(result.hasNextPage());
+    assertNotNull(result.getNextPageToken());
+    verify(bigqueryRpcMock).getJob(PROJECT, JOB, null, EMPTY_RPC_OPTIONS);
     verify(bigqueryRpcMock).queryRpc(PROJECT, requestInfo.toPb());
   }
 
