@@ -1093,14 +1093,10 @@ public class ITBigQueryTest {
       bigquery.update(tableInfo);
       fail("BigQueryException was expected");
     } catch (BigQueryException e) {
-      List<BigQueryError> errors = e.getErrors();
-      assertNotNull(errors);
-      for (BigQueryError error : errors) {
-        assertEquals("notFound", error.getReason());
-        assertNull(error.getLocation());
-        assertNotNull(error.getMessage());
-        assertNotNull(error.getDebugInfo());
-      }
+      BigQueryError error = e.getError();
+      assertNotNull(error);
+      assertEquals("notFound", error.getReason());
+      assertNotNull(error.getMessage());
     }
   }
 
