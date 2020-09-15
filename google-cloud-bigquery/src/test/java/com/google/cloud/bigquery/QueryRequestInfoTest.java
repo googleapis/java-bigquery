@@ -129,6 +129,7 @@ public class QueryRequestInfoTest {
           .setRangePartitioning(RANGE_PARTITIONING)
           .setConnectionProperties(CONNECTION_PROPERTIES)
           .setPositionalParameters(POSITIONAL_PARAMETER)
+          .setMaxResults(100L)
           .build();
   QueryRequestInfo REQUEST_INFO = new QueryRequestInfo(QUERY_JOB_CONFIGURATION);
   private static final QueryJobConfiguration QUERY_JOB_CONFIGURATION_SUPPORTED =
@@ -141,6 +142,7 @@ public class QueryRequestInfoTest {
           .setLabels(LABELS)
           .setConnectionProperties(CONNECTION_PROPERTIES)
           .setPositionalParameters(POSITIONAL_PARAMETER)
+          .setMaxResults(100L)
           .build();
   QueryRequestInfo REQUEST_INFO_SUPPORTED = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_SUPPORTED);
 
@@ -154,5 +156,18 @@ public class QueryRequestInfoTest {
   public void testToPb() {
     QueryRequest requestPb = REQUEST_INFO.toPb();
     assertEquals(requestPb, REQUEST_INFO.toPb());
+  }
+
+  @Test
+  public void equalTo() {
+    compareQueryRequestInfo(
+        new QueryRequestInfo(QUERY_JOB_CONFIGURATION_SUPPORTED), REQUEST_INFO_SUPPORTED);
+    compareQueryRequestInfo(new QueryRequestInfo(QUERY_JOB_CONFIGURATION), REQUEST_INFO);
+  }
+
+  private void compareQueryRequestInfo(QueryRequestInfo expected, QueryRequestInfo actual) {
+    assertEquals(expected, actual);
+    assertEquals(expected.hashCode(), actual.hashCode());
+    assertEquals(expected.toString(), actual.toString());
   }
 }
