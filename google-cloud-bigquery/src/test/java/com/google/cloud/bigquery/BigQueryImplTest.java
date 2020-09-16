@@ -1879,6 +1879,17 @@ public class BigQueryImplTest {
             .setStatus(new com.google.api.services.bigquery.model.JobStatus().setState("DONE"));
     responseJob.getConfiguration().getQuery().setDestinationTable(TABLE_ID.toPb());
     when(bigqueryRpcMock.getJob(PROJECT, JOB, null, EMPTY_RPC_OPTIONS)).thenReturn(responseJob);
+    when(bigqueryRpcMock.listTableData(
+            PROJECT,
+            DATASET,
+            TABLE,
+            BigQueryImpl.optionMap(BigQuery.TableDataListOption.pageToken(CURSOR))))
+        .thenReturn(
+            new TableDataList()
+                .setPageToken(CURSOR)
+                .setRows(ImmutableList.of(TABLE_ROW))
+                .setTotalRows(1L));
+
     com.google.api.services.bigquery.model.QueryResponse queryResponsePb =
         new com.google.api.services.bigquery.model.QueryResponse()
             .setCacheHit(false)
@@ -1898,7 +1909,14 @@ public class BigQueryImplTest {
     TableResult result = bigquery.query(QUERY_JOB_CONFIGURATION_FOR_QUERY);
     assertTrue(result.hasNextPage());
     assertNotNull(result.getNextPageToken());
+    assertNotNull(result.getNextPage());
     verify(bigqueryRpcMock).getJob(PROJECT, JOB, null, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .listTableData(
+            PROJECT,
+            DATASET,
+            TABLE,
+            BigQueryImpl.optionMap(BigQuery.TableDataListOption.pageToken(CURSOR)));
     verify(bigqueryRpcMock).queryRpc(PROJECT, requestInfo.toPb());
   }
 

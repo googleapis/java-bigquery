@@ -200,19 +200,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     }
   }
 
-  private class QueryPageFetcher implements NextPageFetcher<FieldValueList> {
+  private class QueryPageFetcher extends Thread implements NextPageFetcher<FieldValueList> {
 
     private static final long serialVersionUID = -8501991114794410114L;
     private final Map<BigQueryRpc.Option, ?> requestOptions;
     private final BigQueryOptions serviceOptions;
-    private final Job job;
-    private final boolean jobStatus;
+    private Job job;
     private final TableId table;
     private final Schema schema;
 
     QueryPageFetcher(
         JobId jobId,
-        boolean jobStatus,
         Schema schema,
         BigQueryOptions serviceOptions,
         String cursor,
@@ -221,19 +219,19 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           PageImpl.nextRequestOptions(BigQueryRpc.Option.PAGE_TOKEN, cursor, optionMap);
       this.serviceOptions = serviceOptions;
       this.job = getJob(jobId);
-      this.jobStatus = jobStatus;
       this.table = ((QueryJobConfiguration) job.getConfiguration()).getDestinationTable();
       this.schema = schema;
     }
 
     @Override
     public Page<FieldValueList> getNextPage() {
-      try {
-        if (!jobStatus) {
-          job.waitFor();
+      while (!JobStatus.State.DONE.equals(job.getStatus().getState())) {
+        try {
+          sleep(5000);
+        } catch (InterruptedException ex) {
+          throw new RuntimeException(ex.getMessage());
         }
-      } catch (InterruptedException ex) {
-        throw new RuntimeException(ex);
+        job = job.reload();
       }
       return listTableData(table, schema, serviceOptions, requestOptions).x();
     }
@@ -1277,15 +1275,13 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
     if (results.getPageToken() != null) {
       JobId jobId = JobId.fromPb(results.getJobReference());
-      boolean jobStatus = results.getJobComplete();
       String cursor = results.getPageToken();
       return new TableResult(
           schema,
           numRows,
           new PageImpl<>(
               // fetch next pages of results
-              new QueryPageFetcher(
-                  jobId, jobStatus, schema, getOptions(), cursor, optionMap(options)),
+              new QueryPageFetcher(jobId, schema, getOptions(), cursor, optionMap(options)),
               cursor,
               // cache first page of result
               transformTableData(results.getRows(), schema)));
