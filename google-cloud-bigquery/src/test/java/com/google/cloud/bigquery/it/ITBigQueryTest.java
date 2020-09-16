@@ -1552,24 +1552,20 @@ public class ITBigQueryTest {
 
   @Test
   public void testStructQuery() throws InterruptedException {
-    try {
-      // query into a table
-      String query = String.format("SELECT RecordField FROM %s.%s", DATASET, TABLE_ID.getTable());
-      QueryJobConfiguration config =
-          QueryJobConfiguration.newBuilder(query)
-              .setDefaultDataset(DATASET)
-              .setUseLegacySql(false)
-              .build();
-      TableResult result = bigquery.query(config);
-      assertEquals(2, Iterables.size(result.getValues()));
-      for (FieldValueList values : result.iterateAll()) {
-        for (FieldValue value : values) {
-          assertEquals(null, value.getRecordValue().get("StringField").getValue());
-          assertEquals(true, value.getRecordValue().get("BooleanField").getBooleanValue());
-        }
+    // query into a table
+    String query = String.format("SELECT RecordField FROM %s.%s", DATASET, TABLE_ID.getTable());
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query)
+            .setDefaultDataset(DATASET)
+            .setUseLegacySql(false)
+            .build();
+    TableResult result = bigquery.query(config);
+    assertEquals(2, Iterables.size(result.getValues()));
+    for (FieldValueList values : result.iterateAll()) {
+      for (FieldValue value : values) {
+        assertEquals(null, value.getRecordValue().get("StringField").getValue());
+        assertEquals(true, value.getRecordValue().get("BooleanField").getBooleanValue());
       }
-    } finally {
-      assertTrue(bigquery.delete(TABLE_ID));
     }
   }
 
