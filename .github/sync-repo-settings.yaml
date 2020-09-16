@@ -45,4 +45,4 @@ permissionRules:
   # Access level required, one of push|pull|admin|maintain|triage
   permission: admin
 - team: yoshi-java
-  permission: maintain
+  permission: write
