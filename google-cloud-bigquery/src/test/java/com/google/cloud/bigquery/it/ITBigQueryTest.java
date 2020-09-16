@@ -138,11 +138,11 @@ public class ITBigQueryTest {
   private static final String BYTES_BASE64 = BaseEncoding.base64().encode(BYTES);
   private static final Long EXPIRATION_MS = 86400000L;
   private static final Logger LOG = Logger.getLogger(ITBigQueryTest.class.getName());
-  private static final String DATASET = RemoteBigQueryHelper.generateDatasetName();
+  private static String DATASET = "";
   private static final String DESCRIPTION = "Test dataset";
-  private static final String OTHER_DATASET = RemoteBigQueryHelper.generateDatasetName();
-  private static final String MODEL_DATASET = RemoteBigQueryHelper.generateDatasetName();
-  private static final String ROUTINE_DATASET = RemoteBigQueryHelper.generateDatasetName();
+  private static String OTHER_DATASET = "";
+  private static String MODEL_DATASET = "";
+  private static String ROUTINE_DATASET = "";
   private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
   private static final Map<String, String> LABELS =
       ImmutableMap.of(
@@ -261,7 +261,7 @@ public class ITBigQueryTest {
   private static final String EXTRACT_FILE = "extract.csv";
   private static final String EXTRACT_MODEL_FILE = "extract_model.csv";
   private static final String BUCKET = RemoteStorageHelper.generateBucketName();
-  private static final TableId TABLE_ID = TableId.of(DATASET, "testing_table");
+  private static TableId TABLE_ID;
   private static final String CSV_CONTENT = "StringValue1\nStringValue2\n";
   private static final String JSON_CONTENT =
       "{"
@@ -328,6 +328,11 @@ public class ITBigQueryTest {
     RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
     RemoteStorageHelper storageHelper = RemoteStorageHelper.create();
     Map<String, String> labels = ImmutableMap.of("test-job-name", "test-load-job");
+    DATASET = RemoteBigQueryHelper.generateDatasetName();
+    OTHER_DATASET = RemoteBigQueryHelper.generateDatasetName();
+    MODEL_DATASET = RemoteBigQueryHelper.generateDatasetName();
+    ROUTINE_DATASET = RemoteBigQueryHelper.generateDatasetName();
+    TABLE_ID = TableId.of(DATASET, "testing_table");
     bigquery = bigqueryHelper.getOptions().getService();
     storage = storageHelper.getOptions().getService();
     storage.create(BucketInfo.of(BUCKET));
