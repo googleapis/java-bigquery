@@ -85,7 +85,6 @@ import com.google.cloud.bigquery.RoutineId;
 import com.google.cloud.bigquery.RoutineInfo;
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.StandardSQLDataType;
-import com.google.cloud.bigquery.StandardSQLTypeName;
 import com.google.cloud.bigquery.StandardTableDefinition;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableDataWriteChannel;
@@ -138,11 +137,11 @@ public class ITBigQueryTest {
   private static final String BYTES_BASE64 = BaseEncoding.base64().encode(BYTES);
   private static final Long EXPIRATION_MS = 86400000L;
   private static final Logger LOG = Logger.getLogger(ITBigQueryTest.class.getName());
-  private static String DATASET = "";
+  private static final String DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String DESCRIPTION = "Test dataset";
-  private static String OTHER_DATASET = "";
-  private static String MODEL_DATASET = "";
-  private static String ROUTINE_DATASET = "";
+  private static final String OTHER_DATASET = RemoteBigQueryHelper.generateDatasetName();
+  private static final String MODEL_DATASET = RemoteBigQueryHelper.generateDatasetName();
+  private static final String ROUTINE_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
   private static final Map<String, String> LABELS =
       ImmutableMap.of(
@@ -261,7 +260,7 @@ public class ITBigQueryTest {
   private static final String EXTRACT_FILE = "extract.csv";
   private static final String EXTRACT_MODEL_FILE = "extract_model.csv";
   private static final String BUCKET = RemoteStorageHelper.generateBucketName();
-  private static TableId TABLE_ID;
+  private static final TableId TABLE_ID = TableId.of(DATASET, "testing_table");
   private static final String CSV_CONTENT = "StringValue1\nStringValue2\n";
   private static final String JSON_CONTENT =
       "{"
@@ -328,11 +327,6 @@ public class ITBigQueryTest {
     RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
     RemoteStorageHelper storageHelper = RemoteStorageHelper.create();
     Map<String, String> labels = ImmutableMap.of("test-job-name", "test-load-job");
-    DATASET = RemoteBigQueryHelper.generateDatasetName();
-    OTHER_DATASET = RemoteBigQueryHelper.generateDatasetName();
-    MODEL_DATASET = RemoteBigQueryHelper.generateDatasetName();
-    ROUTINE_DATASET = RemoteBigQueryHelper.generateDatasetName();
-    TABLE_ID = TableId.of(DATASET, "testing_table");
     bigquery = bigqueryHelper.getOptions().getService();
     storage = storageHelper.getOptions().getService();
     storage.create(BucketInfo.of(BUCKET));
@@ -1558,51 +1552,24 @@ public class ITBigQueryTest {
 
   @Test
   public void testStructQuery() throws InterruptedException {
-    String tableName = "test_record_table_" + UUID.randomUUID().toString().substring(0, 8);
-    TableId tableId = TableId.of(DATASET, tableName);
     try {
-      // create a table
-      Field booleanField = Field.of("booleanField", StandardSQLTypeName.BOOL);
-      Field integerField = Field.of("integerField", StandardSQLTypeName.INT64);
-      Field stringField = Field.of("stringField", StandardSQLTypeName.STRING);
-      Field recordField =
-          Field.newBuilder(
-                  "recordField",
-                  StandardSQLTypeName.STRUCT,
-                  booleanField,
-                  integerField,
-                  stringField)
-              .setMode(Field.Mode.NULLABLE)
-              .build();
-      Schema schema = Schema.of(recordField);
-      StandardTableDefinition tableDefinition = StandardTableDefinition.of(schema);
-      assertNotNull(bigquery.create(TableInfo.of(tableId, tableDefinition)));
-      // inserting data
-      Map<String, Object> content = new HashMap<>();
-      content.put("booleanField", true);
-      content.put("integerField", 10);
-      content.put("stringField", "test-stringField");
-      Map<String, Object> recordContent = new HashMap<>();
-      recordContent.put("recordField", content);
-      InsertAllResponse response =
-          bigquery.insertAll(InsertAllRequest.newBuilder(tableId).addRow(recordContent).build());
-      assertFalse(response.hasErrors());
       // query into a table
-      String query = String.format("SELECT * FROM %s.%s", DATASET, tableName);
+      String query = String.format("SELECT RecordField FROM %s.%s", DATASET, TABLE_ID.getTable());
       QueryJobConfiguration config =
           QueryJobConfiguration.newBuilder(query)
               .setDefaultDataset(DATASET)
               .setUseLegacySql(false)
               .build();
       TableResult result = bigquery.query(config);
-      assertEquals(1, Iterables.size(result.getValues()));
+      assertEquals(2, Iterables.size(result.getValues()));
       for (FieldValueList values : result.iterateAll()) {
-        for (FieldValue record : values) {
-          assertsFieldValue(record);
+        for (FieldValue value : values) {
+          assertEquals(null, value.getRecordValue().get("StringField").getValue());
+          assertEquals(true, value.getRecordValue().get("BooleanField").getBooleanValue());
         }
       }
     } finally {
-      assertTrue(bigquery.delete(tableId));
+      assertTrue(bigquery.delete(TABLE_ID));
     }
   }
 
