@@ -37,19 +37,19 @@ public abstract class TimePartitioning implements Serializable {
   private static final long serialVersionUID = -8565064035346940951L;
 
   /**
-   * The supported types are DAY, HOUR, MONTH, and YEAR which will generate one partition per time
-   * unit type. (Providing an empty string used to cause an error, but in OnePlatform the field will
-   * be treated as unset.)
+   * [Optional] The supported types are DAY, HOUR, MONTH, and YEAR, which will generate one
+   * partition per day, hour, month, and year, respectively. When the interval is not specified, the
+   * default behavior is DAY.
    */
   public enum Type {
 
-    /** Table is partitioned per day, based on data loading time. */
+    /** Table is partitioned per day. */
     DAY,
-    /** Table is partitioned per hour, based on data loading time. */
+    /** Table is partitioned per hour. */
     HOUR,
-    /** Table is partitioned per month, based on data loading time. */
+    /** Table is partitioned per month. */
     MONTH,
-    /** Table is partitioned per year, based on data loading time. */
+    /** Table is partitioned per year. */
     YEAR
   }
 
