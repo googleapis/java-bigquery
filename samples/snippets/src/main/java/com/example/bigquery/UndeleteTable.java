@@ -46,15 +46,15 @@ public class UndeleteTable {
 
       // Record the current time.  We'll use this as the snapshot time
       // for recovering the table.
-      long snapshot_epoch = Instant.now().toEpochMilli();
+      long snapshotEpoch = Instant.now().toEpochMilli();
 
       // [START_EXCLUDE]
       // Due to very short lifecycle of the table, ensure we're not picking a time
       // prior to the table creation due to time drift between backend and client.
       Table table = bigquery.getTable(TableId.of(datasetName, tableName));
-      Long created_epoch = table.getCreationTime();
-      if (created_epoch > snapshot_epoch) {
-        snapshot_epoch = created_epoch;
+      Long createdEpoch = table.getCreationTime();
+      if (createdEpoch > snapshotEpoch) {
+        snapshotEpoch = createdEpoch;
       }
       // [END_EXCLUDE]
 
@@ -62,7 +62,7 @@ public class UndeleteTable {
       bigquery.delete(TableId.of(datasetName, tableName));
 
       // Construct the restore-from tableID using a snapshot decorator.
-      String snapshotTableId = String.format("%s@%d", tableName, snapshot_epoch);
+      String snapshotTableId = String.format("%s@%d", tableName, snapshotEpoch);
 
       // Construct and run a copy job.
       CopyJobConfiguration configuration =
