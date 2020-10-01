@@ -125,7 +125,7 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     public abstract Builder setCompression(String compression);
 
     /**
-     * [Optional, Trusted Tester] Connection for external data source. The value may be {@code
+     * [Optional, Trusted Tester] connectionId for external data source. The value may be {@code
      * null}.
      */
     public abstract Builder setConnectionId(String connectionId);
