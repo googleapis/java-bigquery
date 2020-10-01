@@ -37,19 +37,16 @@ public class QueryExternalBigtablePerm {
   public static void main(String[] args) {
     // TODO(developer): Replace these variables before running the sample.
     String projectId = "MY_PROJECT_ID";
-    String instanceId = "MY_INSTANCE_ID";
-    String bigtableName = "MY_BIGTABLE_NAME";
-    String datasetName = "MY_DATASET_NAME";
-    String tableName = "MY_TABLE_NAME";
+    String bigtableInstanceId = "MY_INSTANCE_ID";
+    String bigtableTableName = "MY_BIGTABLE_NAME";
+    String bigqueryDatasetName = "MY_DATASET_NAME";
+    String bigqueryTableName = "MY_TABLE_NAME";
     String sourceUri =
-        "https://googleapis.com/bigtable/projects/"
-            + projectId
-            + "/instances/"
-            + instanceId
-            + "/tables/"
-            + bigtableName;
-    String query = String.format("SELECT * FROM %s ", tableName);
-    queryExternalBigtablePerm(datasetName, tableName, sourceUri, query);
+        String.format(
+            "https://googleapis.com/bigtable/projects/%s/instances/%s/tables/%s",
+            projectId, bigtableInstanceId, bigtableTableName);
+    String query = String.format("SELECT * FROM %s ", bigqueryTableName);
+    queryExternalBigtablePerm(bigqueryDatasetName, bigqueryTableName, sourceUri, query);
   }
 
   public static void queryExternalBigtablePerm(
