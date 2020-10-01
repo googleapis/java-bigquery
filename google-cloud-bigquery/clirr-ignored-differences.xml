@@ -5,11 +5,11 @@
   <difference>
     <differenceType>7013</differenceType>
     <className>com/google/cloud/bigquery/ExternalTableDefinition</className>
-    <method>public java.lang.String getConnectionId()</method>
+    <method>java.lang.String getConnectionId()</method>
   </difference>
   <difference>
     <differenceType>7013</differenceType>
     <className>com/google/cloud/bigquery/ExternalTableDefinition$Builder</className>
-    <method>public com.google.cloud.bigquery.ExternalTableDefinition$Builder setConnectionId(java.lang.String)</method>
+    <method>com.google.cloud.bigquery.ExternalTableDefinition$Builder setConnectionId(java.lang.String)</method>
   </difference>
 </differences>
