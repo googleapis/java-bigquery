@@ -75,7 +75,7 @@ public class QueryExternalBigtableTemp {
               .setType("STRING")
               .build();
 
-      // Configure BigtableOptions is optional.
+      // Configuring BigtableOptions is optional.
       BigtableOptions options =
           BigtableOptions.newBuilder()
               .setIgnoreUnspecifiedColumnFamilies(true)
