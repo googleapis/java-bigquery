@@ -55,8 +55,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuery {
+  private final Logger log = Logger.getLogger(this.getClass().getName());
 
   private static class DatasetPageFetcher implements NextPageFetcher<Dataset> {
 
@@ -1240,6 +1243,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       final String projectId, final QueryRequest content, JobOption... options) {
     com.google.api.services.bigquery.model.QueryResponse results;
     try {
+      log.log(Level.INFO, "\n" + "calling queryRpc w requestId: " + content.getRequestId());
       results =
           runWithRetries(
               new Callable<com.google.api.services.bigquery.model.QueryResponse>() {
