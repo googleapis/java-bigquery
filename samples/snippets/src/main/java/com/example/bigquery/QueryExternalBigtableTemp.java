@@ -52,35 +52,46 @@ public class QueryExternalBigtableTemp {
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
-      BigtableColumn name =
+      BigtableColumnFamily.Builder statsSummary = BigtableColumnFamily.newBuilder();
+
+      // Configuring Columns
+      BigtableColumn connectedCell =
           BigtableColumn.newBuilder()
-              .setQualifierEncoded(Base64.encodeBase64String("name".getBytes()))
-              .setFieldName("name")
+              .setQualifierEncoded(Base64.encodeBase64String("connected_cell".getBytes()))
+              .setFieldName("connected_cell")
               .setType("STRING")
               .setEncoding("TEXT")
               .build();
-      BigtableColumn postAbbr =
+      BigtableColumn connectedWifi =
           BigtableColumn.newBuilder()
-              .setQualifierEncoded(Base64.encodeBase64String("post_abbr".getBytes()))
-              .setFieldName("post_abbr")
+              .setQualifierEncoded(Base64.encodeBase64String("connected_wifi".getBytes()))
+              .setFieldName("connected_wifi")
               .setType("STRING")
               .setEncoding("TEXT")
               .build();
-      BigtableColumnFamily usStates =
-          BigtableColumnFamily.newBuilder()
-              .setColumns(ImmutableList.of(name, postAbbr))
-              .setFamilyID("us-states")
-              .setOnlyReadLatest(true)
-              .setEncoding("TEXT")
+      BigtableColumn osBuild =
+          BigtableColumn.newBuilder()
+              .setQualifierEncoded(Base64.encodeBase64String("os_build".getBytes()))
+              .setFieldName("os_build")
               .setType("STRING")
+              .setEncoding("TEXT")
               .build();
+
+      // Configuring column family and columns
+      statsSummary
+          .setColumns(ImmutableList.of(connectedCell, connectedWifi, osBuild))
+          .setFamilyID("stats_summary")
+          .setOnlyReadLatest(true)
+          .setEncoding("TEXT")
+          .setType("STRING")
+          .build();
 
       // Configuring BigtableOptions is optional.
       BigtableOptions options =
           BigtableOptions.newBuilder()
               .setIgnoreUnspecifiedColumnFamilies(true)
               .setReadRowkeyAsString(true)
-              .setColumnFamilies(ImmutableList.of(usStates))
+              .setColumnFamilies(ImmutableList.of(statsSummary.build()))
               .build();
 
       // Configure the external data source and query job.
@@ -91,7 +102,7 @@ public class QueryExternalBigtableTemp {
               .addTableDefinition(tableName, externalTable)
               .build();
 
-      // Example query to find states starting with 'A'
+      // Example query
       TableResult results = bigquery.query(queryConfig);
 
       results
