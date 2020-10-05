@@ -41,6 +41,7 @@ import com.google.cloud.RetryHelper;
 import com.google.cloud.RetryHelper.RetryHelperException;
 import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.InsertAllRequest.RowToInsert;
+import com.google.cloud.bigquery.JobStatus.State;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -203,7 +204,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     }
   }
 
-  private class QueryPageFetcher extends Thread implements NextPageFetcher<FieldValueList> {
+  private class QueryPageFetcher implements NextPageFetcher<FieldValueList> {
 
     private static final long serialVersionUID = -8501991114794410114L;
     private final Map<BigQueryRpc.Option, ?> requestOptions;
@@ -228,13 +229,12 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
     @Override
     public Page<FieldValueList> getNextPage() {
-      while (!JobStatus.State.DONE.equals(job.getStatus().getState())) {
+      if (job.getStatus().getState() != State.DONE) {
         try {
-          sleep(5000);
-        } catch (InterruptedException ex) {
-          throw new RuntimeException(ex.getMessage());
+          job.waitFor();
+        } catch (InterruptedException e) {
+          throw new RuntimeException(e);
         }
-        job = job.reload();
       }
       return listTableData(table, schema, serviceOptions, requestOptions).x();
     }
@@ -1232,15 +1232,15 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     QueryRequestInfo requestInfo = new QueryRequestInfo(configuration);
     if (requestInfo.isFastQuerySupported()) {
       String projectId = getOptions().getProjectId();
-      QueryRequest content = requestInfo.toPb();
-      return queryRpc(projectId, content, options);
+      return queryRpc(projectId, requestInfo, options);
     }
     // Otherwise, fall back to the existing create query job logic
     return create(JobInfo.of(configuration), options).getQueryResults();
   }
 
   private TableResult queryRpc(
-      final String projectId, final QueryRequest content, JobOption... options) {
+      final String projectId, QueryRequestInfo requestInfo, JobOption... options) {
+    final QueryRequest content = requestInfo.toPb();
     com.google.api.services.bigquery.model.QueryResponse results;
     try {
       log.log(Level.INFO, "\n" + "calling queryRpc w requestId: " + content.getRequestId());

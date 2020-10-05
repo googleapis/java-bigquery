@@ -27,7 +27,6 @@ import java.util.UUID;
 
 final class QueryRequestInfo {
 
-  private static final String REQUEST_ID = UUID.randomUUID().toString();
   private QueryJobConfiguration config;
   private final List<ConnectionProperty> connectionProperties;
   private final DatasetId defaultDataset;
@@ -37,6 +36,7 @@ final class QueryRequestInfo {
   private final Long maxResults;
   private final String query;
   private final List<QueryParameter> queryParameters;
+  private final String requestId;
   private final Boolean useQueryCache;
   private final Boolean useLegacySql;
 
@@ -50,6 +50,7 @@ final class QueryRequestInfo {
     this.maxResults = config.getMaxResults();
     this.query = config.getQuery();
     this.queryParameters = config.toPb().getQuery().getQueryParameters();
+    this.requestId = UUID.randomUUID().toString();
     this.useLegacySql = config.useLegacySql();
     this.useQueryCache = config.useQueryCache();
   }
@@ -92,7 +93,7 @@ final class QueryRequestInfo {
       request.setMaxResults(maxResults);
     }
     request.setQuery(query);
-    request.setRequestId(REQUEST_ID);
+    request.setRequestId(requestId);
     if (queryParameters != null) {
       request.setQueryParameters(queryParameters);
     }
@@ -115,7 +116,7 @@ final class QueryRequestInfo {
         .add("maximumBytesBilled", maximumBytesBilled)
         .add("maxResults", maxResults)
         .add("query", query)
-        .add("requestId", REQUEST_ID)
+        .add("requestId", requestId)
         .add("queryParameters", queryParameters)
         .add("useQueryCache", useQueryCache)
         .add("useLegacySql", useLegacySql)
@@ -133,7 +134,7 @@ final class QueryRequestInfo {
         maxResults,
         query,
         queryParameters,
-        REQUEST_ID,
+        requestId,
         useQueryCache,
         useLegacySql);
   }
