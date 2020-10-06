@@ -51,7 +51,7 @@ public class QueryExternalBigtableTempIT {
   private PrintStream originalPrintStream;
 
   private static final String INSTANCE = requireEnvVar("BIGTABLE_TESTING_INSTANCE");
-  private static final String PROJECT = requireEnvVar("GOOGLE_CLOUD_PROJECT");
+  private static final String PROJECT = requireEnvVar("SAMPLES_TESTING_PROJECT");
 
   private static String requireEnvVar(String varName) {
     String value = System.getenv(varName);
