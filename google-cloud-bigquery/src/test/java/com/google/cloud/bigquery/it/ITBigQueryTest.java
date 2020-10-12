@@ -2107,7 +2107,6 @@ public class ITBigQueryTest {
             .build();
     Job remoteJob = bigquery.create(JobInfo.of(configuration));
     assertTrue(remoteJob.cancel());
-    remoteJob = remoteJob.waitFor();
   }
 
   @Test
