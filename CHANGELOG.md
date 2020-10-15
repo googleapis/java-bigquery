@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.122.3](https://www.github.com/googleapis/java-bigquery/compare/v1.122.2...v1.122.3) (2020-10-15)
+
+
+### Bug Fixes
+
+* fix start index with page size for list rows ([#793](https://www.github.com/googleapis/java-bigquery/issues/793)) ([71e7d48](https://www.github.com/googleapis/java-bigquery/commit/71e7d4804e1facfb921892dc702adaec35e47cd0))
+
 ### [1.122.2](https://www.github.com/googleapis/java-bigquery/compare/v1.122.1...v1.122.2) (2020-10-08)
 
 
