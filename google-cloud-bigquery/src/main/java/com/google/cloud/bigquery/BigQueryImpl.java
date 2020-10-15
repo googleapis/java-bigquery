@@ -1265,14 +1265,22 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       throw new BigQueryException(bigQueryErrors);
     }
 
-    Schema schema = results.getSchema() == null ? null : Schema.fromPb(results.getSchema());
-    Long numRows;
-    if (results.getNumDmlAffectedRows() == null && results.getTotalRows() == null) {
-      numRows = 0L;
-    } else if (results.getNumDmlAffectedRows() != null) {
-      numRows = results.getNumDmlAffectedRows();
+    long numRows;
+    Schema schema;
+    if (results.getSchema() == null && results.getJobComplete()) {
+      JobId jobId = JobId.fromPb(results.getJobReference());
+      QueryResponse result = getQueryResults(jobId, getOptions(), optionMap(options));
+      numRows = result.getTotalRows();
+      schema = result.getSchema();
     } else {
-      numRows = results.getTotalRows().longValue();
+      schema = Schema.fromPb(results.getSchema());
+      if (results.getNumDmlAffectedRows() == null && results.getTotalRows() == null) {
+        numRows = 0L;
+      } else if (results.getNumDmlAffectedRows() != null) {
+        numRows = results.getNumDmlAffectedRows();
+      } else {
+        numRows = results.getTotalRows().longValue();
+      }
     }
 
     if (results.getPageToken() != null) {

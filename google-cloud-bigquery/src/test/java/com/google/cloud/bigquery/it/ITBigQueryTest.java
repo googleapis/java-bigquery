@@ -1609,6 +1609,35 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testFastQuerySinglePageDuplicateRequestIds() throws InterruptedException {
+    String query =
+        "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID_FASTQUERY.getTable();
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
+    TableResult result = bigquery.query(config);
+    assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
+    assertEquals(2, result.getTotalRows());
+    assertNull(result.getNextPage());
+    assertNull(result.getNextPageToken());
+    assertFalse(result.hasNextPage());
+
+    TableResult result1 = bigquery.query(config);
+    assertEquals(QUERY_RESULT_SCHEMA, result1.getSchema());
+    assertEquals(2, result1.getTotalRows());
+    assertNull(result1.getNextPage());
+    assertNull(result1.getNextPageToken());
+    assertFalse(result1.hasNextPage());
+
+    config.toBuilder().setQuery(query).build();
+    TableResult result2 = bigquery.query(config);
+    assertEquals(QUERY_RESULT_SCHEMA, result2.getSchema());
+    assertEquals(2, result2.getTotalRows());
+    assertNull(result2.getNextPage());
+    assertNull(result2.getNextPageToken());
+    assertFalse(result2.hasNextPage());
+  }
+
+  @Test
   public void testFastSQLQuery() throws InterruptedException {
     String query =
         "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID_FASTQUERY.getTable();
