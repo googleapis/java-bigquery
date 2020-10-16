@@ -1679,6 +1679,21 @@ public class ITBigQueryTest {
     assertNotNull(result.getNextPage());
     assertNotNull(result.getNextPageToken());
     assertTrue(result.hasNextPage());
+
+    TableResult result1 = bigquery.query(config);
+    assertEquals(LARGE_TABLE_SCHEMA, result.getSchema());
+    assertEquals(313348, result.getTotalRows());
+    assertNotNull(result1.getNextPage());
+    assertNotNull(result1.getNextPageToken());
+    assertTrue(result1.hasNextPage());
+
+    config.toBuilder().setQuery(query).build();
+    TableResult result2 = bigquery.query(config);
+    assertEquals(LARGE_TABLE_SCHEMA, result2.getSchema());
+    assertEquals(313348, result2.getTotalRows());
+    assertNotNull(result2.getNextPage());
+    assertNotNull(result2.getNextPageToken());
+    assertTrue(result2.hasNextPage());
   }
 
   @Test

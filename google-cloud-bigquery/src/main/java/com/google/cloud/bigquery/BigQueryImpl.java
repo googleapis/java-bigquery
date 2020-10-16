@@ -1239,7 +1239,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   }
 
   private TableResult queryRpc(
-      final String projectId, final QueryRequest content, JobOption... options) {
+      final String projectId, final QueryRequest content, JobOption... options)
+      throws InterruptedException {
     com.google.api.services.bigquery.model.QueryResponse results;
     try {
       results =
@@ -1269,9 +1270,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     Schema schema;
     if (results.getSchema() == null && results.getJobComplete()) {
       JobId jobId = JobId.fromPb(results.getJobReference());
-      QueryResponse result = getQueryResults(jobId, getOptions(), optionMap(options));
-      numRows = result.getTotalRows();
-      schema = result.getSchema();
+      Job job = getJob(jobId, options);
+      TableResult tableResult = job.getQueryResults();
+      return tableResult;
     } else {
       schema = Schema.fromPb(results.getSchema());
       if (results.getNumDmlAffectedRows() == null && results.getTotalRows() == null) {
