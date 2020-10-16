@@ -1274,7 +1274,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       TableResult tableResult = job.getQueryResults();
       return tableResult;
     } else {
-      schema = Schema.fromPb(results.getSchema());
+      schema = results.getSchema() == null ? null : Schema.fromPb(results.getSchema());
       if (results.getNumDmlAffectedRows() == null && results.getTotalRows() == null) {
         numRows = 0L;
       } else if (results.getNumDmlAffectedRows() != null) {
