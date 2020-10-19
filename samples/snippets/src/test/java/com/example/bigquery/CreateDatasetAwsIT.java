@@ -39,12 +39,14 @@ public class CreateDatasetAwsIT {
   private PrintStream out;
   private PrintStream originalPrintStream;
 
-  private static final String GOOGLE_CLOUD_PROJECT = System.getenv("GOOGLE_CLOUD_PROJECT");
+  private static final String GOOGLE_CLOUD_PROJECT = requireEnvVar("OMNI_PROJECT_ID");
 
-  private static void requireEnvVar(String varName) {
+  private static String requireEnvVar(String varName) {
+    String value = System.getenv(varName);
     assertNotNull(
         "Environment variable " + varName + " is required to perform these tests.",
         System.getenv(varName));
+    return value;
   }
 
   @BeforeClass
