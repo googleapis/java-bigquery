@@ -85,7 +85,7 @@ public class QueryExternalTableAwsIT {
   }
 
   @Test
-  public void testQueryExternalTableAws() {
+  public void testQueryExternalTableAws() throws InterruptedException {
     String query =
         String.format(
             "SELECT * FROM %s.%s.%s WHERE name LIKE 'W%%'",

@@ -34,11 +34,12 @@ import com.google.cloud.bigquery.TableResult;
 // Sample to queries an external data source aws s3 using a permanent table
 public class QueryExternalTableAws {
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws InterruptedException {
     // TODO(developer): Replace these variables before running the sample.
     String projectId = "MY_PROJECT_ID";
     String datasetName = "MY_DATASET_NAME";
     String externalTableName = "MY_EXTERNAL_TABLE_NAME";
+    // Query to find states starting with 'W'
     String query =
         String.format(
             "SELECT * FROM s%.%s.%s WHERE name LIKE 'W%%'",
@@ -46,13 +47,12 @@ public class QueryExternalTableAws {
     queryExternalTableAws(query);
   }
 
-  public static void queryExternalTableAws(String query) {
+  public static void queryExternalTableAws(String query) throws InterruptedException {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
-      // Example query to find states starting with 'W'
       TableResult results = bigquery.query(QueryJobConfiguration.of(query));
 
       results
@@ -60,7 +60,7 @@ public class QueryExternalTableAws {
           .forEach(row -> row.forEach(val -> System.out.printf("%s,", val.toString())));
 
       System.out.println("Query on aws external permanent table performed successfully.");
-    } catch (BigQueryException | InterruptedException e) {
+    } catch (BigQueryException e) {
       System.out.println("Query not performed \n" + e.toString());
     }
   }
