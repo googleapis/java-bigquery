@@ -95,7 +95,13 @@ public class QueryExternalTableAwsIT {
               .setConnection(connection)
               .setConnectionId(connectionName)
               .build();
-      connectionName = client.createConnection(request).getName();
+      Connection response = client.createConnection(request);
+      AwsCrossAccountRole accountRole = response.getAws().getCrossAccountRole();
+      System.out.println(
+          "Aws connection created successfully : Aws userId :"
+              + accountRole.getIamUserId()
+              + " Aws externalId :"
+              + accountRole.getExternalId());
     }
     // create a temporary dataset
     CreateDatasetAws.createDatasetAws(PROJECT_ID, datasetName, LOCATION);
@@ -108,6 +114,7 @@ public class QueryExternalTableAwsIT {
       DeleteConnectionRequest request =
           DeleteConnectionRequest.newBuilder().setName(connectionName).build();
       client.deleteConnection(request);
+      System.out.println("Connection deleted successfully");
     }
     // Clean up
     DeleteTable.deleteTable(datasetName, tableName);
