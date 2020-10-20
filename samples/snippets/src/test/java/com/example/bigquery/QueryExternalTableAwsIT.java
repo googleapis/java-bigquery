@@ -42,7 +42,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class CreateExternalTableAwsIT {
+public class QueryExternalTableAwsIT {
 
   private static final String ID = UUID.randomUUID().toString().substring(0, 8);
   private static final String LOCATION = "aws-us-east-1";
@@ -75,9 +75,9 @@ public class CreateExternalTableAwsIT {
 
   @Before
   public void setUp() throws IOException {
-    datasetName = "CREATE_EXTERNAL_TABLE_AWS_TEST_" + ID;
-    tableName = "CREATE_EXTERNAL_TABLE_AWS_TEST_" + ID;
-    connectionName = "CREATE_EXTERNAL_TABLE_AWS_TEST_" + ID;
+    datasetName = "QUERY_EXTERNAL_TABLE_AWS_TEST_" + ID;
+    tableName = "QUERY_EXTERNAL_TABLE_AWS_TEST_" + ID;
+    connectionName = "QUERY_EXTERNAL_TABLE_AWS_TEST_" + ID;
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
     originalPrintStream = System.out;
@@ -119,7 +119,7 @@ public class CreateExternalTableAwsIT {
   }
 
   @Test
-  public void testCreateExternalTableAws() {
+  public void testQueryExternalTableAws() {
     String sourceUri = "s3://cloud-samples-tests/us-states.csv";
     Schema schema =
         Schema.of(
@@ -131,8 +131,12 @@ public class CreateExternalTableAwsIT {
             .setConnectionId(connectionName)
             .setSchema(schema)
             .build();
-    CreateExternalTableAws.createExternalTableAws(
-        PROJECT_ID, datasetName, tableName, externalTable);
-    assertThat(bout.toString()).contains("Aws external table created successfully");
+    String query =
+        String.format(
+            "SELECT * FROM s%:%s.%s WHERE name LIKE 'W%%'", PROJECT_ID, datasetName, tableName);
+    QueryExternalTableAws.queryExternalTableAws(
+        PROJECT_ID, datasetName, tableName, externalTable, query);
+    assertThat(bout.toString())
+        .contains("Query on aws external permanent table performed successfully.");
   }
 }
