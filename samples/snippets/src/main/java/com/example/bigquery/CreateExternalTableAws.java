@@ -68,6 +68,9 @@ public class CreateExternalTableAws {
 
       bigquery.create(tableInfo);
       System.out.println("Aws external table created successfully");
+
+      // Clean up
+      bigquery.delete(TableId.of(projectId, datasetName, tableName));
     } catch (BigQueryException e) {
       System.out.println("Aws external was not created." + e.toString());
     }

@@ -47,16 +47,14 @@ public class CreateExternalTableAwsIT {
   private static final String ID = UUID.randomUUID().toString().substring(0, 8);
   private static final String LOCATION = "aws-us-east-1";
   private final Logger log = Logger.getLogger(this.getClass().getName());
-  private String datasetName;
   private String tableName;
-  private String connectionName;
   private ByteArrayOutputStream bout;
   private PrintStream out;
   private PrintStream originalPrintStream;
 
-  private static final String PROJECT_ID = requireEnvVar("OMNI_PROJECT_ID");
-  private static final String AWS_ACCOUNT_ID = requireEnvVar("AWS_ACCOUNT_ID");
-  private static final String AWS_ROLE_ID = requireEnvVar("AWS_ROLE_ID");
+  private static final String OMNI_PROJECT_ID = requireEnvVar("OMNI_PROJECT_ID");
+  private static final String OMNI_DATASET_NAME = requireEnvVar("OMNI_DATASET_NAME");
+  private static final String AWS_READ_CONNECTION_ID = requireEnvVar("AWS_READ_CONNECTION_ID");
 
   private static String requireEnvVar(String varName) {
     String value = System.getenv(varName);
@@ -69,49 +67,21 @@ public class CreateExternalTableAwsIT {
   @BeforeClass
   public static void checkRequirements() {
     requireEnvVar("OMNI_PROJECT_ID");
-    requireEnvVar("AWS_ACCOUNT_ID");
-    requireEnvVar("AWS_ROLE_ID");
+    requireEnvVar("OMNI_DATASET_NAME");
+    requireEnvVar("AWS_READ_CONNECTION_ID");
   }
 
   @Before
-  public void setUp() throws IOException {
-    datasetName = "CREATE_EXTERNAL_TABLE_AWS_TEST_" + ID;
+  public void setUp() {
     tableName = "CREATE_EXTERNAL_TABLE_AWS_TEST_" + ID;
-    connectionName = "CREATE_EXTERNAL_TABLE_AWS_TEST_" + ID;
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
     originalPrintStream = System.out;
     System.setOut(out);
-    // create a temporary aws connection
-    try (ConnectionServiceClient client = ConnectionServiceClient.create()) {
-      LocationName parent = LocationName.of(PROJECT_ID, LOCATION);
-      String iamRoleId = String.format("arn:aws:iam::%s:role/%s", AWS_ACCOUNT_ID, AWS_ROLE_ID);
-      AwsCrossAccountRole role = AwsCrossAccountRole.newBuilder().setIamRoleId(iamRoleId).build();
-      AwsProperties awsProperties = AwsProperties.newBuilder().setCrossAccountRole(role).build();
-      Connection connection = Connection.newBuilder().setAws(awsProperties).build();
-      CreateConnectionRequest request =
-          CreateConnectionRequest.newBuilder()
-              .setParent(parent.toString())
-              .setConnection(connection)
-              .setConnectionId(connectionName)
-              .build();
-      connectionName = client.createConnection(request).getName();
-    }
-    // create a temporary dataset
-    CreateDatasetAws.createDatasetAws(PROJECT_ID, datasetName, LOCATION);
   }
 
   @After
-  public void tearDown() throws IOException {
-    // delete a temporary aws connection
-    try (ConnectionServiceClient client = ConnectionServiceClient.create()) {
-      DeleteConnectionRequest request =
-          DeleteConnectionRequest.newBuilder().setName(connectionName).build();
-      client.deleteConnection(request);
-    }
-    // Clean up
-    DeleteTable.deleteTable(datasetName, tableName);
-    DeleteDataset.deleteDataset(PROJECT_ID, datasetName);
+  public void tearDown() {
     // restores print statements in the original method
     System.out.flush();
     System.setOut(originalPrintStream);
@@ -128,11 +98,11 @@ public class CreateExternalTableAwsIT {
     CsvOptions options = CsvOptions.newBuilder().setSkipLeadingRows(1).build();
     ExternalTableDefinition externalTable =
         ExternalTableDefinition.newBuilder(sourceUri, options)
-            .setConnectionId(connectionName)
+            .setConnectionId(AWS_READ_CONNECTION_ID)
             .setSchema(schema)
             .build();
     CreateExternalTableAws.createExternalTableAws(
-        PROJECT_ID, datasetName, tableName, externalTable);
+        OMNI_PROJECT_ID, OMNI_DATASET_NAME, tableName, externalTable);
     assertThat(bout.toString()).contains("Aws external table created successfully");
   }
 }
