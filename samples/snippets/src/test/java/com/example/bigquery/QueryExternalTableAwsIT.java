@@ -96,6 +96,7 @@ public class QueryExternalTableAwsIT {
               .setConnectionId(connectionName)
               .build();
       Connection response = client.createConnection(request);
+      connectionName = response.getName();
       AwsCrossAccountRole accountRole = response.getAws().getCrossAccountRole();
       System.out.println(
           "Aws connection created successfully : Aws userId :"
