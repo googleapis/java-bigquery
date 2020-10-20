@@ -133,7 +133,7 @@ public class QueryExternalTableAwsIT {
             .build();
     String query =
         String.format(
-            "SELECT * FROM s%:%s.%s WHERE name LIKE 'W%%'", PROJECT_ID, datasetName, tableName);
+            "SELECT * FROM %s:%s.%s WHERE name LIKE 'W%%'", PROJECT_ID, datasetName, tableName);
     QueryExternalTableAws.queryExternalTableAws(
         PROJECT_ID, datasetName, tableName, externalTable, query);
     assertThat(bout.toString())
