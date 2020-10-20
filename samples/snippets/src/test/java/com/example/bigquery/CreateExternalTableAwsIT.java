@@ -90,7 +90,7 @@ public class CreateExternalTableAwsIT {
 
   @Test
   public void testCreateExternalTableAws() {
-    String sourceUri = "s3://cloud-samples-tests/us-states.csv";
+    String sourceUri = "s3://steph-omni-test-bucket/us-states.csv";
     Schema schema =
         Schema.of(
             Field.of("name", StandardSQLTypeName.STRING),

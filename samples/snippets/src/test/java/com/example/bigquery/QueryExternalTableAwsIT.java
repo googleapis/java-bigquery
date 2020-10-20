@@ -44,19 +44,14 @@ import org.junit.Test;
 
 public class QueryExternalTableAwsIT {
 
-  private static final String ID = UUID.randomUUID().toString().substring(0, 8);
-  private static final String LOCATION = "aws-us-east-1";
   private final Logger log = Logger.getLogger(this.getClass().getName());
-  private String datasetName;
-  private String tableName;
-  private String connectionName;
   private ByteArrayOutputStream bout;
   private PrintStream out;
   private PrintStream originalPrintStream;
 
-  private static final String PROJECT_ID = requireEnvVar("OMNI_PROJECT_ID");
-  private static final String AWS_ACCOUNT_ID = requireEnvVar("AWS_ACCOUNT_ID");
-  private static final String AWS_ROLE_ID = requireEnvVar("AWS_ROLE_ID");
+  private static final String OMNI_PROJECT_ID = requireEnvVar("OMNI_PROJECT_ID");
+  private static final String OMNI_DATASET_NAME = requireEnvVar("OMNI_DATASET_NAME");
+  private static final String OMNI_EXTERNAL_TABLE_NAME = requireEnvVar("OMNI_EXTERNAL_TABLE_NAME");
 
   private static String requireEnvVar(String varName) {
     String value = System.getenv(varName);
@@ -69,57 +64,20 @@ public class QueryExternalTableAwsIT {
   @BeforeClass
   public static void checkRequirements() {
     requireEnvVar("OMNI_PROJECT_ID");
-    requireEnvVar("AWS_ACCOUNT_ID");
-    requireEnvVar("AWS_ROLE_ID");
+    requireEnvVar("OMNI_DATASET_NAME");
+    requireEnvVar("OMNI_EXTERNAL_TABLE_NAME");
   }
 
   @Before
-  public void setUp() throws IOException {
-    datasetName = "QUERY_EXTERNAL_TABLE_AWS_TEST_" + ID;
-    tableName = "QUERY_EXTERNAL_TABLE_AWS_TEST_" + ID;
-    connectionName = "QUERY_EXTERNAL_TABLE_AWS_TEST_" + ID;
+  public void setUp() {
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
     originalPrintStream = System.out;
     System.setOut(out);
-    // create a temporary aws connection
-    try (ConnectionServiceClient client = ConnectionServiceClient.create()) {
-      LocationName parent = LocationName.of(PROJECT_ID, LOCATION);
-      String iamRoleId = String.format("arn:aws:iam::%s:role/%s", AWS_ACCOUNT_ID, AWS_ROLE_ID);
-      AwsCrossAccountRole role = AwsCrossAccountRole.newBuilder().setIamRoleId(iamRoleId).build();
-      AwsProperties awsProperties = AwsProperties.newBuilder().setCrossAccountRole(role).build();
-      Connection connection = Connection.newBuilder().setAws(awsProperties).build();
-      CreateConnectionRequest request =
-          CreateConnectionRequest.newBuilder()
-              .setParent(parent.toString())
-              .setConnection(connection)
-              .setConnectionId(connectionName)
-              .build();
-      Connection response = client.createConnection(request);
-      connectionName = response.getName();
-      AwsCrossAccountRole accountRole = response.getAws().getCrossAccountRole();
-      System.out.println(
-          "Aws connection created successfully : Aws userId :"
-              + accountRole.getIamUserId()
-              + " Aws externalId :"
-              + accountRole.getExternalId());
-    }
-    // create a temporary dataset
-    CreateDatasetAws.createDatasetAws(PROJECT_ID, datasetName, LOCATION);
   }
 
   @After
-  public void tearDown() throws IOException {
-    // delete a temporary aws connection
-    try (ConnectionServiceClient client = ConnectionServiceClient.create()) {
-      DeleteConnectionRequest request =
-          DeleteConnectionRequest.newBuilder().setName(connectionName).build();
-      client.deleteConnection(request);
-      System.out.println("Connection deleted successfully");
-    }
-    // Clean up
-    DeleteTable.deleteTable(datasetName, tableName);
-    DeleteDataset.deleteDataset(PROJECT_ID, datasetName);
+  public void tearDown() {
     // restores print statements in the original method
     System.out.flush();
     System.setOut(originalPrintStream);
@@ -128,22 +86,10 @@ public class QueryExternalTableAwsIT {
 
   @Test
   public void testQueryExternalTableAws() {
-    String sourceUri = "s3://cloud-samples-tests/us-states.csv";
-    Schema schema =
-        Schema.of(
-            Field.of("name", StandardSQLTypeName.STRING),
-            Field.of("post_abbr", StandardSQLTypeName.STRING));
-    CsvOptions options = CsvOptions.newBuilder().setSkipLeadingRows(1).build();
-    ExternalTableDefinition externalTable =
-        ExternalTableDefinition.newBuilder(sourceUri, options)
-            .setConnectionId(connectionName)
-            .setSchema(schema)
-            .build();
     String query =
         String.format(
-            "SELECT * FROM %s:%s.%s WHERE name LIKE 'W%%'", PROJECT_ID, datasetName, tableName);
-    QueryExternalTableAws.queryExternalTableAws(
-        PROJECT_ID, datasetName, tableName, externalTable, query);
+            "SELECT * FROM %s.%s.%s WHERE name LIKE 'W%%'", OMNI_PROJECT_ID, OMNI_DATASET_NAME, OMNI_EXTERNAL_TABLE_NAME);
+    QueryExternalTableAws.queryExternalTableAws(query);
     assertThat(bout.toString())
         .contains("Query on aws external permanent table performed successfully.");
   }

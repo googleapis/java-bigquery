@@ -21,6 +21,7 @@ import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.CsvOptions;
+import com.google.cloud.bigquery.DatasetId;
 import com.google.cloud.bigquery.ExternalTableDefinition;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.QueryJobConfiguration;
@@ -37,41 +38,18 @@ public class QueryExternalTableAws {
     // TODO(developer): Replace these variables before running the sample.
     String projectId = "MY_PROJECT_ID";
     String datasetName = "MY_DATASET_NAME";
-    String tableName = "MY_TABLE_NAME";
-    // Create a aws connection
-    // projects/{project_id}/locations/{location_id}/connections/{connection_id}
-    String connectionId = "MY_CONNECTION_NAME";
-    String sourceUri = "s3://your-bucket-name/";
-    CsvOptions options = CsvOptions.newBuilder().setSkipLeadingRows(1).build();
-    Schema schema =
-        Schema.of(
-            Field.of("name", StandardSQLTypeName.STRING),
-            Field.of("post_abbr", StandardSQLTypeName.STRING));
+    String externalTableName = "MY_EXTERNAL_TABLE_NAME";
     String query =
         String.format(
-            "SELECT * FROM s%:%s.%s WHERE name LIKE 'W%%'", projectId, datasetName, tableName);
-    ExternalTableDefinition externalTable =
-        ExternalTableDefinition.newBuilder(sourceUri, options)
-            .setConnectionId(connectionId)
-            .setSchema(schema)
-            .build();
-    queryExternalTableAws(projectId, datasetName, tableName, externalTable, query);
+            "SELECT * FROM s%.%s.%s WHERE name LIKE 'W%%'", projectId, datasetName, externalTableName);
+    queryExternalTableAws(query);
   }
 
-  public static void queryExternalTableAws(
-      String projectId,
-      String datasetName,
-      String tableName,
-      ExternalTableDefinition externalTable,
-      String query) {
+  public static void queryExternalTableAws(String query) {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
-
-      TableId tableId = TableId.of(projectId, datasetName, tableName);
-      // Create a permanent table linked to the Aws file
-      bigquery.create(TableInfo.of(tableId, externalTable));
 
       // Example query to find states starting with 'W'
       TableResult results = bigquery.query(QueryJobConfiguration.of(query));
