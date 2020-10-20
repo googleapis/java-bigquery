@@ -41,7 +41,8 @@ public class QueryExternalTableAws {
     String externalTableName = "MY_EXTERNAL_TABLE_NAME";
     String query =
         String.format(
-            "SELECT * FROM s%.%s.%s WHERE name LIKE 'W%%'", projectId, datasetName, externalTableName);
+            "SELECT * FROM s%.%s.%s WHERE name LIKE 'W%%'",
+            projectId, datasetName, externalTableName);
     queryExternalTableAws(query);
   }
 

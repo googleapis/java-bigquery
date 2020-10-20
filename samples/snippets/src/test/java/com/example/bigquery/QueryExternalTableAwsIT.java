@@ -88,7 +88,8 @@ public class QueryExternalTableAwsIT {
   public void testQueryExternalTableAws() {
     String query =
         String.format(
-            "SELECT * FROM %s.%s.%s WHERE name LIKE 'W%%'", OMNI_PROJECT_ID, OMNI_DATASET_NAME, OMNI_EXTERNAL_TABLE_NAME);
+            "SELECT * FROM %s.%s.%s WHERE name LIKE 'W%%'",
+            OMNI_PROJECT_ID, OMNI_DATASET_NAME, OMNI_EXTERNAL_TABLE_NAME);
     QueryExternalTableAws.queryExternalTableAws(query);
     assertThat(bout.toString())
         .contains("Query on aws external permanent table performed successfully.");
