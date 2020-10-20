@@ -96,13 +96,13 @@ public class CreateExternalTableAwsIT {
             Field.of("name", StandardSQLTypeName.STRING),
             Field.of("post_abbr", StandardSQLTypeName.STRING));
     CsvOptions options = CsvOptions.newBuilder().setSkipLeadingRows(1).build();
-    ExternalTableDefinition externalTable =
+    ExternalTableDefinition externalTableDefinition =
         ExternalTableDefinition.newBuilder(sourceUri, options)
             .setConnectionId(AWS_READ_CONNECTION_ID)
             .setSchema(schema)
             .build();
     CreateExternalTableAws.createExternalTableAws(
-        OMNI_PROJECT_ID, OMNI_DATASET_NAME, tableName, externalTable);
+        OMNI_PROJECT_ID, OMNI_DATASET_NAME, tableName, externalTableDefinition);
     assertThat(bout.toString()).contains("Aws external table created successfully");
   }
 }

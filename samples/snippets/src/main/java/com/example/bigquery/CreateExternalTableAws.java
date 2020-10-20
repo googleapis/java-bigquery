@@ -36,9 +36,7 @@ public class CreateExternalTableAws {
     String projectId = "MY_PROJECT_ID";
     String datasetName = "MY_DATASET_NAME";
     String tableName = "MY_TABLE_NAME";
-    // Create a aws connection
-    // projects/{project_id}/locations/{location_id}/connections/{connection_id}
-    String connectionId = "MY_CONNECTION_NAME";
+    String connectionId = "MY_CONNECTION_ID";
     String sourceUri = "s3://your-bucket-name/";
     CsvOptions options = CsvOptions.newBuilder().setSkipLeadingRows(1).build();
     Schema schema =
