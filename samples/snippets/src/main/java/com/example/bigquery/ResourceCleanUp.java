@@ -50,7 +50,8 @@ public class ResourceCleanUp {
     }
 
     // clean up stale test tables in the test dataset
-    Page<Table> tables = bigquery.listTables(BIGQUERY_DATASET_NAME, TableListOption.pageSize(10000));
+    Page<Table> tables =
+        bigquery.listTables(BIGQUERY_DATASET_NAME, TableListOption.pageSize(10000));
     for (Table table : tables.getValues()) {
       String tableName = table.getTableId().getTable();
       if (tableName.contains("TestTable_")
