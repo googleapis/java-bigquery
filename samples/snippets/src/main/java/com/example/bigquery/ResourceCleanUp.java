@@ -26,8 +26,6 @@ import com.google.cloud.bigquery.Dataset;
 import com.google.cloud.bigquery.DatasetId;
 import com.google.cloud.bigquery.Model;
 import com.google.cloud.bigquery.ModelId;
-import com.google.cloud.bigquery.Routine;
-import com.google.cloud.bigquery.RoutineId;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableId;
 
@@ -42,21 +40,23 @@ public class ResourceCleanUp {
     Page<Dataset> datasets = bigquery.listDatasets(PROJECT_ID, DatasetListOption.pageSize(1000));
     for (Dataset dataset : datasets.getValues()) {
       String datasetName = dataset.getDatasetId().getDataset();
-      if (datasetName.contains("CREATE_DATASET_AWS_TEST_") ||
-          datasetName.contains("MY_DATASET_NAME_TEST_") ||
-          datasetName.contains("gcloud_test_dataset_temp_") ||
-          datasetName.contains("SHARED_DATASET_TEST_")) {
+      if (datasetName.contains("CREATE_DATASET_AWS_TEST_")
+          || datasetName.contains("MY_DATASET_NAME_TEST_")
+          || datasetName.contains("gcloud_test_")
+          || datasetName.contains("SHARED_DATASET_TEST_")) {
         System.out.format("\tDeleting Dataset: %s\n", datasetName);
         bigquery.delete(DatasetId.of(PROJECT_ID, datasetName));
       }
     }
 
     // clean up stale test tables in the test dataset
-    Page<Table> tables = bigquery.listTables(BIGQUERY_DATASET_NAME, TableListOption.pageSize(1000));
+    Page<Table> tables = bigquery.listTables(BIGQUERY_DATASET_NAME, TableListOption.pageSize(10000));
     for (Table table : tables.getValues()) {
       String tableName = table.getTableId().getTable();
-      if (tableName.contains("ADD_COLUMN_LOAD_APPEND_TEST_") ||
-          tableName.contains("AddEmptyColumnTestTable_")) {
+      if (tableName.contains("TestTable_")
+          || tableName.contains("_TEST")
+          || tableName.contains("MY_")
+          || tableName.contains("gcloud_test_")) {
         System.out.format("\tDeleting Table: %s\n", tableName);
         bigquery.delete(TableId.of(PROJECT_ID, BIGQUERY_DATASET_NAME, tableName));
       }
@@ -72,15 +72,6 @@ public class ResourceCleanUp {
       }
     }
 
-    // clean up stale test routines in the test dataset
-    Page<Routine> routines =
-        bigquery.listRoutines(BIGQUERY_DATASET_NAME, BigQuery.RoutineListOption.pageSize(1000));
-    for (Routine routine : routines.getValues()) {
-      String routineName = routine.getRoutineId().getRoutine();
-      if (routineName.contains("MY_ROUTINE_NAME_")) {
-        System.out.format("\tDeleting Routine: %s\n", routineName);
-        bigquery.delete(RoutineId.of(PROJECT_ID, BIGQUERY_DATASET_NAME, routineName));
-      }
-    }
+    System.out.println("*************** All done! Squeaky clean now :) ***************");
   }
 }

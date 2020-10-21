@@ -37,6 +37,11 @@ gcloud auth activate-service-account \
     --key-file="$GOOGLE_APPLICATION_CREDENTIALS" \
     --project="$GOOGLE_CLOUD_PROJECT"
 
+mvn clean install -DskipTests=true
+
+# Move into the samples directory
+cd samples/snippets
+
 echo -e "\n******************** NIGHTLY RESOURCE CLEAN UP ********************"
 
 mvn compile exec:java -Dexec.mainClass=com.example.bigquery.ResourceCleanUp
