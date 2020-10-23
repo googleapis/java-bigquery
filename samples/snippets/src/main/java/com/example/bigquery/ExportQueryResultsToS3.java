@@ -23,7 +23,7 @@ import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.TableResult;
 
-// Sample to queries an external data source aws s3 using a permanent table
+// Sample to export query results to Amazon S3 bucket
 public class ExportQueryResultsToS3 {
 
   public static void main(String[] args) throws InterruptedException {
@@ -34,6 +34,10 @@ public class ExportQueryResultsToS3 {
     // connectionName should be in the format of connection_region.connection_name. e.g.
     // aws-us-east-1.s3-write-conn
     String connectionName = "MY_CONNECTION_REGION.MY_CONNECTION_NAME";
+    // destinationUri must contain exactly one * anywhere in the leaf directory of the path string
+    // e.g. ../aa/*, ../aa/b*c, ../aa/*bc, and ../aa/bc*
+    // BigQuery replaces * with 0000..N depending on the number of files exported.
+    // BigQuery determines the file count and sizes.
     String destinationUri = "s3://your-bucket-name/*";
     String format = "EXPORT_FORMAT";
     // Export result of query to find states starting with 'W'
