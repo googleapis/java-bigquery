@@ -1,5 +1,17 @@
 # Changelog
 
+### [1.123.3](https://www.github.com/googleapis/java-bigquery/compare/v1.123.2...v1.123.3) (2020-10-27)
+
+
+### Bug Fixes
+
+* **samples:** dataset getcreatetime ([#866](https://www.github.com/googleapis/java-bigquery/issues/866)) ([992baaf](https://www.github.com/googleapis/java-bigquery/commit/992baaf85ae2904bb5900cfdfce6b447fd301b3b))
+
+
+### Dependencies
+
+* update dependency com.google.cloud:google-cloud-storage to v1.113.2 ([#871](https://www.github.com/googleapis/java-bigquery/issues/871)) ([66551c3](https://www.github.com/googleapis/java-bigquery/commit/66551c3955ec9ba58e5b7b3204539ff4cde07298))
+
 ### [1.123.2](https://www.github.com/googleapis/java-bigquery/compare/v1.123.1...v1.123.2) (2020-10-23)
 
 
