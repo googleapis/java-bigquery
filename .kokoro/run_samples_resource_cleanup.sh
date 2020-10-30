@@ -37,5 +37,4 @@ cd samples/snippets
 
 echo -e "\n******************** NIGHTLY RESOURCE CLEAN UP ********************"
 
-export
 mvn compile exec:java -Dexec.mainClass=com.example.bigquery.ResourceCleanUp
