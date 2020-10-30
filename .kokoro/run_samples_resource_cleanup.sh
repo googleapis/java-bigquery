@@ -37,9 +37,9 @@ if [[ ! -z "${GOOGLE_APPLICATION_CREDENTIALS}" && "${GOOGLE_APPLICATION_CREDENTI
     export GOOGLE_APPLICATION_CREDENTIALS=$(realpath ${KOKORO_GFILE_DIR}/${GOOGLE_APPLICATION_CREDENTIALS})
 fi
 
-# Activate service account	
-gcloud auth activate-service-account \	
-    --key-file="$GOOGLE_APPLICATION_CREDENTIALS" \	
+# Activate service account
+gcloud auth activate-service-account \
+    --key-file="$GOOGLE_APPLICATION_CREDENTIALS" \
     --project="$GOOGLE_CLOUD_PROJECT"
 
 mvn clean install -DskipTests=true
