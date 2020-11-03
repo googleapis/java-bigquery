@@ -36,7 +36,7 @@ import org.threeten.bp.temporal.ChronoUnit;
 
 public class ResourceCleanUp {
   private static final String PROJECT_ID = "grass-clump-479";
-  private static final String BIGQUERY_DATASET_NAME = "bigquery_dataset_samples";
+  private static final String BIGQUERY_DATASET_NAME = "bigquerydatatransfer_test_dataset";
 
   public static void main(String[] args) {
     BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
