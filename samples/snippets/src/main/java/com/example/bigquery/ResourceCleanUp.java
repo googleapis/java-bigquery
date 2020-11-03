@@ -35,8 +35,8 @@ import org.threeten.bp.Instant;
 import org.threeten.bp.temporal.ChronoUnit;
 
 public class ResourceCleanUp {
-  private static final String PROJECT_ID = System.getenv("GOOGLE_CLOUD_PROJECT");
-  private static final String BIGQUERY_DATASET_NAME = System.getenv("BIGQUERY_DATASET_NAME");
+  private static final String PROJECT_ID = "grass-clump-479";
+  private static final String BIGQUERY_DATASET_NAME = "bigquery_dataset_samples";
 
   public static void main(String[] args) {
     BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
