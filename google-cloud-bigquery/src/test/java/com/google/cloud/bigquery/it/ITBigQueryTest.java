@@ -299,7 +299,6 @@ public class ITBigQueryTest {
   private static final String BUCKET = RemoteStorageHelper.generateBucketName();
   private static final TableId TABLE_ID = TableId.of(DATASET, "testing_table");
   private static final TableId TABLE_ID_DDL = TableId.of(DATASET, "ddl_testing_table");
-  private static final TableId TABLE_ID_DDL_SLOW = TableId.of(DATASET, "ddl_slow_testing_table");
   private static final TableId TABLE_ID_FASTQUERY = TableId.of(DATASET, "fastquery_testing_table");
   private static final TableId TABLE_ID_LARGE = TableId.of(DATASET, "large_data_testing_table");
   private static final String CSV_CONTENT = "StringValue1\nStringValue2\n";
