@@ -1268,7 +1268,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
     long numRows;
     Schema schema;
-    if (results.getSchema() == null && results.getJobComplete()) {
+    if ((results.getSchema() == null && results.getJobComplete()) || !results.getJobComplete()) {
       JobId jobId = JobId.fromPb(results.getJobReference());
       Job job = getJob(jobId, options);
       TableResult tableResult = job.getQueryResults();
