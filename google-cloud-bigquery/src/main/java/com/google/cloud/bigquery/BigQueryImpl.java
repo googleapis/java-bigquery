@@ -1268,13 +1268,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
     long numRows;
     Schema schema;
-    if ((results.getSchema() == null && results.getJobComplete()) || !results.getJobComplete()) {
-      JobId jobId = JobId.fromPb(results.getJobReference());
-      Job job = getJob(jobId, options);
-      TableResult tableResult = job.getQueryResults();
-      return tableResult;
-    } else {
-      schema = results.getSchema() == null ? null : Schema.fromPb(results.getSchema());
+    if (results.getJobComplete() && results.getSchema() != null) {
+      schema = Schema.fromPb(results.getSchema());
       if (results.getNumDmlAffectedRows() == null && results.getTotalRows() == null) {
         numRows = 0L;
       } else if (results.getNumDmlAffectedRows() != null) {
@@ -1282,6 +1277,11 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       } else {
         numRows = results.getTotalRows().longValue();
       }
+    } else {
+      JobId jobId = JobId.fromPb(results.getJobReference());
+      Job job = getJob(jobId, options);
+      TableResult tableResult = job.getQueryResults();
+      return tableResult;
     }
 
     if (results.getPageToken() != null) {
