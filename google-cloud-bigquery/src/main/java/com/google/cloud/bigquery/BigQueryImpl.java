@@ -1278,6 +1278,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         numRows = results.getTotalRows().longValue();
       }
     } else {
+      // Query is long running (> 10s) and hasn't completed yet, or query completed but didn't
+      // return the schema, fallback. Some operations don't return the schema and can be optimized
+      // here, but this is left as future work.
       JobId jobId = JobId.fromPb(results.getJobReference());
       Job job = getJob(jobId, options);
       TableResult tableResult = job.getQueryResults();
