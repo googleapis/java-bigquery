@@ -2051,7 +2051,7 @@ public class ITBigQueryTest {
     assertEquals(QUERY_RESULT_SCHEMA_BIGNUMERIC, result.getSchema());
     assertEquals(2, Iterables.size(result.getValues()));
     for (FieldValueList values : result.iterateAll()) {
-      assertEquals("1408452095.22", values.get(0).getValue());
+      assertEquals("1.40845209522E9", values.get(0).getValue());
       assertEquals("stringValue", values.get(1).getValue());
       assertEquals(false, values.get(2).getBooleanValue());
       assertEquals("0.33333333333333333333333333333333333333", values.get(3).getValue());
