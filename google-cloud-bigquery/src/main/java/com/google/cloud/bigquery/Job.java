@@ -297,8 +297,10 @@ public class Job extends JobInfo {
       job = reload();
     }
     if (job.getStatus() != null && job.getStatus().getError() != null) {
-      throw new JobException(
-          getJobId(), ImmutableList.copyOf(job.getStatus().getExecutionErrors()));
+      throw new BigQueryException(
+          job.getStatus().getExecutionErrors() == null
+              ? ImmutableList.of(job.getStatus().getError())
+              : ImmutableList.copyOf(job.getStatus().getExecutionErrors()));
     }
 
     // If there are no rows in the result, this may have been a DDL query.
@@ -401,7 +403,14 @@ public class Job extends JobInfo {
    */
   public Job reload(JobOption... options) {
     checkNotDryRun("reload");
-    return bigquery.getJob(getJobId(), options);
+    Job job = bigquery.getJob(getJobId(), options);
+    if (job != null && job.getStatus().getError() != null) {
+      throw new BigQueryException(
+          job.getStatus().getExecutionErrors() == null
+              ? ImmutableList.of(job.getStatus().getError())
+              : ImmutableList.copyOf(job.getStatus().getExecutionErrors()));
+    }
+    return job;
   }
 
   /**

@@ -35,6 +35,7 @@ import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Google BigQuery Query Job configuration. A Query Job runs a query against BigQuery data. Query
@@ -69,6 +70,9 @@ public final class QueryJobConfiguration extends JobConfiguration {
   private final Map<String, String> labels;
   private final RangePartitioning rangePartitioning;
   private final List<ConnectionProperty> connectionProperties;
+  // maxResults is only used for fast query path
+  private final Long maxResults;
+  private final String requestId;
 
   /**
    * Priority levels for a query. If not specified the priority is assumed to be {@link
@@ -118,6 +122,8 @@ public final class QueryJobConfiguration extends JobConfiguration {
     private Map<String, String> labels;
     private RangePartitioning rangePartitioning;
     private List<ConnectionProperty> connectionProperties;
+    private Long maxResults;
+    private String requestId;
 
     private Builder() {
       super(Type.QUERY);
@@ -150,6 +156,8 @@ public final class QueryJobConfiguration extends JobConfiguration {
       this.labels = jobConfiguration.labels;
       this.rangePartitioning = jobConfiguration.rangePartitioning;
       this.connectionProperties = jobConfiguration.connectionProperties;
+      this.maxResults = jobConfiguration.maxResults;
+      this.requestId = jobConfiguration.requestId;
     }
 
     private Builder(com.google.api.services.bigquery.model.JobConfiguration configurationPb) {
@@ -603,6 +611,25 @@ public final class QueryJobConfiguration extends JobConfiguration {
       return this;
     }
 
+    /**
+     * This is only supported in the fast query path [Optional] The maximum number of rows of data
+     * to return per page of results. Setting this flag to a small value such as 1000 and then
+     * paging through results might improve reliability when the query result set is large. In
+     * addition to this limit, responses are also limited to 10 MB. By default, there is no maximum
+     * row count, and only the byte limit applies.
+     *
+     * @param maxResults maxResults or {@code null} for none
+     */
+    public Builder setMaxResults(Long maxResults) {
+      this.maxResults = maxResults;
+      return this;
+    }
+
+    Builder setRequestId(String requestId) {
+      this.requestId = requestId;
+      return this;
+    }
+
     public QueryJobConfiguration build() {
       return new QueryJobConfiguration(this);
     }
@@ -644,6 +671,8 @@ public final class QueryJobConfiguration extends JobConfiguration {
     this.labels = builder.labels;
     this.rangePartitioning = builder.rangePartitioning;
     this.connectionProperties = builder.connectionProperties;
+    this.maxResults = builder.maxResults;
+    this.requestId = builder.requestId;
   }
 
   /**
@@ -833,6 +862,23 @@ public final class QueryJobConfiguration extends JobConfiguration {
     return connectionProperties;
   }
 
+  /**
+   * This is only supported in the fast query path [Optional] The maximum number of rows of data to
+   * return per page of results. Setting this flag to a small value such as 1000 and then paging
+   * through results might improve reliability when the query result set is large. In addition to
+   * this limit, responses are also limited to 10 MB. By default, there is no maximum row count, and
+   * only the byte limit applies.
+   *
+   * @return value or {@code null} for none
+   */
+  public Long getMaxResults() {
+    return maxResults;
+  }
+
+  String getRequestId() {
+    return requestId;
+  }
+
   @Override
   public Builder toBuilder() {
     return new Builder(this);
@@ -851,7 +897,7 @@ public final class QueryJobConfiguration extends JobConfiguration {
         .add("flattenResults", flattenResults)
         .add("priority", priority)
         .add("tableDefinitions", tableDefinitions)
-        .add("userQueryCache", useQueryCache)
+        .add("useQueryCache", useQueryCache)
         .add("userDefinedFunctions", userDefinedFunctions)
         .add("createDisposition", createDisposition)
         .add("writeDisposition", writeDisposition)
@@ -1011,7 +1057,7 @@ public final class QueryJobConfiguration extends JobConfiguration {
   /** Creates a builder for a BigQuery Query Job given the query to be run. */
   public static Builder newBuilder(String query) {
     checkArgument(!isNullOrEmpty(query), "Provided query is null or empty");
-    return new Builder().setQuery(query);
+    return new Builder().setQuery(query).setRequestId(UUID.randomUUID().toString());
   }
 
   /**

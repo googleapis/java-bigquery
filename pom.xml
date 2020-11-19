@@ -4,7 +4,7 @@
   <groupId>com.google.cloud</groupId>
   <artifactId>google-cloud-bigquery-parent</artifactId>
   <packaging>pom</packaging>
-  <version>1.117.1-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
+  <version>1.124.8-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
   <name>BigQuery Parent</name>
   <url>https://github.com/googleapis/java-bigquery</url>
   <description>
@@ -14,7 +14,7 @@
   <parent>
     <groupId>com.google.cloud</groupId>
     <artifactId>google-cloud-shared-config</artifactId>
-    <version>0.9.2</version>
+    <version>0.9.4</version>
   </parent>
 
   <developers>
@@ -63,8 +63,9 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <github.global.server>github</github.global.server>
     <site.installationModule>google-cloud-bigquery-parent</site.installationModule>
-    <google-api-services-bigquery.version>v2-rev20200818-1.30.10
+    <google-api-services-bigquery.version>v2-rev20201030-1.30.10
     </google-api-services-bigquery.version>
+    <google.cloud.shared-dependencies.version>0.15.0</google.cloud.shared-dependencies.version>
   </properties>
 
   <dependencyManagement>
@@ -72,7 +73,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-shared-dependencies</artifactId>
-        <version>0.8.6</version>
+        <version>${google.cloud.shared-dependencies.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -86,7 +87,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-bigquery</artifactId>
-        <version>1.117.1-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
+        <version>1.124.8-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
       </dependency>
 
       <dependency>
@@ -99,13 +100,13 @@
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
-        <version>4.13</version>
+        <version>4.13.1</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>com.google.truth</groupId>
         <artifactId>truth</artifactId>
-        <version>1.0.1</version>
+        <version>1.1</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -117,22 +118,11 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-storage</artifactId>
-        <version>1.111.2</version>
+        <version>1.113.4</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
-
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-dependency-plugin</artifactId>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
 
   <modules>
     <module>google-cloud-bigquery</module>
@@ -143,7 +133,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-project-info-reports-plugin</artifactId>
-        <version>3.1.0</version>
+        <version>3.1.1</version>
         <reportSets>
           <reportSet>
             <reports>

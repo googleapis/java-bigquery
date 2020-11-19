@@ -111,6 +111,9 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -143,6 +146,7 @@ public class ITBigQueryTest {
   private static final String MODEL_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String ROUTINE_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
+  private static final String RANDOM_ID = UUID.randomUUID().toString().substring(0, 8);
   private static final Map<String, String> LABELS =
       ImmutableMap.of(
           "example-label1", "example-value1",
@@ -256,6 +260,38 @@ public class ITBigQueryTest {
           BIGNUMERIC_FIELD_SCHEMA2,
           BIGNUMERIC_FIELD_SCHEMA3,
           BIGNUMERIC_FIELD_SCHEMA4);
+
+  private static final Field DDL_TIMESTAMP_FIELD_SCHEMA =
+      Field.newBuilder("TimestampField", LegacySQLTypeName.TIMESTAMP)
+          .setDescription("TimestampDescription")
+          .build();
+  private static final Field DDL_STRING_FIELD_SCHEMA =
+      Field.newBuilder("StringField", LegacySQLTypeName.STRING)
+          .setDescription("StringDescription")
+          .build();
+  private static final Field DDL_BOOLEAN_FIELD_SCHEMA =
+      Field.newBuilder("BooleanField", LegacySQLTypeName.BOOLEAN)
+          .setDescription("BooleanDescription")
+          .build();
+  private static final Schema DDL_TABLE_SCHEMA =
+      Schema.of(DDL_TIMESTAMP_FIELD_SCHEMA, DDL_STRING_FIELD_SCHEMA, DDL_BOOLEAN_FIELD_SCHEMA);
+  private static final Schema LARGE_TABLE_SCHEMA =
+      Schema.of(
+          Field.newBuilder("date", LegacySQLTypeName.DATE).setMode(Field.Mode.NULLABLE).build(),
+          Field.newBuilder("county", LegacySQLTypeName.STRING).setMode(Field.Mode.NULLABLE).build(),
+          Field.newBuilder("state_name", LegacySQLTypeName.STRING)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("county_fips_code", LegacySQLTypeName.STRING)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("confirmed_cases", LegacySQLTypeName.INTEGER)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("deaths", LegacySQLTypeName.INTEGER)
+              .setMode(Field.Mode.NULLABLE)
+              .build());
+
   private static final Schema SIMPLE_SCHEMA = Schema.of(STRING_FIELD_SCHEMA);
   private static final Schema POLICY_SCHEMA =
       Schema.of(STRING_FIELD_SCHEMA, STRING_FIELD_SCHEMA_WITH_POLICY, INTEGER_FIELD_SCHEMA);
@@ -312,11 +348,16 @@ public class ITBigQueryTest {
   private static final RangePartitioning RANGE_PARTITIONING =
       RangePartitioning.newBuilder().setField("IntegerField").setRange(RANGE).build();
   private static final String LOAD_FILE = "load.csv";
+  private static final String LOAD_FILE_LARGE = "load_large.csv";
   private static final String JSON_LOAD_FILE = "load.json";
+  private static final String JSON_LOAD_FILE_SIMPLE = "load_simple.json";
   private static final String EXTRACT_FILE = "extract.csv";
   private static final String EXTRACT_MODEL_FILE = "extract_model.csv";
   private static final String BUCKET = RemoteStorageHelper.generateBucketName();
   private static final TableId TABLE_ID = TableId.of(DATASET, "testing_table");
+  private static final TableId TABLE_ID_DDL = TableId.of(DATASET, "ddl_testing_table");
+  private static final TableId TABLE_ID_FASTQUERY = TableId.of(DATASET, "fastquery_testing_table");
+  private static final TableId TABLE_ID_LARGE = TableId.of(DATASET, "large_data_testing_table");
   private static final String CSV_CONTENT = "StringValue1\nStringValue2\n";
   private static final String JSON_CONTENT =
       "{"
@@ -373,6 +414,17 @@ public class ITBigQueryTest {
           + "  \"BigNumericField3\": \"578960446186580977117854925043439539266.34992332820282019728792003956564819967\","
           + "  \"BigNumericField4\": \"-578960446186580977117854925043439539266.34992332820282019728792003956564819968\""
           + "}";
+  private static final String JSON_CONTENT_SIMPLE =
+      "{"
+          + "  \"TimestampField\": \"2014-08-19 07:41:35.220 -05:00\","
+          + "  \"StringField\": \"stringValue\","
+          + "  \"BooleanField\": \"false\""
+          + "}\n"
+          + "{"
+          + "  \"TimestampField\": \"2014-08-19 07:41:35.220 -05:00\","
+          + "  \"StringField\": \"stringValue\","
+          + "  \"BooleanField\": \"false\""
+          + "}";
   private static final String KEY = "time_zone";
   private static final String VALUE = "US/Eastern";
   private static final ConnectionProperty CONNECTION_PROPERTY =
@@ -383,13 +435,16 @@ public class ITBigQueryTest {
   private static final Set<String> PUBLIC_DATASETS =
       ImmutableSet.of("github_repos", "hacker_news", "noaa_gsod", "samples", "usa_names");
 
+  private static final String PUBLIC_PROJECT = "bigquery-public-data";
+  private static final String PUBLIC_DATASET = "census_bureau_international";
+
   private static BigQuery bigquery;
   private static Storage storage;
 
   @Rule public Timeout globalTimeout = Timeout.seconds(300);
 
   @BeforeClass
-  public static void beforeClass() throws InterruptedException, TimeoutException {
+  public static void beforeClass() throws InterruptedException, IOException {
     RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
     RemoteStorageHelper storageHelper = RemoteStorageHelper.create();
     Map<String, String> labels = ImmutableMap.of("test-job-name", "test-load-job");
@@ -402,6 +457,14 @@ public class ITBigQueryTest {
     storage.create(
         BlobInfo.newBuilder(BUCKET, JSON_LOAD_FILE).setContentType("application/json").build(),
         JSON_CONTENT.getBytes(StandardCharsets.UTF_8));
+    storage.create(
+        BlobInfo.newBuilder(BUCKET, JSON_LOAD_FILE_SIMPLE)
+            .setContentType("application/json")
+            .build(),
+        JSON_CONTENT_SIMPLE.getBytes(StandardCharsets.UTF_8));
+    storage.createFrom(
+        BlobInfo.newBuilder(BUCKET, LOAD_FILE_LARGE).setContentType("text/plain").build(),
+        FileSystems.getDefault().getPath("src/test/resources", "QueryTestData.csv"));
     DatasetInfo info =
         DatasetInfo.newBuilder(DATASET).setDescription(DESCRIPTION).setLabels(LABELS).build();
     bigquery.create(info);
@@ -423,6 +486,39 @@ public class ITBigQueryTest {
     assertNull(job.getStatus().getError());
     LoadJobConfiguration loadJobConfiguration = job.getConfiguration();
     assertEquals(labels, loadJobConfiguration.getLabels());
+
+    LoadJobConfiguration configurationFastQuery =
+        LoadJobConfiguration.newBuilder(
+                TABLE_ID_FASTQUERY, "gs://" + BUCKET + "/" + JSON_LOAD_FILE, FormatOptions.json())
+            .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
+            .setSchema(TABLE_SCHEMA)
+            .setLabels(labels)
+            .build();
+    Job jobFastQuery = bigquery.create(JobInfo.of(configurationFastQuery));
+    jobFastQuery = jobFastQuery.waitFor();
+    assertNull(jobFastQuery.getStatus().getError());
+
+    LoadJobConfiguration configurationDDL =
+        LoadJobConfiguration.newBuilder(
+                TABLE_ID_DDL, "gs://" + BUCKET + "/" + JSON_LOAD_FILE_SIMPLE, FormatOptions.json())
+            .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
+            .setSchema(DDL_TABLE_SCHEMA)
+            .setLabels(labels)
+            .build();
+    Job jobDDL = bigquery.create(JobInfo.of(configurationDDL));
+    jobDDL = jobDDL.waitFor();
+    assertNull(jobDDL.getStatus().getError());
+
+    LoadJobConfiguration configurationLargeTable =
+        LoadJobConfiguration.newBuilder(
+                TABLE_ID_LARGE, "gs://" + BUCKET + "/" + LOAD_FILE_LARGE, FormatOptions.csv())
+            .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
+            .setSchema(LARGE_TABLE_SCHEMA)
+            .setLabels(labels)
+            .build();
+    Job jobLargeTable = bigquery.create(JobInfo.of(configurationLargeTable));
+    jobLargeTable = jobLargeTable.waitFor();
+    assertNull(jobLargeTable.getStatus().getError());
   }
 
   @AfterClass
@@ -925,7 +1021,7 @@ public class ITBigQueryTest {
 
   @Test
   public void testListPartitions() throws InterruptedException {
-    String tableName = "test_table_partitions";
+    String tableName = "test_table_partitions_" + UUID.randomUUID().toString().substring(0, 8);
     Date date = Date.fromJavaUtilDate(new java.util.Date());
     String partitionDate = date.toString().replaceAll("-", "");
     TableId tableId = TableId.of(DATASET, tableName + "$" + partitionDate);
@@ -938,18 +1034,15 @@ public class ITBigQueryTest {
     Job job = bigquery.create(JobInfo.of(QueryJobConfiguration.newBuilder(query).build()));
     job.waitFor();
     assertTrue(job.isDone());
-    try {
-      Map<String, Object> row = new HashMap<String, Object>();
-      row.put("StringField", "StringValue");
-      InsertAllRequest request = InsertAllRequest.newBuilder(tableId).addRow(row).build();
-      InsertAllResponse response = bigquery.insertAll(request);
-      assertFalse(response.hasErrors());
-      assertEquals(0, response.getInsertErrors().size());
-      List<String> partitions = bigquery.listPartitions(TableId.of(DATASET, tableName));
-      assertEquals(1, partitions.size());
-    } finally {
-      bigquery.delete(tableId);
-    }
+    Map<String, Object> row = new HashMap<>();
+    row.put("StringField", "StringValue");
+    InsertAllRequest request = InsertAllRequest.newBuilder(tableId).addRow(row).build();
+    InsertAllResponse response = bigquery.insertAll(request);
+    assertFalse(response.hasErrors());
+    assertEquals(0, response.getInsertErrors().size());
+    List<String> partitions = bigquery.listPartitions(TableId.of(DATASET, tableName));
+    assertEquals(1, partitions.size());
+    bigquery.delete(tableId);
   }
 
   @Test
@@ -1323,6 +1416,25 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testListPageWithStartIndex() {
+    String tableName = "midyear_population_agespecific";
+    TableId tableId = TableId.of(PUBLIC_PROJECT, PUBLIC_DATASET, tableName);
+    Table table = bigquery.getTable(tableId);
+    long numRows = table.getNumRows().longValue();
+    Page<FieldValueList> tableResult =
+        bigquery.listTableData(
+            tableId,
+            BigQuery.TableDataListOption.startIndex(numRows - 300_000L),
+            BigQuery.TableDataListOption.pageSize(600_000L));
+    assertNotNull(tableResult.getNextPageToken());
+    long totalRows = ((Collection<?>) tableResult.getValues()).size();
+    tableResult = tableResult.getNextPage();
+    totalRows = totalRows + ((Collection<?>) tableResult.getValues()).size();
+    assertNull(tableResult.getNextPageToken());
+    assertEquals(300_000L, totalRows);
+  }
+
+  @Test
   public void testModelLifecycle() throws InterruptedException {
 
     String modelName = RemoteBigQueryHelper.generateModelName();
@@ -1379,6 +1491,29 @@ public class ITBigQueryTest {
 
     // Delete the model.
     assertTrue(bigquery.delete(modelId));
+  }
+
+  @Test
+  public void testEmptyListModels() {
+    String datasetId = "test_empty_dataset_list_models_" + RANDOM_ID;
+    assertNotNull(bigquery.create(DatasetInfo.of(datasetId)));
+    Page<Model> models = bigquery.listModels(datasetId, BigQuery.ModelListOption.pageSize(100));
+    assertEquals(0, Iterables.size(models.getValues()));
+    assertFalse(models.hasNextPage());
+    assertNull(models.getNextPageToken());
+    assertTrue(bigquery.delete(datasetId));
+  }
+
+  @Test
+  public void testEmptyListRoutines() {
+    String datasetId = "test_empty_dataset_list_routines_" + RANDOM_ID;
+    assertNotNull(bigquery.create(DatasetInfo.of(datasetId)));
+    Page<Routine> routines =
+        bigquery.listRoutines(datasetId, BigQuery.RoutineListOption.pageSize(100));
+    assertEquals(0, Iterables.size(routines.getValues()));
+    assertFalse(routines.hasNextPage());
+    assertNull(routines.getNextPageToken());
+    assertTrue(bigquery.delete(datasetId));
   }
 
   @Test
@@ -1449,6 +1584,66 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testAuthorizeRoutine() {
+    String routineName = RemoteBigQueryHelper.generateRoutineName();
+    RoutineId routineId = RoutineId.of(PROJECT_ID, ROUTINE_DATASET, routineName);
+    RoutineInfo routineInfo =
+        RoutineInfo.newBuilder(routineId)
+            .setRoutineType("SCALAR_FUNCTION")
+            .setBody("x * 3")
+            .setLanguage("SQL")
+            .setArguments(
+                ImmutableList.of(
+                    RoutineArgument.newBuilder()
+                        .setName("x")
+                        .setDataType(StandardSQLDataType.newBuilder("INT64").build())
+                        .build()))
+            .build();
+    Routine routine = bigquery.create(routineInfo);
+    assertNotNull(routine);
+    assertEquals(routine.getRoutineType(), "SCALAR_FUNCTION");
+    Dataset routineDataset = bigquery.getDataset(ROUTINE_DATASET);
+    List<Acl> routineAcl = new ArrayList<>(routineDataset.getAcl());
+    routineAcl.add(Acl.of(new Acl.Routine(routineId)));
+    routineDataset = routineDataset.toBuilder().setAcl(routineAcl).build().update();
+    assertEquals(routineAcl, routineDataset.getAcl());
+  }
+
+  @Test
+  public void testSingleStatementsQueryException() throws InterruptedException {
+    String invalidQuery =
+        String.format("INSERT %s.%s VALUES('3', 10);", DATASET, TABLE_ID.getTable());
+    try {
+      bigquery.create(JobInfo.of(QueryJobConfiguration.of(invalidQuery))).waitFor();
+      fail("BigQueryException was expected");
+    } catch (BigQueryException ex) {
+      assertEquals("invalidQuery", ex.getReason());
+      assertNotNull(ex.getMessage());
+      BigQueryError error = ex.getError();
+      assertEquals("invalidQuery", error.getReason());
+      assertNotNull(error.getMessage());
+    }
+  }
+
+  @Test
+  public void testMultipleStatementsQueryException() throws InterruptedException {
+    String invalidQuery =
+        String.format(
+            "INSERT %s.%s VALUES('3', 10); DELETE %s.%s where c2=3;",
+            DATASET, TABLE_ID.getTable(), DATASET, TABLE_ID.getTable());
+    try {
+      bigquery.create(JobInfo.of(QueryJobConfiguration.of(invalidQuery))).waitFor();
+      fail("BigQueryException was expected");
+    } catch (BigQueryException ex) {
+      assertEquals("invalidQuery", ex.getReason());
+      assertNotNull(ex.getMessage());
+      BigQueryError error = ex.getError();
+      assertEquals("invalidQuery", error.getReason());
+      assertNotNull(error.getMessage());
+    }
+  }
+
+  @Test
   public void testQuery() throws InterruptedException {
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     QueryJobConfiguration config =
@@ -1478,6 +1673,274 @@ public class ITBigQueryTest {
     Job job2 = bigquery.getJob(job.getJobId());
     JobStatistics.QueryStatistics statistics = job2.getStatistics();
     assertNotNull(statistics.getQueryPlan());
+  }
+
+  @Test
+  public void testQueryCaseInsensitiveSchemaFieldByGetName() throws InterruptedException {
+    String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
+    Job job = bigquery.create(JobInfo.of(JobId.of(), config));
+
+    TableResult result = job.getQueryResults();
+    assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
+    int rowCount = 0;
+    for (FieldValueList row : result.getValues()) {
+      FieldValue timestampCell = row.get(0);
+      assertEquals(timestampCell, row.get("TimestampField"));
+      assertEquals(timestampCell, row.get("timestampfield"));
+      assertEquals(timestampCell, row.get("timeStampfIeld"));
+      FieldValue stringCell = row.get(1);
+      assertEquals(stringCell, row.get("StringField"));
+      assertEquals(stringCell, row.get("stringfield"));
+      assertEquals(stringCell, row.get("sTrinGfield"));
+      FieldValue booleanCell = row.get(2);
+      assertEquals(booleanCell, row.get("BooleanField"));
+      assertEquals(booleanCell, row.get("booleanfield"));
+      assertEquals(booleanCell, row.get("booLeanfielD"));
+      rowCount++;
+    }
+    assertEquals(2, rowCount);
+  }
+
+  @Test
+  public void testFastQueryMultipleRuns() throws InterruptedException {
+    String query =
+        "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID_FASTQUERY.getTable();
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
+    TableResult result = bigquery.query(config);
+    assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
+    assertEquals(2, result.getTotalRows());
+    assertNull(result.getNextPage());
+    assertNull(result.getNextPageToken());
+    assertFalse(result.hasNextPage());
+
+    QueryJobConfiguration config2 =
+        QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
+    TableResult result2 = bigquery.query(config2);
+    assertEquals(QUERY_RESULT_SCHEMA, result2.getSchema());
+    assertEquals(2, result2.getTotalRows());
+    assertNull(result2.getNextPage());
+    assertNull(result2.getNextPageToken());
+    assertFalse(result2.hasNextPage());
+  }
+
+  @Test
+  public void testFastQuerySinglePageDuplicateRequestIds() throws InterruptedException {
+    String query =
+        "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID_FASTQUERY.getTable();
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
+    TableResult result = bigquery.query(config);
+    assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
+    assertEquals(2, result.getTotalRows());
+    assertNull(result.getNextPage());
+    assertNull(result.getNextPageToken());
+    assertFalse(result.hasNextPage());
+
+    TableResult result1 = bigquery.query(config);
+    assertEquals(QUERY_RESULT_SCHEMA, result1.getSchema());
+    assertEquals(2, result1.getTotalRows());
+    assertNull(result1.getNextPage());
+    assertNull(result1.getNextPageToken());
+    assertFalse(result1.hasNextPage());
+
+    config.toBuilder().setQuery(query).build();
+    TableResult result2 = bigquery.query(config);
+    assertEquals(QUERY_RESULT_SCHEMA, result2.getSchema());
+    assertEquals(2, result2.getTotalRows());
+    assertNull(result2.getNextPage());
+    assertNull(result2.getNextPageToken());
+    assertFalse(result2.hasNextPage());
+  }
+
+  @Test
+  public void testFastSQLQuery() throws InterruptedException {
+    String query =
+        "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID_FASTQUERY.getTable();
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
+    TableResult result = bigquery.query(config);
+    assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
+    assertEquals(2, result.getTotalRows());
+    assertNull(result.getNextPage());
+    assertNull(result.getNextPageToken());
+    assertFalse(result.hasNextPage());
+    // Verify correctness of table content
+    for (FieldValueList row : result.getValues()) {
+      FieldValue timestampCell = row.get(0);
+      assertEquals(timestampCell, row.get("TimestampField"));
+      FieldValue stringCell = row.get(1);
+      assertEquals(stringCell, row.get("StringField"));
+      FieldValue booleanCell = row.get(2);
+      assertEquals(booleanCell, row.get("BooleanField"));
+      assertEquals(FieldValue.Attribute.PRIMITIVE, timestampCell.getAttribute());
+      assertEquals(FieldValue.Attribute.PRIMITIVE, stringCell.getAttribute());
+      assertEquals(FieldValue.Attribute.PRIMITIVE, booleanCell.getAttribute());
+      assertEquals(1408452095220000L, timestampCell.getTimestampValue());
+      assertEquals("stringValue", stringCell.getStringValue());
+      assertEquals(false, booleanCell.getBooleanValue());
+    }
+  }
+
+  @Test
+  public void testFastSQLQueryMultiPage() throws InterruptedException {
+    String query =
+        "SELECT date, county, state_name, county_fips_code, confirmed_cases, deaths FROM "
+            + TABLE_ID_LARGE.getTable();
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
+    TableResult result = bigquery.query(config);
+    assertEquals(LARGE_TABLE_SCHEMA, result.getSchema());
+    assertEquals(313348, result.getTotalRows());
+    assertNotNull(result.getNextPage());
+    assertNotNull(result.getNextPageToken());
+    assertTrue(result.hasNextPage());
+
+    TableResult result1 = bigquery.query(config);
+    assertEquals(LARGE_TABLE_SCHEMA, result.getSchema());
+    assertEquals(313348, result.getTotalRows());
+    assertNotNull(result1.getNextPage());
+    assertNotNull(result1.getNextPageToken());
+    assertTrue(result1.hasNextPage());
+
+    config.toBuilder().setQuery(query).build();
+    TableResult result2 = bigquery.query(config);
+    assertEquals(LARGE_TABLE_SCHEMA, result2.getSchema());
+    assertEquals(313348, result2.getTotalRows());
+    assertNotNull(result2.getNextPage());
+    assertNotNull(result2.getNextPageToken());
+    assertTrue(result2.hasNextPage());
+  }
+
+  @Test
+  public void testFastDMLQuery() throws InterruptedException {
+    String tableName = TABLE_ID_FASTQUERY.getTable();
+    String dmlQuery =
+        String.format("UPDATE %s.%s SET StringField = 'hello' WHERE TRUE", DATASET, tableName);
+    QueryJobConfiguration dmlConfig = QueryJobConfiguration.newBuilder(dmlQuery).build();
+    TableResult result = bigquery.query(dmlConfig);
+    assertEquals(TABLE_SCHEMA, result.getSchema());
+    assertEquals(2, result.getTotalRows());
+    // Verify correctness of table content
+    String sqlQuery = String.format("SELECT * FROM %s.%s", DATASET, tableName);
+    QueryJobConfiguration sqlConfig = QueryJobConfiguration.newBuilder(sqlQuery).build();
+    TableResult resultAfterDML = bigquery.query(sqlConfig);
+    for (FieldValueList row : resultAfterDML.getValues()) {
+      FieldValue timestampCell = row.get(0);
+      assertEquals(timestampCell, row.get("TimestampField"));
+      FieldValue stringCell = row.get(1);
+      assertEquals(stringCell, row.get("StringField"));
+      FieldValue booleanCell = row.get(3);
+      assertEquals(booleanCell, row.get("BooleanField"));
+      assertEquals(FieldValue.Attribute.PRIMITIVE, timestampCell.getAttribute());
+      assertEquals(FieldValue.Attribute.PRIMITIVE, stringCell.getAttribute());
+      assertEquals(FieldValue.Attribute.PRIMITIVE, booleanCell.getAttribute());
+      assertEquals(1408452095220000L, timestampCell.getTimestampValue());
+      assertEquals("hello", stringCell.getStringValue());
+      assertEquals(false, booleanCell.getBooleanValue());
+    }
+  }
+
+  @Test
+  public void testFastDDLQuery() throws InterruptedException {
+    String tableName = "test_table_fast_query_ddl";
+    String tableNameFastQuery = TABLE_ID_DDL.getTable();
+    String ddlQuery =
+        String.format(
+            "CREATE OR REPLACE TABLE %s ("
+                + "TimestampField TIMESTAMP OPTIONS(description='TimestampDescription'), "
+                + "StringField STRING OPTIONS(description='StringDescription'), "
+                + "BooleanField BOOLEAN OPTIONS(description='BooleanDescription') "
+                + ") AS SELECT * FROM %s",
+            tableName, tableNameFastQuery);
+    QueryJobConfiguration ddlConfig =
+        QueryJobConfiguration.newBuilder(ddlQuery).setDefaultDataset(DatasetId.of(DATASET)).build();
+    TableResult result = bigquery.query(ddlConfig);
+    assertEquals(DDL_TABLE_SCHEMA, result.getSchema());
+    assertEquals(0, result.getTotalRows());
+    // Verify correctness of table content
+    String sqlQuery = String.format("SELECT * FROM %s.%s", DATASET, tableName);
+    QueryJobConfiguration sqlConfig = QueryJobConfiguration.newBuilder(sqlQuery).build();
+    TableResult resultAfterDDL = bigquery.query(sqlConfig);
+    for (FieldValueList row : resultAfterDDL.getValues()) {
+      FieldValue timestampCell = row.get(0);
+      assertEquals(timestampCell, row.get("TimestampField"));
+      FieldValue stringCell = row.get(1);
+      assertEquals(stringCell, row.get("StringField"));
+      FieldValue booleanCell = row.get(2);
+      assertEquals(booleanCell, row.get("BooleanField"));
+      assertEquals(FieldValue.Attribute.PRIMITIVE, timestampCell.getAttribute());
+      assertEquals(FieldValue.Attribute.PRIMITIVE, stringCell.getAttribute());
+      assertEquals(FieldValue.Attribute.PRIMITIVE, booleanCell.getAttribute());
+      assertEquals(1408452095220000L, timestampCell.getTimestampValue());
+      assertEquals("stringValue", stringCell.getStringValue());
+      assertEquals(false, booleanCell.getBooleanValue());
+    }
+  }
+
+  @Test
+  public void testFastQuerySlowDDL() throws InterruptedException {
+    String tableName =
+        "test_table_fast_query_ddl_slow_" + UUID.randomUUID().toString().substring(0, 8);
+    // This query take more than 10s to run and should fall back on the old query path
+    String slowDdlQuery =
+        String.format(
+            "CREATE OR REPLACE TABLE %s AS SELECT unique_key, agency, complaint_type, descriptor, street_name, city, landmark FROM `bigquery-public-data.new_york.311_service_requests`",
+            tableName);
+    QueryJobConfiguration ddlConfig =
+        QueryJobConfiguration.newBuilder(slowDdlQuery)
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .build();
+    TableResult result = bigquery.query(ddlConfig);
+    assertEquals(0, result.getTotalRows());
+    assertNotNull(result.getSchema());
+    // Verify correctness of table content
+    String sqlQuery = String.format("SELECT * FROM %s.%s", DATASET, tableName);
+    QueryJobConfiguration sqlConfig = QueryJobConfiguration.newBuilder(sqlQuery).build();
+    TableResult resultAfterDDL = bigquery.query(sqlConfig);
+    for (FieldValueList row : resultAfterDDL.getValues()) {
+      FieldValue unique_key = row.get(0);
+      assertEquals(unique_key, row.get("unique_key"));
+      FieldValue agency = row.get(1);
+      assertEquals(agency, row.get("agency"));
+      FieldValue complaint_type = row.get(2);
+      assertEquals(complaint_type, row.get("complaint_type"));
+    }
+  }
+
+  @Test
+  public void testFastQueryHTTPException() throws InterruptedException {
+    String queryInvalid =
+        "CREATE OR REPLACE SELECT * FROM UPDATE TABLE SET " + TABLE_ID_FASTQUERY.getTable();
+    QueryJobConfiguration configInvalidQuery =
+        QueryJobConfiguration.newBuilder(queryInvalid)
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .build();
+    try {
+      bigquery.query(configInvalidQuery);
+      fail("\"BigQueryException was expected\"");
+    } catch (BigQueryException e) {
+      BigQueryError error = e.getError();
+      assertNotNull(error.getMessage());
+      assertEquals("invalidQuery", error.getReason());
+    }
+
+    String queryMissingTable =
+        "SELECT * FROM " + TableId.of(DATASET, "non_existing_table").getTable();
+    QueryJobConfiguration configMissingTable =
+        QueryJobConfiguration.newBuilder(queryMissingTable)
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .build();
+    try {
+      bigquery.query(configMissingTable);
+      fail("\"BigQueryException was expected\"");
+    } catch (BigQueryException e) {
+      BigQueryError error = e.getError();
+      assertNotNull(error.getMessage());
+      assertEquals("notFound", error.getReason());
+    }
   }
 
   @Test
@@ -1647,13 +2110,36 @@ public class ITBigQueryTest {
     for (FieldValueList values : result.iterateAll()) {
       for (FieldValue value : values) {
         for (FieldValue record : value.getRecordValue()) {
-          assertEquals(FieldValue.Attribute.RECORD, record.getAttribute());
-          assertEquals(true, record.getRecordValue().get(0).getBooleanValue());
-          assertEquals(10, record.getRecordValue().get(1).getLongValue());
-          assertEquals("test-stringField", record.getRecordValue().get(2).getStringValue());
+          assertsFieldValue(record);
         }
       }
     }
+  }
+
+  @Test
+  public void testStructQuery() throws InterruptedException {
+    // query into a table
+    String query = String.format("SELECT RecordField FROM %s.%s", DATASET, TABLE_ID.getTable());
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query)
+            .setDefaultDataset(DATASET)
+            .setUseLegacySql(false)
+            .build();
+    TableResult result = bigquery.query(config);
+    assertEquals(2, Iterables.size(result.getValues()));
+    for (FieldValueList values : result.iterateAll()) {
+      for (FieldValue value : values) {
+        assertEquals(null, value.getRecordValue().get("StringField").getValue());
+        assertEquals(true, value.getRecordValue().get("BooleanField").getBooleanValue());
+      }
+    }
+  }
+
+  private static void assertsFieldValue(FieldValue record) {
+    assertEquals(FieldValue.Attribute.RECORD, record.getAttribute());
+    assertEquals(true, record.getRecordValue().get("booleanField").getBooleanValue());
+    assertEquals(10, record.getRecordValue().get("integerField").getLongValue());
+    assertEquals("test-stringField", record.getRecordValue().get("stringField").getStringValue());
   }
 
   @Test
@@ -2155,7 +2641,6 @@ public class ITBigQueryTest {
             .build();
     Job remoteJob = bigquery.create(JobInfo.of(configuration));
     assertTrue(remoteJob.cancel());
-    remoteJob = remoteJob.waitFor();
   }
 
   @Test
