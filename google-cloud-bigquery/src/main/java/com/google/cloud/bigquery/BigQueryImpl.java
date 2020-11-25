@@ -849,9 +849,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   public List<String> listPartitions(TableId tableId) {
     List<String> partitions = new ArrayList<String>();
     String partitionsTable = tableId.getTable() + "$__PARTITIONS_SUMMARY__";
-    TableId metaTableId = tableId.getProject() == null ?
-            TableId.of(tableId.getDataset(), partitionsTable) :
-            TableId.of(tableId.getProject(), tableId.getDataset(), partitionsTable);
+    TableId metaTableId =
+        tableId.getProject() == null
+            ? TableId.of(tableId.getDataset(), partitionsTable)
+            : TableId.of(tableId.getProject(), tableId.getDataset(), partitionsTable);
     Table metaTable = getTable(metaTableId);
     Schema metaSchema = metaTable.getDefinition().getSchema();
     String partition_id = null;
