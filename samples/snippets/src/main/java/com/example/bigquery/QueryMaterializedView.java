@@ -19,8 +19,6 @@ package com.example.bigquery;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
-import com.google.cloud.bigquery.Job;
-import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.TableResult;
 
@@ -40,8 +38,7 @@ public class QueryMaterializedView {
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
-      Job job = bigquery.create(JobInfo.of(QueryJobConfiguration.of(query)));
-      TableResult results = job.getQueryResults(BigQuery.QueryResultsOption.pageSize(1000));
+      TableResult results = bigquery.query(QueryJobConfiguration.of(query));
       results
           .iterateAll()
           .forEach(row -> row.forEach(val -> System.out.printf("%s\n", val.toString())));
