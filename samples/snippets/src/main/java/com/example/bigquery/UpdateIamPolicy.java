@@ -24,7 +24,6 @@ import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.TableId;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
