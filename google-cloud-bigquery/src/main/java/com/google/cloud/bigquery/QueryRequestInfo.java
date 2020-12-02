@@ -35,6 +35,7 @@ final class QueryRequestInfo {
   private final Long maxResults;
   private final String query;
   private final List<QueryParameter> queryParameters;
+  private final String requestId;
   private final Boolean useQueryCache;
   private final Boolean useLegacySql;
   private final String requestId;
@@ -49,6 +50,7 @@ final class QueryRequestInfo {
     this.maxResults = config.getMaxResults();
     this.query = config.getQuery();
     this.queryParameters = config.toPb().getQuery().getQueryParameters();
+    this.requestId = UUID.randomUUID().toString();
     this.useLegacySql = config.useLegacySql();
     this.useQueryCache = config.useQueryCache();
     this.requestId = config.getRequestId();

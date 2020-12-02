@@ -2287,9 +2287,6 @@ public class BigQueryImplTest {
             .setTotalRows(BigInteger.valueOf(1L))
             .setSchema(TABLE_SCHEMA.toPb());
 
-    QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_QUERY);
-    QueryRequest requestPb = requestInfo.toPb();
-
     when(bigqueryRpcMock.queryRpc(eq(PROJECT), requestPbCapture.capture()))
         .thenThrow(new BigQueryException(500, "InternalError"))
         .thenThrow(new BigQueryException(502, "Bad Gateway"))
@@ -2310,13 +2307,13 @@ public class BigQueryImplTest {
 
     List<QueryRequest> allRequests = requestPbCapture.getAllValues();
     boolean idempotent = true;
-    String requestId = requestPb.getRequestId();
+    String firstRequestId = allRequests.get(0).getRequestId();
     for (QueryRequest request : allRequests) {
-      idempotent = request.getRequestId().equals(requestId);
+      idempotent = request.getRequestId().equals(firstRequestId);
     }
     assertTrue(idempotent);
 
-    verify(bigqueryRpcMock, times(5)).queryRpc(PROJECT, requestPb);
+    verify(bigqueryRpcMock, times(5)).queryRpc(eq(PROJECT), requestPbCapture.capture());
   }
 
   @Test
@@ -2330,9 +2327,6 @@ public class BigQueryImplTest {
             .setTotalBytesProcessed(42L)
             .setNumDmlAffectedRows(1L)
             .setSchema(TABLE_SCHEMA.toPb());
-
-    QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY);
-    QueryRequest requestPb = requestInfo.toPb();
 
     when(bigqueryRpcMock.queryRpc(eq(PROJECT), requestPbCapture.capture()))
         .thenThrow(new BigQueryException(500, "InternalError"))
@@ -2354,13 +2348,13 @@ public class BigQueryImplTest {
 
     List<QueryRequest> allRequests = requestPbCapture.getAllValues();
     boolean idempotent = true;
-    String requestId = requestPb.getRequestId();
+    String firstRequestId = allRequests.get(0).getRequestId();
     for (QueryRequest request : allRequests) {
-      idempotent = request.getRequestId().equals(requestId);
+      idempotent = request.getRequestId().equals(firstRequestId);
     }
     assertTrue(idempotent);
 
-    verify(bigqueryRpcMock, times(5)).queryRpc(PROJECT, requestPb);
+    verify(bigqueryRpcMock, times(5)).queryRpc(eq(PROJECT), requestPbCapture.capture());
   }
 
   @Test
@@ -2373,9 +2367,6 @@ public class BigQueryImplTest {
             .setPageToken(null)
             .setTotalBytesProcessed(42L)
             .setSchema(TABLE_SCHEMA.toPb());
-
-    QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_DDLQUERY);
-    QueryRequest requestPb = requestInfo.toPb();
 
     when(bigqueryRpcMock.queryRpc(eq(PROJECT), requestPbCapture.capture()))
         .thenThrow(new BigQueryException(500, "InternalError"))
@@ -2397,13 +2388,13 @@ public class BigQueryImplTest {
 
     List<QueryRequest> allRequests = requestPbCapture.getAllValues();
     boolean idempotent = true;
-    String requestId = requestPb.getRequestId();
+    String firstRequestId = allRequests.get(0).getRequestId();
     for (QueryRequest request : allRequests) {
-      idempotent = request.getRequestId().equals(requestId);
+      idempotent = request.getRequestId().equals(firstRequestId);
     }
     assertTrue(idempotent);
 
-    verify(bigqueryRpcMock, times(5)).queryRpc(PROJECT, requestPb);
+    verify(bigqueryRpcMock, times(5)).queryRpc(eq(PROJECT), requestPbCapture.capture());
   }
 
   @Test
