@@ -23,6 +23,7 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 final class QueryRequestInfo {
 
@@ -38,7 +39,6 @@ final class QueryRequestInfo {
   private final String requestId;
   private final Boolean useQueryCache;
   private final Boolean useLegacySql;
-  private final String requestId;
 
   QueryRequestInfo(QueryJobConfiguration config) {
     this.config = config;
@@ -53,7 +53,6 @@ final class QueryRequestInfo {
     this.requestId = UUID.randomUUID().toString();
     this.useLegacySql = config.useLegacySql();
     this.useQueryCache = config.useQueryCache();
-    this.requestId = config.getRequestId();
   }
 
   boolean isFastQuerySupported() {
