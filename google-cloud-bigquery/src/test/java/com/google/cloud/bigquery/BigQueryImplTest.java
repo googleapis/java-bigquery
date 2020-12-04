@@ -1885,9 +1885,7 @@ public class BigQueryImplTest {
             .setTotalBytesProcessed(42L)
             .setTotalRows(BigInteger.valueOf(1L));
 
-    QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_QUERY);
-
-    when(bigqueryRpcMock.queryRpc(PROJECT, requestInfo.toPb())).thenReturn(queryResponsePb);
+    when(bigqueryRpcMock.queryRpc(eq(PROJECT), requestPbCapture.capture())).thenReturn(queryResponsePb);
 
     bigquery = options.getService();
     TableResult result = bigquery.query(QUERY_JOB_CONFIGURATION_FOR_QUERY);
@@ -1900,7 +1898,7 @@ public class BigQueryImplTest {
       assertThat(row.get(0).getBooleanValue()).isFalse();
       assertThat(row.get(1).getLongValue()).isEqualTo(1);
     }
-    verify(bigqueryRpcMock).queryRpc(PROJECT, requestInfo.toPb());
+    verify(bigqueryRpcMock).queryRpc(eq(PROJECT), requestPbCapture.capture());
   }
 
   @Test
@@ -1937,8 +1935,7 @@ public class BigQueryImplTest {
             .setTotalBytesProcessed(42L)
             .setTotalRows(BigInteger.valueOf(1L));
 
-    QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_QUERY);
-    when(bigqueryRpcMock.queryRpc(PROJECT, requestInfo.toPb())).thenReturn(queryResponsePb);
+    when(bigqueryRpcMock.queryRpc(eq(PROJECT), requestPbCapture.capture())).thenReturn(queryResponsePb);
 
     bigquery = options.getService();
     TableResult result = bigquery.query(QUERY_JOB_CONFIGURATION_FOR_QUERY);
@@ -1952,7 +1949,7 @@ public class BigQueryImplTest {
             DATASET,
             TABLE,
             BigQueryImpl.optionMap(BigQuery.TableDataListOption.pageToken(CURSOR)));
-    verify(bigqueryRpcMock).queryRpc(PROJECT, requestInfo.toPb());
+    verify(bigqueryRpcMock).queryRpc(eq(PROJECT), requestPbCapture.capture());
   }
 
   @Test
@@ -1983,10 +1980,7 @@ public class BigQueryImplTest {
             .setTotalRows(BigInteger.valueOf(1L))
             .setSchema(TABLE_SCHEMA.toPb());
 
-    QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_QUERY);
-    QueryRequest requestPb = requestInfo.toPb();
-
-    when(bigqueryRpcMock.queryRpc(PROJECT, requestPb)).thenReturn(queryResponsePb);
+    when(bigqueryRpcMock.queryRpc(eq(PROJECT), requestPbCapture.capture())).thenReturn(queryResponsePb);
     responseJob.getConfiguration().getQuery().setDestinationTable(TABLE_ID.toPb());
     when(bigqueryRpcMock.getJob(PROJECT, JOB, null, EMPTY_RPC_OPTIONS)).thenReturn(responseJob);
     when(bigqueryRpcMock.getQueryResults(
@@ -2004,7 +1998,7 @@ public class BigQueryImplTest {
       assertThat(row.get(1).getLongValue()).isEqualTo(1);
     }
 
-    verify(bigqueryRpcMock).queryRpc(PROJECT, requestInfo.toPb());
+    verify(bigqueryRpcMock).queryRpc(eq(PROJECT), requestPbCapture.capture());
     verify(bigqueryRpcMock).getJob(PROJECT, JOB, null, EMPTY_RPC_OPTIONS);
     verify(bigqueryRpcMock)
         .getQueryResults(
@@ -2415,10 +2409,7 @@ public class BigQueryImplTest {
             .setPageToken(null)
             .setErrors(errorProtoList);
 
-    QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_FOR_QUERY);
-    QueryRequest requestPb = requestInfo.toPb();
-
-    when(bigqueryRpcMock.queryRpc(PROJECT, requestPb)).thenReturn(responsePb);
+    when(bigqueryRpcMock.queryRpc(eq(PROJECT), requestPbCapture.capture())).thenReturn(responsePb);
 
     bigquery = options.getService();
     try {
@@ -2427,7 +2418,7 @@ public class BigQueryImplTest {
     } catch (BigQueryException ex) {
       assertEquals(Lists.transform(errorProtoList, BigQueryError.FROM_PB_FUNCTION), ex.getErrors());
     }
-    verify(bigqueryRpcMock).queryRpc(PROJECT, requestPb);
+    verify(bigqueryRpcMock).queryRpc(eq(PROJECT), requestPbCapture.capture());
   }
 
   @Test
