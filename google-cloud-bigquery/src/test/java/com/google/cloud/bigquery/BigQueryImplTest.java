@@ -1885,7 +1885,8 @@ public class BigQueryImplTest {
             .setTotalBytesProcessed(42L)
             .setTotalRows(BigInteger.valueOf(1L));
 
-    when(bigqueryRpcMock.queryRpc(eq(PROJECT), requestPbCapture.capture())).thenReturn(queryResponsePb);
+    when(bigqueryRpcMock.queryRpc(eq(PROJECT), requestPbCapture.capture()))
+        .thenReturn(queryResponsePb);
 
     bigquery = options.getService();
     TableResult result = bigquery.query(QUERY_JOB_CONFIGURATION_FOR_QUERY);
@@ -1935,7 +1936,8 @@ public class BigQueryImplTest {
             .setTotalBytesProcessed(42L)
             .setTotalRows(BigInteger.valueOf(1L));
 
-    when(bigqueryRpcMock.queryRpc(eq(PROJECT), requestPbCapture.capture())).thenReturn(queryResponsePb);
+    when(bigqueryRpcMock.queryRpc(eq(PROJECT), requestPbCapture.capture()))
+        .thenReturn(queryResponsePb);
 
     bigquery = options.getService();
     TableResult result = bigquery.query(QUERY_JOB_CONFIGURATION_FOR_QUERY);
@@ -1980,7 +1982,8 @@ public class BigQueryImplTest {
             .setTotalRows(BigInteger.valueOf(1L))
             .setSchema(TABLE_SCHEMA.toPb());
 
-    when(bigqueryRpcMock.queryRpc(eq(PROJECT), requestPbCapture.capture())).thenReturn(queryResponsePb);
+    when(bigqueryRpcMock.queryRpc(eq(PROJECT), requestPbCapture.capture()))
+        .thenReturn(queryResponsePb);
     responseJob.getConfiguration().getQuery().setDestinationTable(TABLE_ID.toPb());
     when(bigqueryRpcMock.getJob(PROJECT, JOB, null, EMPTY_RPC_OPTIONS)).thenReturn(responseJob);
     when(bigqueryRpcMock.getQueryResults(
