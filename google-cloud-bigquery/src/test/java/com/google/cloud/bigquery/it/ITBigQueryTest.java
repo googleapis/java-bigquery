@@ -1743,8 +1743,10 @@ public class ITBigQueryTest {
     String tableName = "test_queryexternalhivepartition_customlayout_table";
     String sourceUri =
         "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/hive-partitioning-samples/customlayout/*";
-    String sourceUriPrefix = "gs://" + CLOUD_SAMPLES_DATA +
-        "/bigquery/hive-partitioning-samples/customlayout/{pkey:STRING}/";
+    String sourceUriPrefix =
+        "gs://"
+            + CLOUD_SAMPLES_DATA
+            + "/bigquery/hive-partitioning-samples/customlayout/{pkey:STRING}/";
     HivePartitioningOptions hivePartitioningOptions =
         HivePartitioningOptions.newBuilder()
             .setMode("CUSTOM")
