@@ -102,6 +102,7 @@ import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.testing.RemoteStorageHelper;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -121,7 +122,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -150,7 +150,7 @@ public class ITBigQueryTest {
   private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
   private static final String RANDOM_ID = UUID.randomUUID().toString().substring(0, 8);
   private static final String CLOUD_SAMPLES_DATA =
-      Optional.ofNullable(System.getenv("CLOUD_SAMPLES_DATA_BUCKET")).orElse("cloud-samples-data");
+      Optional.fromNullable(System.getenv("CLOUD_SAMPLES_DATA_BUCKET")).or("cloud-samples-data");
   private static final Map<String, String> LABELS =
       ImmutableMap.of(
           "example-label1", "example-value1",
