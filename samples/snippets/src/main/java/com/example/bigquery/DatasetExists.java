@@ -39,7 +39,7 @@ public class DatasetExists {
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
       Dataset dataset = bigquery.getDataset(DatasetId.of(datasetName));
-      if ( dataset != null) {
+      if (dataset != null) {
         System.out.println("Dataset already exists.");
       } else {
         System.out.println("Dataset not found.");
