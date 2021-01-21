@@ -75,3 +75,23 @@ python3 -m docuploader create-metadata \
 python3 -m docuploader upload . \
   --credentials ${CREDENTIALS} \
   --staging-bucket ${STAGING_BUCKET_V2}
+
+popd
+# V3 generates docfx yml from javadoc
+
+# generate yml
+mvn clean site -B -q -P docFX
+
+pushd target/docfx-yml
+
+# create metadata
+python3 -m docuploader create-metadata \
+  --name ${NAME} \
+  --version ${VERSION} \
+  --language java
+
+# upload yml
+python3 -m docuploader upload . \
+  --credentials ${CREDENTIALS} \
+  --staging-bucket ${STAGING_BUCKET_V2} \
+  --destination-prefix docfx-
