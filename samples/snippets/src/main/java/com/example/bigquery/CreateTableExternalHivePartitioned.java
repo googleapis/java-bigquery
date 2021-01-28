@@ -28,7 +28,7 @@ import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableInfo;
 
 // Sample to create external table using hive partitioning
-public class SetHivePartitioningOptions {
+public class CreateTableExternalHivePartitioned {
 
   public static void main(String[] args) {
     // TODO(developer): Replace these variables before running the sample.
