@@ -1,5 +1,13 @@
 # Changelog
 
+### [1.126.7](https://www.github.com/googleapis/java-bigquery/compare/v1.126.6...v1.126.7) (2021-02-02)
+
+
+### Documentation
+
+* **samples:** fix sample issue ([#1086](https://www.github.com/googleapis/java-bigquery/issues/1086)) ([ef669df](https://www.github.com/googleapis/java-bigquery/commit/ef669df3c97981664615f0d752f8d988d08c00c9))
+* **samples:** Update region tag for create table external hive partitioning ([#1079](https://www.github.com/googleapis/java-bigquery/issues/1079)) ([50bf783](https://www.github.com/googleapis/java-bigquery/commit/50bf7831d9a7fe40ae08894d50fd2c8ae974f05a))
+
 ### [1.126.6](https://www.github.com/googleapis/java-bigquery/compare/v1.126.5...v1.126.6) (2021-01-13)
 
 
