@@ -73,8 +73,7 @@ public class RoutineInfoTest {
   @Test
   public void testBuilderIncomplete() {
     RoutineInfo routineInfo = RoutineInfo.of(ROUTINE_ID);
-    RoutineInfo expected = routineInfo.toBuilder().build();
-    assertEquals(routineInfo, expected);
+    assertEquals(routineInfo, routineInfo.toBuilder().build());
   }
 
   @Test
