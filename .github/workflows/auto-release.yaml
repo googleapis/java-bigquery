@@ -11,6 +11,7 @@ jobs:
         github-token: ${{secrets.YOSHI_APPROVER_TOKEN}}
         debug: true
         script: |
+          console.log( context.payload.pull_request.title )
           // only approve PRs from release-please[bot]
           if (context.payload.pull_request.user.login !== "release-please[bot]") {
             return;
