@@ -433,7 +433,6 @@ public class RoutineInfo implements Serializable {
         new Routine()
             .setEtag(getEtag())
             .setRoutineType(getRoutineType())
-            .setReturnType(getReturnType().toPb())
             .setDefinitionBody(getBody())
             .setCreationTime(getCreationTime())
             .setDescription(getDescription())
@@ -445,6 +444,9 @@ public class RoutineInfo implements Serializable {
     }
     if (getArguments() != null) {
       routinePb.setArguments(Lists.transform(getArguments(), RoutineArgument.TO_PB_FUNCTION));
+    }
+    if (getReturnType() != null) {
+      routinePb.setReturnType(getReturnType().toPb());
     }
     return routinePb;
   }
