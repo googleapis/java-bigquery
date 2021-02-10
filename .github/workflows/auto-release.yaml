@@ -4,20 +4,19 @@ name: auto-release
 jobs:
   approve:
     runs-on: ubuntu-latest
-    if: contains(github.head_ref, 'release-v')
+    if: contains(github.head_ref, 'release-please')
     steps:
     - uses: actions/github-script@v3
       with:
         github-token: ${{secrets.YOSHI_APPROVER_TOKEN}}
         debug: true
         script: |
-          console.log( context.payload.pull_request.title )
           // only approve PRs from release-please[bot]
           if (context.payload.pull_request.user.login !== "release-please[bot]") {
             return;
           }
 
-          // only approve PRs like "chore: release <release version>"
+          // only approve PRs like "chore(master): release <release version>"
           if ( !context.payload.pull_request.title.startsWith("chore(master): release") ) {
             return;
           }
