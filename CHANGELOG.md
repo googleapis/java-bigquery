@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.127.0](https://www.github.com/googleapis/java-bigquery/compare/v1.126.6...v1.127.0) (2021-02-17)
+
+
+### Features
+
+* add reservation usage in job statistics ([#1018](https://www.github.com/googleapis/java-bigquery/issues/1018)) ([49cbb0f](https://www.github.com/googleapis/java-bigquery/commit/49cbb0f16ac3236e2f87b44570994d7235485902))
+* add support for javascript UDFs determinism level ([#1094](https://www.github.com/googleapis/java-bigquery/issues/1094)) ([cf68d8d](https://www.github.com/googleapis/java-bigquery/commit/cf68d8dc6bf421ea9c82c27760af03dd64b24a29)), closes [#1083](https://www.github.com/googleapis/java-bigquery/issues/1083)
+
+
+### Documentation
+
+* **samples:** fix sample issue ([#1086](https://www.github.com/googleapis/java-bigquery/issues/1086)) ([ef669df](https://www.github.com/googleapis/java-bigquery/commit/ef669df3c97981664615f0d752f8d988d08c00c9))
+* **samples:** Update region tag for create table external hive partitioning ([#1079](https://www.github.com/googleapis/java-bigquery/issues/1079)) ([50bf783](https://www.github.com/googleapis/java-bigquery/commit/50bf7831d9a7fe40ae08894d50fd2c8ae974f05a))
+
+
+### Dependencies
+
+* update dependency com.google.apis:google-api-services-bigquery to v2-rev20210118-1.31.0 ([#1102](https://www.github.com/googleapis/java-bigquery/issues/1102)) ([f227eb4](https://www.github.com/googleapis/java-bigquery/commit/f227eb4a5eac1ddf8adf45d6cb093d51da56df6a))
+* update dependency com.google.apis:google-api-services-bigquery to v2-rev20210204-1.31.0 ([#1109](https://www.github.com/googleapis/java-bigquery/issues/1109)) ([fbc11d7](https://www.github.com/googleapis/java-bigquery/commit/fbc11d70f1ca824b3e1359426c972c38fd2a3b76))
+* update dependency com.google.cloud:google-cloud-bigtable to v1.20.0 ([#1095](https://www.github.com/googleapis/java-bigquery/issues/1095)) ([82ff369](https://www.github.com/googleapis/java-bigquery/commit/82ff3695c8f5811e3b1f52dd52ab6d743475e40c))
+
 ### [1.127.2](https://www.github.com/googleapis/java-bigquery/compare/v1.127.1...v1.127.2) (2021-02-15)
 
 
