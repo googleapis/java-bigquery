@@ -26,7 +26,5 @@ java.common_templates(excludes=[
     '.kokoro/nightly/samples.cfg',
     '.kokoro/presubmit/java8-samples.cfg',
     '.kokoro/presubmit/java11-samples.cfg',
-    'codecov.yaml',
-    '.github/release-please.yml',
-    '.github/sync-repo-settings.yaml'
+    'codecov.yaml'
 ])
