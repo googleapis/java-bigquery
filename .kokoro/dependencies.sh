@@ -50,9 +50,8 @@ function completenessCheck() {
 
   # Output dep list generated using the flattened pom (only 'compile' and 'runtime' scopes)
   msg "Generating dependency list using flattened pom..."
-  # Excluding commons-codec,commons-logging from the comparison as a temp fix since they are
-  # not in the original pom.xml since they are compile scope deps of a test dep (com.google.cloud:google-cloud-core)
-  # but are included as compile scope dependencies in the flattened_pom.xml even tho datacatalog is only included as a test dep
+  # Excluding commons-codec,commons-logging from the comparison as a temp fix
+  # Explanation and issue filed in maven-dependency-plugin: https://issues.apache.org/jira/browse/MDEP-737
   mvn dependency:list -f .flattened-pom.xml -DexcludeArtifactIds=commons-codec,commons-logging -DincludeScope=runtime -Dsort=true | grep '\[INFO]    .*:.*:.*:.*:.*' >.new-list.txt
 
   # Compare two dependency lists
