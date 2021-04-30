@@ -50,7 +50,10 @@ function completenessCheck() {
 
   # Output dep list generated using the flattened pom (only 'compile' and 'runtime' scopes)
   msg "Generating dependency list using flattened pom..."
-  mvn dependency:list -f .flattened-pom.xml -DincludeScope=runtime -Dsort=true | grep '\[INFO]    .*:.*:.*:.*:.*' >.new-list.txt
+  # Excluding commons-codec,commons-logging from the comparison as a temp fix since they are
+  # not in the original pom.xml since they are compile scope deps of a test dep (com.google.cloud:google-cloud-core)
+  # but are included as compile scope dependencies in the flattened_pom.xml even tho datacatalog is only included as a test dep
+  mvn dependency:list -f .flattened-pom.xml -DexcludeArtifactIds=commons-codec,commons-logging -DincludeScope=runtime -Dsort=true | grep '\[INFO]    .*:.*:.*:.*:.*' >.new-list.txt
 
   # Compare two dependency lists
   msg "Comparing dependency lists..."
