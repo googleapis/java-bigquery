@@ -1,8 +1,8 @@
 on:
   push:
     branches:
-    - master
-  pull_request:
+    - 1.127.12-sp
+  pull_request: null
 name: ci
 jobs:
   units:
