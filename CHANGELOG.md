@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.127.12-sp.1](https://www.github.com/googleapis/java-bigquery/compare/1.127.12...v1.127.12-sp.1) (2021-05-11)
+
+
+### Features
+
+* configure initial sp version ([#1282](https://www.github.com/googleapis/java-bigquery/issues/1282)) ([edd2370](https://www.github.com/googleapis/java-bigquery/commit/edd237049c96e097d7cada0a3260670055eb78e5))
+
 ### [1.127.12-sp.1](https://www.github.com/googleapis/java-bigquery/compare/1.127.12...v1.127.12-sp.1) (2021-05-10)
 
 
