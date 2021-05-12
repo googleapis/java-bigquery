@@ -72,7 +72,7 @@
         "^com.google.api.grpc:proto-google-cloud-datacatalog",
         "^com.google.cloud:google-cloud-datacatalog"
       ],
-      "groupName": "datacatalog dependencies"
+      "groupName": "datacatalog dependencies",
       "semanticCommitType": "test",
       "semanticCommitScope": "deps"
     }
