@@ -58,20 +58,20 @@ public abstract class MaterializedViewDefinition extends TableDefinition {
     public abstract Builder setType(Type type);
 
     /**
-     * Sets the time partitioning configuration for the table. If not set, the table is not
+     * Sets the time partitioning configuration for the materialized view. If not set, the materialized view is not
      * time-partitioned.
      */
     public abstract Builder setTimePartitioning(TimePartitioning timePartitioning);
 
     /**
-     * Sets the range partitioning configuration for the table. Only one of timePartitioning and
+     * Sets the range partitioning configuration for the materialized view. Only one of timePartitioning and
      * rangePartitioning should be specified.
      */
     public abstract Builder setRangePartitioning(RangePartitioning rangePartitioning);
 
     /**
-     * Set the clustering configuration for the table. If not set, the table is not clustered.
-     * BigQuery supports clustering for both partitioned and non-partitioned tables.
+     * Set the clustering configuration for the materialized view. If not set, the materialized view is not clustered.
+     * BigQuery supports clustering for both partitioned and non-partitioned materialized views.
      */
     public abstract Builder setClustering(Clustering clustering);
 
@@ -198,20 +198,7 @@ public abstract class MaterializedViewDefinition extends TableDefinition {
         builder.setRefreshIntervalMs(materializedViewDefinition.getRefreshIntervalMs());
       }
       if (tablePb.getTimePartitioning() != null) {
-        try {
-          builder.setTimePartitioning(TimePartitioning.fromPb(tablePb.getTimePartitioning()));
-        } catch (IllegalArgumentException e) {
-          throw new IllegalArgumentException(
-              "Illegal Argument - Got unexpected time partitioning "
-                  + tablePb.getTimePartitioning().getType()
-                  + " in project "
-                  + tablePb.getTableReference().getProjectId()
-                  + " in dataset "
-                  + tablePb.getTableReference().getDatasetId()
-                  + " in table "
-                  + tablePb.getTableReference().getTableId(),
-              e);
-        }
+        builder.setTimePartitioning(TimePartitioning.fromPb(tablePb.getTimePartitioning()));
       }
       if (tablePb.getRangePartitioning() != null) {
         builder.setRangePartitioning(RangePartitioning.fromPb(tablePb.getRangePartitioning()));
