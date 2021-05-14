@@ -58,20 +58,21 @@ public abstract class MaterializedViewDefinition extends TableDefinition {
     public abstract Builder setType(Type type);
 
     /**
-     * Sets the time partitioning configuration for the materialized view. If not set, the materialized view is not
-     * time-partitioned.
+     * Sets the time partitioning configuration for the materialized view. If not set, the
+     * materialized view is not time-partitioned.
      */
     public abstract Builder setTimePartitioning(TimePartitioning timePartitioning);
 
     /**
-     * Sets the range partitioning configuration for the materialized view. Only one of timePartitioning and
-     * rangePartitioning should be specified.
+     * Sets the range partitioning configuration for the materialized view. Only one of
+     * timePartitioning and rangePartitioning should be specified.
      */
     public abstract Builder setRangePartitioning(RangePartitioning rangePartitioning);
 
     /**
-     * Set the clustering configuration for the materialized view. If not set, the materialized view is not clustered.
-     * BigQuery supports clustering for both partitioned and non-partitioned materialized views.
+     * Set the clustering configuration for the materialized view. If not set, the materialized view
+     * is not clustered. BigQuery supports clustering for both partitioned and non-partitioned
+     * materialized views.
      */
     public abstract Builder setClustering(Clustering clustering);
 
