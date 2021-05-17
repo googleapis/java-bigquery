@@ -2590,6 +2590,37 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testSnapshotCopyJob() throws InterruptedException {
+    String sourceTableName = "test_copy_job_base_table";
+    String snapshotTableName = "test_snapshot_table";
+    TableId sourceTable = TableId.of(DATASET, sourceTableName);
+    StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
+    TableInfo tableInfo = TableInfo.of(sourceTable, tableDefinition);
+    Table createdTable = bigquery.create(tableInfo);
+    assertNotNull(createdTable);
+    TableId snapshotTable = TableId.of(DATASET, snapshotTableName);
+    CopyJobConfiguration configuration =
+        CopyJobConfiguration.newBuilder(snapshotTable, sourceTable)
+            .setOperationType("SNAPSHOT")
+            .build();
+    Job createdJob = bigquery.create(JobInfo.of(configuration));
+    CopyJobConfiguration createdConfiguration = createdJob.getConfiguration();
+    assertNotNull(createdConfiguration.getSourceTables());
+    assertNotNull(createdConfiguration.getOperationType());
+    assertNotNull(createdConfiguration.getDestinationTable());
+
+    Job completedJob = createdJob.waitFor();
+    assertNull(completedJob.getStatus().getError());
+    Table remoteTable = bigquery.getTable(DATASET, snapshotTableName);
+    assertNotNull(remoteTable);
+    assertEquals(snapshotTable.getDataset(), remoteTable.getTableId().getDataset());
+    assertEquals(snapshotTableName, remoteTable.getTableId().getTable());
+    assertEquals(TABLE_SCHEMA, remoteTable.getDefinition().getSchema());
+    assertTrue(createdTable.delete());
+    assertTrue(remoteTable.delete());
+  }
+
+  @Test
   public void testCopyJobWithLabels() throws InterruptedException {
     String sourceTableName = "test_copy_job_source_table_label";
     String destinationTableName = "test_copy_job_destination_table_label";
