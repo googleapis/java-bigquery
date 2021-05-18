@@ -313,9 +313,7 @@ public final class CopyJobConfiguration extends JobConfiguration {
     com.google.api.services.bigquery.model.JobConfiguration jobConfiguration =
         new com.google.api.services.bigquery.model.JobConfiguration();
     configurationPb.setDestinationTable(destinationTable.toPb());
-    if (sourceTables.size() == 1) {
-      configurationPb.setSourceTable(sourceTables.get(0).toPb());
-    } else {
+    if (sourceTables != null) {
       configurationPb.setSourceTables(Lists.transform(sourceTables, TableId.TO_PB_FUNCTION));
     }
     if (operationType != null) {

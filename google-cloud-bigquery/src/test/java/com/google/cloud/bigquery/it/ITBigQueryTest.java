@@ -2593,31 +2593,62 @@ public class ITBigQueryTest {
   public void testSnapshotCopyJob() throws InterruptedException {
     String sourceTableName = "test_copy_job_base_table";
     String snapshotTableName = "test_snapshot_table";
-    TableId sourceTable = TableId.of(DATASET, sourceTableName);
+    // Create source table
+    TableId sourceTableId = TableId.of(DATASET, sourceTableName);
     StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
-    TableInfo tableInfo = TableInfo.of(sourceTable, tableDefinition);
+    TableInfo tableInfo = TableInfo.of(sourceTableId, tableDefinition);
     Table createdTable = bigquery.create(tableInfo);
     assertNotNull(createdTable);
-    TableId snapshotTable = TableId.of(DATASET, snapshotTableName);
-    CopyJobConfiguration configuration =
-        CopyJobConfiguration.newBuilder(snapshotTable, sourceTable)
+
+    // Create snapshot table using source table as the base table
+    TableId snapshotTableId = TableId.of(DATASET, snapshotTableName);
+    CopyJobConfiguration snapshotConfiguration =
+        CopyJobConfiguration.newBuilder(snapshotTableId, sourceTableId)
             .setOperationType("SNAPSHOT")
             .build();
-    Job createdJob = bigquery.create(JobInfo.of(configuration));
+    Job createdJob = bigquery.create(JobInfo.of(snapshotConfiguration));
     CopyJobConfiguration createdConfiguration = createdJob.getConfiguration();
     assertNotNull(createdConfiguration.getSourceTables());
     assertNotNull(createdConfiguration.getOperationType());
     assertNotNull(createdConfiguration.getDestinationTable());
-
     Job completedJob = createdJob.waitFor();
     assertNull(completedJob.getStatus().getError());
-    Table remoteTable = bigquery.getTable(DATASET, snapshotTableName);
-    assertNotNull(remoteTable);
-    assertEquals(snapshotTable.getDataset(), remoteTable.getTableId().getDataset());
-    assertEquals(snapshotTableName, remoteTable.getTableId().getTable());
-    assertEquals(TABLE_SCHEMA, remoteTable.getDefinition().getSchema());
+    Table snapshotTable = bigquery.getTable(DATASET, snapshotTableName);
+    assertNotNull(snapshotTable);
+    assertEquals(snapshotTableId.getDataset(), snapshotTable.getTableId().getDataset());
+    assertEquals(snapshotTableName, snapshotTable.getTableId().getTable());
+    assertEquals(TABLE_SCHEMA, snapshotTable.getDefinition().getSchema());
+
+    // Update snapshot table with some description
+    Table updatedSnapshotTable =
+        bigquery.update(
+            snapshotTable.toBuilder().setDescription("This is a snapshot table").build());
+    assertEquals(updatedSnapshotTable.getDescription(), "This is a snapshot table");
+    assertEquals(snapshotTableName, snapshotTable.getTableId().getTable());
+
+    // Restore base table to a new table
+    String restoredTableName = "test_restore_table";
+    TableId restoredTableId = TableId.of(DATASET, restoredTableName);
+    CopyJobConfiguration restoreConfiguration =
+        CopyJobConfiguration.newBuilder(restoredTableId, snapshotTableId)
+            .setOperationType("RESTORE")
+            .build();
+    Job createdRestoreJob = bigquery.create(JobInfo.of(restoreConfiguration));
+    CopyJobConfiguration createdRestoreConfiguration = createdRestoreJob.getConfiguration();
+    assertNotNull(createdRestoreConfiguration.getSourceTables());
+    assertNotNull(createdRestoreConfiguration.getOperationType());
+    assertNotNull(createdRestoreConfiguration.getDestinationTable());
+    Job completedRestoreJob = createdRestoreJob.waitFor();
+    assertNull(completedRestoreJob.getStatus().getError());
+    Table restoredTable = bigquery.getTable(DATASET, restoredTableName);
+    assertNotNull(restoredTable);
+    assertEquals(restoredTableId.getDataset(), restoredTable.getTableId().getDataset());
+    assertEquals(restoredTableName, restoredTable.getTableId().getTable());
+    assertEquals(TABLE_SCHEMA, restoredTable.getDefinition().getSchema());
+
+    // Clean up
     assertTrue(createdTable.delete());
-    assertTrue(remoteTable.delete());
+    assertTrue(snapshotTable.delete());
   }
 
   @Test
