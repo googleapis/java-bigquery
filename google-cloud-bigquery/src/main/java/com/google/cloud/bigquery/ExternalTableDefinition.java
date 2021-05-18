@@ -294,9 +294,6 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     if (getFormatOptions() != null && FormatOptions.BIGTABLE.equals(getFormatOptions().getType())) {
       externalConfigurationPb.setBigtableOptions(((BigtableOptions) getFormatOptions()).toPb());
     }
-    if (getFormatOptions() != null && FormatOptions.PARQUET.equals(getFormatOptions().getType())) {
-      externalConfigurationPb.setParquetOptions(((ParquetOptions) getFormatOptions()).toPb());
-    }
     if (getAutodetect() != null) {
       externalConfigurationPb.setAutodetect(getAutodetect());
     }
