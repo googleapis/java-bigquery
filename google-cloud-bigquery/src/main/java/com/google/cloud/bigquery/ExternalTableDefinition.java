@@ -294,6 +294,9 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     if (getFormatOptions() != null && FormatOptions.BIGTABLE.equals(getFormatOptions().getType())) {
       externalConfigurationPb.setBigtableOptions(((BigtableOptions) getFormatOptions()).toPb());
     }
+    if (getFormatOptions() != null && FormatOptions.PARQUET.equals(getFormatOptions().getType())) {
+      externalConfigurationPb.setParquetOptions(((ParquetOptions) getFormatOptions()).toPb());
+    }
     if (getAutodetect() != null) {
       externalConfigurationPb.setAutodetect(getAutodetect());
     }
@@ -449,6 +452,10 @@ public abstract class ExternalTableDefinition extends TableDefinition {
         builder.setFormatOptions(
             BigtableOptions.fromPb(externalDataConfiguration.getBigtableOptions()));
       }
+      if (externalDataConfiguration.getParquetOptions() != null) {
+        builder.setFormatOptions(
+            ParquetOptions.fromPb(externalDataConfiguration.getParquetOptions()));
+      }
       builder.setMaxBadRecords(externalDataConfiguration.getMaxBadRecords());
       builder.setAutodetect(externalDataConfiguration.getAutodetect());
       if (externalDataConfiguration.getHivePartitioningOptions() != null) {
@@ -490,6 +497,10 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     if (externalDataConfiguration.getBigtableOptions() != null) {
       builder.setFormatOptions(
           BigtableOptions.fromPb(externalDataConfiguration.getBigtableOptions()));
+    }
+    if (externalDataConfiguration.getParquetOptions() != null) {
+      builder.setFormatOptions(
+          ParquetOptions.fromPb(externalDataConfiguration.getParquetOptions()));
     }
     if (externalDataConfiguration.getMaxBadRecords() != null) {
       builder.setMaxBadRecords(externalDataConfiguration.getMaxBadRecords());
