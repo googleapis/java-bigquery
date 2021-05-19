@@ -2618,13 +2618,7 @@ public class ITBigQueryTest {
     assertEquals(snapshotTableId.getDataset(), snapshotTable.getTableId().getDataset());
     assertEquals(snapshotTableName, snapshotTable.getTableId().getTable());
     assertEquals(TABLE_SCHEMA, snapshotTable.getDefinition().getSchema());
-
-    // Update snapshot table with some description
-    Table updatedSnapshotTable =
-        bigquery.update(
-            snapshotTable.toBuilder().setDescription("This is a snapshot table").build());
-    assertEquals(updatedSnapshotTable.getDescription(), "This is a snapshot table");
-    assertEquals(snapshotTableName, snapshotTable.getTableId().getTable());
+    // assertNotNull(snapshotTable.get);
 
     // Restore base table to a new table
     String restoredTableName = "test_restore_table";
