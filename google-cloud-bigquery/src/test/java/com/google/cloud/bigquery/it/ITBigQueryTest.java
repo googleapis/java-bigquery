@@ -2642,6 +2642,7 @@ public class ITBigQueryTest {
 
     // Clean up
     assertTrue(createdTable.delete());
+    assertTrue(restoredTable.delete());
     assertTrue(snapshotTable.delete());
   }
 
