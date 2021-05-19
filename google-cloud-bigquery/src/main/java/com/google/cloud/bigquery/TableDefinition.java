@@ -168,7 +168,7 @@ public abstract class TableDefinition implements Serializable {
       case "MODEL":
         return (T) ModelTableDefinition.fromPb(tablePb);
       case "SNAPSHOT":
-        return (T) SnapshotDefinition.fromPb(tablePb);
+        return (T) SnapshotTableDefinition.fromPb(tablePb);
       default:
         // never reached
         throw new IllegalArgumentException("Format " + tablePb.getType() + " is not supported");

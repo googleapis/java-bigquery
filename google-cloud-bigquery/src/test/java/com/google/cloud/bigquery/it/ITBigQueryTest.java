@@ -86,6 +86,7 @@ import com.google.cloud.bigquery.RoutineArgument;
 import com.google.cloud.bigquery.RoutineId;
 import com.google.cloud.bigquery.RoutineInfo;
 import com.google.cloud.bigquery.Schema;
+import com.google.cloud.bigquery.SnapshotTableDefinition;
 import com.google.cloud.bigquery.StandardSQLDataType;
 import com.google.cloud.bigquery.StandardSQLField;
 import com.google.cloud.bigquery.StandardSQLTableType;
@@ -2590,9 +2591,10 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testSnapshotCopyJob() throws InterruptedException {
+  public void testSnapshotTableCopyJob() throws InterruptedException {
     String sourceTableName = "test_copy_job_base_table";
-    String snapshotTableName = "test_snapshot_table";
+    // this creates a snapshot table at specified snapshotTime
+    String snapshotTableName = String.format("test_snapshot_table");
     // Create source table
     TableId sourceTableId = TableId.of(DATASET, sourceTableName);
     StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
@@ -2617,8 +2619,12 @@ public class ITBigQueryTest {
     assertNotNull(snapshotTable);
     assertEquals(snapshotTableId.getDataset(), snapshotTable.getTableId().getDataset());
     assertEquals(snapshotTableName, snapshotTable.getTableId().getTable());
+    assertTrue(snapshotTable.getDefinition() instanceof SnapshotTableDefinition);
     assertEquals(TABLE_SCHEMA, snapshotTable.getDefinition().getSchema());
-    // assertNotNull(snapshotTable.get);
+    assertNotNull(((SnapshotTableDefinition) snapshotTable.getDefinition()).getSnapshotTime());
+    assertEquals(
+        sourceTableName,
+        ((SnapshotTableDefinition) snapshotTable.getDefinition()).getBaseTableId().getTable());
 
     // Restore base table to a new table
     String restoredTableName = "test_restore_table";
@@ -2639,6 +2645,8 @@ public class ITBigQueryTest {
     assertEquals(restoredTableId.getDataset(), restoredTable.getTableId().getDataset());
     assertEquals(restoredTableName, restoredTable.getTableId().getTable());
     assertEquals(TABLE_SCHEMA, restoredTable.getDefinition().getSchema());
+    assertEquals(snapshotTable.getNumBytes(), restoredTable.getNumBytes());
+    assertEquals(snapshotTable.getNumRows(), restoredTable.getNumRows());
 
     // Clean up
     assertTrue(createdTable.delete());
