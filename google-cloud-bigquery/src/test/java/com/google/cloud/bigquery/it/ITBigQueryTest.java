@@ -2754,9 +2754,8 @@ public class ITBigQueryTest {
     String sourceUri = "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/numeric/numeric_38_12.parquet";
     try {
       LoadJobConfiguration configuration =
-          LoadJobConfiguration.newBuilder(TABLE_ID, sourceUri, FormatOptions.parquet())
+          LoadJobConfiguration.newBuilder(destinationTable, sourceUri, FormatOptions.parquet())
               .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
-              .setDestinationTable(destinationTable)
               .setDecimalTargetTypes(ImmutableList.of("NUMERIC", "BIGNUMERIC", "STRING"))
               .build();
       Job job = bigquery.create(JobInfo.of(configuration));
@@ -2766,6 +2765,11 @@ public class ITBigQueryTest {
       assertEquals(
           ImmutableList.of("NUMERIC", "BIGNUMERIC", "STRING"),
           loadJobConfiguration.getDecimalTargetTypes());
+      String query = "SELECT * FROM " + tableName;
+      QueryJobConfiguration config =
+          QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
+      TableResult result = bigquery.query(config);
+      assertEquals(result.getSchema().getFields().get(0).getType().toString(), "BIGNUMERIC");
     } finally {
       bigquery.delete(destinationTable);
     }
