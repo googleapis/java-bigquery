@@ -2749,7 +2749,7 @@ public class ITBigQueryTest {
 
   @Test
   public void testLoadJobWithDecimalTargetTypes() throws InterruptedException {
-    String tableName = "test_load_job_table_avro_decimalTargetTypes";
+    String tableName = "test_load_job_table_parquet_decimalTargetTypes";
     TableId destinationTable = TableId.of(DATASET, tableName);
     String sourceUri = "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/numeric/numeric_38_12.parquet";
     try {
@@ -2765,14 +2765,34 @@ public class ITBigQueryTest {
       assertEquals(
           ImmutableList.of("NUMERIC", "BIGNUMERIC", "STRING"),
           loadJobConfiguration.getDecimalTargetTypes());
-      String query = "SELECT * FROM " + tableName;
-      QueryJobConfiguration config =
-          QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
-      TableResult result = bigquery.query(config);
-      assertEquals(result.getSchema().getFields().get(0).getType().toString(), "BIGNUMERIC");
+      Table remoteTable = bigquery.getTable(DATASET, tableName);
+      assertNotNull(remoteTable);
+      assertEquals(
+          remoteTable.getDefinition().getSchema().getFields().get(0).getType().toString(),
+          "BIGNUMERIC");
     } finally {
       bigquery.delete(destinationTable);
     }
+  }
+
+  @Test
+  public void testExternalTableWithDecimalTargetTypes() throws InterruptedException {
+    String tableName = "test_create_external_table_parquet_decimalTargetTypes";
+    TableId destinationTable = TableId.of(DATASET, tableName);
+    String sourceUri = "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/numeric/numeric_38_12.parquet";
+    ExternalTableDefinition externalTableDefinition =
+        ExternalTableDefinition.newBuilder(sourceUri, FormatOptions.parquet())
+            .setDecimalTargetTypes(ImmutableList.of("NUMERIC", "BIGNUMERIC", "STRING"))
+            .build();
+    TableInfo tableInfo = TableInfo.of(destinationTable, externalTableDefinition);
+    Table createdTable = bigquery.create(tableInfo);
+    assertNotNull(createdTable);
+    Table remoteTable = bigquery.getTable(DATASET, tableName);
+    assertNotNull(remoteTable);
+    assertEquals(
+        remoteTable.getDefinition().getSchema().getFields().get(0).getType().toString(),
+        "BIGNUMERIC");
+    assertTrue(remoteTable.delete());
   }
 
   @Test

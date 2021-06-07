@@ -102,7 +102,7 @@ public abstract class ExternalTableDefinition extends TableDefinition {
      *
      * @param decimalTargetTypes decimalTargetType or {@code null} for none
      */
-    abstract Builder setDecimalTargetTypes(ImmutableList<String> decimalTargetTypes);
+    public abstract Builder setDecimalTargetTypes(List<String> decimalTargetTypes);
 
     abstract Builder setFormatOptionsInner(FormatOptions formatOptions);
 
@@ -298,7 +298,7 @@ public abstract class ExternalTableDefinition extends TableDefinition {
       externalConfigurationPb.setSourceUris(getSourceUris());
     }
     if (getDecimalTargetTypes() != null) {
-
+      externalConfigurationPb.setDecimalTargetTypes(getDecimalTargetTypes());
     }
     if (getFormatOptions() != null && FormatOptions.CSV.equals(getFormatOptions().getType())) {
       externalConfigurationPb.setCsvOptions(((CsvOptions) getFormatOptions()).toPb());
@@ -447,6 +447,10 @@ public abstract class ExternalTableDefinition extends TableDefinition {
       if (externalDataConfiguration.getSourceUris() != null) {
         builder.setSourceUris(ImmutableList.copyOf(externalDataConfiguration.getSourceUris()));
       }
+      if (externalDataConfiguration.getDecimalTargetTypes() != null) {
+        builder.setDecimalTargetTypes(
+            ImmutableList.copyOf(externalDataConfiguration.getDecimalTargetTypes()));
+      }
       if (externalDataConfiguration.getSourceFormat() != null) {
         builder.setFormatOptions(FormatOptions.of(externalDataConfiguration.getSourceFormat()));
       }
@@ -485,6 +489,9 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     Builder builder = newBuilder();
     if (externalDataConfiguration.getSourceUris() != null) {
       builder.setSourceUris(externalDataConfiguration.getSourceUris());
+    }
+    if (externalDataConfiguration.getDecimalTargetTypes() != null) {
+      builder.setDecimalTargetTypes(externalDataConfiguration.getDecimalTargetTypes());
     }
     if (externalDataConfiguration.getSchema() != null) {
       builder.setSchema(Schema.fromPb(externalDataConfiguration.getSchema()));
