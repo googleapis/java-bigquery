@@ -30,7 +30,7 @@
   <parent>
     <groupId>com.google.cloud.samples</groupId>
     <artifactId>shared-configuration</artifactId>
-    <version>1.0.22</version>
+    <version>1.0.23</version>
   </parent>
 
   <properties>
@@ -44,7 +44,7 @@
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-bigquery</artifactId>
-      <version>1.131.2-SNAPSHOT</version>
+      <version>1.132.1-SNAPSHOT</version>
     </dependency>
     <!-- {x-version-update-end} -->
     <dependency>
@@ -61,13 +61,13 @@
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-bigtable</artifactId>
-      <version>1.25.0</version>
+      <version>1.26.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-bigqueryconnection</artifactId>
-      <version>1.1.0</version>
+      <version>1.1.2</version>
       <scope>test</scope>
     </dependency>
     <dependency>
