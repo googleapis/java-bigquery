@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.132.0](https://www.github.com/googleapis/java-bigquery/compare/v1.131.1...v1.132.0) (2021-06-04)
+
+
+### Features
+
+* add `gcf-owl-bot[bot]` to `ignoreAuthors` ([#1331](https://www.github.com/googleapis/java-bigquery/issues/1331)) ([1f19362](https://www.github.com/googleapis/java-bigquery/commit/1f19362ad5527a12e4fadc1df42523857b6e709a))
+
+
+### Dependencies
+
+* update dependency com.google.apis:google-api-services-bigquery to v2-rev20210518-1.31.0 ([#1341](https://www.github.com/googleapis/java-bigquery/issues/1341)) ([a37a2f5](https://www.github.com/googleapis/java-bigquery/commit/a37a2f5240bb7b0681b8e5e70801d96b4a5675e5))
+* update dependency com.google.cloud:google-cloud-bigtable to v1.25.0 ([#1334](https://www.github.com/googleapis/java-bigquery/issues/1334)) ([f7be534](https://www.github.com/googleapis/java-bigquery/commit/f7be534a5a7fb79232bcd3d082365033262f6dcb))
+* update dependency com.google.cloud:google-cloud-bigtable to v1.26.0 ([#1347](https://www.github.com/googleapis/java-bigquery/issues/1347)) ([55f3e7b](https://www.github.com/googleapis/java-bigquery/commit/55f3e7b359cc197767e75f026f572110649c2ba7))
+* update dependency com.google.cloud:google-cloud-shared-dependencies to v1.3.0 ([#1348](https://www.github.com/googleapis/java-bigquery/issues/1348)) ([ab41045](https://www.github.com/googleapis/java-bigquery/commit/ab41045628a6735de3223bb22285f0affc269c75))
+* update dependency com.google.cloud:google-cloud-storage to v1.115.0 ([#1344](https://www.github.com/googleapis/java-bigquery/issues/1344)) ([0ee09f7](https://www.github.com/googleapis/java-bigquery/commit/0ee09f779c116c000be1cc99c6b1d52a14b33403))
+* update jmh.version to v1.32 ([#1340](https://www.github.com/googleapis/java-bigquery/issues/1340)) ([dfaa49e](https://www.github.com/googleapis/java-bigquery/commit/dfaa49e06715198a012385fad4a37160403b54f4))
+
+### [1.131.1](https://www.github.com/googleapis/java-bigquery/compare/v1.131.0...v1.131.1) (2021-05-19)
+
+
+### Dependencies
+
+* update dependency com.google.cloud:google-cloud-shared-dependencies to v1.2.0 ([#1324](https://www.github.com/googleapis/java-bigquery/issues/1324)) ([dd238db](https://www.github.com/googleapis/java-bigquery/commit/dd238db05664e588aca00e4f10e368d3a574d605))
+* update dependency com.google.cloud:google-cloud-storage to v1.114.0 ([#1306](https://www.github.com/googleapis/java-bigquery/issues/1306)) ([a2cb66a](https://www.github.com/googleapis/java-bigquery/commit/a2cb66a60a44748e7aa8d4f4b5386e46191557b7))
+
+## [1.131.0](https://www.github.com/googleapis/java-bigquery/compare/v1.130.0...v1.131.0) (2021-05-18)
+
+
+### Features
+
+* add ParquetOptions support and expose it in LoadJobConfiguration and ExternalTableDefinition classes ([#1318](https://www.github.com/googleapis/java-bigquery/issues/1318)) ([72b1715](https://www.github.com/googleapis/java-bigquery/commit/72b17151c4f3c4a3d298d3791e58c3112a14b4f5))
+
 ## [1.130.0](https://www.github.com/googleapis/java-bigquery/compare/v1.129.0...v1.130.0) (2021-05-15)
 
 
