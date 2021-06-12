@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.cloud.bigquery;
 
 import static com.google.cloud.RetryHelper.runWithRetries;
@@ -293,7 +292,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               getOptions().getRetrySettings(),
-              EXCEPTION_HANDLER,
+                  EXCEPTION_HANDLER,
               getOptions().getClock()));
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
@@ -370,7 +369,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                   }
                 },
                 getOptions().getRetrySettings(),
-                    BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
+                    EXCEPTION_HANDLER,
                 getOptions().getClock()));
       } catch (RetryHelper.RetryHelperException e) {
         throw BigQueryException.translateAndThrow(e);
@@ -458,7 +457,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               serviceOptions.getRetrySettings(),
-              EXCEPTION_HANDLER,
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               serviceOptions.getClock());
       String cursor = result.x();
       return new PageImpl<>(
