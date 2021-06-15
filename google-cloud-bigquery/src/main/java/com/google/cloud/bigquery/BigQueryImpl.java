@@ -369,7 +369,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                   }
                 },
                 getOptions().getRetrySettings(),
-                    EXCEPTION_HANDLER,
+                EXCEPTION_HANDLER,
                 getOptions().getClock()));
       } catch (RetryHelper.RetryHelperException e) {
         throw BigQueryException.translateAndThrow(e);
