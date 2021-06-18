@@ -275,7 +275,8 @@ public class Dataset extends DatasetInfo {
    * @throws BigQueryException upon failure
    */
   public Table get(String tableId, TableOption... options) {
-    return bigquery.getTable(TableId.of(getDatasetId().getDataset(), tableId), options);
+   //Adding the projectId used of getting the DataSet as a parameter for the issue: https://github.com/googleapis/java-bigquery/issues/1369
+     return bigquery.getTable(TableId.of(getDatasetId().getProject(), getDatasetId().getDataset(), tableId), options);
   }
 
   /**
