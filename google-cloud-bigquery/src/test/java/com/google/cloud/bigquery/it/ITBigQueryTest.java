@@ -1244,6 +1244,19 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testDeleteJob() {
+    String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
+    String jobName = "jobId_" + UUID.randomUUID().toString();
+    JobId jobId = JobId.newBuilder().setLocation("us-east1").setJob(jobName).build();
+    bigquery.create(JobInfo.of(jobId, config));
+    assertNotNull(bigquery.getJob(jobId));
+    assertTrue(bigquery.delete(jobId));
+    assertNull(bigquery.getJob(jobId));
+  }
+
+  @Test
   public void testInsertAll() throws IOException {
     String tableName = "test_insert_all_table";
     StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
