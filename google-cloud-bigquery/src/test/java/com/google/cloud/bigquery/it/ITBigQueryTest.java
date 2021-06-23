@@ -1254,7 +1254,8 @@ public class ITBigQueryTest {
     assertTrue(bigquery.delete(jobId));
     assertNull(bigquery.getJob(jobId));
   }
-   @Test
+
+  @Test
   public void testInsertAll() throws IOException {
     String tableName = "test_insert_all_table";
     StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
