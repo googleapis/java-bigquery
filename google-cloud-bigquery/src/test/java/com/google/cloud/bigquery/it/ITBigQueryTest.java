@@ -1248,9 +1248,11 @@ public class ITBigQueryTest {
     String query = "SELECT 17 as foo";
     QueryJobConfiguration config = QueryJobConfiguration.of(query);
     String jobName = "jobId_" + UUID.randomUUID().toString();
-    JobId jobId = JobId.newBuilder().setLocation("us-east1").setJob(jobName).build();
-    bigquery.create(JobInfo.of(jobId, config));
-    assertNotNull(bigquery.getJob(jobId));
+    JobId jobId =
+        JobId.newBuilder().setLocation("us-east1").setJob(jobName).setProject(PROJECT_ID).build();
+    Job createdJob = bigquery.create(JobInfo.of(jobId, config));
+    Job remoteJob = bigquery.getJob(createdJob.getJobId());
+    assertEquals(createdJob.getJobId(), remoteJob.getJobId());
     assertTrue(bigquery.delete(jobId));
     assertNull(bigquery.getJob(jobId));
   }

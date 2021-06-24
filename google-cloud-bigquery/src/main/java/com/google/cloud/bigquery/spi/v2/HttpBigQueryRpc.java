@@ -608,11 +608,11 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @Override
-  public boolean deleteJob(String projectId, String jobId, String location) {
+  public boolean deleteJob(String projectId, String jobName, String location) {
     try {
       bigquery
           .jobs()
-          .delete(projectId, jobId)
+          .delete(projectId, jobName)
           .setLocation(location)
           .setPrettyPrint(false)
           .execute();

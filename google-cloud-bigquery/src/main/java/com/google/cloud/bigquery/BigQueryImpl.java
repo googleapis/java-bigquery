@@ -588,15 +588,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   @Override
   public boolean delete(JobId jobId) {
     final JobId completeJobId =
-        JobId.of()
-            .setLocation(
-                Strings.isNullOrEmpty(jobId.getLocation())
-                    ? getOptions().getLocation()
-                    : jobId.getLocation())
-            .setProjectId(
-                Strings.isNullOrEmpty(jobId.getProject())
-                    ? getOptions().getProjectId()
-                    : jobId.getProject());
+        jobId.setProjectId(
+            Strings.isNullOrEmpty(jobId.getProject())
+                ? getOptions().getProjectId()
+                : jobId.getProject());
     try {
       return runWithRetries(
           new Callable<Boolean>() {
