@@ -293,17 +293,20 @@ public final class Field implements Serializable {
     return policyTags;
   }
 
-  /** Returns the max length for the field. */
+  /** Returns the maximum length of the field for STRING or BYTES type. */
   public Long getMaxLength() {
     return maxLength;
   }
 
-  /** Returns the scale for the field. */
+  /**
+   * Returns the maximum number of digits set in the fractional part of a NUMERIC or BIGNUMERIC
+   * type.
+   */
   public Long getScale() {
     return scale;
   }
 
-  /** Returns the precision for the field. */
+  /** Returns the maximum number of total digits allowed for NUMERIC or BIGNUMERIC types. */
   public Long getPrecision() {
     return precision;
   }
