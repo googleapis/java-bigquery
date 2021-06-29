@@ -27,6 +27,7 @@ import com.google.cloud.bigquery.TableId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 // Sample to inserting rows into a table without running a load job.
 public class TableInsertRows {
@@ -58,9 +59,8 @@ public class TableInsertRows {
           bigquery.insertAll(
               InsertAllRequest.newBuilder(tableId)
                   // More rows can be added in the same RPC by invoking .addRow() on the builder.
-                  // You can also supply optional unique row keys to support de-duplication
-                  // scenarios.
-                  .addRow(rowContent)
+                  // The insert ID used for de-duplication here is best effort.
+                  .addRow(/*id=*/ UUID.randomUUID().toString(), rowContent)
                   .build());
 
       if (response.hasErrors()) {
