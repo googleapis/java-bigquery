@@ -1338,7 +1338,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                     : jobId.getLocation());
     try {
       GetQueryResultsResponse results =
-          runWithRetries(
+          BigQueryRetryHelper.runWithRetries(
               new Callable<GetQueryResultsResponse>() {
                 @Override
                 public GetQueryResultsResponse call() {
@@ -1352,8 +1352,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               serviceOptions.getRetrySettings(),
-              EXCEPTION_HANDLER,
-              serviceOptions.getClock());
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
+              serviceOptions.getClock(),
+                  new BigQueryRetryConfig());//TODO update with the actual retry config
       TableSchema schemaPb = results.getSchema();
 
       ImmutableList.Builder<BigQueryError> errors = ImmutableList.builder();
