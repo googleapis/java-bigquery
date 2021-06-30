@@ -48,7 +48,7 @@ public class BigQueryRetryHelper extends RetryHelper {
             ResultRetryAlgorithm<V> resultAlgorithm,
             BigQueryRetryConfig bigQueryRetryConfig)
             throws ExecutionException, InterruptedException {
-        RetryAlgorithm<V> retryAlgorithm = new RetryAlgorithm<>(resultAlgorithm, timedAlgorithm);
+        RetryAlgorithm<V> retryAlgorithm = new BigQueryRetryAlgorithm<>(resultAlgorithm, timedAlgorithm, bigQueryRetryConfig);
         RetryingExecutor<V> executor = new DirectRetryingExecutor<>(retryAlgorithm);
 
         RetryingFuture<V> retryingFuture = executor.createFuture(callable);
