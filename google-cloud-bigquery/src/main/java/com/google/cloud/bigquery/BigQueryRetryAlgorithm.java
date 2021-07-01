@@ -55,14 +55,16 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
             throws CancellationException {
         //Implementing shouldRetryBasedOnBigQueryRetryConfig so that we can retry exceptions based on the exception messages
         return (shouldRetryBasedOnResult(context, previousThrowable, previousResponse) ||
-                shouldRetryBasedOnBigQueryRetryConfig(previousThrowable, previousResponse, bigQueryRetryConfig))
+                shouldRetryBasedOnBigQueryRetryConfig(previousThrowable, bigQueryRetryConfig))
                 && shouldRetryBasedOnTiming(context, nextAttemptSettings);
     }
 
-    private boolean shouldRetryBasedOnBigQueryRetryConfig(Throwable previousThrowable, ResponseT previousResponse, BigQueryRetryConfig bigQueryRetryConfig) {
-        Status status = Status.fromThrowable(previousThrowable);
-        String errorDesc = status.getDescription();
-        if (errorDesc!=null){
+    private boolean shouldRetryBasedOnBigQueryRetryConfig(Throwable previousThrowable,  BigQueryRetryConfig bigQueryRetryConfig) {
+        Status status;
+        String errorDesc;
+        if (previousThrowable!=null &&
+                (status = Status.fromThrowable(previousThrowable)) !=null &&
+                (errorDesc = status.getDescription())!=null){
             for ( Iterator<String> retriableMessages =
                   bigQueryRetryConfig.getRetriableErrorMessages().iterator(); retriableMessages.hasNext();){
                 if(errorDesc.contains(retriableMessages.next())){//Error message should be retried
@@ -70,7 +72,7 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
                 }
             }
         }
-    return false;
+        return false;
     }
 
 
