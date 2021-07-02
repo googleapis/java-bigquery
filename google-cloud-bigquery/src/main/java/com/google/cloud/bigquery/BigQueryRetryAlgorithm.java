@@ -60,11 +60,13 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
     }
 
     private boolean shouldRetryBasedOnBigQueryRetryConfig(Throwable previousThrowable,  BigQueryRetryConfig bigQueryRetryConfig) {
-        Status status;
+        /*
+        We are deciding if a given error should be retried on the basis of error message.
+        Cannot rely on Error/Status code as for example error code 400 (which is not retriable) could be thrown due to rateLimitExceed, which is retriable
+         */
         String errorDesc;
         if (previousThrowable!=null &&
-                (status = Status.fromThrowable(previousThrowable)) !=null &&
-                (errorDesc = status.getDescription())!=null){
+                (errorDesc = previousThrowable.getMessage())!=null){
             for ( Iterator<String> retriableMessages =
                   bigQueryRetryConfig.getRetriableErrorMessages().iterator(); retriableMessages.hasNext();){
                 if(errorDesc.contains(retriableMessages.next())){//Error message should be retried
