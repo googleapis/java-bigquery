@@ -23,8 +23,6 @@ import com.google.api.gax.retrying.ResultRetryAlgorithmWithContext;
 import com.google.api.gax.retrying.TimedRetryAlgorithmWithContext;
 import com.google.api.gax.retrying.RetryingContext;
 import com.google.api.gax.retrying.TimedAttemptSettings;
-import io.grpc.Status;
-
 import java.util.Iterator;
 import java.util.concurrent.CancellationException;
 
