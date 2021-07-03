@@ -15,42 +15,40 @@
  */
 package com.google.cloud.bigquery;
 
-
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableSet;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 public class BigQueryRetryConfig {
-    private final ImmutableSet<String> retriableErrorMessages;
-    private BigQueryRetryConfig(Builder builder) {
-        retriableErrorMessages = builder.retriableErrorMessages.build();
+  private final ImmutableSet<String> retriableErrorMessages;
 
+  private BigQueryRetryConfig(Builder builder) {
+    retriableErrorMessages = builder.retriableErrorMessages.build();
+  }
+
+  public ImmutableSet<String> getRetriableErrorMessages() {
+    return retriableErrorMessages;
+  }
+
+  // BigQueryRetryConfig builder
+  public static class Builder {
+    private final ImmutableSet.Builder<String> retriableErrorMessages = ImmutableSet.builder();
+
+    private Builder() {}
+
+    public final Builder retryOnMessage(String... errorMessages) {
+      for (String errorMessage : errorMessages) {
+        retriableErrorMessages.add(checkNotNull(errorMessage));
+      }
+      return this;
     }
 
-    public ImmutableSet<String> getRetriableErrorMessages(){
-        return retriableErrorMessages;
+    public BigQueryRetryConfig build() {
+      return new BigQueryRetryConfig(this);
     }
+  }
 
-    //BigQueryRetryConfig builder
-    public static class Builder {
-        private final ImmutableSet.Builder<String> retriableErrorMessages =
-                ImmutableSet.builder();
-        private Builder() {}
-
-        public final Builder retryOnMessage(String... errorMessages) {
-            for (String errorMessage : errorMessages) {
-                retriableErrorMessages.add(checkNotNull(errorMessage));
-            }
-            return this;
-        }
-
-        public BigQueryRetryConfig build(){
-            return new BigQueryRetryConfig(this);
-        }
-    }
-    public static Builder newBuilder() {
-        return new Builder();
-    }
-
+  public static Builder newBuilder() {
+    return new Builder();
+  }
 }
