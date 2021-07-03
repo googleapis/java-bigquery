@@ -17,5 +17,6 @@
 package com.google.cloud.bigquery;
 
 public class BigQueryErrorMessages {
-    public static final String  RATE_LIMIT_EXCEEDED_MSG = "Exceeded rate limits:";//Error Message for RateLimitExceeded Error
+  public static final String RATE_LIMIT_EXCEEDED_MSG =
+      "Exceeded rate limits:"; // Error Message for RateLimitExceeded Error
 }
