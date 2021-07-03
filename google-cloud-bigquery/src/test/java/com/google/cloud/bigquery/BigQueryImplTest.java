@@ -2177,39 +2177,44 @@ public class BigQueryImplTest {
   public void testGetQueryResultsRetry() {
     JobId queryJob = JobId.of(JOB);
     GetQueryResultsResponse responsePb =
-            new GetQueryResultsResponse()
-                    .setEtag("etag")
-                    .setJobReference(queryJob.toPb())
-                    .setRows(ImmutableList.of(TABLE_ROW))
-                    .setJobComplete(true)
-                    .setCacheHit(false)
-                    .setPageToken(CURSOR)
-                    .setTotalBytesProcessed(42L)
-                    .setTotalRows(BigInteger.valueOf(1L));
+        new GetQueryResultsResponse()
+            .setEtag("etag")
+            .setJobReference(queryJob.toPb())
+            .setRows(ImmutableList.of(TABLE_ROW))
+            .setJobComplete(true)
+            .setCacheHit(false)
+            .setPageToken(CURSOR)
+            .setTotalBytesProcessed(42L)
+            .setTotalRows(BigInteger.valueOf(1L));
 
-    when(bigqueryRpcMock.getQueryResults(PROJECT, JOB, null, EMPTY_RPC_OPTIONS) )
-            .thenThrow(new BigQueryException(500, "InternalError"))
-            .thenThrow(new BigQueryException(502, "Bad Gateway"))
-            .thenThrow(new BigQueryException(503, "Service Unavailable"))
-            .thenThrow(new BigQueryException(504, "Gateway Timeout"))
-            .thenThrow(new BigQueryException(400, BigQueryErrorMessages.RATE_LIMIT_EXCEEDED_MSG))//retrial on based on RATE_LIMIT_EXCEEDED_MSG
-            .thenReturn(responsePb);
+    when(bigqueryRpcMock.getQueryResults(PROJECT, JOB, null, EMPTY_RPC_OPTIONS))
+        .thenThrow(new BigQueryException(500, "InternalError"))
+        .thenThrow(new BigQueryException(502, "Bad Gateway"))
+        .thenThrow(new BigQueryException(503, "Service Unavailable"))
+        .thenThrow(new BigQueryException(504, "Gateway Timeout"))
+        .thenThrow(
+            new BigQueryException(
+                400,
+                BigQueryErrorMessages
+                    .RATE_LIMIT_EXCEEDED_MSG)) // retrial on based on RATE_LIMIT_EXCEEDED_MSG
+        .thenReturn(responsePb);
 
     bigquery =
-            options
-                    .toBuilder()
-                    .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
-                    .build()
-                    .getService();
+        options
+            .toBuilder()
+            .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
+            .build()
+            .getService();
 
     QueryResponse response = bigquery.getQueryResults(queryJob);
     assertEquals(true, response.getCompleted());
     assertEquals(null, response.getSchema());
-    //IMP: Unable to test for idempotency of the requests using getQueryResults(PROJECT, JOB, null, EMPTY_RPC_OPTIONS) as there is no
-    // identifier in this method which will can potentially differ and which can be used to establish idempotency
+    // IMP: Unable to test for idempotency of the requests using getQueryResults(PROJECT, JOB, null,
+    // EMPTY_RPC_OPTIONS) as there is no
+    // identifier in this method which will can potentially differ and which can be used to
+    // establish idempotency
     verify(bigqueryRpcMock, times(6)).getQueryResults(PROJECT, JOB, null, EMPTY_RPC_OPTIONS);
   }
-
 
   @Test
   public void testGetQueryResultsWithProject() {
