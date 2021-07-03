@@ -114,7 +114,7 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
         || shouldRetryBasedOnBigQueryRetryConfig(
             previousThrowable,
             bigQueryRetryConfig)))) { // Calling shouldRetryBasedOnBigQueryRetryConfig to check if
-                                      // the error message could be retried
+      // the error message could be retried
       return null;
     }
 
