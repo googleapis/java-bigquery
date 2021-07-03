@@ -96,4 +96,50 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
         }
         return getTimedAlgorithm().shouldRetry(nextAttemptSettings);
     }
+
+    @Override
+    public TimedAttemptSettings createNextAttempt(
+            RetryingContext context,
+            Throwable previousThrowable,
+            ResponseT previousResponse,
+            TimedAttemptSettings previousSettings) {
+        // a small optimization that avoids calling relatively heavy methods
+        // like timedAlgorithm.createNextAttempt(), when it is not necessary.
+
+        if (!((shouldRetryBasedOnResult(context, previousThrowable, previousResponse) ||
+                shouldRetryBasedOnBigQueryRetryConfig(previousThrowable, bigQueryRetryConfig)))) {//Calling shouldRetryBasedOnBigQueryRetryConfig to check if the error message could be retried
+            return null;
+        }
+
+        TimedAttemptSettings newSettings =
+                createNextAttemptBasedOnResult(
+                        context, previousThrowable, previousResponse, previousSettings);
+        if (newSettings == null) {
+            newSettings = createNextAttemptBasedOnTiming(context, previousSettings);
+        }
+        return newSettings;
+    }
+
+    /*Duplicating this method as it can not be inherited from the RetryAlgorithm due to the private access modifier*/
+    private TimedAttemptSettings createNextAttemptBasedOnResult(
+            RetryingContext context,
+            Throwable previousThrowable,
+            ResponseT previousResponse,
+            TimedAttemptSettings previousSettings) {
+        if (resultAlgorithmWithContext != null && context != null) {
+            return resultAlgorithmWithContext.createNextAttempt(
+                    context, previousThrowable, previousResponse, previousSettings);
+        }
+        return getResultAlgorithm()
+                .createNextAttempt(previousThrowable, previousResponse, previousSettings);
+    }
+
+    /*Duplicating this method as it can not be inherited from the RetryAlgorithm due to the private access modifier*/
+    private TimedAttemptSettings createNextAttemptBasedOnTiming(
+            RetryingContext context, TimedAttemptSettings previousSettings) {
+        if (timedAlgorithmWithContext != null && context != null) {
+            return timedAlgorithmWithContext.createNextAttempt(context, previousSettings);
+        }
+        return getTimedAlgorithm().createNextAttempt(previousSettings);
+    }
 }
