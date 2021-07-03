@@ -1399,7 +1399,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           .setTotalRows(results.getTotalRows() == null ? 0 : results.getTotalRows().longValue())
           .setErrors(errors.build())
           .build();
-    } catch (RetryHelper.RetryHelperException e) {
+    } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
     }
   }
