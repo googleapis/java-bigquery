@@ -18,50 +18,54 @@ package com.google.cloud.bigquery;
 import com.google.api.core.ApiClock;
 import com.google.api.gax.retrying.*;
 import com.google.cloud.RetryHelper;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
 public class BigQueryRetryHelper extends RetryHelper {
 
-    public static <V> V runWithRetries(
-            Callable<V> callable,
-            RetrySettings retrySettings,
-            ResultRetryAlgorithm<?> resultRetryAlgorithm,
-            ApiClock clock,
-            BigQueryRetryConfig bigQueryRetryConfig)
-            throws RetryHelperException {
-        try {
-            // Suppressing should be ok as a workaraund. Current and only ResultRetryAlgorithm
-            // implementation does not use response at all, so ignoring its type is ok.
-            @SuppressWarnings("unchecked")
-            ResultRetryAlgorithm<V> algorithm = (ResultRetryAlgorithm<V>) resultRetryAlgorithm;
-            return run(callable, new ExponentialRetryAlgorithm(retrySettings, clock), algorithm, bigQueryRetryConfig);
-        } catch (Exception e) {
-            throw new BigQueryRetryHelperException(e.getCause());
-        }
+  public static <V> V runWithRetries(
+      Callable<V> callable,
+      RetrySettings retrySettings,
+      ResultRetryAlgorithm<?> resultRetryAlgorithm,
+      ApiClock clock,
+      BigQueryRetryConfig bigQueryRetryConfig)
+      throws RetryHelperException {
+    try {
+      // Suppressing should be ok as a workaraund. Current and only ResultRetryAlgorithm
+      // implementation does not use response at all, so ignoring its type is ok.
+      @SuppressWarnings("unchecked")
+      ResultRetryAlgorithm<V> algorithm = (ResultRetryAlgorithm<V>) resultRetryAlgorithm;
+      return run(
+          callable,
+          new ExponentialRetryAlgorithm(retrySettings, clock),
+          algorithm,
+          bigQueryRetryConfig);
+    } catch (Exception e) {
+      throw new BigQueryRetryHelperException(e.getCause());
     }
+  }
 
-    private static <V> V run(
-            Callable<V> callable,
-            TimedRetryAlgorithm timedAlgorithm,
-            ResultRetryAlgorithm<V> resultAlgorithm,
-            BigQueryRetryConfig bigQueryRetryConfig)
-            throws ExecutionException, InterruptedException {
-        RetryAlgorithm<V> retryAlgorithm = new BigQueryRetryAlgorithm<>(resultAlgorithm, timedAlgorithm, bigQueryRetryConfig);
-        RetryingExecutor<V> executor = new DirectRetryingExecutor<>(retryAlgorithm);
+  private static <V> V run(
+      Callable<V> callable,
+      TimedRetryAlgorithm timedAlgorithm,
+      ResultRetryAlgorithm<V> resultAlgorithm,
+      BigQueryRetryConfig bigQueryRetryConfig)
+      throws ExecutionException, InterruptedException {
+    RetryAlgorithm<V> retryAlgorithm =
+        new BigQueryRetryAlgorithm<>(resultAlgorithm, timedAlgorithm, bigQueryRetryConfig); //using BigQueryRetryAlgorithm in place of com.google.api.gax.retrying.RetryAlgorithm, as BigQueryRetryAlgorithm retries considering bigQueryRetryConfig
+    RetryingExecutor<V> executor = new DirectRetryingExecutor<>(retryAlgorithm);
 
-        RetryingFuture<V> retryingFuture = executor.createFuture(callable);
-        executor.submit(retryingFuture);
-        return retryingFuture.get();
+    RetryingFuture<V> retryingFuture = executor.createFuture(callable);
+    executor.submit(retryingFuture);
+    return retryingFuture.get();
+  }
+
+  public static class BigQueryRetryHelperException extends RuntimeException {
+
+    private static final long serialVersionUID = -8519852520090965314L;
+
+    BigQueryRetryHelperException(Throwable cause) {
+      super(cause);
     }
-
-    public static class BigQueryRetryHelperException extends RuntimeException {
-
-        private static final long serialVersionUID = -8519852520090965314L;
-
-        BigQueryRetryHelperException(Throwable cause) {
-            super(cause);
-        }
-    }
+  }
 }
