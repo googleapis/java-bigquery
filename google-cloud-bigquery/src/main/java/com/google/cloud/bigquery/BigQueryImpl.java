@@ -1275,7 +1275,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     com.google.api.services.bigquery.model.QueryResponse results;
     try {
       results =
-          runWithRetries(
+          BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.QueryResponse>() {
                 @Override
                 public com.google.api.services.bigquery.model.QueryResponse call() {
@@ -1284,8 +1284,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               },
               getOptions().getRetrySettings(),
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
-              getOptions().getClock());
-    } catch (RetryHelperException e) {
+              getOptions().getClock(),
+              DEFAULT_RATE_LIMIT_EXCEEDED_RETRY_CONFIG);
+    } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
     }
 
