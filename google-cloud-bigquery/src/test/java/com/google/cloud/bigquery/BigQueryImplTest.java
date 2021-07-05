@@ -2421,6 +2421,56 @@ public class BigQueryImplTest {
   }
 
   @Test
+  public void testFastQueryRateLimitIdempotency() throws Exception {
+    com.google.api.services.bigquery.model.QueryResponse responsePb =
+        new com.google.api.services.bigquery.model.QueryResponse()
+            .setCacheHit(false)
+            .setJobComplete(true)
+            .setRows(ImmutableList.of(TABLE_ROW))
+            .setPageToken(null)
+            .setTotalBytesProcessed(42L)
+            .setNumDmlAffectedRows(1L)
+            .setSchema(TABLE_SCHEMA.toPb());
+
+    when(bigqueryRpcMock.queryRpc(eq(PROJECT), requestPbCapture.capture()))
+        .thenThrow(new BigQueryException(500, "InternalError"))
+        .thenThrow(new BigQueryException(502, "Bad Gateway"))
+        .thenThrow(new BigQueryException(503, "Service Unavailable"))
+        .thenThrow(new BigQueryException(504, "Gateway Timeout"))
+        .thenThrow(
+            new BigQueryException(
+                400,
+                BigQueryErrorMessages
+                    .RATE_LIMIT_EXCEEDED_MSG)) // retrial on based on RATE_LIMIT_EXCEEDED_MSG
+        .thenReturn(responsePb);
+
+    bigquery =
+        options
+            .toBuilder()
+            .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
+            .build()
+            .getService();
+
+    TableResult response = bigquery.query(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY);
+    assertEquals(TABLE_SCHEMA, response.getSchema());
+    assertEquals(1, response.getTotalRows());
+
+    List<QueryRequest> allRequests = requestPbCapture.getAllValues();
+    boolean idempotent = true;
+    String firstRequestId = allRequests.get(0).getRequestId();
+    for (QueryRequest request : allRequests) {
+      idempotent =
+          idempotent
+              && request
+                  .getRequestId()
+                  .equals(firstRequestId); // all the requestIds should be the same
+    }
+
+    assertTrue(idempotent);
+    verify(bigqueryRpcMock, times(6)).queryRpc(eq(PROJECT), requestPbCapture.capture());
+  }
+
+  @Test
   public void testFastQueryDDLShouldRetry() throws Exception {
     com.google.api.services.bigquery.model.QueryResponse responsePb =
         new com.google.api.services.bigquery.model.QueryResponse()
