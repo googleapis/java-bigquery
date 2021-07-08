@@ -625,9 +625,7 @@ public abstract class JobStatistics implements Serializable {
       return numDmlAffectedRows;
     }
 
-    /**
-     * Detailed statistics for DML statements.
-     */
+    /** Detailed statistics for DML statements. */
     public DmlStats getDmlStats() {
       return dmlStats;
     }
