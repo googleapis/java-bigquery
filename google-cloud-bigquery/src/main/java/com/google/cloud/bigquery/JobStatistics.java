@@ -626,8 +626,7 @@ public abstract class JobStatistics implements Serializable {
     }
 
     /**
-     * Detailed statistics for DML statements Present only for DML statements INSERT, UPDATE, DELETE
-     * or TRUNCATE.
+     * Detailed statistics for DML statements.
      */
     public DmlStats getDmlStats() {
       return dmlStats;
