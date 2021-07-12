@@ -237,7 +237,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   }
 
   private final BigQueryRpc bigQueryRpc;
-  private static final BigQueryRetryConfig DEFAULT_RETRY_CONFIG =
+  private static final BigQueryRetryConfig DEFAULT_RATE_LIMIT_EXCEEDED_RETRY_CONFIG =
       BigQueryRetryConfig.newBuilder()
           .retryOnMessage(BigQueryErrorMessages.RATE_LIMIT_EXCEEDED_MSG)
           .build(); // retry config with Error Message for RateLimitExceeded Error
@@ -1285,7 +1285,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               getOptions().getRetrySettings(),
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock(),
-              DEFAULT_RETRY_CONFIG);
+              DEFAULT_RATE_LIMIT_EXCEEDED_RETRY_CONFIG);
     } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
     }
@@ -1383,7 +1383,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               serviceOptions.getRetrySettings(),
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               serviceOptions.getClock(),
-              DEFAULT_RETRY_CONFIG);
+              DEFAULT_RATE_LIMIT_EXCEEDED_RETRY_CONFIG);
 
       TableSchema schemaPb = results.getSchema();
 
