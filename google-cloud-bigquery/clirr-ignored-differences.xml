@@ -5,11 +5,6 @@
   <difference>
     <differenceType>7012</differenceType>
     <className>com/google/cloud/bigquery/BigQuery</className>
-    <method>boolean delete(com.google.cloud.bigquery.JobId)</method>
-  </difference>
-  <difference>
-    <differenceType>7012</differenceType>
-    <className>com/google/cloud/bigquery/spi/v2/BigQueryRpc</className>
-    <method>boolean deleteJob(java.lang.String, java.lang.String, java.lang.String)</method>
+    <method>com.google.cloud.bigquery.Connection createConnection(com.google.cloud.bigquery.ConnectionSettings)</method>
   </difference>
 </differences>

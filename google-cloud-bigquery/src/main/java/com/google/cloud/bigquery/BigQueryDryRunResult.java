@@ -16,20 +16,14 @@
 
 package com.google.cloud.bigquery;
 
-public interface BigQueryResultSet<T> {
+import com.google.api.services.bigquery.model.QueryParameter;
+import java.util.List;
 
-  /** Returns the schema of the results. */
-  Schema getSchema();
+public interface BigQueryDryRunResult {
 
-  /**
-   * Returns the total number of rows in the complete result set, which can be more than the number
-   * of rows in the first page of results.
-   */
-  long getTotalRows();
+  /** Returns the schema of the results. Null if the schema is not supplied. */
+  Schema getSchema() throws BigQuerySQLException;
 
-  /**
-   * Returns the next row in the user-specified format. Default format is Avro. Null if there is no
-   * more rows left.
-   */
-  T getNext();
+  /** Returns query parameters for standard SQL queries */
+  List<QueryParameter> getQueryParameters() throws BigQuerySQLException;
 }

@@ -16,20 +16,30 @@
 
 package com.google.cloud.bigquery;
 
-public interface BigQueryResultSet<T> {
+public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
 
-  /** Returns the schema of the results. */
-  Schema getSchema();
+  private final Schema schema;
+  private final long totalRows;
+  private final T nextRow;
 
-  /**
-   * Returns the total number of rows in the complete result set, which can be more than the number
-   * of rows in the first page of results.
-   */
-  long getTotalRows();
+  public BigQueryResultSetImpl(Schema schema, long totalRows, T nextRow) {
+    this.schema = schema;
+    this.totalRows = totalRows;
+    this.nextRow = nextRow;
+  }
 
-  /**
-   * Returns the next row in the user-specified format. Default format is Avro. Null if there is no
-   * more rows left.
-   */
-  T getNext();
+  @Override
+  public Schema getSchema() {
+    return schema;
+  }
+
+  @Override
+  public long getTotalRows() {
+    return totalRows;
+  }
+
+  @Override
+  public T getNext() {
+    return null;
+  }
 }

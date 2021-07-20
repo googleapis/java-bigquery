@@ -16,20 +16,8 @@
 
 package com.google.cloud.bigquery;
 
-public interface BigQueryResultSet<T> {
-
-  /** Returns the schema of the results. */
-  Schema getSchema();
-
-  /**
-   * Returns the total number of rows in the complete result set, which can be more than the number
-   * of rows in the first page of results.
-   */
-  long getTotalRows();
-
-  /**
-   * Returns the next row in the user-specified format. Default format is Avro. Null if there is no
-   * more rows left.
-   */
-  T getNext();
+/** Supported row serialization formats * */
+public enum ResponseRowFormat {
+  GenericRecord,
+  JSON
 }

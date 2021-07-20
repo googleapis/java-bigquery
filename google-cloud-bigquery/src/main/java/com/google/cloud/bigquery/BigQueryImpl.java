@@ -345,6 +345,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     return create(jobInfo, idProvider, options);
   }
 
+  @Override
+  public Connection createConnection(ConnectionSettings connectionSettings)
+      throws BigQueryException {
+    switch (connectionSettings.getResponseRowFormat()) {
+      default:
+        // TODO: DETERMINE DEFAULT ROW SERIALIZATION FORMAT
+        return new ConnectionImpl<>(
+            connectionSettings, getOptions(), bigQueryRpc, DEFAULT_RETRY_CONFIG);
+    }
+  }
+
   @InternalApi("visible for testing")
   Job create(JobInfo jobInfo, Supplier<JobId> idProvider, JobOption... options) {
     boolean idRandom = false;

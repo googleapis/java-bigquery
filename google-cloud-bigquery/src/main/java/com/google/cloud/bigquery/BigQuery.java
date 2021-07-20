@@ -761,6 +761,34 @@ public interface BigQuery extends Service<BigQueryOptions> {
   Job create(JobInfo jobInfo, JobOption... options);
 
   /**
+   * Creates a new BigQuery query connection.
+   *
+   * <p>Example of creating a query connection.
+   *
+   * <pre>
+   * {
+   *   &#64;code
+   *       ConnectionSettings connectionSettings =
+   *         ConnectionSettings.newBuilder()
+   *             .setRequestTimeout(10L)
+   *             .setMaxResults(100L)
+   *             .setUseQueryCache(true)
+   *             .setResponseRowFormat(ResponseRowFormat.GenericRecord)
+   *             .build();
+   *       Connection connection = bigquery.createConnection(connectionSettings);
+   *       try {
+   *           connection.executeSelect("SELECT 1");
+   *       } catch (BigQuerySQLException ex) {
+   *           // handle exception
+   *       }
+   * }
+   * </pre>
+   *
+   * @throws BigQueryException upon failure
+   */
+  Connection createConnection(ConnectionSettings connectionSettings);
+
+  /**
    * Returns the requested dataset or {@code null} if not found.
    *
    * <p>Example of getting a dataset.
