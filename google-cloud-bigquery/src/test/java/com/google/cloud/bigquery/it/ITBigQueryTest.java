@@ -1202,9 +1202,10 @@ public class ITBigQueryTest {
             .build();
 
     Table table = bigquery.create(TableInfo.of(tableId, tableDefinition));
-    assertThat(table.getDefinition()).isInstanceOf(StandardTableDefinition.class);
+    TableDefinition definition = table.getDefinition();
+    assertThat(definition).isInstanceOf(StandardTableDefinition.class);
     assertThat(
-            ((StandardTableDefinition) table.getDefinition())
+            ((StandardTableDefinition) definition)
                 .getTimePartitioning()
                 .getExpirationMs())
         .isNull();
@@ -1220,7 +1221,7 @@ public class ITBigQueryTest {
             .build()
             .update(BigQuery.TableOption.fields(BigQuery.TableField.TIME_PARTITIONING));
     assertThat(
-            ((StandardTableDefinition) table.getDefinition())
+            ((StandardTableDefinition) definition)
                 .getTimePartitioning()
                 .getExpirationMs())
         .isEqualTo(42L);
@@ -1236,7 +1237,7 @@ public class ITBigQueryTest {
             .build()
             .update(BigQuery.TableOption.fields(BigQuery.TableField.TIME_PARTITIONING));
     assertThat(
-            ((StandardTableDefinition) table.getDefinition())
+            ((StandardTableDefinition) definition)
                 .getTimePartitioning()
                 .getExpirationMs())
         .isNull();
