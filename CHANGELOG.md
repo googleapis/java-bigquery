@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.138.0](https://www.github.com/googleapis/java-bigquery/compare/v1.137.1...v1.138.0) (2021-08-04)
+
+
+### Features
+
+* configure initial sp version ([#1471](https://www.github.com/googleapis/java-bigquery/issues/1471)) ([ef8d1de](https://www.github.com/googleapis/java-bigquery/commit/ef8d1de15b048828484246ba7c5f0b62669fac62))
+
 ### [1.137.1](https://www.github.com/googleapis/java-bigquery/compare/v1.137.0...v1.137.1) (2021-07-20)
 
 
