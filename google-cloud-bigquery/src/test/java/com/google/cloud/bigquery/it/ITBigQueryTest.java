@@ -1217,8 +1217,9 @@ public class ITBigQueryTest {
                     .build())
             .build()
             .update(BigQuery.TableOption.fields(BigQuery.TableField.TIME_PARTITIONING));
-   TableDefinition updatedDefinition = table.getDefinition();
-    assertThat(((StandardTableDefinition) updatedDefinition).getTimePartitioning().getExpirationMs())
+    TableDefinition updatedDefinition = table.getDefinition();
+    assertThat(
+            ((StandardTableDefinition) updatedDefinition).getTimePartitioning().getExpirationMs())
         .isEqualTo(42L);
 
     table =
