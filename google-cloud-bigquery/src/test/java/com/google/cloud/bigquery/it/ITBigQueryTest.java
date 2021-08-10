@@ -2222,21 +2222,13 @@ public class ITBigQueryTest {
 
   @Test
   public void testTransactionInfo() throws InterruptedException {
+    String tableName = TABLE_ID_FASTQUERY.getTable();
     String transaction =
-        "BEGIN\n"
-            + "\n"
-            + "  BEGIN TRANSACTION;\n"
-            + "  INSERT INTO mydataset.NewArrivals\n"
-            + "    VALUES ('top load washer', 100, 'warehouse #1');\n"
-            + "  -- Trigger an error.\n"
-            + "  SELECT 1/0;\n"
-            + "  COMMIT TRANSACTION;\n"
-            + "\n"
-            + "EXCEPTION WHEN ERROR THEN\n"
-            + "  -- Roll back the transaction inside the exception handler.\n"
-            + "  SELECT @@error.message;\n"
-            + "  ROLLBACK TRANSACTION;\n"
-            + "END;";
+        String.format(
+            "BEGIN TRANSACTION;\n"
+                + "  UPDATE %s.%s SET StringField = 'hello' WHERE TRUE;\n"
+                + "  COMMIT TRANSACTION;\n",
+            DATASET, tableName);
     QueryJobConfiguration config = QueryJobConfiguration.of(transaction);
     Job remoteJob = bigquery.create(JobInfo.of(config));
     JobInfo parentJobInfo = remoteJob.waitFor();

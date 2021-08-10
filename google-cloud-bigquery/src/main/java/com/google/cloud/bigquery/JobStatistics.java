@@ -1357,7 +1357,7 @@ public abstract class JobStatistics implements Serializable {
     return reservationUsage;
   }
 
-  /** TransactionInfo indicates the transaction ID associated with the job, if any. */
+  /** Info indicates the transaction ID associated with the job, if any. */
   public TransactionInfo getTransactionInfo() {
     return transactionInfo;
   }
