@@ -52,13 +52,13 @@ public class CreateModel {
 
   public static void createModel(String sql) {
     try {
-      // Initialize client that will be used to send requests. This client only needs to be created
-      // once, and can be reused for multiple requests.
+      // Initialize the client that will be used to send requests. This client needs to be created
+      // only once, and it can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
       QueryJobConfiguration config = QueryJobConfiguration.newBuilder(sql).build();
 
-      // create a model using query and it will wait to complete job.
+      // Create a model using query and it will wait to complete job.
       Job job = bigquery.create(JobInfo.of(config));
       job = job.waitFor();
       if (job.isDone()) {
