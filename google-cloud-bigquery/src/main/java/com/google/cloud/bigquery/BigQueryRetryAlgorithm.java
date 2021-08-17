@@ -73,9 +73,9 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
                 || shouldRetryBasedOnBigQueryRetryConfig(previousThrowable, bigQueryRetryConfig))
             && shouldRetryBasedOnTiming(context, nextAttemptSettings);
 
-    if (LOG.isLoggable(Level.INFO)) {
+    if (LOG.isLoggable(Level.FINEST)) {
       LOG.log(
-          Level.INFO,
+          Level.FINEST,
           "Retrying with:\n{0}\n{1}\n{2}\n{3}\n{4}",
           new Object[] {
             "BigQuery attemptCount: " + attemptCount,
