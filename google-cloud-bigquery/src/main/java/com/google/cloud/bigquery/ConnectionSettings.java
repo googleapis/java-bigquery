@@ -46,14 +46,22 @@ public abstract class ConnectionSettings {
   /** Returns the maximum number of rows of data */
   public abstract Long getMaxResults();
 
+  /** Returns the number of rows of data to pre-fetch */
+  public abstract Long getPrefetchedRowLimit();
+
   /** Returns whether to look for the result in the query cache */
   public abstract Boolean getUseQueryCache();
 
+  /**
+   * Returns whether nested and repeated fields should be flattened. If set to {@code false} {@link
+   * QueryJobConfiguration.Builder#setAllowLargeResults(Boolean)} must be {@code true}.
+   *
+   * @see <a href="https://cloud.google.com/bigquery/docs/data#flatten">Flatten</a>
+   */
+  public abstract Boolean getFlattenResults();
+
   /** Returns the BigQuery Storage read API configuration */
   public abstract ReadClientConnectionConfiguration getReadClientConnectionConfiguration();
-
-  /** Returns the return row serialization format */
-  public abstract ResponseRowFormat getResponseRowFormat();
 
   /**
    * Below properties are only supported by jobs.insert API and not yet supported by jobs.query API
@@ -89,6 +97,16 @@ public abstract class ConnectionSettings {
 
   /** Returns the query priority. */
   public abstract Priority getPriority();
+
+  /**
+   * Returns whether the job is enabled to create arbitrarily large results. If {@code true} the
+   * query is allowed to create large results at a slight cost in performance. the query is allowed
+   * to create large results at a slight cost in performance.
+   *
+   * @see <a href="https://cloud.google.com/bigquery/querying-data#largequeryresults">Returning
+   *     Large Query Results</a>
+   */
+  public abstract Boolean getAllowLargeResults();
 
   /** Returns the range partitioning specification for the table */
   public abstract RangePartitioning getRangePartitioning();
@@ -184,6 +202,13 @@ public abstract class ConnectionSettings {
     public abstract Builder setMaxResults(Long maxResults);
 
     /**
+     * Sets the number of rows of data to pre-fetch during query execution.
+     *
+     * @param prefetchedRowLimit prefetchedRowLimit or {@code null} for none
+     */
+    public abstract Builder setPrefetchedRowLimit(Long prefetchedRowLimit);
+
+    /**
      * Sets whether to look for the result in the query cache. The query cache is a best-effort
      * cache that will be flushed whenever tables in the query are modified. Moreover, the query
      * cache is only available when {@link
@@ -192,6 +217,15 @@ public abstract class ConnectionSettings {
      * @see <a href="https://cloud.google.com/bigquery/querying-data#querycaching">Query Caching</a>
      */
     public abstract Builder setUseQueryCache(Boolean useQueryCache);
+
+    /**
+     * Sets whether nested and repeated fields should be flattened. If set to {@code false} {@link
+     * QueryJobConfiguration.Builder#setAllowLargeResults(Boolean)} must be {@code true}. By default
+     * results are flattened.
+     *
+     * @see <a href="https://cloud.google.com/bigquery/docs/data#flatten">Flatten</a>
+     */
+    public abstract Builder setFlattenResults(Boolean flattenResults);
 
     /**
      * Sets the values necessary to determine whether table result will be read using the BigQuery
@@ -207,13 +241,6 @@ public abstract class ConnectionSettings {
      */
     public abstract Builder setReadClientConnectionConfiguration(
         ReadClientConnectionConfiguration readClientConnectionConfiguration);
-
-    /**
-     * Sets the row format received from the BigQuery API.
-     *
-     * @param responseRowFormat or {@code null} for none
-     */
-    public abstract Builder setResponseRowFormat(ResponseRowFormat responseRowFormat);
 
     /** Sets the clustering specification for the destination table. */
     public abstract Builder setClustering(Clustering clustering);
@@ -264,6 +291,16 @@ public abstract class ConnectionSettings {
      * Priority#INTERACTIVE}.
      */
     public abstract Builder setPriority(Priority priority);
+
+    /**
+     * Sets whether the job is enabled to create arbitrarily large results. If {@code true} the
+     * query is allowed to create large results at a slight cost in performance. If {@code true}
+     * {@link ConnectionSettings.Builder#setDestinationTable(TableId)} must be provided.
+     *
+     * @see <a href="https://cloud.google.com/bigquery/querying-data#largequeryresults">Returning
+     *     Large Query Results</a>
+     */
+    public abstract Builder setAllowLargeResults(Boolean allowLargeResults);
 
     /**
      * Range partitioning specification for this table. Only one of timePartitioning and

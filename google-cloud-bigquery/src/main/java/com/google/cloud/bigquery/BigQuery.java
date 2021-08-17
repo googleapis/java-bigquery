@@ -773,14 +773,8 @@ public interface BigQuery extends Service<BigQueryOptions> {
    *             .setRequestTimeout(10L)
    *             .setMaxResults(100L)
    *             .setUseQueryCache(true)
-   *             .setResponseRowFormat(ResponseRowFormat.GenericRecord)
    *             .build();
    *       Connection connection = bigquery.createConnection(connectionSettings);
-   *       try {
-   *           connection.executeSelect("SELECT 1");
-   *       } catch (BigQuerySQLException ex) {
-   *           // handle exception
-   *       }
    * }
    * </pre>
    *

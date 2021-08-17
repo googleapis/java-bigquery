@@ -16,6 +16,8 @@
 
 package com.google.cloud.bigquery;
 
+import java.sql.SQLException;
+
 public interface BigQueryResultSet<T> {
 
   /** Returns the schema of the results. */
@@ -27,9 +29,12 @@ public interface BigQueryResultSet<T> {
    */
   long getTotalRows();
 
-  /**
-   * Returns the next row in the user-specified format. Default format is Avro. Null if there is no
-   * more rows left.
-   */
-  T getNext();
+  /** Returns the next row. Null if there is no more rows left. */
+  // ResultSet getNext();
+
+  /*Advances the result set to the next row, returning false if no such row exists. Potentially blocking operation*/
+  boolean next() throws SQLException;
+
+  /*Returns the value of a String field if the field exists, otherwise returns null*/
+  String getString(String fieldName) throws SQLException;
 }
