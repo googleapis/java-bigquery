@@ -75,7 +75,7 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
     if (LOG.isLoggable(Level.FINEST)) {
       LOG.log(
           Level.FINEST,
-          "Retrying with:\n{0}\n{1}\n{2}\n{4}\n{5}",
+          "Retrying with:\n{0}\n{1}\n{2}\n{3}\n{4}",
           new Object[] {
             "BigQuery attemptCount: " + attemptCount,
             "BigQuery delay: " + retryDelay,
