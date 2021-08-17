@@ -64,6 +64,7 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
     int attemptCount = nextAttemptSettings == null ? 0 : nextAttemptSettings.getAttemptCount();
     Duration retryDelay =
         nextAttemptSettings == null ? Duration.ZERO : nextAttemptSettings.getRetryDelay();
+    String errorMessage = previousThrowable != null ? previousThrowable.getMessage() : "";
 
     // Implementing shouldRetryBasedOnBigQueryRetryConfig so that we can retry exceptions based on
     // the exception messages
@@ -72,18 +73,16 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
                 || shouldRetryBasedOnBigQueryRetryConfig(previousThrowable, bigQueryRetryConfig))
             && shouldRetryBasedOnTiming(context, nextAttemptSettings);
 
-    if (LOG.isLoggable(Level.FINEST)) {
+    if (LOG.isLoggable(Level.INFO)) {
       LOG.log(
-          Level.FINEST,
+          Level.INFO,
           "Retrying with:\n{0}\n{1}\n{2}\n{3}\n{4}",
           new Object[] {
             "BigQuery attemptCount: " + attemptCount,
             "BigQuery delay: " + retryDelay,
             "BigQuery retriableException: " + previousThrowable,
             "BigQuery shouldRetry: " + shouldRetry,
-            "BigQuery previousThrowable.getMessage: " + previousThrowable != null
-                ? previousThrowable.getMessage()
-                : previousThrowable
+            "BigQuery previousThrowable.getMessage: " + errorMessage
           });
     }
     return shouldRetry;
