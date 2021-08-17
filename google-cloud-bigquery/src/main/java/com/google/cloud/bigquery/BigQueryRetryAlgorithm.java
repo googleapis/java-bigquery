@@ -65,22 +65,28 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
     Duration retryDelay =
         nextAttemptSettings == null ? Duration.ZERO : nextAttemptSettings.getRetryDelay();
 
+    // Implementing shouldRetryBasedOnBigQueryRetryConfig so that we can retry exceptions based on
+    // the exception messages
+    boolean shouldRetry =
+        (shouldRetryBasedOnResult(context, previousThrowable, previousResponse)
+                || shouldRetryBasedOnBigQueryRetryConfig(previousThrowable, bigQueryRetryConfig))
+            && shouldRetryBasedOnTiming(context, nextAttemptSettings);
+
     if (LOG.isLoggable(Level.FINEST)) {
       LOG.log(
           Level.FINEST,
-          "Retrying with:\n{0}\n{1}\n{2}",
+          "Retrying with:\n{0}\n{1}\n{2}\n{4}\n{5}",
           new Object[] {
             "BigQuery attemptCount: " + attemptCount,
             "BigQuery delay: " + retryDelay,
-            "BigQuery retriableException: " + previousThrowable
+            "BigQuery retriableException: " + previousThrowable,
+            "BigQuery shouldRetry: " + shouldRetry,
+            "BigQuery previousThrowable.getMessage: " + previousThrowable != null
+                ? previousThrowable.getMessage()
+                : previousThrowable
           });
     }
-
-    // Implementing shouldRetryBasedOnBigQueryRetryConfig so that we can retry exceptions based on
-    // the exception messages
-    return (shouldRetryBasedOnResult(context, previousThrowable, previousResponse)
-            || shouldRetryBasedOnBigQueryRetryConfig(previousThrowable, bigQueryRetryConfig))
-        && shouldRetryBasedOnTiming(context, nextAttemptSettings);
+    return shouldRetry;
   }
 
   private boolean shouldRetryBasedOnBigQueryRetryConfig(
