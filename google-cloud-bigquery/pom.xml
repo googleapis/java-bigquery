@@ -150,7 +150,7 @@
       <version>2.0.1</version>
       <exclusions>
        <exclusion>
-        <groupId>com.google.cloud</groupId>
+        <groupId>/*</groupId>
         <artifactId>*</artifactId>
       </exclusion>
     </exclusions>
