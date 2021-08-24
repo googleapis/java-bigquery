@@ -16,6 +16,7 @@
   <properties>
     <site.installationModule>google-cloud-bigquery</site.installationModule>
     <jmh.version>1.32</jmh.version>
+    <arrow.version>5.0.0</arrow.version>
   </properties>
   <dependencies>
     <dependency>
@@ -119,30 +120,24 @@
     </dependency>
     <!-- Dependencies for Apache Arrow vs Avro Benchmarking -->
     <dependency>
-      <groupId>org.apache.avro</groupId>
-      <artifactId>avro</artifactId>
-      <version>1.10.2</version>
-    </dependency>
-    <dependency>
       <groupId>org.openjdk.jmh</groupId>
       <artifactId>jmh-core</artifactId>
       <version>${jmh.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.openjdk.jmh</groupId>
-      <artifactId>jmh-generator-annprocess</artifactId>
-      <version>${jmh.version}</version>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro</artifactId>
+      <version>1.10.2</version>
     </dependency>
     <dependency>
       <groupId>org.apache.arrow</groupId>
       <artifactId>arrow-vector</artifactId>
-      <version>5.0.0</version>
+      <version>${arrow.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.arrow</groupId>
-      <artifactId>arrow-memory-netty</artifactId>
-      <version>5.0.0</version>
-      <scope>runtime</scope>
+      <artifactId>arrow-memory-core</artifactId>
+      <version>${arrow.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.cloud</groupId>

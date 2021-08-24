@@ -219,12 +219,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <configuration>
-          <ignoredUnusedDeclaredDependencies>
-            <ignoredUnusedDeclaredDependency>org.openjdk.jmh:jmh-generator-annprocess</ignoredUnusedDeclaredDependency>
-            <ignoredUnusedDeclaredDependency>org.apache.arrow:arrow-memory-netty</ignoredUnusedDeclaredDependency>
-          </ignoredUnusedDeclaredDependencies>
           <ignoredUsedUndeclaredDependencies>
-            <ignoredUsedUndeclaredDependency>org.apache.arrow:arrow-memory-core</ignoredUsedUndeclaredDependency>
             <ignoredUsedUndeclaredDependency>com.google.api.grpc:proto-google-cloud-bigquerystorage-v1</ignoredUsedUndeclaredDependency>
             <ignoredUsedUndeclaredDependency>com.google.protobuf:protobuf-java</ignoredUsedUndeclaredDependency>
           </ignoredUsedUndeclaredDependencies>
