@@ -42,19 +42,23 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 @Fork(value = 1)
 @BenchmarkMode(Mode.AverageTime)
-@Warmup(iterations = 2)
-@Measurement(iterations = 5)
+@Warmup(iterations = Constants.WARMUP_ITERATIONS)
+@Measurement(iterations = Constants.MEASUREMENT_ITERATIONS)
 @State(Scope.Benchmark)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 
 
 public class BQAvroBenchMark {
     private static BigQueryReadClient client;
-    private static final String SRC_TABLE_USA_NAMES = "projects/bigquery-public-data/datasets/usa_names/tables/usa_1910_current";
-    private  List<ReadRowsResponse> cachedRowRes = null;
+
+    private static SimpleRowReader reader;
+    private  List<AvroRows> cachedRowRes = null;
     private Schema avroSchema;
 
     private static class SimpleRowReader {
@@ -78,21 +82,25 @@ public class BQAvroBenchMark {
          *
          * @param avroRows object returned from the ReadRowsResponse.
          */
-        public void processRows(ReadRowsResponse res, Blackhole blackhole) throws IOException {////deserialize the values and consume the hash of the values
-            AvroRows avroRows = res.getAvroRows();
+        public void processRows(AvroRows avroRows, Blackhole blackhole) throws IOException {////deserialize the values and consume the hash of the values
             decoder =
                     DecoderFactory.get()
                             .binaryDecoder(avroRows.getSerializedBinaryRows().toByteArray(), decoder);
-
+            blackhole.consume(avroRows);
             while (!decoder.isEnd()) {
                 // Reusing object row
                 row = datumReader.read(row, decoder);
-                blackhole.consume(row.get("name").toString().hashCode()+row.get("state").toString().hashCode()+Long.parseLong(row.get("number").toString()));
+                long hash = 0;
+                for(String field: Constants.FIELDS){
+                    hash += row.get(field)!=null? row.get(field).toString().hashCode():0;////get to the row level value as String and compute the hashcode
+                }
+                blackhole.consume(hash);
             }
 
         }
 
     }
+
 
     @Setup
     public void setUp() {
@@ -105,30 +113,30 @@ public class BQAvroBenchMark {
         }
     }
 
-    private List<ReadRowsResponse> getRowsFromBQStorage() throws IOException {
+
+
+    private List<AvroRows> getRowsFromBQStorage() throws IOException {
+
+
         this.client = BigQueryReadClient.create();
-        List<ReadRowsResponse> cachedRowRes = new ArrayList<>();
-        String projectId = "mweb-demos";
+        List<AvroRows> cachedRowRes = new ArrayList<>();
         Integer snapshotMillis = null;
         String[] args = {null};
         if (args.length > 1) {
             snapshotMillis = Integer.parseInt(args[1]);
         }
 
-        String parent = String.format("projects/%s", projectId);
+        String parent = String.format("projects/%s", Constants.PROJECT_ID);
+
         TableReadOptions options =
                 TableReadOptions.newBuilder()
-                        .addSelectedFields("name")
-                        .addSelectedFields("number")
-                        .addSelectedFields("state")
-                        .setRowRestriction("state = \"WA\"")
-
+                        .addAllSelectedFields(Constants.FIELDS)
                         .build();
 
         // Start specifying the read session we want created.
         ReadSession.Builder sessionBuilder =
                 ReadSession.newBuilder()
-                        .setTable(SRC_TABLE_USA_NAMES)
+                        .setTable(Constants.SRC_TABLE)
                         // This API can also deliver data serialized in Apache Avro format.
                         // This example leverages Apache Avro.
                         .setDataFormat(DataFormat.AVRO)
@@ -171,28 +179,33 @@ public class BQAvroBenchMark {
 
         // Process each block of rows as they arrive and decode using our simple row reader.
         ServerStream<ReadRowsResponse> stream = client.readRowsCallable().call(readRowsRequest);
+        reader =
+                new SimpleRowReader(avroSchema);
         for (ReadRowsResponse response : stream) {
             Preconditions.checkState(response.hasAvroRows());
-            cachedRowRes.add(response);
+            cachedRowRes.add(response.getAvroRows());
         }
         return cachedRowRes;
     }
 
     @Benchmark
     public void deserializationBenchmark( Blackhole blackhole) throws Exception {
-        SimpleRowReader reader =
-                new SimpleRowReader(avroSchema);
-        for (ReadRowsResponse res: cachedRowRes){
+
+        // System.out.println("cachedRowRes.size(): "+cachedRowRes.size());
+        for (AvroRows res: cachedRowRes){
             reader.processRows(res, blackhole);
         }
 
     }
 
-    public static void main(String[] args) throws Exception {
 
-   /*     BQAvroBenchMark bqBenmark = new BQAvroBenchMark();
-        bqBenmark.setUp();
-        bqBenmark.deserializationBenchmark(null);//for debugging, Will throw NPE*/
+    public static void main(String[] args) throws Exception {
+        Options opt = new OptionsBuilder()
+                .include(BQAvroBenchMark.class.getSimpleName())
+                .forks(1)
+                .build();
+
+        new Runner(opt).run();
 
     }
 }
