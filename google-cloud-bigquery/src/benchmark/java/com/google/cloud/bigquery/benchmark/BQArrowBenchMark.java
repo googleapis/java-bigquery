@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.*;
@@ -39,16 +38,18 @@ import org.apache.arrow.vector.util.ByteArrayReadableSeekableByteChannel;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.infra.Blackhole;
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 @Fork(value = 1)
 @BenchmarkMode(Mode.AverageTime)
-@Warmup(iterations = 2)
-@Measurement(iterations = 5)
+@Warmup(iterations = Constants.WARMUP_ITERATIONS)
+@Measurement(iterations = Constants.MEASUREMENT_ITERATIONS)
 @State(Scope.Benchmark)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 public class BQArrowBenchMark {
     private static BigQueryReadClient client;
-    private static final String SRC_TABLE_USA_NAMES = "projects/bigquery-public-data/datasets/usa_names/tables/usa_1910_current";
     private List<ArrowRecordBatch> cachedRes =null;
     private ArrowSchema arrowSchema;
 
@@ -96,16 +97,20 @@ public class BQArrowBenchMark {
             loader.load(deserializedBatch);
             // Release buffers from batch (they are still held in the vectors in root).
             deserializedBatch.close();
-
-            VarCharVector v1 = (VarCharVector) root.getVector(0);
-            VarCharVector v2 = (VarCharVector) root.getVector(1);
-            BigIntVector v3 = (BigIntVector) root.getVector(2);
-
+            long hash = 0;
             for (int i = 0; i < root.getRowCount(); i++) {
-                blackhole.consume(new String(v1.get(i)).hashCode()+new String(v2.get(i)).hashCode()+v3.getValueAsLong(0));
-            }
+                //"vendor_id","pickup_datetime","rate_code","dropoff_datetime","payment_type","pickup_location_id","dropoff_location_id"
+                hash += new String(((VarCharVector)root.getVector("vendor_id")).get(i)).hashCode();
+                hash += (String.valueOf(((TimeStampMicroVector)root.getVector("pickup_datetime")).get(i))).hashCode();
+                hash += new String(((VarCharVector)root.getVector("rate_code")).get(i)).hashCode();
+                hash += (String.valueOf(((TimeStampMicroVector)root.getVector("dropoff_datetime")).get(i))).hashCode();
+                hash += new String(((VarCharVector)root.getVector("payment_type")).get(i)).hashCode();
+                hash += new String(((VarCharVector)root.getVector("pickup_location_id")).get(i)).hashCode();
+                hash += new String(((VarCharVector)root.getVector("dropoff_location_id")).get(i)).hashCode();
 
+            }
             root.clear();
+            blackhole.consume(hash);
 
         }
 
@@ -141,29 +146,27 @@ public class BQArrowBenchMark {
         this.client = BigQueryReadClient.create();
         List<ArrowRecordBatch> cachedRes = new ArrayList<>();
         // Sets your Google Cloud Platform project ID.
-        String projectId = "mweb-demos";
         Integer snapshotMillis = null;
         String[] args = {null};
         if (args.length > 1) {
             snapshotMillis = Integer.parseInt(args[1]);
         }
 
-        String parent = String.format("projects/%s", projectId);
+
+        String parent = String.format("projects/%s", Constants.PROJECT_ID);
+
 
         // We specify the columns to be projected by adding them to the selected fields,
         // and set a simple filter to restrict which rows are transmitted.
         TableReadOptions options =
                 TableReadOptions.newBuilder()
-                        .addSelectedFields("name")
-                        .addSelectedFields("number")
-                        .addSelectedFields("state")
-                        .setRowRestriction("state = \"WA\"")
+                        .addAllSelectedFields(Constants.FIELDS)
                         .build();
 
         // Start specifying the read session we want created.
         ReadSession.Builder sessionBuilder =
                 ReadSession.newBuilder()
-                        .setTable(SRC_TABLE_USA_NAMES)
+                        .setTable(Constants.SRC_TABLE)
                         // This API can also deliver data serialized in Apache Avro format.
                         // This example leverages Apache Arrow.
                         .setDataFormat(DataFormat.ARROW)
@@ -213,8 +216,11 @@ public class BQArrowBenchMark {
     }
 
     public static void main(String[] args) throws Exception {
-      /*  BQArrowBenchMark bqArrowBenchMark = new BQArrowBenchMark();
-        bqArrowBenchMark.setUp();
-        bqArrowBenchMark.deserializationBenchmark(null);//for debugging, will throw NPE*/
+        Options opt = new OptionsBuilder()
+                .include(BQArrowBenchMark.class.getSimpleName())
+                .forks(1)
+                .build();
+
+        new Runner(opt).run();
     }
 }
