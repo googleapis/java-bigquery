@@ -29,10 +29,12 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.UUID;
 
 public class BigQueryRetryHelper extends RetryHelper {
 
   private static final Logger LOG = Logger.getLogger(BigQueryRetryHelper.class.getName());
+  private static final UUID RETRY_UUID = UUID.randomUUID();
 
   public static <V> V runWithRetries(
       Callable<V> callable,
@@ -66,7 +68,8 @@ public class BigQueryRetryHelper extends RetryHelper {
         new BigQueryRetryAlgorithm<>(
             resultAlgorithm,
             timedAlgorithm,
-            bigQueryRetryConfig); // using BigQueryRetryAlgorithm in place of
+            bigQueryRetryConfig,
+            RETRY_UUID); // using BigQueryRetryAlgorithm in place of
     // com.google.api.gax.retrying.RetryAlgorithm, as
     // BigQueryRetryAlgorithm retries considering bigQueryRetryConfig
     RetryingExecutor<V> executor = new DirectRetryingExecutor<>(retryAlgorithm);
@@ -75,9 +78,10 @@ public class BigQueryRetryHelper extends RetryHelper {
     if (LOG.isLoggable(Level.FINEST)) {
       LOG.log(
           Level.FINEST,
-          "Retrying with:\n{0}",
+          "Retrying with:\n{0}\n{1}",
           new Object[] {
             "BigQuery retried method: " + callable.getClass().getEnclosingMethod().getName(),
+            "Bigquery retry identifier: " + RETRY_UUID
           });
     }
 

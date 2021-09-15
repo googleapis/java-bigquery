@@ -26,10 +26,12 @@ import com.google.api.gax.retrying.TimedAttemptSettings;
 import com.google.api.gax.retrying.TimedRetryAlgorithm;
 import com.google.api.gax.retrying.TimedRetryAlgorithmWithContext;
 import java.util.Iterator;
+import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.UUID;
 import org.threeten.bp.Duration;
 
 public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT> {
@@ -38,19 +40,30 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
   private final TimedRetryAlgorithm timedAlgorithm;
   private final ResultRetryAlgorithmWithContext<ResponseT> resultAlgorithmWithContext;
   private final TimedRetryAlgorithmWithContext timedAlgorithmWithContext;
+  private final UUID retryUUID;
 
   private static final Logger LOG = Logger.getLogger(BigQueryRetryAlgorithm.class.getName());
 
   public BigQueryRetryAlgorithm(
-      ResultRetryAlgorithm<ResponseT> resultAlgorithm,
-      TimedRetryAlgorithm timedAlgorithm,
-      BigQueryRetryConfig bigQueryRetryConfig) {
+          ResultRetryAlgorithm<ResponseT> resultAlgorithm,
+          TimedRetryAlgorithm timedAlgorithm,
+          BigQueryRetryConfig bigQueryRetryConfig,
+          UUID retryUUID) {
     super(resultAlgorithm, timedAlgorithm);
     this.bigQueryRetryConfig = checkNotNull(bigQueryRetryConfig);
     this.resultAlgorithm = checkNotNull(resultAlgorithm);
     this.timedAlgorithm = checkNotNull(timedAlgorithm);
     this.resultAlgorithmWithContext = null;
     this.timedAlgorithmWithContext = null;
+    this.retryUUID = retryUUID;
+  }
+
+  public BigQueryRetryAlgorithm(
+          ResultRetryAlgorithm<ResponseT> resultAlgorithm,
+          TimedRetryAlgorithm timedAlgorithm,
+          BigQueryRetryConfig bigQueryRetryConfig) {
+    this(resultAlgorithm, timedAlgorithm, bigQueryRetryConfig, UUID.randomUUID());
+
   }
 
   @Override
@@ -76,13 +89,14 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
     if (LOG.isLoggable(Level.FINEST)) {
       LOG.log(
           Level.FINEST,
-          "Retrying with:\n{0}\n{1}\n{2}\n{3}\n{4}",
+          "Retrying with:\n{0}\n{1}\n{2}\n{3}\n{4}\n{5}",
           new Object[] {
             "BigQuery attemptCount: " + attemptCount,
             "BigQuery delay: " + retryDelay,
             "BigQuery retriableException: " + previousThrowable,
             "BigQuery shouldRetry: " + shouldRetry,
-            "BigQuery previousThrowable.getMessage: " + errorMessage
+            "BigQuery previousThrowable.getMessage: " + errorMessage,
+            "Bigquery retry identifier: " + retryUUID
           });
     }
     return shouldRetry;
