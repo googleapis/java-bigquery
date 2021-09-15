@@ -29,47 +29,44 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.UUID;
 
 public class BigQueryRetryHelper extends RetryHelper {
 
   private static final Logger LOG = Logger.getLogger(BigQueryRetryHelper.class.getName());
-  private static final UUID RETRY_UUID = UUID.randomUUID();
 
   public static <V> V runWithRetries(
-      Callable<V> callable,
-      RetrySettings retrySettings,
-      ResultRetryAlgorithm<?> resultRetryAlgorithm,
-      ApiClock clock,
-      BigQueryRetryConfig bigQueryRetryConfig)
-      throws RetryHelperException {
+          Callable<V> callable,
+          RetrySettings retrySettings,
+          ResultRetryAlgorithm<?> resultRetryAlgorithm,
+          ApiClock clock,
+          BigQueryRetryConfig bigQueryRetryConfig)
+          throws RetryHelperException {
     try {
       // Suppressing should be ok as a workaraund. Current and only ResultRetryAlgorithm
       // implementation does not use response at all, so ignoring its type is ok.
       @SuppressWarnings("unchecked")
       ResultRetryAlgorithm<V> algorithm = (ResultRetryAlgorithm<V>) resultRetryAlgorithm;
       return run(
-          callable,
-          new ExponentialRetryAlgorithm(retrySettings, clock),
-          algorithm,
-          bigQueryRetryConfig);
+              callable,
+              new ExponentialRetryAlgorithm(retrySettings, clock),
+              algorithm,
+              bigQueryRetryConfig);
     } catch (Exception e) {
       throw new BigQueryRetryHelperException(e.getCause());
     }
   }
 
   private static <V> V run(
-      Callable<V> callable,
-      TimedRetryAlgorithm timedAlgorithm,
-      ResultRetryAlgorithm<V> resultAlgorithm,
-      BigQueryRetryConfig bigQueryRetryConfig)
-      throws ExecutionException, InterruptedException {
+          Callable<V> callable,
+          TimedRetryAlgorithm timedAlgorithm,
+          ResultRetryAlgorithm<V> resultAlgorithm,
+          BigQueryRetryConfig bigQueryRetryConfig)
+          throws ExecutionException, InterruptedException {
     RetryAlgorithm<V> retryAlgorithm =
-        new BigQueryRetryAlgorithm<>(
-            resultAlgorithm,
-            timedAlgorithm,
-            bigQueryRetryConfig,
-            RETRY_UUID); // using BigQueryRetryAlgorithm in place of
+            new BigQueryRetryAlgorithm<>(
+                    resultAlgorithm,
+                    timedAlgorithm,
+                    bigQueryRetryConfig); // using BigQueryRetryAlgorithm in place of
     // com.google.api.gax.retrying.RetryAlgorithm, as
     // BigQueryRetryAlgorithm retries considering bigQueryRetryConfig
     RetryingExecutor<V> executor = new DirectRetryingExecutor<>(retryAlgorithm);
@@ -77,12 +74,11 @@ public class BigQueryRetryHelper extends RetryHelper {
     // Log retry info
     if (LOG.isLoggable(Level.FINEST)) {
       LOG.log(
-          Level.FINEST,
-          "Retrying with:\n{0}\n{1}",
-          new Object[] {
-            "BigQuery retried method: " + callable.getClass().getEnclosingMethod().getName(),
-            "Bigquery retry identifier: " + RETRY_UUID
-          });
+              Level.FINEST,
+              "Retrying with:\n{0}",
+              new Object[] {
+                      "BigQuery retried method: " + callable.getClass().getEnclosingMethod().getName(),
+              });
     }
 
     RetryingFuture<V> retryingFuture = executor.createFuture(callable);

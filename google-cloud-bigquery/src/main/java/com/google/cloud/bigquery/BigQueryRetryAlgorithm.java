@@ -39,30 +39,20 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
   private final TimedRetryAlgorithm timedAlgorithm;
   private final ResultRetryAlgorithmWithContext<ResponseT> resultAlgorithmWithContext;
   private final TimedRetryAlgorithmWithContext timedAlgorithmWithContext;
-  private final UUID retryUUID;
 
+  private static final UUID RETRY_UUID = UUID.randomUUID();;
   private static final Logger LOG = Logger.getLogger(BigQueryRetryAlgorithm.class.getName());
 
   public BigQueryRetryAlgorithm(
           ResultRetryAlgorithm<ResponseT> resultAlgorithm,
           TimedRetryAlgorithm timedAlgorithm,
-          BigQueryRetryConfig bigQueryRetryConfig,
-          UUID retryUUID) {
+          BigQueryRetryConfig bigQueryRetryConfig) {
     super(resultAlgorithm, timedAlgorithm);
     this.bigQueryRetryConfig = checkNotNull(bigQueryRetryConfig);
     this.resultAlgorithm = checkNotNull(resultAlgorithm);
     this.timedAlgorithm = checkNotNull(timedAlgorithm);
     this.resultAlgorithmWithContext = null;
     this.timedAlgorithmWithContext = null;
-    this.retryUUID = retryUUID;
-  }
-
-  public BigQueryRetryAlgorithm(
-          ResultRetryAlgorithm<ResponseT> resultAlgorithm,
-          TimedRetryAlgorithm timedAlgorithm,
-          BigQueryRetryConfig bigQueryRetryConfig) {
-    this(resultAlgorithm, timedAlgorithm, bigQueryRetryConfig, UUID.randomUUID());
-
   }
 
   @Override
@@ -95,7 +85,7 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
             "BigQuery retriableException: " + previousThrowable,
             "BigQuery shouldRetry: " + shouldRetry,
             "BigQuery previousThrowable.getMessage: " + errorMessage,
-            "Bigquery retry identifier: " + retryUUID
+            "Bigquery retry identifier: " + RETRY_UUID
           });
     }
     return shouldRetry;
