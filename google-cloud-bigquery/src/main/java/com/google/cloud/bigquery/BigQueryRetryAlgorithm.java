@@ -30,6 +30,7 @@ import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.UUID;
 import org.threeten.bp.Duration;
 
 public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT> {
@@ -40,6 +41,7 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
   private final TimedRetryAlgorithmWithContext timedAlgorithmWithContext;
 
   private static final Logger LOG = Logger.getLogger(BigQueryRetryAlgorithm.class.getName());
+  private static final UUID RETRY_UUID = UUID.randomUUID();
 
   public BigQueryRetryAlgorithm(
       ResultRetryAlgorithm<ResponseT> resultAlgorithm,
@@ -76,13 +78,14 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
     if (LOG.isLoggable(Level.FINEST)) {
       LOG.log(
           Level.FINEST,
-          "Retrying with:\n{0}\n{1}\n{2}\n{3}\n{4}",
+          "Retrying with:\n{0}\n{1}\n{2}\n{3}\n{4}\n{5}",
           new Object[] {
             "BigQuery attemptCount: " + attemptCount,
             "BigQuery delay: " + retryDelay,
             "BigQuery retriableException: " + previousThrowable,
             "BigQuery shouldRetry: " + shouldRetry,
-            "BigQuery previousThrowable.getMessage: " + errorMessage
+            "BigQuery previousThrowable.getMessage: " + errorMessage,
+            "BigQuery retry identifier: " + RETRY_UUID
           });
     }
     return shouldRetry;
