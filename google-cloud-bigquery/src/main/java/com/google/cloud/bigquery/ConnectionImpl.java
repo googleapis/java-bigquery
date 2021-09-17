@@ -127,16 +127,6 @@ final class ConnectionImpl implements Connection {
     }
   }
 
-  // Get's field's name is to type mapping
-  private Map<String, String> getFieldNameType(Schema schema) {
-    List<TableFieldSchema> fieldSchemas = schema.getFields().toPb();
-    Map<String, String> nameType = new HashMap<>();
-    for (TableFieldSchema fieldSchema : fieldSchemas) {
-      nameType.put(fieldSchema.getName(), fieldSchema.getType());
-    }
-    return nameType;
-  }
-
   private ResultSet processQueryResponseResults(
       com.google.api.services.bigquery.model.QueryResponse results) {
     Schema schema;
@@ -162,7 +152,7 @@ final class ConnectionImpl implements Connection {
 
     // only 1 page of result
     if (results.getPageToken() == null) {
-      return new BigQueryResultSetImpl<TableRow>(schema, numRows, getFieldNameType(schema), buffer);
+      return new BigQueryResultSetImpl<TableRow>(schema, numRows, buffer);
     }
     // use tabledata.list or Read API to fetch subsequent pages of results
     long totalRows = results.getTotalRows().longValue();

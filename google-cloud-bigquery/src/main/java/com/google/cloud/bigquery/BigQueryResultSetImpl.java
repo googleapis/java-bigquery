@@ -18,8 +18,8 @@ package com.google.cloud.bigquery;
 
 import com.google.api.services.bigquery.model.TableRow;
 import java.math.BigDecimal;
-import java.sql.*;
-import java.util.Map;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.concurrent.BlockingQueue;
 
 // TODO: This implementation deals with the JSON response. We can have respective implementations
@@ -28,17 +28,13 @@ public class BigQueryResultSetImpl<T> extends AbstractJdbcResultSet
 
   private final Schema schema;
   private final long totalRows;
-  // private final ResultSet nextRow;
-  private final Map<String, String> nameType; // TODO: Remove
-  private final BlockingQueue<T> buffer; // TableRow
+  private final BlockingQueue<T> buffer;
   private T cursor;
 
   // TODO : Implement a wrapper/struct like spanner
-  public BigQueryResultSetImpl(
-      Schema schema, long totalRows, Map<String, String> nameType, BlockingQueue<T> buffer) {
+  public BigQueryResultSetImpl(Schema schema, long totalRows, BlockingQueue<T> buffer) {
     this.schema = schema;
     this.totalRows = totalRows;
-    this.nameType = nameType;
     this.buffer = buffer;
   }
 
