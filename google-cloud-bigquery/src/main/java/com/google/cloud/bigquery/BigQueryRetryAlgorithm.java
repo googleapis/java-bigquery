@@ -26,11 +26,11 @@ import com.google.api.gax.retrying.TimedAttemptSettings;
 import com.google.api.gax.retrying.TimedRetryAlgorithm;
 import com.google.api.gax.retrying.TimedRetryAlgorithmWithContext;
 import java.util.Iterator;
+import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import java.util.UUID;
 import org.threeten.bp.Duration;
 
 public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT> {
