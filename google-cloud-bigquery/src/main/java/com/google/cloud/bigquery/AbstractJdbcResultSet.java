@@ -933,11 +933,6 @@ abstract class AbstractJdbcResultSet implements ResultSet {
   }
 
   @Override
-  public int getInt(String columnLabel) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  @Override
   public byte[] getBytes(String columnLabel) throws SQLException {
     throw new SQLFeatureNotSupportedException();
   }

@@ -17,7 +17,6 @@
 package com.google.cloud.bigquery;
 
 import com.google.api.services.bigquery.model.QueryParameter;
-import java.sql.ResultSet;
 import java.util.List;
 import java.util.Map;
 
@@ -55,7 +54,8 @@ public interface Connection {
    *   //         .build();
    *   // Connection connection = bigquery.createConnection(connectionSettings);
    *   String selectQuery = "SELECT corpus FROM `bigquery-public-data.samples.shakespeare` GROUP BY corpus;";
-   *   try (ResultSet rs = connection.executeSelect(selectQuery)) {
+   *   try (BigQueryResultSet bqResultSet = connection.executeSelect(selectQuery)) {
+   *       ResultSet rs = bqResultSet.getResultSet();
    *       while (rs.next()) {
    *           System.out.printf("%s,", rs.getString("corpus"));
    *       }
@@ -69,7 +69,7 @@ public interface Connection {
    * @return a ResultSet that contains the data produced by the query
    * @exception BigQuerySQLException if a database access error occurs
    */
-  ResultSet executeSelect(String sql) throws BigQuerySQLException;
+  BigQueryResultSet executeSelect(String sql) throws BigQuerySQLException;
 
   /**
    * Execute a SQL statement with query parameters that returns a single ResultSet
@@ -86,6 +86,7 @@ public interface Connection {
    * @return a ResultSet that contains the data produced by the query
    * @exception BigQuerySQLException if a database access error occurs
    */
-  ResultSet executeSelect(String sql, List<QueryParameter> parameters, Map<String, String> labels)
+  BigQueryResultSet executeSelect(
+      String sql, List<QueryParameter> parameters, Map<String, String> labels)
       throws BigQuerySQLException;
 }
