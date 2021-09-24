@@ -167,4 +167,16 @@ public class BigQueryResultSetImpl<T> extends AbstractJdbcResultSet
       return Timestamp.valueOf(String.valueOf(value));
     }
   }
+
+  @Override
+  public int getInt(String fieldName) throws SQLException {
+    Object value = getObject(fieldName);
+    if (value == null) {
+      throw new SQLException("fieldName can't be null");
+    } else if (!(value instanceof Integer || value instanceof String)) {
+      throw new SQLException("value cannot be converted to int");
+    } else {
+      return Integer.parseInt(String.valueOf(value));
+    }
+  }
 }
