@@ -37,7 +37,7 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
     this.schema = schema;
     this.totalRows = totalRows;
     this.buffer = buffer;
-    underlyingResultSet = new ResultSetWrapper();
+    this.underlyingResultSet = new ResultSetWrapper();
   }
 
   @Override
