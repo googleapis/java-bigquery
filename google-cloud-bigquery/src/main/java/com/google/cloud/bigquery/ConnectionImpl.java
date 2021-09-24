@@ -25,7 +25,6 @@ import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
-import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -61,7 +60,7 @@ final class ConnectionImpl implements Connection {
   }
 
   @Override
-  public ResultSet executeSelect(String sql) throws BigQuerySQLException {
+  public BigQueryResultSet executeSelect(String sql) throws BigQuerySQLException {
     // use jobs.query if all the properties of connectionSettings are supported
     if (isFastQuerySupported()) {
       String projectId = bigQueryOptions.getProjectId();
@@ -75,7 +74,7 @@ final class ConnectionImpl implements Connection {
   }
 
   @Override
-  public ResultSet executeSelect(
+  public BigQueryResultSet executeSelect(
       String sql, List<QueryParameter> parameters, Map<String, String> labels)
       throws BigQuerySQLException {
     // use jobs.query if possible
@@ -91,7 +90,7 @@ final class ConnectionImpl implements Connection {
     return null; // TODO getQueryResultsRpc(JobId.fromPb(queryJob.getJobReference()));
   }
 
-  private ResultSet queryRpc(final String projectId, final QueryRequest queryRequest) {
+  private BigQueryResultSet queryRpc(final String projectId, final QueryRequest queryRequest) {
     com.google.api.services.bigquery.model.QueryResponse results;
     try {
       results =
@@ -127,7 +126,7 @@ final class ConnectionImpl implements Connection {
     }
   }
 
-  private ResultSet processQueryResponseResults(
+  private BigQueryResultSet processQueryResponseResults(
       com.google.api.services.bigquery.model.QueryResponse results) {
     Schema schema;
     long numRows;
