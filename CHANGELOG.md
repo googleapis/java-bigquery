@@ -1,5 +1,55 @@
 # Changelog
 
+### [2.1.12](https://www.github.com/googleapis/java-bigquery/compare/v2.1.11...v2.1.12) (2021-09-24)
+
+
+### Dependencies
+
+* update dependency com.google.cloud:google-cloud-bigtable to v2.1.4 ([#1616](https://www.github.com/googleapis/java-bigquery/issues/1616)) ([3e3b1da](https://www.github.com/googleapis/java-bigquery/commit/3e3b1da0f9e4006a83ed824f8ed67a9798219bee))
+* update dependency com.google.cloud:google-cloud-storage to v2.1.5 ([#1615](https://www.github.com/googleapis/java-bigquery/issues/1615)) ([00cc068](https://www.github.com/googleapis/java-bigquery/commit/00cc0682b694bcdad927e0ec1770b99896402563))
+
+### [2.1.11](https://www.github.com/googleapis/java-bigquery/compare/v2.1.10...v2.1.11) (2021-09-22)
+
+
+### Dependencies
+
+* update dependency com.google.cloud:google-cloud-bigtable to v2.1.3 ([#1609](https://www.github.com/googleapis/java-bigquery/issues/1609)) ([6b04f76](https://www.github.com/googleapis/java-bigquery/commit/6b04f769ad5fb2eaa0eec57a5e937b81413c95e3))
+* update dependency com.google.cloud:google-cloud-shared-dependencies to v2.3.0 ([#1610](https://www.github.com/googleapis/java-bigquery/issues/1610)) ([fb3895e](https://www.github.com/googleapis/java-bigquery/commit/fb3895e811cdec46b05f2188cd054788fcb03a1d))
+
+### [2.1.10](https://www.github.com/googleapis/java-bigquery/compare/v2.1.9...v2.1.10) (2021-09-22)
+
+
+### Bug Fixes
+
+* add retrySetting in logging ([#1604](https://www.github.com/googleapis/java-bigquery/issues/1604)) ([1a96cb0](https://www.github.com/googleapis/java-bigquery/commit/1a96cb076ded8eae8c34962aa00e914ba197b516))
+
+
+### Dependencies
+
+* update dependency com.google.apis:google-api-services-bigquery to v2-rev20210910-1.32.1 ([#1602](https://www.github.com/googleapis/java-bigquery/issues/1602)) ([1ccac9a](https://www.github.com/googleapis/java-bigquery/commit/1ccac9a6ca891fd160911de524e8227414b29e75))
+
+### [2.1.9](https://www.github.com/googleapis/java-bigquery/compare/v2.1.8...v2.1.9) (2021-09-21)
+
+
+### Bug Fixes
+
+* do not throw NPE from BigQueryImpl.testIamPermissions ([#1596](https://www.github.com/googleapis/java-bigquery/issues/1596)) ([4251b19](https://www.github.com/googleapis/java-bigquery/commit/4251b19f5b240b907aa5fc6d0cc64026245714cf))
+
+
+### Dependencies
+
+* update dependency com.google.cloud:google-cloud-storage to v2.1.4 ([#1597](https://www.github.com/googleapis/java-bigquery/issues/1597)) ([354cf7f](https://www.github.com/googleapis/java-bigquery/commit/354cf7f3a8dd8cf24d9a5f7e3377591a13b60863))
+
+### [2.1.8](https://www.github.com/googleapis/java-bigquery/compare/v2.1.7...v2.1.8) (2021-09-16)
+
+
+### Dependencies
+
+* update dependency com.google.apis:google-api-services-bigquery to v2-rev20210904-1.32.1 ([#1584](https://www.github.com/googleapis/java-bigquery/issues/1584)) ([9b42705](https://www.github.com/googleapis/java-bigquery/commit/9b42705e670e095cfd48b239e814d6608f4748c7))
+* update dependency com.google.cloud:google-cloud-bigtable to v2.1.2 ([#1585](https://www.github.com/googleapis/java-bigquery/issues/1585)) ([114d587](https://www.github.com/googleapis/java-bigquery/commit/114d587e4b6bf25df3a33a7d9bfc2d22cb929812))
+* update dependency com.google.cloud:google-cloud-shared-dependencies to v2.2.1 ([#1586](https://www.github.com/googleapis/java-bigquery/issues/1586)) ([7478903](https://www.github.com/googleapis/java-bigquery/commit/747890305f503a8b8e2406d3c51b4b7e0fae0741))
+* update dependency com.google.cloud:google-cloud-storage to v2.1.3 ([#1587](https://www.github.com/googleapis/java-bigquery/issues/1587)) ([f006fd0](https://www.github.com/googleapis/java-bigquery/commit/f006fd02d2966e358d53af7da4a86901ad64e4e9))
+
 ### [2.1.7](https://www.github.com/googleapis/java-bigquery/compare/v2.1.6...v2.1.7) (2021-09-07)
 
 

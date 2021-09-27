@@ -1501,7 +1501,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               getOptions().getRetrySettings(),
               EXCEPTION_HANDLER,
               getOptions().getClock());
-      return ImmutableList.copyOf(response.getPermissions());
+      return response.getPermissions() == null
+          ? ImmutableList.of()
+          : ImmutableList.copyOf(response.getPermissions());
     } catch (RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
     }
