@@ -50,8 +50,11 @@ import com.google.cloud.bigquery.BigQuery.TableField;
 import com.google.cloud.bigquery.BigQuery.TableOption;
 import com.google.cloud.bigquery.BigQueryError;
 import com.google.cloud.bigquery.BigQueryException;
+import com.google.cloud.bigquery.BigQueryResultSet;
 import com.google.cloud.bigquery.Clustering;
+import com.google.cloud.bigquery.Connection;
 import com.google.cloud.bigquery.ConnectionProperty;
+import com.google.cloud.bigquery.ConnectionSettings;
 import com.google.cloud.bigquery.CopyJobConfiguration;
 import com.google.cloud.bigquery.Dataset;
 import com.google.cloud.bigquery.DatasetId;
@@ -127,6 +130,8 @@ import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -1949,6 +1954,21 @@ public class ITBigQueryTest {
     }
     assertEquals(1, result.getTotalRows());
     assertTrue(bigquery.delete(tableId));
+  }
+
+  @Test
+  public void testExecuteQuerySinglePageTableRow() throws SQLException {
+    String query = "SELECT * FROM " + TABLE_ID_FASTQUERY.getTable();
+    ConnectionSettings connectionSettings =
+        ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
+    Connection connection = bigquery.createConnection(connectionSettings);
+    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
+    ResultSet rs = bigQueryResultSet.getResultSet();
+    while (rs.next()) {
+      // System.out.println(rs.getString("TimestampField"));
+    }
+    // assertEquals(QUERY_RESULT_SCHEMA, bigQueryResultSet.getSchema());
+    // assertEquals(2, bigQueryResultSet.getTotalRows());
   }
 
   @Test

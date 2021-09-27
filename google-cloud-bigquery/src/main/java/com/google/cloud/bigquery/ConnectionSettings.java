@@ -23,6 +23,7 @@ import com.google.cloud.bigquery.JobInfo.WriteDisposition;
 import com.google.cloud.bigquery.QueryJobConfiguration.Priority;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /** ConnectionSettings for setting up a BigQuery query connection. */
 @AutoValue
@@ -32,24 +33,30 @@ public abstract class ConnectionSettings {
   }
 
   /** Returns the synchronous response timeoutMs associated with this query */
+  @Nullable
   public abstract Long getRequestTimeout();
 
   /** Returns the connection properties for connection string with this query */
+  @Nullable
   public abstract List<ConnectionProperty> getConnectionProperties();
 
   /** Returns the default dataset */
   public abstract DatasetId getDefaultDataset();
 
   /** Returns the limits the bytes billed for this job */
+  @Nullable
   public abstract Long getMaximumBytesBilled();
 
   /** Returns the maximum number of rows of data */
+  @Nullable
   public abstract Long getMaxResults();
 
   /** Returns the number of rows of data to pre-fetch */
+  @Nullable
   public abstract Long getPrefetchedRowLimit();
 
   /** Returns whether to look for the result in the query cache */
+  @Nullable
   public abstract Boolean getUseQueryCache();
 
   /**
@@ -58,9 +65,11 @@ public abstract class ConnectionSettings {
    *
    * @see <a href="https://cloud.google.com/bigquery/docs/data#flatten">Flatten</a>
    */
+  @Nullable
   public abstract Boolean getFlattenResults();
 
   /** Returns the BigQuery Storage read API configuration */
+  @Nullable
   public abstract ReadClientConnectionConfiguration getReadClientConnectionConfiguration();
 
   /**
@@ -69,6 +78,7 @@ public abstract class ConnectionSettings {
    */
 
   /** Returns the clustering specification for the destination table. */
+  @Nullable
   public abstract Clustering getClustering();
 
   /**
@@ -78,24 +88,30 @@ public abstract class ConnectionSettings {
    *     href="https://cloud.google.com/bigquery/docs/reference/v2/jobs#configuration.query.createDisposition">
    *     Create Disposition</a>
    */
+  @Nullable
   public abstract CreateDisposition getCreateDisposition();
 
   /** Returns the custom encryption configuration (e.g., Cloud KMS keys) */
+  @Nullable
   public abstract EncryptionConfiguration getDestinationEncryptionConfiguration();
 
   /**
    * Returns the table where to put query results. If not provided a new table is created. This
    * value is required if {@link #allowLargeResults()} is {@code true}.
    */
+  @Nullable
   public abstract TableId getDestinationTable();
 
   /** Returns the timeout associated with this job */
+  @Nullable
   public abstract Long getJobTimeoutMs();
 
   /** Returns the optional billing tier limit for this job. */
+  @Nullable
   public abstract Integer getMaximumBillingTier();
 
   /** Returns the query priority. */
+  @Nullable
   public abstract Priority getPriority();
 
   /**
@@ -106,9 +122,11 @@ public abstract class ConnectionSettings {
    * @see <a href="https://cloud.google.com/bigquery/querying-data#largequeryresults">Returning
    *     Large Query Results</a>
    */
+  @Nullable
   public abstract Boolean getAllowLargeResults();
 
   /** Returns the range partitioning specification for the table */
+  @Nullable
   public abstract RangePartitioning getRangePartitioning();
 
   /**
@@ -118,6 +136,7 @@ public abstract class ConnectionSettings {
    * table is a partition of a table, specified by partition decorators. For normal tables,
    * WRITE_TRUNCATE will always overwrite the schema.
    */
+  @Nullable
   public abstract List<SchemaUpdateOption> getSchemaUpdateOptions();
 
   /**
@@ -126,9 +145,11 @@ public abstract class ConnectionSettings {
    * defining these properties, the data sources can be queried as if they were standard BigQuery
    * tables.
    */
+  @Nullable
   public abstract Map<String, ExternalTableDefinition> getTableDefinitions();
 
   /** Returns the time partitioning specification for the destination table. */
+  @Nullable
   public abstract TimePartitioning getTimePartitioning();
 
   /**
@@ -136,6 +157,7 @@ public abstract class ConnectionSettings {
    * either be defined inline ({@link UserDefinedFunction.Type#INLINE}) or loaded from a Google
    * Cloud Storage URI ({@link UserDefinedFunction.Type#FROM_URI}.
    */
+  @Nullable
   public abstract List<UserDefinedFunction> getUserDefinedFunctions();
 
   /**
@@ -145,6 +167,7 @@ public abstract class ConnectionSettings {
    *     href="https://cloud.google.com/bigquery/docs/reference/v2/jobs#configuration.query.writeDisposition">
    *     Write Disposition</a>
    */
+  @Nullable
   public abstract WriteDisposition getWriteDisposition();
 
   /** Returns a builder pre-populated using the current values of this field. */
