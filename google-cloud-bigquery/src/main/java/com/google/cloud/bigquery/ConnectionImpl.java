@@ -217,7 +217,7 @@ final class ConnectionImpl implements Connection {
                           completeTableId.getProject(),
                           completeTableId.getDataset(),
                           completeTableId.getTable(),
-                          connectionSettings.getPrefetchedRowLimit()),
+                          connectionSettings.getNumBufferedRows()),
               bigQueryOptions.getRetrySettings(),
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               bigQueryOptions.getClock());
@@ -255,7 +255,7 @@ final class ConnectionImpl implements Connection {
                       completeJobId.getProject(),
                       completeJobId.getJob(),
                       completeJobId.getLocation(),
-                      connectionSettings.getPrefetchedRowLimit()),
+                      connectionSettings.getNumBufferedRows()),
               bigQueryOptions.getRetrySettings(),
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               bigQueryOptions.getClock(),

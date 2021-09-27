@@ -53,7 +53,7 @@ public abstract class ConnectionSettings {
 
   /** Returns the number of rows of data to pre-fetch */
   @Nullable
-  public abstract Long getPrefetchedRowLimit();
+  public abstract Long getNumBufferedRows();
 
   /** Returns whether to look for the result in the query cache */
   @Nullable
@@ -227,9 +227,9 @@ public abstract class ConnectionSettings {
     /**
      * Sets the number of rows of data to pre-fetch during query execution.
      *
-     * @param prefetchedRowLimit prefetchedRowLimit or {@code null} for none
+     * @param numBufferedRows prefetchedRowLimit or {@code null} for none
      */
-    public abstract Builder setPrefetchedRowLimit(Long prefetchedRowLimit);
+    public abstract Builder setNumBufferedRows(Long numBufferedRows);
 
     /**
      * Sets whether to look for the result in the query cache. The query cache is a best-effort
