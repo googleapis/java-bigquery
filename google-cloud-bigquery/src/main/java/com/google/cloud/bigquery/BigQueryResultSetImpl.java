@@ -30,9 +30,8 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
   private final long totalRows;
   private final BlockingQueue<T> buffer;
   private T cursor;
-  private ResultSetWrapper underlyingResultSet = null;
+  private final ResultSetWrapper underlyingResultSet;
 
-  // TODO : Implement a wrapper/struct like spanner
   public BigQueryResultSetImpl(Schema schema, long totalRows, BlockingQueue<T> buffer) {
     this.schema = schema;
     this.totalRows = totalRows;
@@ -59,24 +58,31 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
     @Override
     /*Advances the result set to the next row, returning false if no such row exists. Potentially blocking operation*/
     public boolean next() throws SQLException {
-      if (buffer.peek() == null) { // producer has no more rows left.
-        return false;
-      }
       try {
         cursor = buffer.take(); // advance the cursor,Potentially blocking operation
+        if (isEndOfStream(cursor)) { // check for end of stream
+          cursor = null;
+          return false;
+        }
       } catch (InterruptedException e) {
-        throw new SQLException("No rows left");
+        throw new SQLException("Error occurred while reading buffer");
       }
 
       return true;
     }
 
+    private boolean isEndOfStream(T cursor) {
+      return cursor
+          instanceof
+          ConnectionImpl.EndOfFieldValueList; // TODO: Similar check will be required for Arrow
+    }
+
     @Override
     public Object getObject(String fieldName) throws SQLException {
-      if (cursor instanceof TableRow) {
+      if (cursor != null && cursor instanceof TableRow) {
         TableRow currentRow = (TableRow) cursor;
-        if (currentRow == null) {
-          throw new SQLException("No rows left");
+        if (fieldName == null) {
+          throw new SQLException("fieldName can't be null");
         }
         return currentRow.get(fieldName);
       }
@@ -86,14 +92,15 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
 
     @Override
     public String getString(String fieldName) throws SQLException {
-      Object value = getObject(fieldName);
-      if (value == null) {
+      if (fieldName == null) {
         throw new SQLException("fieldName can't be null");
-      } else if (!(value instanceof String)) {
-        throw new SQLException("value not in instance of String");
-      } else {
-        return (String) value;
       }
+      if (cursor == null) {
+        return null;
+      } else if (cursor instanceof FieldValueList) {
+        return ((FieldValueList) cursor).get(fieldName).getStringValue();
+      }
+      return null; // TODO: Implementation for Arrow
     }
 
     @Override
