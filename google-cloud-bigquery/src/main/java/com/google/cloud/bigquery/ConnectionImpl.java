@@ -22,8 +22,10 @@ import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import com.google.api.services.bigquery.model.*;
 import com.google.cloud.RetryHelper;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
+import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
@@ -90,6 +92,21 @@ final class ConnectionImpl implements Connection {
     return null; // TODO getQueryResultsRpc(JobId.fromPb(queryJob.getJobReference()));
   }
 
+  static class EndOfFieldValueList
+      extends AbstractList<
+          FieldValue> { // A reference of this class is used as a token to inform the thread
+                        // consuming `buffer` BigQueryResultSetImpl that we have run out of records
+    @Override
+    public FieldValue get(int index) {
+      return null;
+    }
+
+    @Override
+    public int size() {
+      return 0;
+    }
+  }
+
   private BigQueryResultSet queryRpc(final String projectId, final QueryRequest queryRequest) {
     com.google.api.services.bigquery.model.QueryResponse results;
     try {
@@ -126,6 +143,21 @@ final class ConnectionImpl implements Connection {
     }
   }
 
+  private static Iterable<FieldValueList> getIterableFieldValueList(
+      Iterable<TableRow> tableDataPb, final Schema schema) {
+    return ImmutableList.copyOf(
+        Iterables.transform(
+            tableDataPb != null ? tableDataPb : ImmutableList.<TableRow>of(),
+            new Function<TableRow, FieldValueList>() {
+              FieldList fields = schema != null ? schema.getFields() : null;
+
+              @Override
+              public FieldValueList apply(TableRow rowPb) {
+                return FieldValueList.fromPb(rowPb.getF(), fields);
+              }
+            }));
+  }
+
   private BigQueryResultSet processQueryResponseResults(
       com.google.api.services.bigquery.model.QueryResponse results) {
     Schema schema;
@@ -133,17 +165,27 @@ final class ConnectionImpl implements Connection {
     schema = Schema.fromPb(results.getSchema());
     numRows = results.getTotalRows().longValue();
 
+    Iterable<FieldValueList> fieldValueLists = getIterableFieldValueList(results.getRows(), schema);
+
     // Producer thread for populating the buffer row by row
-    BlockingQueue<TableRow> buffer =
+    BlockingQueue<AbstractList<FieldValue>> buffer =
         new LinkedBlockingDeque<>(1000); // TODO: Update the capacity. Prefetch limit
     Runnable populateBufferRunnable =
         () -> { // producer thread populating the buffer
-          List<TableRow> tableRows = results.getRows();
-          for (TableRow tableRow : tableRows) { // TODO: Handle the logic of pagination
-            buffer.offer(tableRow);
+          // List<TableRow> tableRows = results.getRows();
+          for (FieldValueList fieldValueList :
+              fieldValueLists) { // TODO: Handle the logic of pagination
+            try {
+              buffer.put(fieldValueList);
+            } catch (InterruptedException e) {
+              e.printStackTrace();
+            }
           }
+
           if (results.getPageToken() == null) {
-            buffer.offer(null); // null marks the end of the records
+            buffer.offer(
+                new EndOfFieldValueList()); // A Hack to inform the BQResultSet that the blocking
+                                            // queue won't be populated with more records
           }
         };
     Thread populateBufferWorker = new Thread(populateBufferRunnable);
@@ -151,7 +193,7 @@ final class ConnectionImpl implements Connection {
 
     // only 1 page of result
     if (results.getPageToken() == null) {
-      return new BigQueryResultSetImpl<TableRow>(schema, numRows, buffer);
+      return new BigQueryResultSetImpl<AbstractList<FieldValue>>(schema, numRows, buffer);
     }
     // use tabledata.list or Read API to fetch subsequent pages of results
     long totalRows = results.getTotalRows().longValue();
