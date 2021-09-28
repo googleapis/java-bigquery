@@ -95,7 +95,7 @@ final class ConnectionImpl implements Connection {
   static class EndOfFieldValueList
       extends AbstractList<
           FieldValue> { // A reference of this class is used as a token to inform the thread
-                        // consuming `buffer` BigQueryResultSetImpl that we have run out of records
+    // consuming `buffer` BigQueryResultSetImpl that we have run out of records
     @Override
     public FieldValue get(int index) {
       return null;
@@ -185,7 +185,7 @@ final class ConnectionImpl implements Connection {
           if (results.getPageToken() == null) {
             buffer.offer(
                 new EndOfFieldValueList()); // A Hack to inform the BQResultSet that the blocking
-                                            // queue won't be populated with more records
+            // queue won't be populated with more records
           }
         };
     Thread populateBufferWorker = new Thread(populateBufferRunnable);
