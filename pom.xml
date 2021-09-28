@@ -4,7 +4,7 @@
   <groupId>com.google.cloud</groupId>
   <artifactId>google-cloud-bigquery-parent</artifactId>
   <packaging>pom</packaging>
-  <version>2.1.8-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
+  <version>2.1.13-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
   <name>BigQuery Parent</name>
   <url>https://github.com/googleapis/java-bigquery</url>
   <description>
@@ -14,7 +14,7 @@
   <parent>
     <groupId>com.google.cloud</groupId>
     <artifactId>google-cloud-shared-config</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.3</version>
   </parent>
 
   <developers>
@@ -53,9 +53,9 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <github.global.server>github</github.global.server>
     <site.installationModule>google-cloud-bigquery-parent</site.installationModule>
-    <google-api-services-bigquery.version>v2-rev20210828-1.32.1
+    <google-api-services-bigquery.version>v2-rev20210910-1.32.1
     </google-api-services-bigquery.version>
-    <google.cloud.shared-dependencies.version>2.2.0</google.cloud.shared-dependencies.version>
+    <google.cloud.shared-dependencies.version>2.3.0</google.cloud.shared-dependencies.version>
   </properties>
 
   <dependencyManagement>
@@ -77,7 +77,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-bigquery</artifactId>
-        <version>2.1.8-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
+        <version>2.1.13-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
       </dependency>
 
       <dependency>
@@ -114,19 +114,19 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-storage</artifactId>
-        <version>2.1.1</version>
+        <version>2.1.5</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-datacatalog</artifactId>
-        <version>1.5.4</version>
+        <version>1.5.7</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>com.google.api.grpc</groupId>
         <artifactId>proto-google-cloud-datacatalog-v1</artifactId>
-        <version>1.5.4</version>
+        <version>1.5.7</version>
         <scope>test</scope>
       </dependency>
       <dependency>

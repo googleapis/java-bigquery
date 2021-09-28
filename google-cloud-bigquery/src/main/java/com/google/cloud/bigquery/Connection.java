@@ -55,7 +55,7 @@ public interface Connection {
    *   // Connection connection = bigquery.createConnection(connectionSettings);
    *   String selectQuery = "SELECT corpus FROM `bigquery-public-data.samples.shakespeare` GROUP BY corpus;";
    *   try (BigQueryResultSet bqResultSet = connection.executeSelect(selectQuery)) {
-   *       ResultSet rs = bqResultSet.getUnderlyingResultSet();
+   *       ResultSet rs = bqResultSet.getResultSet();
    *       while (rs.next()) {
    *           System.out.printf("%s,", rs.getString("corpus"));
    *       }

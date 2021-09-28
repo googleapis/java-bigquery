@@ -18,6 +18,7 @@ package com.google.cloud.bigquery;
 
 import com.google.auto.value.AutoValue;
 import java.io.Serializable;
+import javax.annotation.Nullable;
 
 /** Represents BigQueryStorage Read client connection information. */
 @AutoValue
@@ -30,15 +31,18 @@ public abstract class ReadClientConnectionConfiguration implements Serializable 
      * Sets the total row count to page row count ratio used to determine whether to us the
      * BigQueryStorage Read client to fetch result sets after the first page.
      */
+    @Nullable
     public abstract Builder setTotalToPageRowCountRatio(Long ratio);
 
     /**
      * Sets the minimum number of table rows in the query results used to determine whether to us
      * the BigQueryStorage Read client to fetch result sets after the first page.
      */
+    @Nullable
     public abstract Builder setMinResultSize(Long numRows);
 
     /** Sets the buffer size during streaming from the BigQueryStorage Read client. */
+    @Nullable
     public abstract Builder setBufferSize(Long bufferSize);
 
     /** Creates a {@code ReadClientConnectionConfiguration} object. */
