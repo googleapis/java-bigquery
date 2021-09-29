@@ -1958,17 +1958,21 @@ public class ITBigQueryTest {
 
   @Test
   public void testExecuteQuerySinglePageTableRow() throws SQLException {
-    String query = "SELECT * FROM " + TABLE_ID_FASTQUERY.getTable();
+    String query =
+        "SELECT TimestampField, StringField, BooleanField  FROM " + TABLE_ID_FASTQUERY.getTable();
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
     Connection connection = bigquery.createConnection(connectionSettings);
     BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
     ResultSet rs = bigQueryResultSet.getResultSet();
-    while (rs.next()) {
-      // System.out.println(rs.getString("TimestampField"));
-    }
-    // assertEquals(QUERY_RESULT_SCHEMA, bigQueryResultSet.getSchema());
-    // assertEquals(2, bigQueryResultSet.getTotalRows());
+    // while (rs.next()) {
+    // System.out.println(rs.getString("TimestampField"));
+    // }
+    assertEquals(QUERY_RESULT_SCHEMA, bigQueryResultSet.getSchema());
+    assertEquals(2, bigQueryResultSet.getTotalRows());
+    assertTrue(rs.next());
+    assertTrue(rs.next());
+    assertFalse(rs.next()); // it should return false for the third call as the table has 2 rows
   }
 
   @Test
