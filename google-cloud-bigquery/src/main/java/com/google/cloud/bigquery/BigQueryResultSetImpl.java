@@ -103,14 +103,14 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       return null; // TODO: Implementation for Arrow
     }
 
-
     @Override
     public int getInt(String fieldName) throws SQLException {
       if (fieldName == null) {
         throw new SQLException("fieldName can't be null");
       }
       if (cursor == null) {
-        return 0;//the column value; if the value is SQL NULL, the value returned is 0 as per java.sql.ResultSet definition
+        return 0; // the column value; if the value is SQL NULL, the value returned is 0 as per
+        // java.sql.ResultSet definition
       } else if (cursor instanceof FieldValueList) {
         return ((FieldValueList) cursor).get(fieldName).getNumericValue().intValue();
       }
@@ -193,6 +193,5 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
         return Timestamp.valueOf(String.valueOf(value));
       }
     }
-
   }
 }
