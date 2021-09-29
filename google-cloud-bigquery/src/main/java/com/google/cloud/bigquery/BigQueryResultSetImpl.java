@@ -103,6 +103,20 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       return null; // TODO: Implementation for Arrow
     }
 
+
+    @Override
+    public int getInt(String fieldName) throws SQLException {
+      if (fieldName == null) {
+        throw new SQLException("fieldName can't be null");
+      }
+      if (cursor == null) {
+        return 0;//the column value; if the value is SQL NULL, the value returned is 0 as per java.sql.ResultSet definition
+      } else if (cursor instanceof FieldValueList) {
+        return ((FieldValueList) cursor).get(fieldName).getNumericValue().intValue();
+      }
+      return 0; // TODO: Implementation for Arrow
+    }
+
     @Override
     public long getLong(String fieldName) throws SQLException {
       Object value = getObject(fieldName);
@@ -180,16 +194,5 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       }
     }
 
-    @Override
-    public int getInt(String fieldName) throws SQLException {
-      Object value = getObject(fieldName);
-      if (value == null) {
-        throw new SQLException("fieldName can't be null");
-      } else if (!(value instanceof Integer || value instanceof String)) {
-        throw new SQLException("value cannot be converted to int");
-      } else {
-        return Integer.parseInt(String.valueOf(value));
-      }
-    }
   }
 }
