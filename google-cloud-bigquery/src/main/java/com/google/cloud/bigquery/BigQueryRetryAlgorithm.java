@@ -41,7 +41,7 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
   private final TimedRetryAlgorithmWithContext timedAlgorithmWithContext;
 
   private static final Logger LOG = Logger.getLogger(BigQueryRetryAlgorithm.class.getName());
-  private static final UUID RETRY_UUID = UUID.randomUUID();
+  private final UUID retryUuid = UUID.randomUUID();
 
   public BigQueryRetryAlgorithm(
       ResultRetryAlgorithm<ResponseT> resultAlgorithm,
@@ -78,15 +78,15 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
     if (LOG.isLoggable(Level.FINEST)) {
       LOG.log(
           Level.FINEST,
-          "Retrying with:\n{0}\n{1}\n{2}\n{3}\n{4}\n{5}",
-          new Object[] {
-            "BigQuery attemptCount: " + attemptCount,
-            "BigQuery delay: " + retryDelay,
-            "BigQuery retriableException: " + previousThrowable,
-            "BigQuery shouldRetry: " + shouldRetry,
-            "BigQuery previousThrowable.getMessage: " + errorMessage,
-            "BigQuery retry identifier: " + RETRY_UUID
-          });
+          "shouldRetry result: [uuid: \"{0}\", shouldRetry: {1}, attemptCount: {2}, delay: \"{3}\", nextAttemptSettings: {4}, previousThrowable: \"{5}\"]",
+              new Object[] {
+                      retryUuid,
+                      shouldRetry,
+                      attemptCount,
+                      retryDelay,
+                      nextAttemptSettings,
+                      previousThrowable
+              });
     }
     return shouldRetry;
   }

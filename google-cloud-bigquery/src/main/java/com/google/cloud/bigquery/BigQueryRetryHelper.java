@@ -23,6 +23,7 @@ import com.google.api.gax.retrying.RetryAlgorithm;
 import com.google.api.gax.retrying.RetrySettings;
 import com.google.api.gax.retrying.RetryingExecutor;
 import com.google.api.gax.retrying.RetryingFuture;
+import com.google.api.gax.retrying.TimedAttemptSettings;
 import com.google.api.gax.retrying.TimedRetryAlgorithm;
 import com.google.cloud.RetryHelper;
 import java.util.concurrent.Callable;
@@ -52,7 +53,7 @@ public class BigQueryRetryHelper extends RetryHelper {
           algorithm,
           bigQueryRetryConfig);
     } catch (Exception e) {
-      throw new BigQueryRetryHelperException(e.getCause());
+      throw new BigQueryRetryHelperException(e);
     }
   }
 
@@ -73,12 +74,14 @@ public class BigQueryRetryHelper extends RetryHelper {
 
     // Log retry info
     if (LOG.isLoggable(Level.FINEST)) {
+      final TimedAttemptSettings firstAttempt = timedAlgorithm.createFirstAttempt();
+      final RetrySettings globalSettings = firstAttempt.getGlobalSettings();
       LOG.log(
-          Level.FINEST,
-          "Retrying with:\n{0}\n{1}",
+          Level.FINEST, 
+          "Retrying with: [callable: \"{0}\", settings: {1}]",
           new Object[] {
-            "BigQuery retried method: " + callable.getClass().getEnclosingMethod().getName(),
-            "BigQuery retry settings: " + timedAlgorithm.createFirstAttempt().getGlobalSettings()
+                  callable.toString(),
+                  globalSettings
           });
     }
 
