@@ -120,6 +120,8 @@ public class FormatOptions implements Serializable {
     checkArgument(!isNullOrEmpty(format), "Provided format is null or empty");
     if (format.equals(CSV)) {
       return csv();
+    } else if (format.equals(AVRO)) {
+      return avro();
     } else if (format.equals(DATASTORE_BACKUP)) {
       return datastoreBackup();
     } else if (format.equals(GOOGLE_SHEETS)) {
