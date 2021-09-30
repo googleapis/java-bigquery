@@ -77,12 +77,9 @@ public class BigQueryRetryHelper extends RetryHelper {
       final TimedAttemptSettings firstAttempt = timedAlgorithm.createFirstAttempt();
       final RetrySettings globalSettings = firstAttempt.getGlobalSettings();
       LOG.log(
-          Level.FINEST, 
+          Level.FINEST,
           "Retrying with: [callable: \"{0}\", settings: {1}]",
-          new Object[] {
-                  callable.toString(),
-                  globalSettings
-          });
+          new Object[] {callable.toString(), globalSettings});
     }
 
     RetryingFuture<V> retryingFuture = executor.createFuture(callable);

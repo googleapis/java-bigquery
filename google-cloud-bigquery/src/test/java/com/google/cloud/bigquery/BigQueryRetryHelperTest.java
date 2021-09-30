@@ -50,37 +50,34 @@ public class BigQueryRetryHelperTest {
 
   @Test
   public void parallelRetriesAllBehaveAsExpected() throws ExecutionException, InterruptedException {
-    BigQueryRetryConfig config = BigQueryRetryConfig.newBuilder()
-        .retryOnMessage("asdf")
-        .retryOnRegEx(".*dfdf.*")
-        .build();
+    BigQueryRetryConfig config =
+        BigQueryRetryConfig.newBuilder().retryOnMessage("asdf").retryOnRegEx(".*dfdf.*").build();
 
-    ThreadFactory threadFactory = new ThreadFactoryBuilder()
-        .setDaemon(true)
-        .setNameFormat("testing-%02d")
-        .build();
+    ThreadFactory threadFactory =
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("testing-%02d").build();
 
-    ListeningExecutorService exec = MoreExecutors.listeningDecorator(
-        Executors.newFixedThreadPool(4, threadFactory));
+    ListeningExecutorService exec =
+        MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(4, threadFactory));
 
     int endInclusive = 16;
-    RetrySettings retrySettings = RetrySettings.newBuilder()
-        .setMaxAttempts(6)
-        .setInitialRetryDelay(Duration.ofMillis(20))
-        .setRetryDelayMultiplier(1.25)
-        .setMaxRetryDelay(Duration.ofMinutes(1))
-        .build();
-    ListenableFuture<List<Result>> f = Futures.allAsList(
-        IntStream.rangeClosed(1, endInclusive)
-            .mapToObj(i -> exec.submit(new ResultCallable(i, config, retrySettings)))
-            .collect(Collectors.toList())
-    );
+    RetrySettings retrySettings =
+        RetrySettings.newBuilder()
+            .setMaxAttempts(6)
+            .setInitialRetryDelay(Duration.ofMillis(20))
+            .setRetryDelayMultiplier(1.25)
+            .setMaxRetryDelay(Duration.ofMinutes(1))
+            .build();
+    ListenableFuture<List<Result>> f =
+        Futures.allAsList(
+            IntStream.rangeClosed(1, endInclusive)
+                .mapToObj(i -> exec.submit(new ResultCallable(i, config, retrySettings)))
+                .collect(Collectors.toList()));
 
     List<Result> results = f.get();
 
     List<String> values = results.stream().map(r -> r.val).collect(Collectors.toList());
-    Map<String, List<String>> grouped = values.stream()
-        .collect(Collectors.groupingBy(Function.identity()));
+    Map<String, List<String>> grouped =
+        values.stream().collect(Collectors.groupingBy(Function.identity()));
     int sum = results.stream().mapToInt(r -> r.count).sum();
 
     assertThat(values).hasSize(endInclusive);
@@ -93,6 +90,7 @@ public class BigQueryRetryHelperTest {
   private static class Result {
     private final String val;
     private final int count;
+
     public Result(String val, int count) {
       this.val = val;
       this.count = count;
@@ -101,13 +99,13 @@ public class BigQueryRetryHelperTest {
 
   private static class ResultCallable implements Callable<Result> {
     private static final Logger LOGGER = Logger.getLogger(ResultCallable.class.getName());
-    private static final BasicResultRetryAlgorithm<String> RESULT_RETRY_ALGORITHM = new BasicResultRetryAlgorithm<String>() {
-      @Override
-      public boolean shouldRetry(Throwable previousThrowable,
-          String previousResponse) {
-          return previousThrowable instanceof GoogleJsonResponseException;
-      }
-    };
+    private static final BasicResultRetryAlgorithm<String> RESULT_RETRY_ALGORITHM =
+        new BasicResultRetryAlgorithm<String>() {
+          @Override
+          public boolean shouldRetry(Throwable previousThrowable, String previousResponse) {
+            return previousThrowable instanceof GoogleJsonResponseException;
+          }
+        };
 
     private final BigQueryRetryConfig config;
     private final int i;
@@ -123,13 +121,13 @@ public class BigQueryRetryHelperTest {
     @Override
     public Result call() {
       StringCallable stringCallable = new StringCallable(i);
-      String s = BigQueryRetryHelper.runWithRetries(
-          stringCallable,
-          settings,
-          RESULT_RETRY_ALGORITHM,
-          NanoClock.getDefaultClock(),
-          config
-      );
+      String s =
+          BigQueryRetryHelper.runWithRetries(
+              stringCallable,
+              settings,
+              RESULT_RETRY_ALGORITHM,
+              NanoClock.getDefaultClock(),
+              config);
       return new Result(s, stringCallable.counter.get() - 1);
     }
   }
@@ -155,8 +153,8 @@ public class BigQueryRetryHelperTest {
         GoogleJsonError googleJsonError = new GoogleJsonError();
         googleJsonError.setCode(503);
         throw new GoogleJsonResponseException(
-            new HttpResponseException.Builder(503, "service unavailable",
-                new HttpHeaders()), googleJsonError);
+            new HttpResponseException.Builder(503, "service unavailable", new HttpHeaders()),
+            googleJsonError);
       } else if (count >= 6) {
         return "Hello World";
       } else {

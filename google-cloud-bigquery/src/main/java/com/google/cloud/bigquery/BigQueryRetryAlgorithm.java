@@ -79,14 +79,9 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
       LOG.log(
           Level.FINEST,
           "shouldRetry result: [uuid: \"{0}\", shouldRetry: {1}, attemptCount: {2}, delay: \"{3}\", nextAttemptSettings: {4}, previousThrowable: \"{5}\"]",
-              new Object[] {
-                      retryUuid,
-                      shouldRetry,
-                      attemptCount,
-                      retryDelay,
-                      nextAttemptSettings,
-                      previousThrowable
-              });
+          new Object[] {
+            retryUuid, shouldRetry, attemptCount, retryDelay, nextAttemptSettings, previousThrowable
+          });
     }
     return shouldRetry;
   }
