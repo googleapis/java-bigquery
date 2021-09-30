@@ -9,5 +9,5 @@ __pycache__
 .diff.txt
 .new-list.txt
 .org-list.txt
-.flattened-pom.xml
 SimpleBenchmarkApp/src/main/java/com/google/cloud/App.java
+.flattened-pom.xml
