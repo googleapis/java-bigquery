@@ -49,7 +49,7 @@ import org.threeten.bp.Duration;
 public class BigQueryRetryHelperTest {
 
   @Test
-  public void parallelRetriesAllBehaveAsExpected() throws ExecutionException, InterruptedException {
+  public void testRetriesMultithread() throws ExecutionException, InterruptedException {
     BigQueryRetryConfig config =
         BigQueryRetryConfig.newBuilder().retryOnMessage("asdf").retryOnRegEx(".*dfdf.*").build();
 
