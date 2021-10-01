@@ -91,8 +91,8 @@ public class FormatOptions implements Serializable {
   }
 
   /** Default options for AVRO format. */
-  public static FormatOptions avro() {
-    return new FormatOptions(AVRO);
+  public static AvroOptions avro() {
+    return AvroOptions.newBuilder().build();
   }
 
   /** Default options for BIGTABLE format. */
