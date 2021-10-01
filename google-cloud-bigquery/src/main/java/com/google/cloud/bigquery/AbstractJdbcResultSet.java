@@ -63,6 +63,12 @@ abstract class AbstractJdbcResultSet implements ResultSet {
   }
 
   @Override
+  public byte getByte(String column) throws SQLException {
+    // TODO: Implement the logic
+    throw new RuntimeException("Not implemented");
+  }
+
+  @Override
   public short getShort(int columnIndex) throws SQLException {
     // TODO: Implement the logic
     throw new RuntimeException("Not implemented");
@@ -929,21 +935,6 @@ abstract class AbstractJdbcResultSet implements ResultSet {
 
   @Override
   public short getShort(String columnLabel) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  @Override
-  public byte[] getBytes(String columnLabel) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  @Override
-  public Date getDate(String columnLabel) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  @Override
-  public Time getTime(String columnLabel) throws SQLException {
     throw new SQLFeatureNotSupportedException();
   }
 
