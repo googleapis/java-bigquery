@@ -18,10 +18,6 @@ package com.google.cloud.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.api.client.googleapis.json.GoogleJsonError;
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.http.HttpHeaders;
-import com.google.api.client.http.HttpResponseException;
 import com.google.api.core.NanoClock;
 import com.google.api.gax.retrying.BasicResultRetryAlgorithm;
 import com.google.api.gax.retrying.RetrySettings;
@@ -31,15 +27,14 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.io.IOException;
-import java.net.SocketException;
+import java.net.ConnectException;
+import java.net.UnknownHostException;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -59,41 +54,41 @@ public class BigQueryRetryHelperTest {
     ListeningExecutorService exec =
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(4, threadFactory));
 
-    int endInclusive = 16;
+    int jobCount = 16;
+    int maxAttempts = 6;
     RetrySettings retrySettings =
         RetrySettings.newBuilder()
-            .setMaxAttempts(6)
+            .setMaxAttempts(maxAttempts)
             .setInitialRetryDelay(Duration.ofMillis(20))
             .setRetryDelayMultiplier(1.25)
             .setMaxRetryDelay(Duration.ofMinutes(1))
             .build();
     ListenableFuture<List<Result>> f =
         Futures.allAsList(
-            IntStream.rangeClosed(1, endInclusive)
+            IntStream.rangeClosed(1, jobCount)
                 .mapToObj(i -> exec.submit(new ResultCallable(i, config, retrySettings)))
                 .collect(Collectors.toList()));
 
-    List<Result> results = f.get();
+    List<Result> allJobResults = f.get();
 
-    List<String> values = results.stream().map(r -> r.val).collect(Collectors.toList());
-    Map<String, List<String>> grouped =
-        values.stream().collect(Collectors.groupingBy(Function.identity()));
-    int sum = results.stream().mapToInt(r -> r.count).sum();
+    List<String> allJobResultValues =
+        allJobResults.stream().map(r -> r.val).collect(Collectors.toList());
+    int allJobActualAttemptSum = allJobResults.stream().mapToInt(r -> r.numAttempts).sum();
 
-    assertThat(values).hasSize(endInclusive);
-    assertThat(grouped.values()).hasSize(1);
-    //noinspection OptionalGetWithoutIsPresent
-    assertThat(grouped.values().stream().findFirst().get()).hasSize(endInclusive);
-    assertThat(sum).isEqualTo(6 * endInclusive);
+    // ensure the number of jobs that produced values matches the number of jobs we ran
+    assertThat(allJobResultValues).hasSize(jobCount);
+    // ensure the total number of attempts across all jobs matches our max attempt count per job
+    //   times the number of jobs we ran
+    assertThat(allJobActualAttemptSum).isEqualTo(maxAttempts * jobCount);
   }
 
   private static class Result {
     private final String val;
-    private final int count;
+    private final int numAttempts;
 
-    public Result(String val, int count) {
+    public Result(String val, int numAttempts) {
       this.val = val;
-      this.count = count;
+      this.numAttempts = numAttempts;
     }
   }
 
@@ -103,24 +98,27 @@ public class BigQueryRetryHelperTest {
         new BasicResultRetryAlgorithm<String>() {
           @Override
           public boolean shouldRetry(Throwable previousThrowable, String previousResponse) {
-            return previousThrowable instanceof GoogleJsonResponseException;
+            return previousThrowable instanceof ConnectException
+                || previousThrowable instanceof UnknownHostException;
           }
         };
 
     private final BigQueryRetryConfig config;
     private final int i;
     private final RetrySettings settings;
+    private final int maxAttempts;
 
     public ResultCallable(int i, BigQueryRetryConfig config, RetrySettings settings) {
       LOGGER.info(String.format("i = 0x%08x", i));
       this.i = i;
       this.config = config;
       this.settings = settings;
+      this.maxAttempts = settings.getMaxAttempts();
     }
 
     @Override
     public Result call() {
-      StringCallable stringCallable = new StringCallable(i);
+      StringCallable stringCallable = new StringCallable(i, maxAttempts);
       String s =
           BigQueryRetryHelper.runWithRetries(
               stringCallable,
@@ -135,9 +133,11 @@ public class BigQueryRetryHelperTest {
   private static class StringCallable implements Callable<String> {
     private final AtomicInteger counter = new AtomicInteger(1);
     private final int i;
+    private final int maxAttempts;
 
-    public StringCallable(int i) {
+    public StringCallable(int i, int maxAttempts) {
       this.i = i;
+      this.maxAttempts = maxAttempts;
     }
 
     @Override
@@ -148,14 +148,10 @@ public class BigQueryRetryHelperTest {
       } else if (count == 2) {
         throw new IOException("asdf");
       } else if (count == 3) {
-        throw new SocketException("err connect dfdf");
+        throw new ConnectException("connect error");
       } else if (count == 4) {
-        GoogleJsonError googleJsonError = new GoogleJsonError();
-        googleJsonError.setCode(503);
-        throw new GoogleJsonResponseException(
-            new HttpResponseException.Builder(503, "service unavailable", new HttpHeaders()),
-            googleJsonError);
-      } else if (count >= 6) {
+        throw new UnknownHostException("unknown host");
+      } else if (count >= maxAttempts) {
         return "Hello World";
       } else {
         throw new RuntimeException("asdf");
