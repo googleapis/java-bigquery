@@ -132,6 +132,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Time;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -316,6 +318,40 @@ public class ITBigQueryTest {
           Field.newBuilder("BooleanField", LegacySQLTypeName.BOOLEAN)
               .setMode(Field.Mode.NULLABLE)
               .build());
+
+  private static final Schema BQ_RESULTSET_SCHEMA =
+      Schema.of(
+          Field.newBuilder("StringField", LegacySQLTypeName.STRING)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("BigNumericField", LegacySQLTypeName.BIGNUMERIC)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("BooleanField", LegacySQLTypeName.BOOLEAN)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("BytesField", LegacySQLTypeName.BYTES)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("IntegerField", LegacySQLTypeName.INTEGER)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("TimestampField", LegacySQLTypeName.TIMESTAMP)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("Date_Field", LegacySQLTypeName.DATE)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("FloatField", LegacySQLTypeName.FLOAT)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("NumericField", LegacySQLTypeName.NUMERIC)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("TimeField", LegacySQLTypeName.TIME)
+              .setMode(Field.Mode.NULLABLE)
+              .build());
+
   private static final Schema QUERY_RESULT_SCHEMA_BIGNUMERIC =
       Schema.of(
           Field.newBuilder("TimestampField", LegacySQLTypeName.TIMESTAMP)
@@ -1959,20 +1995,48 @@ public class ITBigQueryTest {
   @Test
   public void testExecuteQuerySinglePageTableRow() throws SQLException {
     String query =
-        "SELECT TimestampField, StringField, BooleanField  FROM " + TABLE_ID_FASTQUERY.getTable();
+        "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, Date_Field, FloatField, NumericField, TimeField "
+            + "from fastquery_testing_table_bqresultset order by TimestampField";
     ConnectionSettings connectionSettings =
-        ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
+        ConnectionSettings.newBuilder()
+            .setDefaultDataset(DatasetId.of("bigquery_test_dataset"))
+            .build();
     Connection connection = bigquery.createConnection(connectionSettings);
     BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
     ResultSet rs = bigQueryResultSet.getResultSet();
-    // while (rs.next()) {
-    // System.out.println(rs.getString("TimestampField"));
-    // }
-    assertEquals(QUERY_RESULT_SCHEMA, bigQueryResultSet.getSchema());
+    Schema sc = bigQueryResultSet.getSchema();
+
+    assertEquals(BQ_RESULTSET_SCHEMA, sc); // match the schema
+
     assertEquals(2, bigQueryResultSet.getTotalRows());
-    assertTrue(rs.next());
-    assertTrue(rs.next());
-    assertFalse(rs.next()); // it should return false for the third call as the table has 2 rows
+
+    assertTrue(rs.next()); // first row
+    // checking for the null or 0 column values
+    assertNull(rs.getString("StringField"));
+    assertTrue(rs.getDouble("BigNumericField") == 0.0d);
+    assertFalse(rs.getBoolean("BooleanField"));
+    assertNull(rs.getBytes("BytesField"));
+    assertEquals(rs.getInt("IntegerField"), 0);
+    assertNull(rs.getTimestamp("TimestampField"));
+    assertNull(rs.getDate("Date_Field"));
+    assertTrue(rs.getDouble("FloatField") == 0.0d);
+    assertTrue(rs.getDouble("NumericField") == 0.0d);
+    assertNull(rs.getTime("TimeField"));
+
+    assertTrue(rs.next()); // second row
+    // second row is non null, comparing the values
+    assertEquals(rs.getString("StringField"), "StringValue1");
+    assertTrue(rs.getDouble("BigNumericField") == 10.0d);
+    assertFalse(rs.getBoolean("BooleanField"));
+    assertNotNull(rs.getBytes("BytesField"));
+    assertEquals(rs.getInt("IntegerField"), 1);
+    assertEquals(rs.getTimestamp("TimestampField").toString(), "2018-08-19 17:41:35.22");
+    assertEquals(rs.getDate("Date_Field"), java.sql.Date.valueOf("2018-08-19"));
+    assertTrue(rs.getDouble("FloatField") == 10.1d);
+    assertTrue(rs.getDouble("NumericField") == 100.0d);
+    assertEquals(rs.getTime("TimeField"), Time.valueOf(LocalTime.of(12, 11, 35, 000000)));
+
+    assertFalse(rs.next()); // no third row in the table
   }
 
   @Test
