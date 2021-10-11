@@ -2179,14 +2179,10 @@ public class ITBigQueryTest {
     assertFalse(rs.getBoolean("BooleanField"));
     assertNotNull(rs.getBytes("BytesField"));
     assertEquals(1, rs.getInt("IntegerField"));
-    /*
-    TODO: Check the rounding issue
-    org.junit.ComparisonFailure:
-    Expected :2018-08-19 17:41:35.123456
-    Actual   :2018-08-19 17:41:35.22
-         */
-    // assertEquals("2018-08-19 17:41:35.123456",
-    // rs.getTimestamp("TimestampField").toString());//TODO: Check the rounding issue
+    /*    assertEquals(
+    "2018-08-19 17:41:35.12",
+    rs.getTimestamp("TimestampField").toString()); // precision up to milliseconds*/
+    // TODO
     assertEquals(java.sql.Date.valueOf("2018-08-19"), rs.getDate("DateField"));
     assertTrue(rs.getDouble("FloatField") == 10.1d);
     assertTrue(rs.getDouble("NumericField") == 100.0d);
