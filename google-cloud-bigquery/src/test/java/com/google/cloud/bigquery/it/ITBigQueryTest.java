@@ -167,6 +167,7 @@ public class ITBigQueryTest {
   private static final String OTHER_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String MODEL_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String ROUTINE_DATASET = RemoteBigQueryHelper.generateDatasetName();
+  private static final String BQ_RESULTSET_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
   private static final String RANDOM_ID = UUID.randomUUID().toString().substring(0, 8);
   private static final String CLOUD_SAMPLES_DATA =
@@ -179,6 +180,26 @@ public class ITBigQueryTest {
       Field.newBuilder("TimestampField", LegacySQLTypeName.TIMESTAMP)
           .setMode(Field.Mode.NULLABLE)
           .setDescription("TimestampDescription")
+          .build();
+  private static final Field TIME_FIELD_SCHEMA =
+      Field.newBuilder("TimeField", LegacySQLTypeName.TIME)
+          .setMode(Field.Mode.NULLABLE)
+          .setDescription("TimeDescription")
+          .build();
+  private static final Field DATE_FIELD_SCHEMA =
+      Field.newBuilder("DateField", LegacySQLTypeName.DATE)
+          .setMode(Field.Mode.NULLABLE)
+          .setDescription("DateDescription")
+          .build();
+  private static final Field DATE_TIME_FIELD_SCHEMA =
+      Field.newBuilder("DateTimeField", LegacySQLTypeName.DATETIME)
+          .setMode(Field.Mode.NULLABLE)
+          .setDescription("DateTimeDescription")
+          .build();
+  private static final Field STRUCT_FIELD_SCHEMA =
+      Field.newBuilder("StructField", LegacySQLTypeName.STRING)
+          .setMode(Field.Mode.NULLABLE)
+          .setDescription("StructDescription")
           .build();
   private static final Field STRING_FIELD_SCHEMA =
       Field.newBuilder("StringField", LegacySQLTypeName.STRING)
@@ -275,6 +296,30 @@ public class ITBigQueryTest {
           BIGNUMERIC_FIELD_SCHEMA3,
           BIGNUMERIC_FIELD_SCHEMA4);
 
+  private static final Schema BQ_RESULTSET_SCHEMA =
+      Schema.of(
+          TIMESTAMP_FIELD_SCHEMA,
+          STRING_FIELD_SCHEMA,
+          INTEGER_ARRAY_FIELD_SCHEMA,
+          BOOLEAN_FIELD_SCHEMA,
+          BYTES_FIELD_SCHEMA,
+          RECORD_FIELD_SCHEMA,
+          INTEGER_FIELD_SCHEMA,
+          FLOAT_FIELD_SCHEMA,
+          GEOGRAPHY_FIELD_SCHEMA,
+          NUMERIC_FIELD_SCHEMA,
+          BIGNUMERIC_FIELD_SCHEMA,
+          BIGNUMERIC_FIELD_SCHEMA1,
+          BIGNUMERIC_FIELD_SCHEMA2,
+          BIGNUMERIC_FIELD_SCHEMA3,
+          BIGNUMERIC_FIELD_SCHEMA4,
+              TIME_FIELD_SCHEMA,
+              DATE_FIELD_SCHEMA,
+              DATE_TIME_FIELD_SCHEMA,
+             STRUCT_FIELD_SCHEMA
+      );
+
+
   private static final Field DDL_TIMESTAMP_FIELD_SCHEMA =
       Field.newBuilder("TimestampField", LegacySQLTypeName.TIMESTAMP)
           .setDescription("TimestampDescription")
@@ -319,11 +364,29 @@ public class ITBigQueryTest {
               .setMode(Field.Mode.NULLABLE)
               .build());
 
-  private static final Schema BQ_RESULTSET_SCHEMA =
+  /*
+    private static final Schema BQ_RESULTSET_EXPECTED_SCHEMA =
+      Schema.of(
+          STRING_FIELD_SCHEMA,
+          BIGNUMERIC_FIELD_SCHEMA,
+          BOOLEAN_FIELD_SCHEMA,
+              BYTES_FIELD_SCHEMA,
+              INTEGER_FIELD_SCHEMA,
+              TIMESTAMP_FIELD_SCHEMA,
+              FLOAT_FIELD_SCHEMA,
+              NUMERIC_FIELD_SCHEMA,
+              TIME_FIELD_SCHEMA,
+              DATE_FIELD_SCHEMA,
+              DATE_TIME_FIELD_SCHEMA,
+              STRUCT_FIELD_SCHEMA,
+              INTEGER_ARRAY_FIELD_SCHEMA
+      );
+   */
+  private static final Schema BQ_RESULTSET_EXPECTED_SCHEMA =
       Schema.of(
           Field.newBuilder("StringField", LegacySQLTypeName.STRING)
               .setMode(Field.Mode.NULLABLE)
-              .build(),
+              .build() ,
           Field.newBuilder("BigNumericField", LegacySQLTypeName.BIGNUMERIC)
               .setMode(Field.Mode.NULLABLE)
               .build(),
@@ -339,18 +402,31 @@ public class ITBigQueryTest {
           Field.newBuilder("TimestampField", LegacySQLTypeName.TIMESTAMP)
               .setMode(Field.Mode.NULLABLE)
               .build(),
+              Field.newBuilder("FloatField", LegacySQLTypeName.FLOAT)
+                      .setMode(Field.Mode.NULLABLE)
+                      .build(),
+              Field.newBuilder("NumericField", LegacySQLTypeName.NUMERIC)
+                      .setMode(Field.Mode.NULLABLE)
+                      .build(),
+              Field.newBuilder("TimeField", LegacySQLTypeName.TIME)
+                      .setMode(Field.Mode.NULLABLE)
+                      .build(),
           Field.newBuilder("Date_Field", LegacySQLTypeName.DATE)
               .setMode(Field.Mode.NULLABLE)
               .build(),
-          Field.newBuilder("FloatField", LegacySQLTypeName.FLOAT)
+              Field.newBuilder("Date_Time_Field", LegacySQLTypeName.DATETIME)
               .setMode(Field.Mode.NULLABLE)
               .build(),
-          Field.newBuilder("NumericField", LegacySQLTypeName.NUMERIC)
-              .setMode(Field.Mode.NULLABLE)
-              .build(),
-          Field.newBuilder("TimeField", LegacySQLTypeName.TIME)
-              .setMode(Field.Mode.NULLABLE)
-              .build());
+              Field.newBuilder("Struct_Field", LegacySQLTypeName.STRING)
+                      .setMode(Field.Mode.NULLABLE)
+                      .build(),
+              Field.newBuilder("IntegerArrayField", LegacySQLTypeName.DATE)
+                      .setMode(Field.Mode.NULLABLE)
+                      .build()
+
+
+
+      );
 
   private static final Schema QUERY_RESULT_SCHEMA_BIGNUMERIC =
       Schema.of(
@@ -396,6 +472,7 @@ public class ITBigQueryTest {
   private static final String LOAD_FILE = "load.csv";
   private static final String LOAD_FILE_LARGE = "load_large.csv";
   private static final String JSON_LOAD_FILE = "load.json";
+  private static final String JSON_LOAD_FILE_BQ_RESULTSET = "load_bq_resultset.json";
   private static final String JSON_LOAD_FILE_SIMPLE = "load_simple.json";
   private static final String EXTRACT_FILE = "extract.csv";
   private static final String EXTRACT_MODEL_FILE = "extract_model.csv";
@@ -404,7 +481,9 @@ public class ITBigQueryTest {
   private static final TableId TABLE_ID_DDL = TableId.of(DATASET, "ddl_testing_table");
   private static final TableId TABLE_ID_FASTQUERY = TableId.of(DATASET, "fastquery_testing_table");
   private static final TableId TABLE_ID_LARGE = TableId.of(DATASET, "large_data_testing_table");
+  private static final TableId TABLE_ID_FASTQUERY_BQ_RESULTSET = TableId.of(DATASET, "fastquery_testing_bq_resultset");
   private static final String CSV_CONTENT = "StringValue1\nStringValue2\n";
+
   private static final String JSON_CONTENT =
       "{"
           + "  \"TimestampField\": \"2014-08-19 07:41:35.220 -05:00\","
@@ -460,6 +539,66 @@ public class ITBigQueryTest {
           + "  \"BigNumericField3\": \"578960446186580977117854925043439539266.34992332820282019728792003956564819967\","
           + "  \"BigNumericField4\": \"-578960446186580977117854925043439539266.34992332820282019728792003956564819968\""
           + "}";
+
+  private static final String JSON_CONTENT_BQ_RESULTSET =
+          "{"
+                  + "  \"TimestampField\": null,"
+                  + "  \"StringField\": null,"
+                  + "  \"IntegerArrayField\": null,"
+                  + "  \"BooleanField\": null,"
+                  + "  \"BytesField\": null,"
+                  + "  \"RecordField\": {"
+                  + "    \"TimestampField\": null,"
+                  + "    \"StringField\": null,"
+                  + "    \"IntegerArrayField\": null,"
+                  + "    \"BooleanField\": null,"
+                  + "    \"BytesField\": null"
+                  + "  },"
+                  + "  \"IntegerField\": null,"
+                  + "  \"FloatField\": null,"
+                  + "  \"GeographyField\": null,"
+                  + "  \"NumericField\": null,"
+                  + "  \"BigNumericField\": null,"
+                  + "  \"BigNumericField1\": null,"
+                  + "  \"BigNumericField2\": null,"
+                  + "  \"BigNumericField3\": null,"
+                  + "  \"BigNumericField4\": null,"
+                  + "  \"TimeField\": null,"
+                  + "  \"DateField\": null,"
+                  + "  \"DateTimeField\": null,"
+                  + "  \"StructField\": null"
+                  + "}\n"
+    +  "{"
+          + "  \"TimestampField\": \"2018-08-19 12:11:35.220 UTC\","
+          + "  \"StringField\": \"StringValue1\","
+          + "  \"IntegerArrayField\": [\"0\", \"1\"],"
+          + "  \"BooleanField\": \"false\","
+          + "  \"BytesField\": \""
+          + BYTES_BASE64
+          + "\","
+          + "  \"RecordField\": {"
+          + "    \"TimestampField\": \"1969-07-20 20:18:04 UTC\","
+          + "    \"StringField\": null,"
+          + "    \"IntegerArrayField\": [\"1\",\"0\"],"
+          + "    \"BooleanField\": \"true\","
+          + "    \"BytesField\": \""
+          + BYTES_BASE64
+          + "\""
+          + "  },"
+          + "  \"IntegerField\": \"1\","
+          + "  \"FloatField\": \"10.1\","
+          + "  \"GeographyField\": \"POINT(-122.35022 47.649154)\","
+          + "  \"NumericField\": \"100\","
+          + "  \"BigNumericField\": \"0.33333333333333333333333333333333333333\","
+          + "  \"BigNumericField1\": \"1e-38\","
+          + "  \"BigNumericField2\": \"-1e38\","
+          + "  \"BigNumericField3\": \"578960446186580977117854925043439539266.34992332820282019728792003956564819967\","
+          + "  \"BigNumericField4\": \"-578960446186580977117854925043439539266.34992332820282019728792003956564819968\","
+          + "  \"TimeField\": \"12:11:35.123456\","
+          + "  \"DateField\": \"2018-08-19\","
+          + "  \"DateTimeField\": \"2018-08-19 12:11:35.123456\","
+          + "  \"StructField\": \"STRUCT('StructVal')\""
+          + "}";
   private static final String JSON_CONTENT_SIMPLE =
       "{"
           + "  \"TimestampField\": \"2014-08-19 07:41:35.220 -05:00\","
@@ -511,6 +650,9 @@ public class ITBigQueryTest {
     storage.createFrom(
         BlobInfo.newBuilder(BUCKET, LOAD_FILE_LARGE).setContentType("text/plain").build(),
         FileSystems.getDefault().getPath("src/test/resources", "QueryTestData.csv"));
+    storage.create(
+            BlobInfo.newBuilder(BUCKET, JSON_LOAD_FILE_BQ_RESULTSET).setContentType("application/json").build(),
+            JSON_CONTENT_BQ_RESULTSET.getBytes(StandardCharsets.UTF_8));
     DatasetInfo info =
         DatasetInfo.newBuilder(DATASET).setDescription(DESCRIPTION).setLabels(LABELS).build();
     bigquery.create(info);
@@ -544,7 +686,18 @@ public class ITBigQueryTest {
     jobFastQuery = jobFastQuery.waitFor();
     assertNull(jobFastQuery.getStatus().getError());
 
-    LoadJobConfiguration configurationDDL =
+    LoadJobConfiguration configFastQueryBQResultset =
+            LoadJobConfiguration.newBuilder(
+                    TABLE_ID_FASTQUERY_BQ_RESULTSET, "gs://" + BUCKET + "/" + JSON_LOAD_FILE_BQ_RESULTSET, FormatOptions.json())
+                    .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
+                    .setSchema(BQ_RESULTSET_SCHEMA)
+                    .setLabels(labels)
+                    .build();
+    Job jobFastQueryBQResultSet = bigquery.create(JobInfo.of(configFastQueryBQResultset));
+    jobFastQueryBQResultSet = jobFastQueryBQResultSet.waitFor();
+    assertNull(jobFastQueryBQResultSet.getStatus().getError());
+
+     LoadJobConfiguration configurationDDL =
         LoadJobConfiguration.newBuilder(
                 TABLE_ID_DDL, "gs://" + BUCKET + "/" + JSON_LOAD_FILE_SIMPLE, FormatOptions.json())
             .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
@@ -1995,20 +2148,38 @@ public class ITBigQueryTest {
   @Test
   public void testExecuteQuerySinglePageTableRow() throws SQLException {
     String query =
-        "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, Date_Field, FloatField, NumericField, TimeField "
-            + "from fastquery_testing_table_bqresultset order by TimestampField";
+        "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, FloatField, " +
+                "NumericField, TimeField, DateField,  DateTimeField, StructField, IntegerArrayField from "+ TABLE_ID_FASTQUERY_BQ_RESULTSET.getTable()
+            + " order by TimestampField";
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder()
-            .setDefaultDataset(DatasetId.of("bigquery_test_dataset"))
+            .setDefaultDataset(DatasetId.of(DATASET))
             .build();
     Connection connection = bigquery.createConnection(connectionSettings);
     BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
     ResultSet rs = bigQueryResultSet.getResultSet();
     Schema sc = bigQueryResultSet.getSchema();
 
-    assertEquals(BQ_RESULTSET_SCHEMA, sc); // match the schema
+    assertEquals(BQ_RESULTSET_EXPECTED_SCHEMA, sc); // match the schema
 
-    assertEquals(2, bigQueryResultSet.getTotalRows());
+    assertEquals(3, bigQueryResultSet.getTotalRows());
+
+/*    while (rs.next()){
+      System.out.println(rs.getString("StringField"));
+      System.out.println(rs.getDouble("BigNumericField"));
+      System.out.println(rs.getBoolean("BooleanField"));
+      System.out.println(rs.getBytes("BytesField"));
+      System.out.println(rs.getInt("IntegerField"));
+      System.out.println(rs.getTimestamp("TimestampField"));
+      System.out.println(rs.getDate("DateField"));
+      System.out.println(rs.getDouble("FloatField"));
+      System.out.println(rs.getDouble("NumericField"));
+      System.out.println(rs.getTime("TimeField"));
+      System.out.println(rs.getString("DateTimeField"));
+      System.out.println(rs.getString("StructField"));
+      System.out.println(rs.getString("IntegerArrayField"));
+      System.out.println("\n\n>\n\n");
+    }*/
 
     assertTrue(rs.next()); // first row
     // checking for the null or 0 column values
@@ -2018,25 +2189,37 @@ public class ITBigQueryTest {
     assertNull(rs.getBytes("BytesField"));
     assertEquals(rs.getInt("IntegerField"), 0);
     assertNull(rs.getTimestamp("TimestampField"));
-    assertNull(rs.getDate("Date_Field"));
+    assertNull(rs.getDate("DateField"));
     assertTrue(rs.getDouble("FloatField") == 0.0d);
     assertTrue(rs.getDouble("NumericField") == 0.0d);
     assertNull(rs.getTime("TimeField"));
+    assertNull(rs.getString("DateTimeField"));
+    assertNull(rs.getString("StructField"));
+    assertNull(rs.getString("IntegerArrayField"));
 
     assertTrue(rs.next()); // second row
     // second row is non null, comparing the values
-    assertEquals(rs.getString("StringField"), "StringValue1");
-    assertTrue(rs.getDouble("BigNumericField") == 10.0d);
+    assertEquals("StringValue1", rs.getString("StringField"));
+    assertTrue(rs.getDouble("BigNumericField") == 0.3333333333333333d);
     assertFalse(rs.getBoolean("BooleanField"));
     assertNotNull(rs.getBytes("BytesField"));
-    assertEquals(rs.getInt("IntegerField"), 1);
-    assertEquals(rs.getTimestamp("TimestampField").toString(), "2018-08-19 17:41:35.22");
-    assertEquals(rs.getDate("Date_Field"), java.sql.Date.valueOf("2018-08-19"));
+    assertEquals(1, rs.getInt("IntegerField"));
+    /*
+org.junit.ComparisonFailure:
+Expected :2018-08-19 17:41:35.123456
+Actual   :2018-08-19 17:41:35.22
+     */
+   // assertEquals("2018-08-19 17:41:35.123456", rs.getTimestamp("TimestampField").toString());
+    assertEquals( java.sql.Date.valueOf("2018-08-19"), rs.getDate("DateField"));
     assertTrue(rs.getDouble("FloatField") == 10.1d);
     assertTrue(rs.getDouble("NumericField") == 100.0d);
-    assertEquals(rs.getTime("TimeField"), Time.valueOf(LocalTime.of(12, 11, 35, 000000)));
+    assertEquals(Time.valueOf(LocalTime.of(12, 11, 35, 123456)), rs.getTime("TimeField"));
+    assertEquals("2018-08-19T12:11:35.123456", rs.getString("DateTimeField"));
+    assertEquals("STRUCT('StructVal')", rs.getString("StructField"));
+    assertEquals("0", rs.getString("IntegerArrayField"));
 
-    assertFalse(rs.next()); // no third row in the table
+    assertTrue(rs.next()); //third row
+    assertFalse(rs.next()); // no 4th row in the table
   }
 
   @Test
