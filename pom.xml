@@ -98,6 +98,12 @@
         <artifactId>truth</artifactId>
         <version>1.1.3</version>
         <scope>test</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.checkerframework</groupId>
+            <artifactId>checker-qual</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
@@ -121,13 +127,6 @@
         <groupId>com.google.api.grpc</groupId>
         <artifactId>proto-google-cloud-datacatalog-v1</artifactId>
         <version>1.5.8</version>
-        <scope>test</scope>
-      </dependency>
-      <!-- Adding checker-qual as a test dep so it will be dropped during pom flattening -->
-      <dependency>
-        <groupId>org.checkerframework</groupId>
-        <artifactId>checker-qual</artifactId>
-        <version>3.8.0</version>
         <scope>test</scope>
       </dependency>
       <dependency>
