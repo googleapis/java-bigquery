@@ -168,7 +168,6 @@ public class ITBigQueryTest {
   private static final String OTHER_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String MODEL_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String ROUTINE_DATASET = RemoteBigQueryHelper.generateDatasetName();
-  private static final String BQ_RESULTSET_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
   private static final String RANDOM_ID = UUID.randomUUID().toString().substring(0, 8);
   private static final String CLOUD_SAMPLES_DATA =
@@ -182,26 +181,6 @@ public class ITBigQueryTest {
           .setMode(Field.Mode.NULLABLE)
           .setDescription("TimestampDescription")
           .build();
-  private static final Field TIME_FIELD_SCHEMA =
-      Field.newBuilder("TimeField", LegacySQLTypeName.TIME)
-          .setMode(Field.Mode.NULLABLE)
-          .setDescription("TimeDescription")
-          .build();
-  private static final Field DATE_FIELD_SCHEMA =
-      Field.newBuilder("DateField", LegacySQLTypeName.DATE)
-          .setMode(Field.Mode.NULLABLE)
-          .setDescription("DateDescription")
-          .build();
-  private static final Field DATE_TIME_FIELD_SCHEMA =
-      Field.newBuilder("DateTimeField", LegacySQLTypeName.DATETIME)
-          .setMode(Field.Mode.NULLABLE)
-          .setDescription("DateTimeDescription")
-          .build();
-  private static final Field STRUCT_FIELD_SCHEMA =
-      Field.newBuilder("StructField", LegacySQLTypeName.STRING)
-          .setMode(Field.Mode.NULLABLE)
-          .setDescription("StructDescription")
-          .build();
   private static final Field STRING_FIELD_SCHEMA =
       Field.newBuilder("StringField", LegacySQLTypeName.STRING)
           .setMode(Field.Mode.NULLABLE)
@@ -211,11 +190,6 @@ public class ITBigQueryTest {
       Field.newBuilder("IntegerArrayField", LegacySQLTypeName.INTEGER)
           .setMode(Field.Mode.REPEATED)
           .setDescription("IntegerArrayDescription")
-          .build();
-  private static final Field STRING_ARRAY_FIELD_SCHEMA =
-      Field.newBuilder("StringArrayField", LegacySQLTypeName.STRING)
-          .setMode(Field.Mode.REPEATED)
-          .setDescription("StringArrayDescription")
           .build();
   private static final Field BOOLEAN_FIELD_SCHEMA =
       Field.newBuilder("BooleanField", LegacySQLTypeName.BOOLEAN)
@@ -304,26 +278,104 @@ public class ITBigQueryTest {
 
   private static final Schema BQ_RESULTSET_SCHEMA =
       Schema.of(
-          TIMESTAMP_FIELD_SCHEMA,
-          STRING_FIELD_SCHEMA,
-          INTEGER_ARRAY_FIELD_SCHEMA,
-          BOOLEAN_FIELD_SCHEMA,
-          BYTES_FIELD_SCHEMA,
-          RECORD_FIELD_SCHEMA,
-          INTEGER_FIELD_SCHEMA,
-          FLOAT_FIELD_SCHEMA,
-          GEOGRAPHY_FIELD_SCHEMA,
-          NUMERIC_FIELD_SCHEMA,
-          BIGNUMERIC_FIELD_SCHEMA,
-          BIGNUMERIC_FIELD_SCHEMA1,
-          BIGNUMERIC_FIELD_SCHEMA2,
-          BIGNUMERIC_FIELD_SCHEMA3,
-          BIGNUMERIC_FIELD_SCHEMA4,
-          TIME_FIELD_SCHEMA,
-          DATE_FIELD_SCHEMA,
-          DATE_TIME_FIELD_SCHEMA,
-          STRUCT_FIELD_SCHEMA,
-          STRING_ARRAY_FIELD_SCHEMA);
+          Field.newBuilder("TimestampField", StandardSQLTypeName.TIMESTAMP)
+              .setMode(Field.Mode.NULLABLE)
+              .setDescription("TimestampDescription")
+              .build(),
+          Field.newBuilder("StringField", StandardSQLTypeName.STRING)
+              .setMode(Field.Mode.NULLABLE)
+              .setDescription("StringDescription")
+              .build(),
+          Field.newBuilder("IntegerArrayField", StandardSQLTypeName.NUMERIC)
+              .setMode(Field.Mode.REPEATED)
+              .setDescription("IntegerArrayDescription")
+              .build(),
+          Field.newBuilder("BooleanField", StandardSQLTypeName.BOOL)
+              .setMode(Field.Mode.NULLABLE)
+              .setDescription("BooleanDescription")
+              .build(),
+          Field.newBuilder("BytesField", StandardSQLTypeName.BYTES)
+              .setMode(Field.Mode.NULLABLE)
+              .setDescription("BytesDescription")
+              .build(),
+          Field.newBuilder(
+                  "RecordField",
+                  StandardSQLTypeName.STRUCT,
+                  Field.newBuilder("TimestampField", StandardSQLTypeName.TIMESTAMP)
+                      .setMode(Field.Mode.NULLABLE)
+                      .setDescription("TimestampDescription")
+                      .build(),
+                  Field.newBuilder("StringField", StandardSQLTypeName.STRING)
+                      .setMode(Field.Mode.NULLABLE)
+                      .setDescription("StringDescription")
+                      .build(),
+                  Field.newBuilder("IntegerArrayField", StandardSQLTypeName.NUMERIC)
+                      .setMode(Field.Mode.REPEATED)
+                      .setDescription("IntegerArrayDescription")
+                      .build(),
+                  Field.newBuilder("BooleanField", StandardSQLTypeName.BOOL)
+                      .setMode(Field.Mode.NULLABLE)
+                      .setDescription("BooleanDescription")
+                      .build(),
+                  Field.newBuilder("BytesField", StandardSQLTypeName.BYTES)
+                      .setMode(Field.Mode.NULLABLE)
+                      .setDescription("BytesDescription")
+                      .build())
+              .setMode(Field.Mode.REQUIRED)
+              .setDescription("RecordDescription")
+              .build(),
+          Field.newBuilder("IntegerField", StandardSQLTypeName.NUMERIC)
+              .setMode(Field.Mode.NULLABLE)
+              .setDescription("IntegerDescription")
+              .build(),
+          Field.newBuilder("FloatField", StandardSQLTypeName.NUMERIC)
+              .setMode(Field.Mode.NULLABLE)
+              .setDescription("FloatDescription")
+              .build(),
+          Field.newBuilder("GeographyField", StandardSQLTypeName.GEOGRAPHY)
+              .setMode(Field.Mode.NULLABLE)
+              .setDescription("GeographyDescription")
+              .build(),
+          Field.newBuilder("NumericField", StandardSQLTypeName.NUMERIC)
+              .setMode(Field.Mode.NULLABLE)
+              .setDescription("NumericDescription")
+              .build(),
+          Field.newBuilder("BigNumericField", StandardSQLTypeName.BIGNUMERIC)
+              .setMode(Field.Mode.NULLABLE)
+              .setDescription("BigNumericDescription")
+              .build(),
+          Field.newBuilder("BigNumericField1", StandardSQLTypeName.BIGNUMERIC)
+              .setMode(Field.Mode.NULLABLE)
+              .setDescription("BigNumeric1Description")
+              .build(),
+          Field.newBuilder("BigNumericField2", StandardSQLTypeName.BIGNUMERIC)
+              .setMode(Field.Mode.NULLABLE)
+              .setDescription("BigNumeric2Description")
+              .build(),
+          Field.newBuilder("BigNumericField3", StandardSQLTypeName.BIGNUMERIC)
+              .setMode(Field.Mode.NULLABLE)
+              .setDescription("BigNumeric3Description")
+              .build(),
+          Field.newBuilder("BigNumericField4", StandardSQLTypeName.BIGNUMERIC)
+              .setMode(Field.Mode.NULLABLE)
+              .setDescription("BigNumeric4Description")
+              .build(),
+          Field.newBuilder("TimeField", StandardSQLTypeName.TIME)
+              .setMode(Field.Mode.NULLABLE)
+              .setDescription("TimeDescription")
+              .build(),
+          Field.newBuilder("DateField", StandardSQLTypeName.DATE)
+              .setMode(Field.Mode.NULLABLE)
+              .setDescription("DateDescription")
+              .build(),
+          Field.newBuilder("DateTimeField", StandardSQLTypeName.DATETIME)
+              .setMode(Field.Mode.NULLABLE)
+              .setDescription("DateTimeDescription")
+              .build(),
+          Field.newBuilder("StringArrayField", StandardSQLTypeName.STRING)
+              .setMode(Field.Mode.REPEATED)
+              .setDescription("StringArrayDescription")
+              .build());
 
   private static final Field DDL_TIMESTAMP_FIELD_SCHEMA =
       Field.newBuilder("TimestampField", LegacySQLTypeName.TIMESTAMP)
@@ -371,52 +423,49 @@ public class ITBigQueryTest {
 
   private static final Schema BQ_RESULTSET_EXPECTED_SCHEMA =
       Schema.of(
-          Field.newBuilder("StringField", LegacySQLTypeName.STRING)
+          Field.newBuilder("StringField", StandardSQLTypeName.STRING)
               .setMode(Field.Mode.NULLABLE)
               .build(),
-          Field.newBuilder("BigNumericField", LegacySQLTypeName.BIGNUMERIC)
+          Field.newBuilder("BigNumericField", StandardSQLTypeName.BIGNUMERIC)
               .setMode(Field.Mode.NULLABLE)
               .build(),
-          Field.newBuilder("BooleanField", LegacySQLTypeName.BOOLEAN)
+          Field.newBuilder("BooleanField", StandardSQLTypeName.BOOL)
               .setMode(Field.Mode.NULLABLE)
               .build(),
-          Field.newBuilder("BytesField", LegacySQLTypeName.BYTES)
+          Field.newBuilder("BytesField", StandardSQLTypeName.BYTES)
               .setMode(Field.Mode.NULLABLE)
               .build(),
-          Field.newBuilder("IntegerField", LegacySQLTypeName.INTEGER)
+          Field.newBuilder("IntegerField", StandardSQLTypeName.NUMERIC)
               .setMode(Field.Mode.NULLABLE)
               .build(),
-          Field.newBuilder("TimestampField", LegacySQLTypeName.TIMESTAMP)
+          Field.newBuilder("TimestampField", StandardSQLTypeName.TIMESTAMP)
               .setMode(Field.Mode.NULLABLE)
               .build(),
-          Field.newBuilder("FloatField", LegacySQLTypeName.FLOAT)
+          Field.newBuilder("FloatField", StandardSQLTypeName.NUMERIC)
               .setMode(Field.Mode.NULLABLE)
               .build(),
-          Field.newBuilder("NumericField", LegacySQLTypeName.NUMERIC)
+          Field.newBuilder("NumericField", StandardSQLTypeName.NUMERIC)
               .setMode(Field.Mode.NULLABLE)
               .build(),
-          Field.newBuilder("TimeField", LegacySQLTypeName.TIME)
+          Field.newBuilder("TimeField", StandardSQLTypeName.TIME)
               .setMode(Field.Mode.NULLABLE)
               .build(),
-          Field.newBuilder("DateField", LegacySQLTypeName.DATE)
+          Field.newBuilder("DateField", StandardSQLTypeName.DATE)
               .setMode(Field.Mode.NULLABLE)
               .build(),
-          Field.newBuilder("DateTimeField", LegacySQLTypeName.DATETIME)
+          Field.newBuilder("DateTimeField", StandardSQLTypeName.DATETIME)
               .setMode(Field.Mode.NULLABLE)
               .build(),
-          Field.newBuilder("StructField", LegacySQLTypeName.STRING)
+          Field.newBuilder("StringArrayField", StandardSQLTypeName.STRING)
               .setMode(Field.Mode.NULLABLE)
               .build(),
-          Field.newBuilder("StringArrayField", LegacySQLTypeName.STRING)
+          Field.newBuilder("GeographyField", StandardSQLTypeName.GEOGRAPHY)
               .setMode(Field.Mode.NULLABLE)
               .build(),
-          Field.newBuilder("GeographyField", LegacySQLTypeName.GEOGRAPHY)
+          Field.newBuilder("RecordField_BytesField", StandardSQLTypeName.BYTES)
               .setMode(Field.Mode.NULLABLE)
               .build(),
-          Field.newBuilder("RecordField_BytesField", LegacySQLTypeName.BYTES)
-              .setMode(Field.Mode.NULLABLE)
-              .build(),
-          Field.newBuilder("RecordField_BooleanField", LegacySQLTypeName.BOOLEAN)
+          Field.newBuilder("RecordField_BooleanField", StandardSQLTypeName.BOOL)
               .setMode(Field.Mode.NULLABLE)
               .build());
 
@@ -559,7 +608,6 @@ public class ITBigQueryTest {
           + "  \"TimeField\": null,"
           + "  \"DateField\": null,"
           + "  \"DateTimeField\": null,"
-          + "  \"StructField\": null,"
           + "  \"StringArrayField\": null"
           + "}\n"
           + "{"
@@ -591,7 +639,6 @@ public class ITBigQueryTest {
           + "  \"TimeField\": \"12:11:35.123456\","
           + "  \"DateField\": \"2018-08-19\","
           + "  \"DateTimeField\": \"2018-08-19 12:11:35.123456\","
-          + "  \"StructField\": \"STRUCT('StructVal')\","
           + "  \"StringArrayField\": [\"one\", \"two\"]"
           + "}";
   private static final String JSON_CONTENT_SIMPLE =
@@ -2182,7 +2229,7 @@ public class ITBigQueryTest {
   public void testExecuteQuerySinglePageTableRow() throws SQLException {
     String query =
         "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, FloatField, "
-            + "NumericField, TimeField, DateField,  DateTimeField, StructField, StringArrayField , GeographyField, RecordField.BytesField, RecordField.BooleanField from "
+            + "NumericField, TimeField, DateField,  DateTimeField, StringArrayField , GeographyField, RecordField.BytesField, RecordField.BooleanField from "
             + TABLE_ID_FASTQUERY_BQ_RESULTSET.getTable()
             + " order by TimestampField";
     ConnectionSettings connectionSettings =
@@ -2193,7 +2240,6 @@ public class ITBigQueryTest {
     Schema sc = bigQueryResultSet.getSchema();
 
     assertEquals(BQ_RESULTSET_EXPECTED_SCHEMA, sc); // match the schema
-
     assertEquals(3, bigQueryResultSet.getTotalRows());
 
     assertTrue(rs.next()); // first row
@@ -2209,7 +2255,6 @@ public class ITBigQueryTest {
     assertTrue(rs.getDouble("NumericField") == 0.0d);
     assertNull(rs.getTime("TimeField"));
     assertNull(rs.getString("DateTimeField"));
-    assertNull(rs.getString("StructField"));
     assertNull(rs.getString("StringArrayField"));
     assertNull(rs.getString("GeographyField"));
     assertNull(rs.getBytes("RecordField_BytesField"));
@@ -2231,7 +2276,6 @@ public class ITBigQueryTest {
     assertTrue(rs.getDouble("NumericField") == 100.0d);
     assertEquals(Time.valueOf(LocalTime.of(12, 11, 35, 123456)), rs.getTime("TimeField"));
     assertEquals("2018-08-19T12:11:35.123456", rs.getString("DateTimeField"));
-    assertEquals("STRUCT('StructVal')", rs.getString("StructField"));
     assertEquals("one", rs.getString("StringArrayField"));
     assertEquals("POINT(-122.35022 47.649154)", rs.getString("GeographyField"));
     assertNotNull(rs.getBytes("RecordField_BytesField"));
