@@ -412,6 +412,12 @@ public class ITBigQueryTest {
               .build(),
           Field.newBuilder("GeographyField", LegacySQLTypeName.GEOGRAPHY)
               .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("RecordField_BytesField", LegacySQLTypeName.BYTES)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("RecordField_BooleanField", LegacySQLTypeName.BOOLEAN)
+              .setMode(Field.Mode.NULLABLE)
               .build());
 
   private static final Schema QUERY_RESULT_SCHEMA_BIGNUMERIC =
@@ -2176,7 +2182,7 @@ public class ITBigQueryTest {
   public void testExecuteQuerySinglePageTableRow() throws SQLException {
     String query =
         "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, FloatField, "
-            + "NumericField, TimeField, DateField,  DateTimeField, StructField, StringArrayField , GeographyField from "
+            + "NumericField, TimeField, DateField,  DateTimeField, StructField, StringArrayField , GeographyField, RecordField.BytesField, RecordField.BooleanField from "
             + TABLE_ID_FASTQUERY_BQ_RESULTSET.getTable()
             + " order by TimestampField";
     ConnectionSettings connectionSettings =
@@ -2206,6 +2212,8 @@ public class ITBigQueryTest {
     assertNull(rs.getString("StructField"));
     assertNull(rs.getString("StringArrayField"));
     assertNull(rs.getString("GeographyField"));
+    assertNull(rs.getBytes("RecordField_BytesField"));
+    assertFalse(rs.getBoolean("RecordField_BooleanField"));
 
     assertTrue(rs.next()); // second row
     // second row is non null, comparing the values
@@ -2226,6 +2234,8 @@ public class ITBigQueryTest {
     assertEquals("STRUCT('StructVal')", rs.getString("StructField"));
     assertEquals("one", rs.getString("StringArrayField"));
     assertEquals("POINT(-122.35022 47.649154)", rs.getString("GeographyField"));
+    assertNotNull(rs.getBytes("RecordField_BytesField"));
+    assertTrue(rs.getBoolean("RecordField_BooleanField"));
 
     assertTrue(rs.next()); // third row
     assertFalse(rs.next()); // no 4th row in the table
