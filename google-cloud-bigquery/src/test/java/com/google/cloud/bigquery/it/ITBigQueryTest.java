@@ -1890,6 +1890,27 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testInsertTimeStamp() throws InterruptedException {
+    String tableName = "test_insert_timestamp" + UUID.randomUUID().toString().substring(0, 8);
+    TableId tableId = TableId.of(DATASET, tableName);
+    String query =
+        String.format(
+            "CREATE OR REPLACE TABLE  %s.%s ( TimestampField TIMESTAMP )",
+            DATASET, tableName);
+    Job job = bigquery.create(JobInfo.of(QueryJobConfiguration.newBuilder(query).build()));
+    job.waitFor();
+    assertTrue(job.isDone());
+    Map<String, Object> row = new HashMap<>();
+    // Try to insert millisecond precision timestamp
+    long millisNow = 1631425816551L;
+    row.put("TimestampField", millisNow);
+    InsertAllRequest request = InsertAllRequest.newBuilder(tableId).addRow(row).build();
+    InsertAllResponse response = bigquery.insertAll(request);
+    // TODO: ERRORS SHOULD BE FALSE b/139860901
+    assertTrue(response.hasErrors());
+  }
+
+  @Test
   public void testQueryCaseInsensitiveSchemaFieldByGetName() throws InterruptedException {
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     QueryJobConfiguration config =
