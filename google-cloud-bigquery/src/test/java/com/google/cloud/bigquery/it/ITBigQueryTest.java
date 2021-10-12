@@ -2279,6 +2279,23 @@ public class ITBigQueryTest {
     assertTrue(rs.getBoolean("RecordField_BooleanField"));
 
     assertTrue(rs.next()); // third row
+    // 3rd row
+    assertEquals("StringValue1", rs.getString("StringField"));
+    assertTrue(rs.getDouble("BigNumericField") == 0.3333333333333333d);
+    assertFalse(rs.getBoolean("BooleanField"));
+    assertNotNull(rs.getBytes("BytesField"));
+    assertEquals(1, rs.getInt("IntegerField"));
+    assertEquals("2018-08-19 17:41:35.123", rs.getTimestamp("TimestampField").toString());
+    assertEquals(java.sql.Date.valueOf("2018-08-19"), rs.getDate("DateField"));
+    assertTrue(rs.getDouble("FloatField") == 10.1d);
+    assertTrue(rs.getDouble("NumericField") == 100.0d);
+    assertEquals(Time.valueOf(LocalTime.of(12, 11, 35, 123456)), rs.getTime("TimeField"));
+    assertEquals("2018-08-19T12:11:35.123456", rs.getString("DateTimeField"));
+    assertEquals("two", rs.getString("StringArrayField"));
+    assertEquals("POINT(-122.35022 47.649154)", rs.getString("GeographyField"));
+    assertNotNull(rs.getBytes("RecordField_BytesField"));
+    assertTrue(rs.getBoolean("RecordField_BooleanField"));
+
     assertFalse(rs.next()); // no 4th row in the table
   }
 
