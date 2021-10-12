@@ -390,6 +390,8 @@ final class ConnectionImpl implements Connection {
     }
     content.setQuery(sql);
     content.setRequestId(requestId);
+    // The new Connection interface only supports StandardSQL dialect
+    content.setUseLegacySql(false);
     return content;
   }
 
@@ -486,6 +488,8 @@ final class ConnectionImpl implements Connection {
     if (labels != null) {
       configurationPb.setLabels(labels);
     }
+    // The new Connection interface only supports StandardSQL dialect
+    queryConfigurationPb.setUseLegacySql(false);
     configurationPb.setQuery(queryConfigurationPb);
 
     com.google.api.services.bigquery.model.Job jobPb =

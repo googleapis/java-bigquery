@@ -2300,6 +2300,28 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testExecuteSelectStruct() throws SQLException {
+    String query = "select (STRUCT(\"Vancouver\" as city, 5 as years)) as address";
+    ConnectionSettings connectionSettings =
+        ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
+    Connection connection = bigquery.createConnection(connectionSettings);
+    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
+    assertEquals(1, bigQueryResultSet.getTotalRows());
+
+    Schema schema = bigQueryResultSet.getSchema();
+    assertEquals(schema.getFields().get(0).getName(), "address");
+    assertEquals(schema.getFields().get(0).getMode(), Field.Mode.NULLABLE);
+    // Backend is currently returning RECORD which is LegacySQLTypeName.
+    assertEquals(schema.getFields().get(0).getType(), LegacySQLTypeName.RECORD);
+
+    ResultSet rs = bigQueryResultSet.getResultSet();
+    assertTrue(rs.next());
+    // TODO: Figure out what this is supposed to return
+    // Object o = rs.getObject("address"); // is this supposed to return the reinterpreted JSON?
+    assertFalse(rs.next()); // only 1 row of data
+  }
+
+  @Test
   public void testFastQueryMultipleRuns() throws InterruptedException {
     String query =
         "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID_FASTQUERY.getTable();
