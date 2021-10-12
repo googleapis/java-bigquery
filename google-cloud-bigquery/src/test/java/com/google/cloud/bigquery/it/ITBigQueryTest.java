@@ -611,7 +611,7 @@ public class ITBigQueryTest {
           + "  \"StringArrayField\": null"
           + "}\n"
           + "{"
-          + "  \"TimestampField\": \"2018-08-19 12:11:35.220 UTC\","
+          + "  \"TimestampField\": \"2018-08-19 12:11:35.123456 UTC\","
           + "  \"StringField\": \"StringValue1\","
           + "  \"IntegerArrayField\": [\"0\", \"1\"],"
           + "  \"BooleanField\": \"false\","
@@ -2267,10 +2267,7 @@ public class ITBigQueryTest {
     assertFalse(rs.getBoolean("BooleanField"));
     assertNotNull(rs.getBytes("BytesField"));
     assertEquals(1, rs.getInt("IntegerField"));
-    /*    assertEquals(
-    "2018-08-19 17:41:35.12",
-    rs.getTimestamp("TimestampField").toString()); // precision up to milliseconds*/
-    // TODO
+    assertEquals("2018-08-19 17:41:35.123", rs.getTimestamp("TimestampField").toString());
     assertEquals(java.sql.Date.valueOf("2018-08-19"), rs.getDate("DateField"));
     assertTrue(rs.getDouble("FloatField") == 10.1d);
     assertTrue(rs.getDouble("NumericField") == 100.0d);
