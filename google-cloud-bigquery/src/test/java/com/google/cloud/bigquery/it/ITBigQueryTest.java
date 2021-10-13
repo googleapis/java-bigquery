@@ -1895,8 +1895,7 @@ public class ITBigQueryTest {
     TableId tableId = TableId.of(DATASET, tableName);
     String query =
         String.format(
-            "CREATE OR REPLACE TABLE  %s.%s ( TimestampField TIMESTAMP )",
-            DATASET, tableName);
+            "CREATE OR REPLACE TABLE  %s.%s ( TimestampField TIMESTAMP )", DATASET, tableName);
     Job job = bigquery.create(JobInfo.of(QueryJobConfiguration.newBuilder(query).build()));
     job.waitFor();
     assertTrue(job.isDone());
