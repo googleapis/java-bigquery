@@ -2260,7 +2260,7 @@ public class ITBigQueryTest {
     assertFalse(rs.getBoolean("BooleanField"));
     assertNotNull(rs.getBytes("BytesField"));
     assertEquals(1, rs.getInt("IntegerField"));
-    assertEquals("2018-08-19 17:41:35.123", rs.getTimestamp("TimestampField").toString());
+    assertEquals(1534680695123L, rs.getTimestamp("TimestampField").getTime());
     assertEquals(java.sql.Date.valueOf("2018-08-19"), rs.getDate("DateField"));
     assertTrue(rs.getDouble("FloatField") == 10.1d);
     assertTrue(rs.getDouble("NumericField") == 100.0d);
