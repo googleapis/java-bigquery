@@ -16,7 +16,6 @@
 
 package com.google.cloud.bigquery;
 
-import com.google.api.services.bigquery.model.TableRow;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.ResultSet;
@@ -82,15 +81,16 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
 
     @Override
     public Object getObject(String fieldName) throws SQLException {
-      if (cursor != null && cursor instanceof TableRow) {
-        TableRow currentRow = (TableRow) cursor;
-        if (fieldName == null) {
-          throw new SQLException("fieldName can't be null");
-        }
-        return currentRow.get(fieldName);
+      if (fieldName == null) {
+        throw new SQLException("fieldName can't be null");
       }
-      // TODO: Add similar clauses for Apache Arrow
-      return null;
+      if (cursor == null) {
+        return null;
+      } else if (cursor instanceof FieldValueList) {
+        FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
+        return fieldValue.getValue() == null ? null : fieldValue.getValue();
+      }
+      return null; // TODO: Implementation for Arrow
     }
 
     @Override
