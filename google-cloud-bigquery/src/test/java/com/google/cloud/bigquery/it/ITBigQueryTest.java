@@ -371,10 +371,6 @@ public class ITBigQueryTest {
           Field.newBuilder("DateTimeField", StandardSQLTypeName.DATETIME)
               .setMode(Field.Mode.NULLABLE)
               .setDescription("DateTimeDescription")
-              .build(),
-          Field.newBuilder("StringArrayField", StandardSQLTypeName.STRING)
-              .setMode(Field.Mode.REPEATED)
-              .setDescription("StringArrayDescription")
               .build());
 
   private static final Field DDL_TIMESTAMP_FIELD_SCHEMA =
@@ -456,17 +452,17 @@ public class ITBigQueryTest {
           Field.newBuilder("DateTimeField", StandardSQLTypeName.DATETIME)
               .setMode(Field.Mode.NULLABLE)
               .build(),
-          Field.newBuilder("StringArrayField", StandardSQLTypeName.STRING)
-              .setMode(Field.Mode.NULLABLE)
-              .build(),
           Field.newBuilder("GeographyField", StandardSQLTypeName.GEOGRAPHY)
               .setMode(Field.Mode.NULLABLE)
               .build(),
-          Field.newBuilder("RecordField_BytesField", StandardSQLTypeName.BYTES)
+          Field.newBuilder("BytesField_1", StandardSQLTypeName.BYTES)
               .setMode(Field.Mode.NULLABLE)
               .build(),
-          Field.newBuilder("RecordField_BooleanField", StandardSQLTypeName.BOOL)
+          Field.newBuilder("BooleanField_1", StandardSQLTypeName.BOOL)
               .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("IntegerArrayField", StandardSQLTypeName.NUMERIC)
+              .setMode(Field.Mode.REPEATED)
               .build());
 
   private static final Schema QUERY_RESULT_SCHEMA_BIGNUMERIC =
@@ -607,13 +603,12 @@ public class ITBigQueryTest {
           + "  \"BigNumericField4\": null,"
           + "  \"TimeField\": null,"
           + "  \"DateField\": null,"
-          + "  \"DateTimeField\": null,"
-          + "  \"StringArrayField\": null"
+          + "  \"DateTimeField\": null"
           + "}\n"
           + "{"
           + "  \"TimestampField\": \"2018-08-19 12:11:35.123456 UTC\","
           + "  \"StringField\": \"StringValue1\","
-          + "  \"IntegerArrayField\": [\"0\", \"1\"],"
+          + "  \"IntegerArrayField\": [1,2,3,4],"
           + "  \"BooleanField\": \"false\","
           + "  \"BytesField\": \""
           + BYTES_BASE64
@@ -621,7 +616,7 @@ public class ITBigQueryTest {
           + "  \"RecordField\": {"
           + "    \"TimestampField\": \"1969-07-20 20:18:04 UTC\","
           + "    \"StringField\": null,"
-          + "    \"IntegerArrayField\": [\"1\",\"0\"],"
+          + "    \"IntegerArrayField\": [1,0],"
           + "    \"BooleanField\": \"true\","
           + "    \"BytesField\": \""
           + BYTES_BASE64
@@ -638,8 +633,7 @@ public class ITBigQueryTest {
           + "  \"BigNumericField4\": \"-578960446186580977117854925043439539266.34992332820282019728792003956564819968\","
           + "  \"TimeField\": \"12:11:35.123456\","
           + "  \"DateField\": \"2018-08-19\","
-          + "  \"DateTimeField\": \"2018-08-19 12:11:35.123456\","
-          + "  \"StringArrayField\": [\"one\", \"two\"]"
+          + "  \"DateTimeField\": \"2018-08-19 12:11:35.123456\""
           + "}";
   private static final String JSON_CONTENT_SIMPLE =
       "{"
@@ -2229,7 +2223,7 @@ public class ITBigQueryTest {
   public void testExecuteQuerySinglePageTableRow() throws SQLException {
     String query =
         "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, FloatField, "
-            + "NumericField, TimeField, DateField,  DateTimeField, StringArrayField , GeographyField, RecordField.BytesField, RecordField.BooleanField from "
+            + "NumericField, TimeField, DateField,  DateTimeField , GeographyField, RecordField.BytesField, RecordField.BooleanField, IntegerArrayField from "
             + TABLE_ID_FASTQUERY_BQ_RESULTSET.getTable()
             + " order by TimestampField";
     ConnectionSettings connectionSettings =
@@ -2240,7 +2234,7 @@ public class ITBigQueryTest {
     Schema sc = bigQueryResultSet.getSchema();
 
     assertEquals(BQ_RESULTSET_EXPECTED_SCHEMA, sc); // match the schema
-    assertEquals(3, bigQueryResultSet.getTotalRows());
+    assertEquals(2, bigQueryResultSet.getTotalRows()); // Expecting 2 rows
 
     assertTrue(rs.next()); // first row
     // checking for the null or 0 column values
@@ -2255,10 +2249,9 @@ public class ITBigQueryTest {
     assertTrue(rs.getDouble("NumericField") == 0.0d);
     assertNull(rs.getTime("TimeField"));
     assertNull(rs.getString("DateTimeField"));
-    assertNull(rs.getString("StringArrayField"));
     assertNull(rs.getString("GeographyField"));
-    assertNull(rs.getBytes("RecordField_BytesField"));
-    assertFalse(rs.getBoolean("RecordField_BooleanField"));
+    assertNull(rs.getBytes("BytesField_1"));
+    assertFalse(rs.getBoolean("BooleanField_1"));
 
     assertTrue(rs.next()); // second row
     // second row is non null, comparing the values
@@ -2273,30 +2266,17 @@ public class ITBigQueryTest {
     assertTrue(rs.getDouble("NumericField") == 100.0d);
     assertEquals(Time.valueOf(LocalTime.of(12, 11, 35, 123456)), rs.getTime("TimeField"));
     assertEquals("2018-08-19T12:11:35.123456", rs.getString("DateTimeField"));
-    assertEquals("one", rs.getString("StringArrayField"));
     assertEquals("POINT(-122.35022 47.649154)", rs.getString("GeographyField"));
-    assertNotNull(rs.getBytes("RecordField_BytesField"));
-    assertTrue(rs.getBoolean("RecordField_BooleanField"));
+    assertNotNull(rs.getBytes("BytesField_1"));
+    assertTrue(rs.getBoolean("BooleanField_1"));
+    assertTrue(
+        rs.getObject("IntegerArrayField") instanceof com.google.cloud.bigquery.FieldValueList);
+    FieldValueList integerArrayFieldValue =
+        (com.google.cloud.bigquery.FieldValueList) rs.getObject("IntegerArrayField");
+    assertEquals(4, integerArrayFieldValue.size()); // Array has 4 elements
+    assertEquals(3, (integerArrayFieldValue.get(2).getNumericValue()).intValue());
 
-    assertTrue(rs.next()); // third row
-    // 3rd row
-    assertEquals("StringValue1", rs.getString("StringField"));
-    assertTrue(rs.getDouble("BigNumericField") == 0.3333333333333333d);
-    assertFalse(rs.getBoolean("BooleanField"));
-    assertNotNull(rs.getBytes("BytesField"));
-    assertEquals(1, rs.getInt("IntegerField"));
-    assertEquals("2018-08-19 17:41:35.123", rs.getTimestamp("TimestampField").toString());
-    assertEquals(java.sql.Date.valueOf("2018-08-19"), rs.getDate("DateField"));
-    assertTrue(rs.getDouble("FloatField") == 10.1d);
-    assertTrue(rs.getDouble("NumericField") == 100.0d);
-    assertEquals(Time.valueOf(LocalTime.of(12, 11, 35, 123456)), rs.getTime("TimeField"));
-    assertEquals("2018-08-19T12:11:35.123456", rs.getString("DateTimeField"));
-    assertEquals("two", rs.getString("StringArrayField"));
-    assertEquals("POINT(-122.35022 47.649154)", rs.getString("GeographyField"));
-    assertNotNull(rs.getBytes("RecordField_BytesField"));
-    assertTrue(rs.getBoolean("RecordField_BooleanField"));
-
-    assertFalse(rs.next()); // no 4th row in the table
+    assertFalse(rs.next()); // no 3rd row in the table
   }
 
   @Test
