@@ -2280,6 +2280,72 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testExecuteQuerySinglePageTableRowColInd() throws SQLException {
+    String query =
+        "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, FloatField, "
+            + "NumericField, TimeField, DateField,  DateTimeField , GeographyField, RecordField.BytesField, RecordField.BooleanField, IntegerArrayField from "
+            + TABLE_ID_FASTQUERY_BQ_RESULTSET.getTable()
+            + " order by TimestampField";
+    /*
+    Column Index mapping for ref:
+    StringField,  0    BigNumericField, 1    BooleanField,  2   BytesField,  3    IntegerField, 4   TimestampField, 5   FloatField, " 6
+    NumericField, 7    TimeField, 8     DateField,  9    DateTimeField , 10   GeographyField, 11    RecordField.BytesField, 12     RecordField.BooleanField, 13   IntegerArrayField 14
+         */
+    ConnectionSettings connectionSettings =
+        ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
+    Connection connection = bigquery.createConnection(connectionSettings);
+    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
+    ResultSet rs = bigQueryResultSet.getResultSet();
+    Schema sc = bigQueryResultSet.getSchema();
+
+    assertEquals(BQ_RESULTSET_EXPECTED_SCHEMA, sc); // match the schema
+    assertEquals(2, bigQueryResultSet.getTotalRows()); // Expecting 2 rows
+    while (rs.next()) {
+      assertEquals(rs.getString(0), rs.getString("StringField"));
+      assertTrue(rs.getDouble(1) == rs.getDouble("BigNumericField"));
+      assertEquals(rs.getBoolean(2), rs.getBoolean("BooleanField"));
+      if (rs.getBytes(3) == null) { // both overloads should be null
+        assertEquals(rs.getBytes(3), rs.getBytes("BytesField"));
+      } else { // value in String representation should be the same
+        assertEquals(
+            new String(rs.getBytes(3), StandardCharsets.UTF_8),
+            new String(rs.getBytes("BytesField"), StandardCharsets.UTF_8));
+      }
+      assertEquals(rs.getInt(4), rs.getInt("IntegerField"));
+      assertEquals(rs.getTimestamp(5), rs.getTimestamp("TimestampField"));
+      assertEquals(rs.getDate(9), rs.getDate("DateField"));
+      assertTrue(rs.getDouble("FloatField") == rs.getDouble(6));
+      assertTrue(rs.getDouble("NumericField") == rs.getDouble(7));
+      assertEquals(rs.getTime(8), rs.getTime("TimeField"));
+      assertEquals(rs.getString(10), rs.getString("DateTimeField"));
+      assertEquals(rs.getString(11), rs.getString("GeographyField"));
+      if (rs.getBytes(12) == null) { // both overloads should be null
+        assertEquals(rs.getBytes(12), rs.getBytes("BytesField_1"));
+      } else { // value in String representation should be the same
+        assertEquals(
+            new String(rs.getBytes(12), StandardCharsets.UTF_8),
+            new String(rs.getBytes("BytesField_1"), StandardCharsets.UTF_8));
+      }
+      assertEquals(rs.getBoolean(13), rs.getBoolean("BooleanField_1"));
+      assertTrue(
+          rs.getObject("IntegerArrayField") instanceof com.google.cloud.bigquery.FieldValueList);
+      FieldValueList integerArrayFieldValue =
+          (com.google.cloud.bigquery.FieldValueList) rs.getObject("IntegerArrayField");
+      assertTrue(rs.getObject(14) instanceof com.google.cloud.bigquery.FieldValueList);
+      FieldValueList integerArrayFieldValueColInd =
+          (com.google.cloud.bigquery.FieldValueList) rs.getObject(14);
+      assertEquals(
+          integerArrayFieldValue.size(),
+          integerArrayFieldValueColInd.size()); // Array has 4 elements
+      if (integerArrayFieldValue.size() == 4) { // as we are picking the third index
+        assertEquals(
+            (integerArrayFieldValue.get(2).getNumericValue()).intValue(),
+            (integerArrayFieldValueColInd.get(2).getNumericValue()).intValue());
+      }
+    }
+  }
+
+  @Test
   public void testExecuteSelectStruct() throws SQLException {
     String query = "select (STRUCT(\"Vancouver\" as city, 5 as years)) as address";
     ConnectionSettings connectionSettings =
