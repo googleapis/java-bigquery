@@ -168,6 +168,7 @@ final class ConnectionImpl implements Connection {
     Iterable<FieldValueList> fieldValueLists = getIterableFieldValueList(results.getRows(), schema);
 
     // Producer thread for populating the buffer row by row
+    // TODO: Update to use a configurable number of threads (default 4) to populate the producer
     BlockingQueue<AbstractList<FieldValue>> buffer =
         new LinkedBlockingDeque<>(1000); // TODO: Update the capacity. Prefetch limit
     Runnable populateBufferRunnable =
@@ -335,6 +336,7 @@ final class ConnectionImpl implements Connection {
   }
 
   private boolean isFastQuerySupported() {
+    // TODO: add regex logic to check for scripting
     return connectionSettings.getClustering() == null
         && connectionSettings.getCreateDisposition() == null
         && connectionSettings.getDestinationEncryptionConfiguration() == null

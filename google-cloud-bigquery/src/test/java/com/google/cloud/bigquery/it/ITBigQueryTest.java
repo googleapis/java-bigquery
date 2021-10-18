@@ -2355,15 +2355,24 @@ public class ITBigQueryTest {
     assertEquals(1, bigQueryResultSet.getTotalRows());
 
     Schema schema = bigQueryResultSet.getSchema();
-    assertEquals(schema.getFields().get(0).getName(), "address");
-    assertEquals(schema.getFields().get(0).getMode(), Field.Mode.NULLABLE);
+    assertEquals("address", schema.getFields().get(0).getName());
+    assertEquals(Field.Mode.NULLABLE, schema.getFields().get(0).getMode());
     // Backend is currently returning RECORD which is LegacySQLTypeName.
-    assertEquals(schema.getFields().get(0).getType(), LegacySQLTypeName.RECORD);
+    assertEquals(LegacySQLTypeName.RECORD, schema.getFields().get(0).getType());
+    assertEquals("city", schema.getFields().get(0).getSubFields().get(0).getName());
+    assertEquals(
+        LegacySQLTypeName.STRING, schema.getFields().get(0).getSubFields().get(0).getType());
+    assertEquals("years", schema.getFields().get(0).getSubFields().get(1).getName());
+    assertEquals(
+        LegacySQLTypeName.INTEGER, schema.getFields().get(0).getSubFields().get(1).getType());
 
     ResultSet rs = bigQueryResultSet.getResultSet();
     assertTrue(rs.next());
-    // TODO: Figure out what this is supposed to return
-    // Object o = rs.getObject("address"); // is this supposed to return the reinterpreted JSON?
+    FieldValueList addressFieldValue =
+        (com.google.cloud.bigquery.FieldValueList) rs.getObject("address");
+    assertEquals(rs.getObject("address"), rs.getObject(0));
+    assertEquals("Vancouver", addressFieldValue.get(0).getStringValue());
+    assertEquals("5", addressFieldValue.get(1).getStringValue());
     assertFalse(rs.next()); // only 1 row of data
   }
 
