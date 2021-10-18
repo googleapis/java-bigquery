@@ -45,18 +45,6 @@ abstract class AbstractJdbcResultSet implements ResultSet {
   }
 
   @Override
-  public String getString(int columnIndex) throws SQLException {
-    // TODO: Implement the logic
-    throw new RuntimeException("Not implemented");
-  }
-
-  @Override
-  public boolean getBoolean(int columnIndex) throws SQLException {
-    // TODO: Implement the logic
-    throw new RuntimeException("Not implemented");
-  }
-
-  @Override
   public byte getByte(int columnIndex) throws SQLException {
     // TODO: Implement the logic
     throw new RuntimeException("Not implemented");
@@ -75,55 +63,13 @@ abstract class AbstractJdbcResultSet implements ResultSet {
   }
 
   @Override
-  public int getInt(int columnIndex) throws SQLException {
-    // TODO: Implement the logic
-    throw new RuntimeException("Not implemented");
-  }
-
-  @Override
-  public long getLong(int columnIndex) throws SQLException {
-    // TODO: Implement the logic
-    throw new RuntimeException("Not implemented");
-  }
-
-  @Override
   public float getFloat(int columnIndex) throws SQLException {
     // TODO: Implement the logic
     throw new RuntimeException("Not implemented");
   }
 
   @Override
-  public double getDouble(int columnIndex) throws SQLException {
-    // TODO: Implement the logic
-    throw new RuntimeException("Not implemented");
-  }
-
-  @Override
   public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
-    // TODO: Implement the logic
-    throw new RuntimeException("Not implemented");
-  }
-
-  @Override
-  public byte[] getBytes(int columnIndex) throws SQLException {
-    // TODO: Implement the logic
-    throw new RuntimeException("Not implemented");
-  }
-
-  @Override
-  public Date getDate(int columnIndex) throws SQLException {
-    // TODO: Implement the logic
-    throw new RuntimeException("Not implemented");
-  }
-
-  @Override
-  public Time getTime(int columnIndex) throws SQLException {
-    // TODO: Implement the logic
-    throw new RuntimeException("Not implemented");
-  }
-
-  @Override
-  public Timestamp getTimestamp(int columnIndex) throws SQLException {
     // TODO: Implement the logic
     throw new RuntimeException("Not implemented");
   }
@@ -160,12 +106,6 @@ abstract class AbstractJdbcResultSet implements ResultSet {
 
   @Override
   public Reader getCharacterStream(String columnLabel) throws SQLException {
-    // TODO: Implement the logic
-    throw new RuntimeException("Not implemented");
-  }
-
-  @Override
-  public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
     // TODO: Implement the logic
     throw new RuntimeException("Not implemented");
   }
@@ -955,11 +895,6 @@ abstract class AbstractJdbcResultSet implements ResultSet {
 
   @Override
   public ResultSetMetaData getMetaData() throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  @Override
-  public Object getObject(int columnIndex) throws SQLException {
     throw new SQLFeatureNotSupportedException();
   }
 
