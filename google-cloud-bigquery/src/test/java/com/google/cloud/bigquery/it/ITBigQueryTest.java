@@ -2019,6 +2019,35 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testLastModifiedTime() {
+    String tableName = "test_create_table_modify";
+    TableId tableId = TableId.of(DATASET, tableName);
+    try {
+      StandardTableDefinition tableDefinition =
+          StandardTableDefinition.newBuilder().setSchema(TABLE_SCHEMA).build();
+      Table createdTable = bigquery.create(TableInfo.of(tableId, tableDefinition));
+      assertNotNull(createdTable);
+
+      Table updatedTable =
+          bigquery.update(createdTable.toBuilder().setDescription("Updated Description").build());
+      assertThat(updatedTable.getDescription()).isEqualTo("Updated Description");
+
+      Dataset dataset = bigquery.getDataset(DATASET);
+      Page<Table> tableList = dataset.list(BigQuery.TableListOption.pageSize(1000));
+      tableList
+          .getValues()
+          .forEach(
+              table -> {
+                // lastModifiedTime is always null
+                Long lastModifiedTime = table.getLastModifiedTime();
+                assertNotNull(lastModifiedTime);
+              });
+    } finally {
+      bigquery.delete(tableId);
+    }
+  }
+
+  @Test
   public void testFastQuerySinglePageDuplicateRequestIds() throws InterruptedException {
     String query =
         "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID_FASTQUERY.getTable();
