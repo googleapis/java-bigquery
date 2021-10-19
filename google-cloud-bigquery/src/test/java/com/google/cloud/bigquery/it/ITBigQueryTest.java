@@ -64,6 +64,7 @@ import com.google.cloud.bigquery.ExtractJobConfiguration;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.FieldList;
 import com.google.cloud.bigquery.FieldValue;
+import com.google.cloud.bigquery.FieldValue.Attribute;
 import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.FormatOptions;
 import com.google.cloud.bigquery.HivePartitioningOptions;
@@ -2220,7 +2221,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExecuteQuerySinglePageTableRow() throws SQLException {
+  public void testExecuteSelectSinglePageTableRow() throws SQLException {
     String query =
         "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, FloatField, "
             + "NumericField, TimeField, DateField,  DateTimeField , GeographyField, RecordField.BytesField, RecordField.BooleanField, IntegerArrayField from "
@@ -2280,7 +2281,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExecuteQuerySinglePageTableRowColInd() throws SQLException {
+  public void testExecuteSelectSinglePageTableRowColInd() throws SQLException {
     String query =
         "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, FloatField, "
             + "NumericField, TimeField, DateField,  DateTimeField , GeographyField, RecordField.BytesField, RecordField.BooleanField, IntegerArrayField from "
@@ -2357,14 +2358,16 @@ public class ITBigQueryTest {
     Schema schema = bigQueryResultSet.getSchema();
     assertEquals("address", schema.getFields().get(0).getName());
     assertEquals(Field.Mode.NULLABLE, schema.getFields().get(0).getMode());
-    // Backend is currently returning RECORD which is LegacySQLTypeName.
+    // Backend is currently returning LegacySQLTypeName. Tracking bug: b/202977620
     assertEquals(LegacySQLTypeName.RECORD, schema.getFields().get(0).getType());
     assertEquals("city", schema.getFields().get(0).getSubFields().get(0).getName());
     assertEquals(
         LegacySQLTypeName.STRING, schema.getFields().get(0).getSubFields().get(0).getType());
+    assertEquals(Field.Mode.NULLABLE, schema.getFields().get(0).getSubFields().get(0).getMode());
     assertEquals("years", schema.getFields().get(0).getSubFields().get(1).getName());
     assertEquals(
         LegacySQLTypeName.INTEGER, schema.getFields().get(0).getSubFields().get(1).getType());
+    assertEquals(Field.Mode.NULLABLE, schema.getFields().get(0).getSubFields().get(1).getMode());
 
     ResultSet rs = bigQueryResultSet.getResultSet();
     assertTrue(rs.next());
@@ -2372,8 +2375,96 @@ public class ITBigQueryTest {
         (com.google.cloud.bigquery.FieldValueList) rs.getObject("address");
     assertEquals(rs.getObject("address"), rs.getObject(0));
     assertEquals("Vancouver", addressFieldValue.get(0).getStringValue());
-    assertEquals("5", addressFieldValue.get(1).getStringValue());
+    assertEquals(5, addressFieldValue.get(1).getLongValue());
     assertFalse(rs.next()); // only 1 row of data
+  }
+
+  @Test
+  public void testExecuteSelectStructSubField() throws SQLException {
+    String query =
+        "select address.city from (select (STRUCT(\"Vancouver\" as city, 5 as years)) as address)";
+    ConnectionSettings connectionSettings =
+        ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
+    Connection connection = bigquery.createConnection(connectionSettings);
+    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
+    assertEquals(1, bigQueryResultSet.getTotalRows());
+
+    Schema schema = bigQueryResultSet.getSchema();
+    assertEquals("city", schema.getFields().get(0).getName());
+    assertEquals(Field.Mode.NULLABLE, schema.getFields().get(0).getMode());
+    // Backend is currently returning LegacySQLTypeName. Tracking bug: b/202977620
+    assertEquals(LegacySQLTypeName.STRING, schema.getFields().get(0).getType());
+    assertNull(
+        schema.getFields().get(0).getSubFields()); // this is a String field without any subfields
+
+    ResultSet rs = bigQueryResultSet.getResultSet();
+    assertTrue(rs.next());
+    String cityFieldValue = rs.getString("city");
+    assertEquals(rs.getString("city"), rs.getObject(0));
+    assertEquals("Vancouver", cityFieldValue);
+    assertFalse(rs.next()); // only 1 row of data
+  }
+
+  @Test
+  public void testExecuteSelectArray() throws SQLException {
+    String query = "SELECT [1,2,3]";
+    ConnectionSettings connectionSettings =
+        ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
+    Connection connection = bigquery.createConnection(connectionSettings);
+    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
+    assertEquals(1, bigQueryResultSet.getTotalRows());
+
+    Schema schema = bigQueryResultSet.getSchema();
+    assertEquals("f0_", schema.getFields().get(0).getName());
+    assertEquals(Field.Mode.REPEATED, schema.getFields().get(0).getMode());
+    assertEquals(LegacySQLTypeName.INTEGER, schema.getFields().get(0).getType());
+    assertNull(schema.getFields().get(0).getSubFields()); // no subfields for Integers
+
+    ResultSet rs = bigQueryResultSet.getResultSet();
+    assertTrue(rs.next());
+    FieldValueList arrayFieldValue = (com.google.cloud.bigquery.FieldValueList) rs.getObject(0);
+    assertEquals(1, arrayFieldValue.get(0).getLongValue());
+    assertEquals(2, arrayFieldValue.get(1).getLongValue());
+    assertEquals(3, arrayFieldValue.get(2).getLongValue());
+  }
+
+  @Test
+  public void testExecuteSelectArrayOfStruct() throws SQLException {
+    String query =
+        "SELECT [STRUCT(\"Vancouver\" as city, 5 as years), STRUCT(\"Boston\" as city, 10 as years)]";
+    ConnectionSettings connectionSettings =
+        ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
+    Connection connection = bigquery.createConnection(connectionSettings);
+    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
+    assertEquals(1, bigQueryResultSet.getTotalRows());
+
+    Schema schema = bigQueryResultSet.getSchema();
+    assertEquals("f0_", schema.getFields().get(0).getName());
+    assertEquals(Field.Mode.REPEATED, schema.getFields().get(0).getMode());
+    // Backend is currently returning LegacySQLTypeName. Tracking bug: b/202977620
+    // Verify the field metadata of the two subfields of the struct
+    assertEquals(LegacySQLTypeName.RECORD, schema.getFields().get(0).getType());
+    assertEquals("city", schema.getFields().get(0).getSubFields().get(0).getName());
+    assertEquals(
+        LegacySQLTypeName.STRING, schema.getFields().get(0).getSubFields().get(0).getType());
+    assertEquals(Field.Mode.NULLABLE, schema.getFields().get(0).getSubFields().get(0).getMode());
+    assertEquals("years", schema.getFields().get(0).getSubFields().get(1).getName());
+    assertEquals(
+        LegacySQLTypeName.INTEGER, schema.getFields().get(0).getSubFields().get(1).getType());
+    assertEquals(Field.Mode.NULLABLE, schema.getFields().get(0).getSubFields().get(1).getMode());
+
+    ResultSet rs = bigQueryResultSet.getResultSet();
+    assertTrue(rs.next());
+    FieldValueList arrayOfStructFieldValue =
+        (com.google.cloud.bigquery.FieldValueList) rs.getObject(0);
+    // Verify the values of the two structs in the array
+    assertEquals(Attribute.RECORD, arrayOfStructFieldValue.get(0).getAttribute());
+    assertEquals(
+        "Vancouver", arrayOfStructFieldValue.get(0).getRecordValue().get(0).getStringValue());
+    assertEquals(5, arrayOfStructFieldValue.get(0).getRecordValue().get(1).getLongValue());
+    assertEquals(Attribute.RECORD, arrayOfStructFieldValue.get(1).getAttribute());
+    assertEquals("Boston", arrayOfStructFieldValue.get(1).getRecordValue().get(0).getStringValue());
+    assertEquals(10, arrayOfStructFieldValue.get(1).getRecordValue().get(1).getLongValue());
   }
 
   @Test
