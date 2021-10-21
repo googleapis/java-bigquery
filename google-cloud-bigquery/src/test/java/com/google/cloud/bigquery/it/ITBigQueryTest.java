@@ -1901,12 +1901,11 @@ public class ITBigQueryTest {
     assertTrue(job.isDone());
     Map<String, Object> row = new HashMap<>();
     // Try to insert millisecond precision timestamp
-    long millisNow = 1631425816551L;
+    String millisNow = "2021-10-21 17:51:04.777"; // Using String instead of long
     row.put("TimestampField", millisNow);
     InsertAllRequest request = InsertAllRequest.newBuilder(tableId).addRow(row).build();
     InsertAllResponse response = bigquery.insertAll(request);
-    // TODO: ERRORS SHOULD BE FALSE b/139860901
-    assertTrue(response.hasErrors());
+    assertFalse(response.hasErrors());
   }
 
   @Test
