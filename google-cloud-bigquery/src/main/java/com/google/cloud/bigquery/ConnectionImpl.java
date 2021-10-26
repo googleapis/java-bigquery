@@ -120,6 +120,7 @@ final class ConnectionImpl implements Connection {
     } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
     }
+
     if (results.getErrors() != null) {
       List<BigQueryError> bigQueryErrors =
           results.getErrors().stream()
@@ -165,42 +166,59 @@ final class ConnectionImpl implements Connection {
     schema = Schema.fromPb(results.getSchema());
     numRows = results.getTotalRows().longValue();
 
-    Iterable<FieldValueList> fieldValueLists = getIterableFieldValueList(results.getRows(), schema);
-
     // Producer thread for populating the buffer row by row
     // TODO: Update to use a configurable number of threads (default 4) to populate the producer
     BlockingQueue<AbstractList<FieldValue>> buffer =
         new LinkedBlockingDeque<>(1000); // TODO: Update the capacity. Prefetch limit
+
     Runnable populateBufferRunnable =
         () -> { // producer thread populating the buffer
-          // List<TableRow> tableRows = results.getRows();
-          for (FieldValueList fieldValueList :
-              fieldValueLists) { // TODO: Handle the logic of pagination
-            try {
-              buffer.put(fieldValueList);
-            } catch (InterruptedException e) {
-              e.printStackTrace();
+          Iterable<FieldValueList> fieldValueLists =
+              getIterableFieldValueList(results.getRows(), schema);
+
+          boolean hasRows = true; // as we have to process the first page
+          String pageToken = results.getPageToken();
+          while (hasRows) {
+
+            for (FieldValueList fieldValueList : fieldValueLists) {
+              try {
+                buffer.put(fieldValueList);
+              } catch (InterruptedException e) {
+                e.printStackTrace();
+              }
+            }
+
+            if (pageToken != null) { // request next page
+              TableDataList tabledataList =
+                  tableDataListRpc(
+                      connectionSettings.getDestinationTable(),
+                      pageToken); // TODO: It appears connectionSettings.getDestinationTable() is
+                                  // null, check how can be pass the required params
+              fieldValueLists = getIterableFieldValueList(tabledataList.getRows(), schema);
+              ; // get next set of values
+              hasRows = true; // new page was requested, which is not yet processed
+              pageToken = tabledataList.getPageToken(); // next page's token
+            } else { // the current page has been processed and there's no next page
+              hasRows = false;
             }
           }
-
-          if (results.getPageToken() == null) {
-            buffer.offer(
-                new EndOfFieldValueList()); // A Hack to inform the BQResultSet that the blocking
-            // queue won't be populated with more records
-          }
+          buffer.offer(
+              new EndOfFieldValueList()); // All the pages has been processed, put this marker
         };
     Thread populateBufferWorker = new Thread(populateBufferRunnable);
     populateBufferWorker.start(); // child process to populate the buffer
 
-    // only 1 page of result
-    if (results.getPageToken() == null) {
-      return new BigQueryResultSetImpl<AbstractList<FieldValue>>(schema, numRows, buffer);
-    }
+    // if (results.getPageToken() == null) {
+    return new BigQueryResultSetImpl<AbstractList<FieldValue>>(schema, numRows, buffer);
+    // }
+
+    /*
+    // TODO: This part is done above, will remove the commented code in the next commit
     // use tabledata.list or Read API to fetch subsequent pages of results
     long totalRows = results.getTotalRows().longValue();
     long pageRows = results.getRows().size();
     JobId jobId = JobId.fromPb(results.getJobReference());
-    return null; // TODO - Implement getQueryResultsWithJobId(totalRows, pageRows, schema, jobId);
+    return null; // TODO - Implement getQueryResultsWithJobId(totalRows, pageRows, schema, jobId);*/
   }
 
   /* Returns query results using either tabledata.list or the high throughput Read API */
@@ -209,7 +227,7 @@ final class ConnectionImpl implements Connection {
     TableId destinationTable = queryJobsGetRpc(jobId);
     return useReadAPI(totalRows, pageRows)
         ? highThroughPutRead(destinationTable)
-        : tableDataListRpc(destinationTable, schema);
+        : null; // TODO - plugin tableDataListRpc(destinationTable, schema, null);
   }
 
   /* Returns the destinationTable from jobId by calling jobs.get API */
@@ -243,14 +261,13 @@ final class ConnectionImpl implements Connection {
     return ((QueryJobConfiguration) job.getConfiguration()).getDestinationTable();
   }
 
-  private BigQueryResultSet tableDataListRpc(TableId destinationTable, Schema schema) {
+  private TableDataList tableDataListRpc(TableId destinationTable, String pageToken) {
     try {
       final TableId completeTableId =
           destinationTable.setProjectId(
               Strings.isNullOrEmpty(destinationTable.getProject())
                   ? bigQueryOptions.getProjectId()
                   : destinationTable.getProject());
-
       TableDataList results =
           runWithRetries(
               () ->
@@ -260,18 +277,13 @@ final class ConnectionImpl implements Connection {
                           completeTableId.getProject(),
                           completeTableId.getDataset(),
                           completeTableId.getTable(),
-                          connectionSettings.getNumBufferedRows()),
+                          connectionSettings.getNumBufferedRows(),
+                          pageToken),
               bigQueryOptions.getRetrySettings(),
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               bigQueryOptions.getClock());
 
-      long numRows = results.getTotalRows() == null ? 0 : results.getTotalRows().longValue();
-      /*   return new BigQueryResultSetImpl(
-      schema, numRows, null
-      */
-      /* TODO: iterate(pagesAfterFirstPage) */
-      /* );*/
-      return null; // TODO: Plugin the buffer logic
+      return results;
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
     }
