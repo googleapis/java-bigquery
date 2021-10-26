@@ -259,7 +259,7 @@ public interface BigQueryRpc extends ServiceRpc {
    * @throws BigQueryException upon failure
    */
   TableDataList listTableDataWithRowLimit(
-      String projectId, String datasetId, String tableId, Long rowLimit);
+      String projectId, String datasetId, String tableId, Long rowLimit, String pageToken);
 
   /**
    * Returns the requested job or {@code null} if not found.
