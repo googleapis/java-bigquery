@@ -193,7 +193,7 @@ final class ConnectionImpl implements Connection {
                   tableDataListRpc(
                       connectionSettings.getDestinationTable(),
                       pageToken); // TODO: It appears connectionSettings.getDestinationTable() is
-                                  // null, check how can be pass the required params
+              // null, check how can be pass the required params
               fieldValueLists = getIterableFieldValueList(tabledataList.getRows(), schema);
               ; // get next set of values
               hasRows = true; // new page was requested, which is not yet processed
