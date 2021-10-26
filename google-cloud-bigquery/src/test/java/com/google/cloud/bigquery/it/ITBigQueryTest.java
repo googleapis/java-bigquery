@@ -1074,6 +1074,25 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testTableExpiration() {
+    StandardTableDefinition tableDefinition =
+        StandardTableDefinition.newBuilder()
+            .build();
+
+    // 1.with dataset default being set, create a table with setExpirationTime(Long.MaxValue) and see what's the expiration time of the table being created?
+    String tableName1 = "MY_TABLE_NAME_DEFAULT_DATASET_MAX_EXPIRATION";
+    TableId tableId1 = TableId.of(DATASET, tableName1);
+    Table createdTable1 = bigquery.create(TableInfo.newBuilder(tableId1, tableDefinition).setExpirationTime(Long.MAX_VALUE).build());
+    System.out.println("1. " + createdTable1.getExpirationTime());
+
+    // 3. with dataset default set, create a table with setExpirationTime(64060588800000) and see what's the expiration time of the table being created?
+    String tableName2 = "MY_TABLE_NAME_DEFAULT_DATASET_LONG_EXPIRATION";
+    TableId tableId2 = TableId.of(DATASET, tableName2);
+    Table createdTable2 = bigquery.create(TableInfo.newBuilder(tableId2, tableDefinition).setExpirationTime(64060588800000l).build());
+    System.out.println("3. " + createdTable2.getExpirationTime());
+  }
+
+  @Test
   public void testListTablesWithPartitioning() {
     String tableName = "test_list_tables_partitioning";
     TimePartitioning timePartitioning = TimePartitioning.of(Type.DAY, EXPIRATION_MS);
