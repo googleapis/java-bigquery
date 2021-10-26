@@ -530,13 +530,18 @@ public class HttpBigQueryRpc implements BigQueryRpc {
 
   @Override
   public TableDataList listTableDataWithRowLimit(
-      String projectId, String datasetId, String tableId, Long preFetchedRowLimit) {
+      String projectId,
+      String datasetId,
+      String tableId,
+      Long preFetchedRowLimit,
+      String pageToken) {
     try {
       return bigquery
           .tabledata()
           .list(projectId, datasetId, tableId)
           .setPrettyPrint(false)
           .setMaxResults(preFetchedRowLimit)
+          .setPageToken(pageToken)
           .execute();
     } catch (IOException ex) {
       throw translate(ex);
