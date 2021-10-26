@@ -120,13 +120,6 @@
       <artifactId>assertj-core</artifactId>
       <scope>test</scope>
     </dependency>
-    <!-- Manage checker-qual in test scope so that it is dropped from the flattened pom -->
-    <dependency>
-      <groupId>org.checkerframework</groupId>
-      <artifactId>checker-qual</artifactId>
-      <version>3.12.0</version>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
   <build>

@@ -129,13 +129,6 @@
         <version>1.5.9</version>
         <scope>test</scope>
       </dependency>
-      <!-- Adding checker-qual as a test dep so it will be dropped during pom flattening -->
-      <dependency>
-        <groupId>org.checkerframework</groupId>
-        <artifactId>checker-qual</artifactId>
-        <version>3.8.0</version>
-        <scope>test</scope>
-      </dependency>
       <dependency>
         <groupId>org.assertj</groupId>
         <artifactId>assertj-core</artifactId>
