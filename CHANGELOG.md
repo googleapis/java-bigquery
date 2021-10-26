@@ -1,5 +1,44 @@
 # Changelog
 
+### [2.3.3](https://www.github.com/googleapis/java-bigquery/compare/v2.3.2...v2.3.3) (2021-10-25)
+
+
+### Bug Fixes
+
+* allow retry on connection establishing exceptions ([#1666](https://www.github.com/googleapis/java-bigquery/issues/1666)) ([fd06ad2](https://www.github.com/googleapis/java-bigquery/commit/fd06ad2728e52eac2e8570b0ba15830ad79470ad))
+
+
+### Dependencies
+
+* update dependency com.google.apis:google-api-services-bigquery to v2-rev20211017-1.32.1 ([#1679](https://www.github.com/googleapis/java-bigquery/issues/1679)) ([5e46e5c](https://www.github.com/googleapis/java-bigquery/commit/5e46e5c59f58efb996364edb394b149f4ead8428))
+
+### [2.3.2](https://www.github.com/googleapis/java-bigquery/compare/v2.3.1...v2.3.2) (2021-10-20)
+
+
+### Dependencies
+
+* update dependency com.google.cloud:google-cloud-bigtable to v2.2.0 ([#1667](https://www.github.com/googleapis/java-bigquery/issues/1667)) ([201852f](https://www.github.com/googleapis/java-bigquery/commit/201852fa3f9947da54bf4c4ec79d1b2630d76f2f))
+
+### [2.3.1](https://www.github.com/googleapis/java-bigquery/compare/v2.3.0...v2.3.1) (2021-10-19)
+
+
+### Dependencies
+
+* update dependency com.google.cloud:google-cloud-shared-dependencies to v2.4.0 ([#1661](https://www.github.com/googleapis/java-bigquery/issues/1661)) ([a499bbc](https://www.github.com/googleapis/java-bigquery/commit/a499bbc526da6a2e7f289ba2a86d9d206659d88c))
+* update dependency com.google.cloud:google-cloud-storage to v2.1.9 ([#1659](https://www.github.com/googleapis/java-bigquery/issues/1659)) ([16c2d22](https://www.github.com/googleapis/java-bigquery/commit/16c2d22550812e908f19969c27bcaf9dd5f861e1))
+
+## [2.3.0](https://www.github.com/googleapis/java-bigquery/compare/v2.2.1...v2.3.0) (2021-10-15)
+
+
+### Features
+
+* add session support ([#1652](https://www.github.com/googleapis/java-bigquery/issues/1652)) ([acc6cb8](https://www.github.com/googleapis/java-bigquery/commit/acc6cb8ad318ae41a9a3a00a5942025c14cbe681))
+
+
+### Bug Fixes
+
+* fix timestamp rounding issue ([#1645](https://www.github.com/googleapis/java-bigquery/issues/1645)) ([e60bdff](https://www.github.com/googleapis/java-bigquery/commit/e60bdff9e196a618a59a0544ec93f87b2ec5fc82))
+
 ### [2.2.1](https://www.github.com/googleapis/java-bigquery/compare/v2.2.0...v2.2.1) (2021-10-05)
 
 
