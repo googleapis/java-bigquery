@@ -25,6 +25,6 @@
   <difference>
     <differenceType>7012</differenceType>
     <className>com/google/cloud/bigquery/spi/v2/BigQueryRpc</className>
-    <method>com.google.api.services.bigquery.model.TableDataList listTableDataWithRowLimit(java.lang.String, java.lang.String, java.lang.String, java.lang.Long)</method>
+    <method>com.google.api.services.bigquery.model.TableDataList listTableDataWithRowLimit(java.lang.String, java.lang.String, java.lang.String, java.lang.Long, java.lang.String)</method>
   </difference>
 </differences>
