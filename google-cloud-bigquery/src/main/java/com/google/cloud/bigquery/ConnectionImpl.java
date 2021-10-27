@@ -131,11 +131,13 @@ final class ConnectionImpl implements Connection {
       throw new BigQueryException(bigQueryErrors);
     }
 
+    // Query finished running and we can paginate all the results
     if (results.getJobComplete() && results.getSchema() != null) {
       return processQueryResponseResults(results);
     } else {
       // Query is long running (> 10s) and hasn't completed yet, or query completed but didn't
-      // return the schema, fallback to GetQueryResults. Some operations don't return the schema and
+      // return the schema, fallback to jobs.insert path. Some operations don't return the schema
+      // and
       // can be optimized here, but this is left as future work.
       long totalRows = results.getTotalRows().longValue();
       long pageRows = results.getRows().size();
@@ -189,13 +191,11 @@ final class ConnectionImpl implements Connection {
             }
 
             if (pageToken != null) { // request next page
-              TableDataList tabledataList =
-                  tableDataListRpc(
-                      connectionSettings.getDestinationTable(),
-                      pageToken); // TODO: It appears connectionSettings.getDestinationTable() is
-              // null, check how can be pass the required params
+              JobId jobId = JobId.fromPb(results.getJobReference());
+              TableId destinationTable = queryJobsGetRpc(jobId);
+              TableDataList tabledataList = tableDataListRpc(destinationTable, pageToken);
               fieldValueLists = getIterableFieldValueList(tabledataList.getRows(), schema);
-              ; // get next set of values
+              // get next set of values
               hasRows = true; // new page was requested, which is not yet processed
               pageToken = tabledataList.getPageToken(); // next page's token
             } else { // the current page has been processed and there's no next page
@@ -208,9 +208,8 @@ final class ConnectionImpl implements Connection {
     Thread populateBufferWorker = new Thread(populateBufferRunnable);
     populateBufferWorker.start(); // child process to populate the buffer
 
-    // if (results.getPageToken() == null) {
+    // Only 1 page of results
     return new BigQueryResultSetImpl<AbstractList<FieldValue>>(schema, numRows, buffer);
-    // }
 
     /*
     // TODO: This part is done above, will remove the commented code in the next commit
