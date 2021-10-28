@@ -142,7 +142,7 @@ final class ConnectionImpl implements Connection {
       long totalRows = results.getTotalRows().longValue();
       long pageRows = results.getRows().size();
       JobId jobId = JobId.fromPb(results.getJobReference());
-      return null; // TODO getQueryResultsWithJobId(totalRows, pageRows, null, jobId);
+      return getQueryResultsWithJobId(totalRows, pageRows, null, jobId);
     }
   }
 
@@ -170,6 +170,7 @@ final class ConnectionImpl implements Connection {
 
     // Producer thread for populating the buffer row by row
     // TODO: Update to use a configurable number of threads (default 4) to populate the producer
+    // TODO: Have just one child process at most, instead of the thread
     BlockingQueue<AbstractList<FieldValue>> buffer =
         new LinkedBlockingDeque<>(1000); // TODO: Update the capacity. Prefetch limit
 
@@ -193,9 +194,9 @@ final class ConnectionImpl implements Connection {
             if (pageToken != null) { // request next page
               JobId jobId = JobId.fromPb(results.getJobReference());
               TableId destinationTable = queryJobsGetRpc(jobId);
+              // get next set of values
               TableDataList tabledataList = tableDataListRpc(destinationTable, pageToken);
               fieldValueLists = getIterableFieldValueList(tabledataList.getRows(), schema);
-              // get next set of values
               hasRows = true; // new page was requested, which is not yet processed
               pageToken = tabledataList.getPageToken(); // next page's token
             } else { // the current page has been processed and there's no next page
@@ -208,25 +209,20 @@ final class ConnectionImpl implements Connection {
     Thread populateBufferWorker = new Thread(populateBufferRunnable);
     populateBufferWorker.start(); // child process to populate the buffer
 
-    // Only 1 page of results
+    // This will work for pagination as well, as buffer is getting updated asynchronously
     return new BigQueryResultSetImpl<AbstractList<FieldValue>>(schema, numRows, buffer);
-
-    /*
-    // TODO: This part is done above, will remove the commented code in the next commit
-    // use tabledata.list or Read API to fetch subsequent pages of results
-    long totalRows = results.getTotalRows().longValue();
-    long pageRows = results.getRows().size();
-    JobId jobId = JobId.fromPb(results.getJobReference());
-    return null; // TODO - Implement getQueryResultsWithJobId(totalRows, pageRows, schema, jobId);*/
   }
 
   /* Returns query results using either tabledata.list or the high throughput Read API */
   private BigQueryResultSet getQueryResultsWithJobId(
       long totalRows, long pageRows, Schema schema, JobId jobId) {
     TableId destinationTable = queryJobsGetRpc(jobId);
-    return useReadAPI(totalRows, pageRows)
-        ? highThroughPutRead(destinationTable)
-        : null; // TODO - plugin tableDataListRpc(destinationTable, schema, null);
+
+    return null; // use processQueryResponseResults(); for remaining pages
+    /*  return useReadAPI(totalRows, pageRows)
+    ? highThroughPutRead(destinationTable)
+    : null; // plugin tableDataListRpc(destinationTable, schema, null);, Use processQueryResponseResults ?
+                */
   }
 
   /* Returns the destinationTable from jobId by calling jobs.get API */
@@ -293,7 +289,8 @@ final class ConnectionImpl implements Connection {
   }
 
   /* Returns results of the query associated with the provided job using jobs.getQueryResults API */
-  private BigQueryResultSet getQueryResultsRpc(JobId jobId) {
+  private BigQueryResultSet getQueryResultsRpc(
+      JobId jobId) { // TODO(prasmish) temp: This is a slower endpoint
     JobId completeJobId =
         jobId
             .setProjectId(bigQueryOptions.getProjectId())
