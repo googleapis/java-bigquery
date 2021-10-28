@@ -54,6 +54,7 @@ public class Job extends JobInfo {
           .setTotalTimeout(Duration.ofHours(12L))
           .setInitialRetryDelay(Duration.ofSeconds(1L))
           .setRetryDelayMultiplier(2.0)
+          .setMaxAttempts(6)
           .setJittered(true)
           .setMaxRetryDelay(Duration.ofMinutes(1L))
           .build();
@@ -63,6 +64,7 @@ public class Job extends JobInfo {
           .setTotalTimeout(Duration.ofHours(12L))
           .setInitialRetryDelay(Duration.ofSeconds(3L))
           .setRetryDelayMultiplier(1.0)
+          .setMaxAttempts(6)
           .setJittered(true)
           .setMaxRetryDelay(Duration.ofSeconds(3L))
           .build();
