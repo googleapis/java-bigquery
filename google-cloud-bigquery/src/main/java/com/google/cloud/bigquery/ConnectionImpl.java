@@ -174,9 +174,10 @@ final class ConnectionImpl implements Connection {
     // Keeping the buffersize more than the page size and ensuring it's always a reasonable number
     int bufferSize =
         (int)
-            (connectionSettings.getNumBufferedRows() >= 10000
-                ? (connectionSettings.getNumBufferedRows() * 2)
-                : 20000);
+            (connectionSettings.getNumBufferedRows() == null
+                    || connectionSettings.getNumBufferedRows() < 10000
+                ? 20000
+                : (connectionSettings.getNumBufferedRows() * 2));
     BlockingQueue<AbstractList<FieldValue>> buffer = new LinkedBlockingDeque<>(bufferSize);
 
     Runnable populateBufferRunnable =
@@ -186,8 +187,9 @@ final class ConnectionImpl implements Connection {
 
           boolean hasRows = true; // as we have to process the first page
           String pageToken = results.getPageToken();
+          JobId jobId = JobId.fromPb(results.getJobReference());
+          final TableId destinationTable = queryJobsGetRpc(jobId);
           while (hasRows) {
-
             for (FieldValueList fieldValueList : fieldValueLists) {
               try {
                 buffer.put(fieldValueList);
@@ -196,8 +198,6 @@ final class ConnectionImpl implements Connection {
               }
             }
             if (pageToken != null) { // request next page
-              JobId jobId = JobId.fromPb(results.getJobReference());
-              TableId destinationTable = queryJobsGetRpc(jobId);
               // get next set of values
               TableDataList tabledataList = tableDataListRpc(destinationTable, pageToken);
               fieldValueLists = getIterableFieldValueList(tabledataList.getRows(), schema);
