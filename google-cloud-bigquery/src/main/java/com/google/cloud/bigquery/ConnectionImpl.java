@@ -171,8 +171,13 @@ final class ConnectionImpl implements Connection {
     // Producer thread for populating the buffer row by row
     // TODO: Update to use a configurable number of threads (default 4) to populate the producer
     // TODO: Have just one child process at most, instead of the thread
-    BlockingQueue<AbstractList<FieldValue>> buffer =
-        new LinkedBlockingDeque<>(1000); // TODO: Update the capacity. Prefetch limit
+    // Keeping the buffersize more than the page size and ensuring it's always a reasonable number
+    int bufferSize =
+        (int)
+            (connectionSettings.getNumBufferedRows() >= 10000
+                ? (connectionSettings.getNumBufferedRows() * 2)
+                : 20000);
+    BlockingQueue<AbstractList<FieldValue>> buffer = new LinkedBlockingDeque<>(bufferSize);
 
     Runnable populateBufferRunnable =
         () -> { // producer thread populating the buffer
@@ -190,7 +195,6 @@ final class ConnectionImpl implements Connection {
                 e.printStackTrace();
               }
             }
-
             if (pageToken != null) { // request next page
               JobId jobId = JobId.fromPb(results.getJobReference());
               TableId destinationTable = queryJobsGetRpc(jobId);
