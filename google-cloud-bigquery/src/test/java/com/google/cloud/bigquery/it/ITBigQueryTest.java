@@ -2282,14 +2282,13 @@ public class ITBigQueryTest {
 
   @Test
   public void testBQResultSetPagination() throws SQLException {
-    // TODO(prasmish) find a way to auto populate large dataset for testing pagination (Eg: upload a
-    // CSV) and update the query
     String query =
-        "SELECT pickup_datetime, passenger_count, store_and_fwd_flag  FROM `java-docs-samples-testing.bigquery_test_dataset.tlc_yellow_trips_2017_stephwang` "
-            + "where pickup_datetime is not null and store_and_fwd_flag is not null order by pickup_datetime  limit 200000";
+        "SELECT date, county, state_name, confirmed_cases, deaths FROM "
+            + TABLE_ID_LARGE.getTable()
+            + " where date is not null and county is not null and state_name is not null order by date limit 300000";
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder()
-            .setDefaultDataset(DatasetId.of("bigquery_test_dataset"))
+            .setDefaultDataset(DatasetId.of(DATASET))
             .setNumBufferedRows(10000L) // page size
             .build();
     Connection connection = bigquery.createConnection(connectionSettings);
@@ -2297,12 +2296,14 @@ public class ITBigQueryTest {
     ResultSet rs = bigQueryResultSet.getResultSet();
     int cnt = 0;
     while (rs.next()) { // pagination starts after approx 120,000 records
-      assertNotNull(rs.getString(0));
-      assertTrue(rs.getInt(1) >= 0);
+      assertNotNull(rs.getDate(0));
+      assertNotNull(rs.getString(1));
       assertNotNull(rs.getString(2));
+      assertTrue(rs.getInt(3) >= 0);
+      assertTrue(rs.getInt(4) >= 0);
       ++cnt;
     }
-    assertEquals(200000, cnt); // total 200000 rows should be read
+    assertEquals(300000, cnt); // total 300000 rows should be read
   }
 
   @Test
