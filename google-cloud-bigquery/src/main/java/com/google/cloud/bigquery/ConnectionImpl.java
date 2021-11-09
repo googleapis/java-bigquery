@@ -169,8 +169,87 @@ final class ConnectionImpl implements Connection {
     numRows = results.getTotalRows().longValue();
 
     // Producer thread for populating the buffer row by row
-    // TODO: Update to use a configurable number of threads (default 4) to populate the producer
-    // TODO: Have just one child process at most, instead of the thread
+    // Keeping the buffersize more than the page size and ensuring it's always a reasonable number
+    int bufferSize =
+        (int)
+            (connectionSettings.getNumBufferedRows() == null
+                    || connectionSettings.getNumBufferedRows() < 10000
+                ? 20000
+                : (connectionSettings.getNumBufferedRows() * 2));
+    BlockingQueue<AbstractList<FieldValue>> buffer = new LinkedBlockingDeque<>(bufferSize);
+    BlockingQueue<TableDataList> nextPage =
+        new LinkedBlockingDeque<>(1); // we will be keeping atmost 1 page fetched upfront
+
+    Runnable populateBufferRunnable =
+        () -> { // producer thread populating the buffer
+          Iterable<FieldValueList> fieldValueLists =
+              getIterableFieldValueList(results.getRows(), schema);
+
+          boolean hasRows = true; // as we have to process the first page
+          String pageToken = results.getPageToken();
+          JobId jobId = JobId.fromPb(results.getJobReference());
+          final TableId destinationTable = queryJobsGetRpc(jobId);
+          while (hasRows) {
+            if (pageToken
+                != null) { // spawn a child thread to fetch the next page before the current page is
+              // processed
+              final String nextPageToken = pageToken;
+              Runnable nextPageTask =
+                  () -> {
+                    try {
+                      TableDataList tabledataList =
+                          tableDataListRpc(destinationTable, nextPageToken);
+                      nextPage.put(tabledataList);
+                    } catch (InterruptedException e) {
+                      e.printStackTrace(); // TODO: Throw an exception back
+                    }
+                  };
+              Thread nextPageFetcher = new Thread(nextPageTask);
+              nextPageFetcher.start();
+            }
+
+            for (FieldValueList fieldValueList : fieldValueLists) {
+              try {
+                buffer.put(fieldValueList);
+              } catch (InterruptedException e) {
+                e.printStackTrace();
+              }
+            }
+            if (pageToken != null) {
+              // next page would have been requested using a child process, check if the it's
+              // available
+              try {
+                TableDataList tabledataList = nextPage.take();
+                fieldValueLists = getIterableFieldValueList(tabledataList.getRows(), schema);
+                hasRows = true; // new page was requested, which is not yet processed
+                pageToken = tabledataList.getPageToken(); // next page's token
+              } catch (InterruptedException e) {
+                e.printStackTrace(); // TODO: Throw an exception back
+              }
+            } else { // the current page has been processed and there's no next page
+              hasRows = false;
+            }
+          }
+          buffer.offer(
+              new EndOfFieldValueList()); // All the pages has been processed, put this marker
+        };
+    Thread populateBufferWorker = new Thread(populateBufferRunnable);
+    populateBufferWorker.start(); // producer process to populate the buffer
+
+    // This will work for pagination as well, as buffer is getting updated asynchronously
+    return new BigQueryResultSetImpl<AbstractList<FieldValue>>(schema, numRows, buffer);
+  }
+
+  // TODO(prasmish): Remove it after benchmarking
+  @Deprecated
+  private BigQueryResultSet processQueryResponseResultsSingleThreadedProducer(
+      com.google.api.services.bigquery.model.QueryResponse results) {
+    Schema schema;
+    long numRows;
+    schema = Schema.fromPb(results.getSchema());
+    numRows = results.getTotalRows().longValue();
+
+    // Producer thread for populating the buffer row by row
     // Keeping the buffersize more than the page size and ensuring it's always a reasonable number
     int bufferSize =
         (int)
