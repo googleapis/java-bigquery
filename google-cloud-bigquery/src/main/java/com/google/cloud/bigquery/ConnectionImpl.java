@@ -257,8 +257,10 @@ final class ConnectionImpl implements Connection {
                 ? 20000
                 : (connectionSettings.getNumBufferedRows() * 2));
     BlockingQueue<AbstractList<FieldValue>> buffer = new LinkedBlockingDeque<>(bufferSize);
-    BlockingQueue<Tuple<TableDataList, Boolean>> nextPage =
+    BlockingQueue<Tuple<TableDataList, Boolean>> pageCache =
         new LinkedBlockingDeque<>(2); // we will be keeping atmost 2 page fetched upfront
+    // TODO(prasmish) - Add a dynamic logic to set higher pageCache size if user selects a lower
+    // page size (as we can have more pages in cache)
 
     JobId jobId = JobId.fromPb(results.getJobReference());
     final TableId destinationTable = queryJobsGetRpc(jobId);
@@ -268,10 +270,10 @@ final class ConnectionImpl implements Connection {
           try {
             while (pageToken != null) {
               TableDataList tabledataList = tableDataListRpc(destinationTable, pageToken);
-              nextPage.put(Tuple.of(tabledataList, true));
+              pageCache.put(Tuple.of(tabledataList, true));
               pageToken = tabledataList.getPageToken();
             }
-            nextPage.put(Tuple.of(null, false)); // no further pages
+            pageCache.put(Tuple.of(null, false)); // no further pages
           } catch (InterruptedException e) {
             e.printStackTrace(); // TODO: Throw an exception back
           }
@@ -296,7 +298,7 @@ final class ConnectionImpl implements Connection {
             }
 
             try {
-              Tuple<TableDataList, Boolean> nextPageTuple = nextPage.take();
+              Tuple<TableDataList, Boolean> nextPageTuple = pageCache.take();
               TableDataList tabledataList = nextPageTuple.x();
               hasRows = nextPageTuple.y();
               if (hasRows) {
