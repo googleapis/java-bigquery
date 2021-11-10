@@ -21,6 +21,7 @@ import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
 import com.google.api.services.bigquery.model.*;
 import com.google.cloud.RetryHelper;
+import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
@@ -162,7 +163,7 @@ final class ConnectionImpl implements Connection {
   }
 
   private BigQueryResultSet processQueryResponseResults(
-      com.google.api.services.bigquery.model.QueryResponse results) {
+      com.google.api.services.bigquery.model.QueryResponse results) { // Muttithreaded- Logic 1
     Schema schema;
     long numRows;
     schema = Schema.fromPb(results.getSchema());
@@ -230,6 +231,82 @@ final class ConnectionImpl implements Connection {
               hasRows = false;
             }
           }
+          buffer.offer(
+              new EndOfFieldValueList()); // All the pages has been processed, put this marker
+        };
+    Thread populateBufferWorker = new Thread(populateBufferRunnable);
+    populateBufferWorker.start(); // producer process to populate the buffer
+
+    // This will work for pagination as well, as buffer is getting updated asynchronously
+    return new BigQueryResultSetImpl<AbstractList<FieldValue>>(schema, numRows, buffer);
+  }
+
+  private BigQueryResultSet processQueryResponseResults2(
+      com.google.api.services.bigquery.model.QueryResponse results) { // Muttithreaded- Logic 2
+    Schema schema;
+    long numRows;
+    schema = Schema.fromPb(results.getSchema());
+    numRows = results.getTotalRows().longValue();
+
+    // Producer thread for populating the buffer row by row
+    // Keeping the buffersize more than the page size and ensuring it's always a reasonable number
+    int bufferSize =
+        (int)
+            (connectionSettings.getNumBufferedRows() == null
+                    || connectionSettings.getNumBufferedRows() < 10000
+                ? 20000
+                : (connectionSettings.getNumBufferedRows() * 2));
+    BlockingQueue<AbstractList<FieldValue>> buffer = new LinkedBlockingDeque<>(bufferSize);
+    BlockingQueue<Tuple<TableDataList, Boolean>> nextPage =
+        new LinkedBlockingDeque<>(2); // we will be keeping atmost 2 page fetched upfront
+
+    JobId jobId = JobId.fromPb(results.getJobReference());
+    final TableId destinationTable = queryJobsGetRpc(jobId);
+    Runnable nextPageTask =
+        () -> {
+          String pageToken = results.getPageToken();
+          try {
+            while (pageToken != null) {
+              TableDataList tabledataList = tableDataListRpc(destinationTable, pageToken);
+              nextPage.put(Tuple.of(tabledataList, true));
+              pageToken = tabledataList.getPageToken();
+            }
+            nextPage.put(Tuple.of(null, false)); // no further pages
+          } catch (InterruptedException e) {
+            e.printStackTrace(); // TODO: Throw an exception back
+          }
+        };
+    Thread nextPageFetcher = new Thread(nextPageTask);
+    nextPageFetcher.start();
+
+    Runnable populateBufferRunnable =
+        () -> { // producer thread populating the buffer
+          Iterable<FieldValueList> fieldValueLists =
+              getIterableFieldValueList(results.getRows(), schema);
+
+          boolean hasRows = true; // as we have to process the first page
+
+          while (hasRows) {
+            for (FieldValueList fieldValueList : fieldValueLists) {
+              try {
+                buffer.put(fieldValueList);
+              } catch (InterruptedException e) {
+                e.printStackTrace();
+              }
+            }
+
+            try {
+              Tuple<TableDataList, Boolean> nextPageTuple = nextPage.take();
+              TableDataList tabledataList = nextPageTuple.x();
+              hasRows = nextPageTuple.y();
+              if (hasRows) {
+                fieldValueLists = getIterableFieldValueList(tabledataList.getRows(), schema);
+              }
+            } catch (InterruptedException e) {
+              e.printStackTrace(); // TODO: Throw an exception back
+            }
+          }
+
           buffer.offer(
               new EndOfFieldValueList()); // All the pages has been processed, put this marker
         };
