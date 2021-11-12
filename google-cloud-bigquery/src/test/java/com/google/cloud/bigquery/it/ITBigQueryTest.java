@@ -954,6 +954,28 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testSetPermExternalTableSchema() {
+    String tableName = "test_create_external_table_perm";
+    TableId tableId = TableId.of(DATASET, tableName);
+    ExternalTableDefinition externalTableDefinition =
+        ExternalTableDefinition.newBuilder(
+                "gs://" + BUCKET + "/" + JSON_LOAD_FILE, FormatOptions.json())
+            .setSchema(TABLE_SCHEMA)
+            .setConnectionId(
+                // TODO: SET UP CONNECTION FOR THE TEST
+                "projects/java-docs-samples-testing/locations/us/connections/[TODO:CONNECTION]")
+            .build();
+    TableInfo tableInfo = TableInfo.of(tableId, externalTableDefinition);
+    // Table createdTable = bigquery.create(tableInfo);
+    //
+    // assertNotNull(createdTable);
+    // assertEquals(DATASET, createdTable.getTableId().getDataset());
+    // assertEquals(tableName, createdTable.getTableId().getTable());
+    // Table remoteTable = bigquery.getTable(DATASET, tableName);
+    // assertNotNull(remoteTable);
+  }
+
+  @Test
   public void testCreateViewTable() throws InterruptedException {
     String tableName = "test_create_view_table";
     TableId tableId = TableId.of(DATASET, tableName);
