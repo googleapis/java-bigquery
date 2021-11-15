@@ -253,8 +253,8 @@ public abstract class ConnectionSettings {
     /**
      * Sets the values necessary to determine whether table result will be read using the BigQuery
      * Storage client Read API. The BigQuery Storage client Read API will be used to read the query
-     * result when the totalToFirstPageSizeRatio (default 3) and minimumTableSize (default 100MB)
-     * conditions set are met. A ReadSession will be created using Apache Avro data format for
+     * result when the totalToFirstPageSizeRatio (default 3) and minimumTableSize (default 100 rows)
+     * conditions set are met. A ReadSession will be created using the Apache Arrow data format for
      * serialization.
      *
      * <p>It also sets the maximum number of table rows allowed in buffer before streaming them to

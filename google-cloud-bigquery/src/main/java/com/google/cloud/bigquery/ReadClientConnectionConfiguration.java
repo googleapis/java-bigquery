@@ -41,7 +41,10 @@ public abstract class ReadClientConnectionConfiguration implements Serializable 
     @Nullable
     public abstract Builder setMinResultSize(Long numRows);
 
-    /** Sets the buffer size during streaming from the BigQueryStorage Read client. */
+    /**
+     * Sets the maximum number of table rows allowed in buffer before streaming them to the
+     * BigQueryResultSet.
+     */
     @Nullable
     public abstract Builder setBufferSize(Long bufferSize);
 
