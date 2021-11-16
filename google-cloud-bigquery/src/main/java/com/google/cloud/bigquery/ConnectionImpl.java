@@ -134,7 +134,7 @@ final class ConnectionImpl implements Connection {
 
     // Query finished running and we can paginate all the results
     if (results.getJobComplete() && results.getSchema() != null) {
-      return processQueryResponseResults(results);
+      return processQueryResponseResults2(results);
     } else {
       // Query is long running (> 10s) and hasn't completed yet, or query completed but didn't
       // return the schema, fallback to jobs.insert path. Some operations don't return the schema
@@ -176,7 +176,7 @@ final class ConnectionImpl implements Connection {
             (connectionSettings.getNumBufferedRows() == null
                     || connectionSettings.getNumBufferedRows() < 10000
                 ? 20000
-                : (connectionSettings.getNumBufferedRows() * 2));
+                : (connectionSettings.getNumBufferedRows() * 2)); // TODO - fine tune the logic
     BlockingQueue<AbstractList<FieldValue>> buffer = new LinkedBlockingDeque<>(bufferSize);
     BlockingQueue<TableDataList> nextPage =
         new LinkedBlockingDeque<>(1); // we will be keeping atmost 1 page fetched upfront
@@ -241,6 +241,34 @@ final class ConnectionImpl implements Connection {
     return new BigQueryResultSetImpl<AbstractList<FieldValue>>(schema, numRows, buffer);
   }
 
+  // This methods tries to find the optimal number of page size depending of
+  private int getPageCacheSize(Long numBufferedRows, long numRows, Schema schema) {
+    final int MIN_CACHE_SIZE = 2; // Min number of pages in the page size
+    final int MAX_CACHE_SIZE = 20; // //Min number of pages in the page size
+    int columnsRead = schema.getFields().size();
+    int pageCacheSize = 10; // default page size
+    // TODO: Further enhance this logic
+    if (numBufferedRows > 10000) {
+      pageCacheSize =
+          2; // the size of numBufferedRows is quite large and as per our tests we should be able to
+      // do enough even with low
+    }
+    if (columnsRead > 15
+        && numBufferedRows
+            > 5000) { // too many fields are being read, setting the page size on the lower end
+      pageCacheSize = 3;
+    }
+    if (numBufferedRows < 2000
+        && columnsRead < 15) { // low pagesize with less number of columns, we can cache more pages
+      pageCacheSize = 20;
+    }
+    return pageCacheSize < MIN_CACHE_SIZE
+        ? MIN_CACHE_SIZE
+        : (Math.min(
+            pageCacheSize,
+            MAX_CACHE_SIZE)); // pageCacheSize should be between the defined min and max
+  }
+
   private BigQueryResultSet processQueryResponseResults2(
       com.google.api.services.bigquery.model.QueryResponse results) { // Muttithreaded- Logic 2
     Schema schema;
@@ -258,9 +286,8 @@ final class ConnectionImpl implements Connection {
                 : (connectionSettings.getNumBufferedRows() * 2));
     BlockingQueue<AbstractList<FieldValue>> buffer = new LinkedBlockingDeque<>(bufferSize);
     BlockingQueue<Tuple<TableDataList, Boolean>> pageCache =
-        new LinkedBlockingDeque<>(2); // we will be keeping atmost 2 page fetched upfront
-    // TODO(prasmish) - Add a dynamic logic to set higher pageCache size if user selects a lower
-    // page size (as we can have more pages in cache)
+        new LinkedBlockingDeque<>(
+            getPageCacheSize(connectionSettings.getNumBufferedRows(), numRows, schema));
 
     JobId jobId = JobId.fromPb(results.getJobReference());
     final TableId destinationTable = queryJobsGetRpc(jobId);
