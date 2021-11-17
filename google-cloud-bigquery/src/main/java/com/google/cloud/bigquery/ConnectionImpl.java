@@ -247,18 +247,20 @@ final class ConnectionImpl implements Connection {
     final int MAX_CACHE_SIZE = 20; // //Min number of pages in the page size
     int columnsRead = schema.getFields().size();
     int pageCacheSize = 10; // default page size
+    long pageSize = numBufferedRows == null ? 0 : numBufferedRows.longValue();
+
     // TODO: Further enhance this logic
-    if (numBufferedRows > 10000) {
+    if (pageSize > 10000) {
       pageCacheSize =
           2; // the size of numBufferedRows is quite large and as per our tests we should be able to
       // do enough even with low
     }
     if (columnsRead > 15
-        && numBufferedRows
+        && pageSize
             > 5000) { // too many fields are being read, setting the page size on the lower end
       pageCacheSize = 3;
     }
-    if (numBufferedRows < 2000
+    if (pageSize < 2000
         && columnsRead < 15) { // low pagesize with less number of columns, we can cache more pages
       pageCacheSize = 20;
     }
