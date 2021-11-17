@@ -54,11 +54,14 @@ final class ConnectionImpl implements Connection {
 
   @Override
   public Boolean cancel() throws BigQuerySQLException {
+    // TODO: Stop the producer thread and the paging thread, clear the cache and buffer AFTER adding
+    // EoF there
     return null;
   }
 
   @Override
   public BigQueryDryRunResult dryRun(String sql) throws BigQuerySQLException {
+    // TODO: run a dummy query using tabaledata.list end point ? What are the query params
     return null;
   }
 
@@ -307,7 +310,7 @@ final class ConnectionImpl implements Connection {
             }
             pageCache.put(Tuple.of(null, false)); // no further pages
           } catch (InterruptedException e) {
-            e.printStackTrace(); // TODO: Throw an exception back
+            throw new BigQueryException(0, e.getMessage(), e);
           }
         };
     Thread nextPageFetcher = new Thread(nextPageTask);
@@ -317,18 +320,15 @@ final class ConnectionImpl implements Connection {
         () -> { // producer thread populating the buffer
           Iterable<FieldValueList> fieldValueLists =
               getIterableFieldValueList(results.getRows(), schema);
-
           boolean hasRows = true; // as we have to process the first page
-
           while (hasRows) {
             for (FieldValueList fieldValueList : fieldValueLists) {
               try {
                 buffer.put(fieldValueList);
               } catch (InterruptedException e) {
-                e.printStackTrace();
+                throw new BigQueryException(0, e.getMessage(), e);
               }
             }
-
             try {
               Tuple<TableDataList, Boolean> nextPageTuple = pageCache.take();
               TableDataList tabledataList = nextPageTuple.x();
@@ -337,10 +337,9 @@ final class ConnectionImpl implements Connection {
                 fieldValueLists = getIterableFieldValueList(tabledataList.getRows(), schema);
               }
             } catch (InterruptedException e) {
-              e.printStackTrace(); // TODO: Throw an exception back
+              throw new BigQueryException(0, e.getMessage(), e);
             }
           }
-
           buffer.offer(
               new EndOfFieldValueList()); // All the pages has been processed, put this marker
         };
