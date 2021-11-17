@@ -134,7 +134,7 @@ final class ConnectionImpl implements Connection {
 
     // Query finished running and we can paginate all the results
     if (results.getJobComplete() && results.getSchema() != null) {
-      return processQueryResponseResults2(results);
+      return processQueryResponseResults(results);
     } else {
       // Query is long running (> 10s) and hasn't completed yet, or query completed but didn't
       // return the schema, fallback to jobs.insert path. Some operations don't return the schema
@@ -162,7 +162,9 @@ final class ConnectionImpl implements Connection {
             }));
   }
 
-  private BigQueryResultSet processQueryResponseResults(
+  // TODO(prasmish) - Delete this method after benchmarking
+  @Deprecated
+  private BigQueryResultSet processQueryResponseResults_Nested_NextPageTask(
       com.google.api.services.bigquery.model.QueryResponse results) { // Muttithreaded- Logic 1
     Schema schema;
     long numRows;
@@ -254,15 +256,15 @@ final class ConnectionImpl implements Connection {
       pageCacheSize =
           2; // the size of numBufferedRows is quite large and as per our tests we should be able to
       // do enough even with low
-    }
-    if (columnsRead > 15
+    } else if (columnsRead > 15
         && pageSize
             > 5000) { // too many fields are being read, setting the page size on the lower end
       pageCacheSize = 3;
-    }
-    if (pageSize < 2000
+    } else if (pageSize < 2000
         && columnsRead < 15) { // low pagesize with less number of columns, we can cache more pages
       pageCacheSize = 20;
+    } else { // default - under 10K pageSize with any number of columns
+      pageCacheSize = 5;
     }
     return pageCacheSize < MIN_CACHE_SIZE
         ? MIN_CACHE_SIZE
@@ -271,8 +273,9 @@ final class ConnectionImpl implements Connection {
             MAX_CACHE_SIZE)); // pageCacheSize should be between the defined min and max
   }
 
-  private BigQueryResultSet processQueryResponseResults2(
-      com.google.api.services.bigquery.model.QueryResponse results) { // Muttithreaded- Logic 2
+  // this method uses two independent threads to query the pages and then populate the buffer
+  private BigQueryResultSet processQueryResponseResults(
+      com.google.api.services.bigquery.model.QueryResponse results) {
     Schema schema;
     long numRows;
     schema = Schema.fromPb(results.getSchema());
