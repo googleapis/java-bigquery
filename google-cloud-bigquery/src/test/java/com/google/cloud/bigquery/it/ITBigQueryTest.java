@@ -2297,15 +2297,14 @@ public class ITBigQueryTest {
     int cnt = 0;
     while (rs.next()) {
       ++cnt;
-      if (cnt > 57000) {//breaking at 57K, query reads 300K
+      if (cnt > 57000) { // breaking at 57K, query reads 300K
         assertTrue(connection.cancel()); // we should be able to cancel the connection
       }
     }
     assertTrue(
-        cnt
-            < 60000); // Few extra records are still read (generally ~10) even after canceling, as
-                      // the backgrounds threads are still active while the interrupt occurs and the
-                      // buffer and pageCache are cleared
+        cnt < 60000); // Few extra records are still read (generally ~10) even after canceling, as
+    // the backgrounds threads are still active while the interrupt occurs and the
+    // buffer and pageCache are cleared
   }
 
   @Test
