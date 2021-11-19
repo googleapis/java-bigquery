@@ -40,6 +40,11 @@ final class ConnectionImpl implements Connection {
   private BigQueryOptions bigQueryOptions;
   private BigQueryRpc bigQueryRpc;
   private BigQueryRetryConfig retryConfig;
+  private Thread pageFetcher, producerWorker;
+  private volatile boolean isCancelled =
+      false; // TODO: this flag is kind of redundant, but this.pageFetcher.isInterrupted() returns
+  // false even after interrupting it here! This could be due to the retrial logic, so
+  // using it as a workaround.
 
   ConnectionImpl(
       ConnectionSettings connectionSettings,
@@ -52,16 +57,33 @@ final class ConnectionImpl implements Connection {
     this.retryConfig = retryConfig;
   }
 
+  /*
+  Cancel method shutdowns the pageFetcher and producerWorker threads gracefully using interrupt
+
+  The pageFetcher threat wont request for any subsequent threads after interrupting and shutdown as soon as any ongoing RPC call returns
+
+  The producerWorker wont populate the buffer with any further records and clear the buffer, put a EoF marker and shutdown
+   */
   @Override
-  public Boolean cancel() throws BigQuerySQLException {
-    // TODO: Stop the producer thread and the paging thread, clear the cache and buffer AFTER adding
-    // EoF there
-    return null;
+  public synchronized Boolean cancel() throws BigQuerySQLException {
+
+    // Interrupt the pageFetcher thread
+    if (this.pageFetcher != null && !this.pageFetcher.isInterrupted()) {
+      this.pageFetcher.interrupt();
+    }
+
+    // Interrupt the producerWorker thread
+    if (this.producerWorker != null && !this.producerWorker.isInterrupted()) {
+      this.producerWorker.interrupt();
+    }
+    isCancelled = true;
+    return this.pageFetcher.isInterrupted() && this.producerWorker.isInterrupted();
   }
 
   @Override
   public BigQueryDryRunResult dryRun(String sql) throws BigQuerySQLException {
     // TODO: run a dummy query using tabaledata.list end point ? What are the query params
+    // jobs.query or jobs.getqueuryresults queryrequestinfo.java
     return null;
   }
 
@@ -251,8 +273,8 @@ final class ConnectionImpl implements Connection {
     final int MIN_CACHE_SIZE = 2; // Min number of pages in the page size
     final int MAX_CACHE_SIZE = 20; // //Min number of pages in the page size
     int columnsRead = schema.getFields().size();
-    int pageCacheSize = 10; // default page size
-    long pageSize = numBufferedRows == null ? 0 : numBufferedRows.longValue();
+    int pageCacheSize = 10; // default page size//TODO: numCachedPages
+    long pageSize = numBufferedRows == null ? 0 : numBufferedRows.longValue(); // TODO: Rename it
 
     // TODO: Further enhance this logic
     if (pageSize > 10000) {
@@ -304,6 +326,10 @@ final class ConnectionImpl implements Connection {
           String pageToken = results.getPageToken();
           try {
             while (pageToken != null) {
+              if (Thread.currentThread().isInterrupted()
+                  || isCancelled) { // do not process further pages and shutdown
+                break;
+              }
               TableDataList tabledataList = tableDataListRpc(destinationTable, pageToken);
               pageCache.put(Tuple.of(tabledataList, true));
               pageToken = tabledataList.getPageToken();
@@ -313,8 +339,8 @@ final class ConnectionImpl implements Connection {
             throw new BigQueryException(0, e.getMessage(), e);
           }
         };
-    Thread nextPageFetcher = new Thread(nextPageTask);
-    nextPageFetcher.start();
+    this.pageFetcher = new Thread(nextPageTask);
+    this.pageFetcher.start();
 
     Runnable populateBufferRunnable =
         () -> { // producer thread populating the buffer
@@ -324,10 +350,18 @@ final class ConnectionImpl implements Connection {
           while (hasRows) {
             for (FieldValueList fieldValueList : fieldValueLists) {
               try {
+                if (Thread.currentThread()
+                    .isInterrupted()) { // do not process further pages and shutdown (inner loop)
+                  break;
+                }
                 buffer.put(fieldValueList);
               } catch (InterruptedException e) {
                 throw new BigQueryException(0, e.getMessage(), e);
               }
+            }
+            if (Thread.currentThread()
+                .isInterrupted()) { // do not process further pages and shutdown (outerloop)
+              break;
             }
             try {
               Tuple<TableDataList, Boolean> nextPageTuple = pageCache.take();
@@ -340,11 +374,18 @@ final class ConnectionImpl implements Connection {
               throw new BigQueryException(0, e.getMessage(), e);
             }
           }
+          if (Thread.currentThread()
+              .isInterrupted()) { // clear the buffer for any outstanding records
+            buffer.clear();
+            pageCache
+                .clear(); // IMP - so that if it's full then it unblocks and the interrupt logic
+            // could trigger
+          }
           buffer.offer(
               new EndOfFieldValueList()); // All the pages has been processed, put this marker
         };
-    Thread populateBufferWorker = new Thread(populateBufferRunnable);
-    populateBufferWorker.start(); // producer process to populate the buffer
+    this.producerWorker = new Thread(populateBufferRunnable);
+    this.producerWorker.start(); // producer process to populate the buffer
 
     // This will work for pagination as well, as buffer is getting updated asynchronously
     return new BigQueryResultSetImpl<AbstractList<FieldValue>>(schema, numRows, buffer);
