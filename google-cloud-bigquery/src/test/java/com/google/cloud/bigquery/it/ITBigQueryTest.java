@@ -2281,6 +2281,34 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testConnectionCancel() throws SQLException {
+    String query =
+        "SELECT date, county, state_name, confirmed_cases, deaths FROM "
+            + TABLE_ID_LARGE.getTable()
+            + " where date is not null and county is not null and state_name is not null order by date limit 300000";
+    ConnectionSettings connectionSettings =
+        ConnectionSettings.newBuilder()
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .setNumBufferedRows(10000L) // page size
+            .build();
+    Connection connection = bigquery.createConnection(connectionSettings);
+    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
+    ResultSet rs = bigQueryResultSet.getResultSet();
+    int cnt = 0;
+    while (rs.next()) {
+      ++cnt;
+      if (cnt > 57000) {//breaking at 57K, query reads 300K
+        assertTrue(connection.cancel()); // we should be able to cancel the connection
+      }
+    }
+    assertTrue(
+        cnt
+            < 60000); // Few extra records are still read (generally ~10) even after canceling, as
+                      // the backgrounds threads are still active while the interrupt occurs and the
+                      // buffer and pageCache are cleared
+  }
+
+  @Test
   public void testBQResultSetPagination() throws SQLException {
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
