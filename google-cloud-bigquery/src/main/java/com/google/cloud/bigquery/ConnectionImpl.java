@@ -274,34 +274,34 @@ final class ConnectionImpl implements Connection {
     return new BigQueryResultSetImpl<AbstractList<FieldValue>>(schema, numRows, buffer);
   }
 
-  // This methods tries to find the optimal number of page size depending of
+  // Determines the optimal number of caches pages to improve read performance
   private int getPageCacheSize(Long numBufferedRows, long numRows, Schema schema) {
     final int MIN_CACHE_SIZE = 2; // Min number of pages in the page size
     final int MAX_CACHE_SIZE = 20; // //Min number of pages in the page size
     int columnsRead = schema.getFields().size();
-    int pageCacheSize = 10; // default page size//TODO: numCachedPages
-    long pageSize = numBufferedRows == null ? 0 : numBufferedRows.longValue(); // TODO: Rename it
+    int numCachedPages = 10; // default page size
+    long numCachedRows = numBufferedRows == null ? 0 : numBufferedRows.longValue();
 
     // TODO: Further enhance this logic
-    if (pageSize > 10000) {
-      pageCacheSize =
+    if (numCachedRows > 10000) {
+      numCachedPages =
           2; // the size of numBufferedRows is quite large and as per our tests we should be able to
       // do enough even with low
     } else if (columnsRead > 15
-        && pageSize
+        && numCachedRows
             > 5000) { // too many fields are being read, setting the page size on the lower end
-      pageCacheSize = 3;
-    } else if (pageSize < 2000
-        && columnsRead < 15) { // low pagesize with less number of columns, we can cache more pages
-      pageCacheSize = 20;
-    } else { // default - under 10K pageSize with any number of columns
-      pageCacheSize = 5;
+      numCachedPages = 3;
+    } else if (numCachedRows < 2000
+        && columnsRead < 15) { // low pagesize with fewer number of columns, we can cache more pages
+      numCachedPages = 20;
+    } else { // default - under 10K numCachedRows with any number of columns
+      numCachedPages = 5;
     }
-    return pageCacheSize < MIN_CACHE_SIZE
+    return numCachedPages < MIN_CACHE_SIZE
         ? MIN_CACHE_SIZE
         : (Math.min(
-            pageCacheSize,
-            MAX_CACHE_SIZE)); // pageCacheSize should be between the defined min and max
+            numCachedPages,
+            MAX_CACHE_SIZE)); // numCachedPages should be between the defined min and max
   }
 
   // this method uses two independent threads to query the pages and then populate the buffer
