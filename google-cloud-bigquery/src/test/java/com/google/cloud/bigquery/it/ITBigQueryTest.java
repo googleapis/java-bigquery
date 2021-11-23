@@ -51,6 +51,7 @@ import com.google.cloud.bigquery.BigQuery.TableOption;
 import com.google.cloud.bigquery.BigQueryError;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryResultSet;
+import com.google.cloud.bigquery.BigQuerySQLException;
 import com.google.cloud.bigquery.Clustering;
 import com.google.cloud.bigquery.Connection;
 import com.google.cloud.bigquery.ConnectionProperty;
@@ -2800,6 +2801,22 @@ public class ITBigQueryTest {
     Job queryJobWithSession = bigquery.getJob(remoteJobWithSession.getJobId());
     JobStatistics.QueryStatistics statisticsWithSession = queryJobWithSession.getStatistics();
     assertEquals(sessionId, statisticsWithSession.getSessionInfo().getSessionId());
+  }
+
+  @Test
+  // TODO: update this testcase when executeUpdate is implemented
+  public void testExecuteSelectSessionSupport() throws BigQuerySQLException {
+    String query = "SELECT 17 as foo";
+    ConnectionSettings connectionSettings =
+        ConnectionSettings.newBuilder()
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .setCreateSession(true)
+            .build();
+    Connection connection = bigquery.createConnection(connectionSettings);
+    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
+    String sessionId =
+        bigQueryResultSet.getBigQueryResultSetStats().getSessionInfo().getSessionId();
+    assertNotNull(sessionId);
   }
 
   @Test

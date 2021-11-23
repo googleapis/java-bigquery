@@ -125,6 +125,14 @@ public abstract class ConnectionSettings {
   @Nullable
   public abstract Boolean getAllowLargeResults();
 
+  /**
+   * Returns whether to create a new session.
+   *
+   * @see <a href="https://cloud.google.com/bigquery/docs/sessions-create">Create Sessions</a>
+   */
+  @Nullable
+  public abstract Boolean getCreateSession();
+
   /** Returns the range partitioning specification for the table */
   @Nullable
   public abstract RangePartitioning getRangePartitioning();
@@ -324,6 +332,13 @@ public abstract class ConnectionSettings {
      *     Large Query Results</a>
      */
     public abstract Builder setAllowLargeResults(Boolean allowLargeResults);
+
+    /**
+     * Sets whether to create a new session. If {@code true} a random session id will be generated
+     * by BigQuery. If false, runs query with an existing session_id passed in ConnectionProperty,
+     * otherwise runs query in non-session mode."
+     */
+    public abstract Builder setCreateSession(Boolean createSession);
 
     /**
      * Range partitioning specification for this table. Only one of timePartitioning and

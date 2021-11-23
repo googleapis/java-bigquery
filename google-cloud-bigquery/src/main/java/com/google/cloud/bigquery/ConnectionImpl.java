@@ -216,8 +216,19 @@ final class ConnectionImpl implements Connection {
       com.google.api.services.bigquery.model.QueryResponse results) {
     Schema schema;
     long numRows;
+    ;
     schema = Schema.fromPb(results.getSchema());
     numRows = results.getTotalRows().longValue();
+
+    // Get query statistics
+    DmlStats dmlStats =
+        results.getDmlStats() == null ? null : DmlStats.fromPb(results.getDmlStats());
+    JobStatistics.SessionInfo sessionInfo =
+        results.getSessionInfo() == null
+            ? null
+            : JobStatistics.SessionInfo.fromPb(results.getSessionInfo());
+    BigQueryResultSetStats bigQueryResultSetStats =
+        new BigQueryResultSetStatsImpl(dmlStats, sessionInfo);
 
     // Producer thread for populating the buffer row by row
     // Keeping the buffersize more than the page size and ensuring it's always a reasonable number
@@ -287,7 +298,8 @@ final class ConnectionImpl implements Connection {
         rpcResponseQueue, pageCache, buffer); // spawns a thread to populate the buffer
 
     // This will work for pagination as well, as buffer is getting updated asynchronously
-    return new BigQueryResultSetImpl<AbstractList<FieldValue>>(schema, numRows, buffer);
+    return new BigQueryResultSetImpl<AbstractList<FieldValue>>(
+        schema, numRows, buffer, bigQueryResultSetStats);
   }
 
   /*
@@ -562,6 +574,7 @@ final class ConnectionImpl implements Connection {
         && totalRows > connectionSettings.getReadClientConnectionConfiguration().getMinResultSize();
   }
 
+  // Used for job.query endpoint
   private QueryRequest createQueryRequest(
       ConnectionSettings connectionSettings,
       String sql,
@@ -587,6 +600,9 @@ final class ConnectionImpl implements Connection {
     }
     if (queryParameters != null) {
       content.setQueryParameters(queryParameters);
+    }
+    if (connectionSettings.getCreateSession() != null) {
+      content.setCreateSession(connectionSettings.getCreateSession());
     }
     if (labels != null) {
       content.setLabels(labels);
@@ -684,6 +700,9 @@ final class ConnectionImpl implements Connection {
           connectionSettings.getConnectionProperties().stream()
               .map(ConnectionProperty.TO_PB_FUNCTION)
               .collect(Collectors.toList()));
+    }
+    if (connectionSettings.getCreateSession() != null) {
+      queryConfigurationPb.setCreateSession(connectionSettings.getCreateSession());
     }
     if (connectionSettings.getJobTimeoutMs() != null) {
       configurationPb.setJobTimeoutMs(connectionSettings.getJobTimeoutMs());

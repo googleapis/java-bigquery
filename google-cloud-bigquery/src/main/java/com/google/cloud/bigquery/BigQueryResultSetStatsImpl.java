@@ -16,22 +16,25 @@
 
 package com.google.cloud.bigquery;
 
-import java.sql.ResultSet;
+import com.google.cloud.bigquery.JobStatistics.SessionInfo;
 
-public interface BigQueryResultSet<T> {
+public class BigQueryResultSetStatsImpl implements BigQueryResultSetStats {
 
-  /** Returns the schema of the results. */
-  Schema getSchema();
+  private final DmlStats dmlStats;
+  private final SessionInfo sessionInfo;
 
-  /**
-   * Returns the total number of rows in the complete result set, which can be more than the number
-   * of rows in the first page of results.
-   */
-  long getTotalRows();
+  public BigQueryResultSetStatsImpl(DmlStats dmlStats, SessionInfo sessionInfo) {
+    this.dmlStats = dmlStats;
+    this.sessionInfo = sessionInfo;
+  }
 
-  /* Returns the underlying ResultSet Implementation */
-  ResultSet getResultSet();
+  @Override
+  public DmlStats getDmlStats() {
+    return dmlStats;
+  }
 
-  /* Returns the query statistics associated with this query. */
-  BigQueryResultSetStats getBigQueryResultSetStats();
+  @Override
+  public SessionInfo getSessionInfo() {
+    return sessionInfo;
+  }
 }

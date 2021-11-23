@@ -33,12 +33,18 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
   private final BlockingQueue<T> buffer;
   private T cursor;
   private final ResultSetWrapper underlyingResultSet;
+  private final BigQueryResultSetStats bigQueryResultSetStats;
 
-  public BigQueryResultSetImpl(Schema schema, long totalRows, BlockingQueue<T> buffer) {
+  public BigQueryResultSetImpl(
+      Schema schema,
+      long totalRows,
+      BlockingQueue<T> buffer,
+      BigQueryResultSetStats bigQueryResultSetStats) {
     this.schema = schema;
     this.totalRows = totalRows;
     this.buffer = buffer;
     this.underlyingResultSet = new ResultSetWrapper();
+    this.bigQueryResultSetStats = bigQueryResultSetStats;
   }
 
   @Override
@@ -401,5 +407,10 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       }
       return null; // TODO: Implementation for Arrow
     }
+  }
+
+  @Override
+  public BigQueryResultSetStats getBigQueryResultSetStats() {
+    return bigQueryResultSetStats;
   }
 }
