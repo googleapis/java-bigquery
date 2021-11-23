@@ -33,7 +33,8 @@ See https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google
     <groupId>com.google.cloud</groupId>
     <artifactId>google-cloud-bigquery</artifactId>
   </dependency>
-
+</dependencies>
+  
 ```
 
 If you are using Maven without BOM, add this to your dependencies:
