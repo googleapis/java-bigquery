@@ -2279,7 +2279,7 @@ public class ITBigQueryTest {
 
     assertFalse(rs.next()); // no 3rd row in the table
   }
-  /*
+
   @Test
   public void testConnectionCancel() throws SQLException {
     String query =
@@ -2305,7 +2305,7 @@ public class ITBigQueryTest {
         cnt < 60000); // Few extra records are still read (generally ~10) even after canceling, as
     // the backgrounds threads are still active while the interrupt occurs and the
     // buffer and pageCache are cleared
-  }*/
+  }
 
   @Test
   public void testBQResultSetPagination() throws SQLException {
