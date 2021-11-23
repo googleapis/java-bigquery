@@ -336,7 +336,11 @@ final class ConnectionImpl implements Connection {
           try {
             pageCache.put(Tuple.of(null, false)); // no further pages
           } catch (InterruptedException e) {
-            e.printStackTrace();
+            logger.log(
+                Level.WARNING,
+                "\n" + Thread.currentThread().getName() + " Interrupted",
+                e); // Thread might get interrupted while calling the Cancel method, which is
+            // expected, so logging this instead of throwing the exception back
           }
         };
     queryTaskExecutor.execute(parseDataTask);
