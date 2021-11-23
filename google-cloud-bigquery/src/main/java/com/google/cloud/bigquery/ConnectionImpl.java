@@ -216,7 +216,6 @@ final class ConnectionImpl implements Connection {
       com.google.api.services.bigquery.model.QueryResponse results) {
     Schema schema;
     long numRows;
-    ;
     schema = Schema.fromPb(results.getSchema());
     numRows = results.getTotalRows().longValue();
 
@@ -430,8 +429,8 @@ final class ConnectionImpl implements Connection {
                 */
   }
 
-  /* Returns the destinationTable from jobId by calling jobs.get API */
-  private TableId queryJobsGetRpc(JobId jobId) {
+  /* Returns Job from jobId by calling the jobs.get API */
+  private Job getQueryJobRpc(JobId jobId) {
     final JobId completeJobId =
         jobId
             .setProjectId(bigQueryOptions.getProjectId())
@@ -457,7 +456,12 @@ final class ConnectionImpl implements Connection {
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
     }
-    Job job = Job.fromPb(bigQueryOptions.getService(), jobPb);
+    return Job.fromPb(bigQueryOptions.getService(), jobPb);
+  }
+
+  /* Returns the destinationTable from jobId by calling jobs.get API */
+  private TableId queryJobsGetRpc(JobId jobId) {
+    Job job = getQueryJobRpc(jobId);
     return ((QueryJobConfiguration) job.getConfiguration()).getDestinationTable();
   }
 
@@ -536,10 +540,19 @@ final class ConnectionImpl implements Connection {
     long numRows = results.getTotalRows() == null ? 0 : results.getTotalRows().longValue();
     Schema schema = results.getSchema() == null ? null : Schema.fromPb(results.getSchema());
 
+    // Get query statistics
+    Job queryJob = getQueryJobRpc(jobId);
+    JobStatistics.QueryStatistics statistics = queryJob.getStatistics();
+    DmlStats dmlStats = statistics.getDmlStats() == null ? null : statistics.getDmlStats();
+    JobStatistics.SessionInfo sessionInfo =
+        statistics.getSessionInfo() == null ? null : statistics.getSessionInfo();
+    BigQueryResultSetStats bigQueryResultSetStats =
+        new BigQueryResultSetStatsImpl(dmlStats, sessionInfo);
+
     // only use this API for the first page of result
     if (results.getPageToken() == null) {
-      // return new BigQueryResultSetImpl(schema, numRows, null /* TODO: iterate(cachedFirstPage)
-      // */);
+      // TODO: iterate(cachedFirstPage)
+      // return new BigQueryResultSetImpl(schema, numRows, null, bigQueryResultSetStats);
       return null; // TODO: Plugin the buffer logic
     }
     // use tabledata.list or Read API to fetch subsequent pages of results
@@ -574,7 +587,7 @@ final class ConnectionImpl implements Connection {
         && totalRows > connectionSettings.getReadClientConnectionConfiguration().getMinResultSize();
   }
 
-  // Used for job.query endpoint
+  // Used for job.query API endpoint
   private QueryRequest createQueryRequest(
       ConnectionSettings connectionSettings,
       String sql,
@@ -614,6 +627,7 @@ final class ConnectionImpl implements Connection {
     return content;
   }
 
+  // Used for jobs.getQueryResults API endpoint
   private com.google.api.services.bigquery.model.Job createQueryJob(
       String sql,
       ConnectionSettings connectionSettings,
