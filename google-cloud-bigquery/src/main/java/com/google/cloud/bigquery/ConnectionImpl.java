@@ -33,6 +33,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /** Implementation for {@link Connection}, the generic BigQuery connection API (not JDBC). */
@@ -42,14 +44,12 @@ final class ConnectionImpl implements Connection {
   private BigQueryOptions bigQueryOptions;
   private BigQueryRpc bigQueryRpc;
   private BigQueryRetryConfig retryConfig;
-  private Thread pageFetcher, producerWorker;
-  private volatile boolean isCancelled =
-      false; // TODO: this flag is kind of redundant, but this.pageFetcher.isInterrupted() returns
   // false even after interrupting it here! This could be due to the retrial logic, so
   // using it as a workaround.
   private final int MAX_PROCESS_QUERY_THREADS_CNT = 5;
   private ExecutorService queryTaskExecutor =
       Executors.newFixedThreadPool(MAX_PROCESS_QUERY_THREADS_CNT);
+  private final Logger logger = Logger.getLogger(this.getClass().getName());
 
   ConnectionImpl(
       ConnectionSettings connectionSettings,
@@ -71,18 +71,8 @@ final class ConnectionImpl implements Connection {
    */
   @Override
   public synchronized Boolean cancel() throws BigQuerySQLException {
-
-    // Interrupt the pageFetcher thread
-    if (this.pageFetcher != null && !this.pageFetcher.isInterrupted()) {
-      this.pageFetcher.interrupt();
-    }
-
-    // Interrupt the producerWorker thread
-    if (this.producerWorker != null && !this.producerWorker.isInterrupted()) {
-      this.producerWorker.interrupt();
-    }
-    isCancelled = true;
-    return this.pageFetcher.isInterrupted() && this.producerWorker.isInterrupted();
+    queryTaskExecutor.shutdownNow();
+    return queryTaskExecutor.isShutdown();
   }
 
   @Override
@@ -164,8 +154,7 @@ final class ConnectionImpl implements Connection {
 
     // Query finished running and we can paginate all the results
     if (results.getJobComplete() && results.getSchema() != null) {
-      return processQueryResponseResults_thread_pooled(
-          results); // processQueryResponseResults(results);
+      return processQueryResponseResults(results); // processQueryResponseResults(results);
     } else {
       // Query is long running (> 10s) and hasn't completed yet, or query completed but didn't
       // return the schema, fallback to jobs.insert path. Some operations don't return the schema
@@ -191,87 +180,6 @@ final class ConnectionImpl implements Connection {
                 return FieldValueList.fromPb(rowPb.getF(), fields);
               }
             }));
-  }
-
-  // TODO(prasmish) - Delete this method after benchmarking
-  @Deprecated
-  private BigQueryResultSet processQueryResponseResults_Nested_NextPageTask(
-      com.google.api.services.bigquery.model.QueryResponse results) { // Muttithreaded- Logic 1
-    Schema schema;
-    long numRows;
-    schema = Schema.fromPb(results.getSchema());
-    numRows = results.getTotalRows().longValue();
-
-    // Producer thread for populating the buffer row by row
-    // Keeping the buffersize more than the page size and ensuring it's always a reasonable number
-    int bufferSize =
-        (int)
-            (connectionSettings.getNumBufferedRows() == null
-                    || connectionSettings.getNumBufferedRows() < 10000
-                ? 20000
-                : (connectionSettings.getNumBufferedRows() * 2)); // TODO - fine tune the logic
-    BlockingQueue<AbstractList<FieldValue>> buffer = new LinkedBlockingDeque<>(bufferSize);
-    BlockingQueue<TableDataList> nextPage =
-        new LinkedBlockingDeque<>(1); // we will be keeping atmost 1 page fetched upfront
-
-    Runnable populateBufferRunnable =
-        () -> { // producer thread populating the buffer
-          Iterable<FieldValueList> fieldValueLists =
-              getIterableFieldValueList(results.getRows(), schema);
-
-          boolean hasRows = true; // as we have to process the first page
-          String pageToken = results.getPageToken();
-          JobId jobId = JobId.fromPb(results.getJobReference());
-          final TableId destinationTable = queryJobsGetRpc(jobId);
-          while (hasRows) {
-            if (pageToken
-                != null) { // spawn a child thread to fetch the next page before the current page is
-              // processed
-              final String nextPageToken = pageToken;
-              Runnable nextPageTask =
-                  () -> {
-                    try {
-                      TableDataList tabledataList =
-                          tableDataListRpc(destinationTable, nextPageToken);
-                      nextPage.put(tabledataList);
-                    } catch (InterruptedException e) {
-                      e.printStackTrace(); // TODO: Throw an exception back
-                    }
-                  };
-              Thread nextPageFetcher = new Thread(nextPageTask);
-              nextPageFetcher.start();
-            }
-
-            for (FieldValueList fieldValueList : fieldValueLists) {
-              try {
-                buffer.put(fieldValueList);
-              } catch (InterruptedException e) {
-                e.printStackTrace();
-              }
-            }
-            if (pageToken != null) {
-              // next page would have been requested using a child process, check if the it's
-              // available
-              try {
-                TableDataList tabledataList = nextPage.take();
-                fieldValueLists = getIterableFieldValueList(tabledataList.getRows(), schema);
-                hasRows = true; // new page was requested, which is not yet processed
-                pageToken = tabledataList.getPageToken(); // next page's token
-              } catch (InterruptedException e) {
-                e.printStackTrace(); // TODO: Throw an exception back
-              }
-            } else { // the current page has been processed and there's no next page
-              hasRows = false;
-            }
-          }
-          buffer.offer(
-              new EndOfFieldValueList()); // All the pages has been processed, put this marker
-        };
-    Thread populateBufferWorker = new Thread(populateBufferRunnable);
-    populateBufferWorker.start(); // producer process to populate the buffer
-
-    // This will work for pagination as well, as buffer is getting updated asynchronously
-    return new BigQueryResultSetImpl<AbstractList<FieldValue>>(schema, numRows, buffer);
   }
 
   // Determines the optimal number of caches pages to improve read performance
@@ -304,7 +212,6 @@ final class ConnectionImpl implements Connection {
             MAX_CACHE_SIZE)); // numCachedPages should be between the defined min and max
   }
 
-  // this method uses two independent threads to query the pages and then populate the buffer
   private BigQueryResultSet processQueryResponseResults(
       com.google.api.services.bigquery.model.QueryResponse results) {
     Schema schema;
@@ -320,183 +227,148 @@ final class ConnectionImpl implements Connection {
                     || connectionSettings.getNumBufferedRows() < 10000
                 ? 20000
                 : (connectionSettings.getNumBufferedRows() * 2));
-    BlockingQueue<AbstractList<FieldValue>> buffer = new LinkedBlockingDeque<>(bufferSize);
-    BlockingQueue<Tuple<TableDataList, Boolean>> pageCache =
+    BlockingQueue<AbstractList<FieldValue>> buffer =
         new LinkedBlockingDeque<>(
-            getPageCacheSize(connectionSettings.getNumBufferedRows(), numRows, schema));
-
-    JobId jobId = JobId.fromPb(results.getJobReference());
-    final TableId destinationTable = queryJobsGetRpc(jobId);
-    Runnable nextPageTask =
-        () -> {
-          String pageToken = results.getPageToken();
-          try {
-            while (pageToken != null) {
-              if (Thread.currentThread().isInterrupted()
-                  || isCancelled) { // do not process further pages and shutdown
-                break;
-              }
-              TableDataList tabledataList = tableDataListRpc(destinationTable, pageToken);
-              pageCache.put(Tuple.of(tabledataList, true));
-              pageToken = tabledataList.getPageToken();
-            }
-            pageCache.put(Tuple.of(null, false)); // no further pages
-          } catch (InterruptedException e) {
-            throw new BigQueryException(0, e.getMessage(), e);
-          }
-        };
-    this.pageFetcher = new Thread(nextPageTask);
-    this.pageFetcher.start();
-
-    Runnable populateBufferRunnable =
-        () -> { // producer thread populating the buffer
-          Iterable<FieldValueList> fieldValueLists =
-              getIterableFieldValueList(results.getRows(), schema);
-          boolean hasRows = true; // as we have to process the first page
-          while (hasRows) {
-            for (FieldValueList fieldValueList : fieldValueLists) {
-              try {
-                if (Thread.currentThread()
-                    .isInterrupted()) { // do not process further pages and shutdown (inner loop)
-                  break;
-                }
-                buffer.put(fieldValueList);
-              } catch (InterruptedException e) {
-                throw new BigQueryException(0, e.getMessage(), e);
-              }
-            }
-            if (Thread.currentThread()
-                .isInterrupted()) { // do not process further pages and shutdown (outerloop)
-              break;
-            }
-            try {
-              Tuple<TableDataList, Boolean> nextPageTuple = pageCache.take();
-              TableDataList tabledataList = nextPageTuple.x();
-              hasRows = nextPageTuple.y();
-              if (hasRows) {
-                fieldValueLists = getIterableFieldValueList(tabledataList.getRows(), schema);
-              }
-            } catch (InterruptedException e) {
-              throw new BigQueryException(0, e.getMessage(), e);
-            }
-          }
-          if (Thread.currentThread()
-              .isInterrupted()) { // clear the buffer for any outstanding records
-            buffer.clear();
-            pageCache
-                .clear(); // IMP - so that if it's full then it unblocks and the interrupt logic
-            // could trigger
-          }
-          buffer.offer(
-              new EndOfFieldValueList()); // All the pages has been processed, put this marker
-        };
-    this.producerWorker = new Thread(populateBufferRunnable);
-    this.producerWorker.start(); // producer process to populate the buffer
-
-    // This will work for pagination as well, as buffer is getting updated asynchronously
-    return new BigQueryResultSetImpl<AbstractList<FieldValue>>(schema, numRows, buffer);
-  }
-
-  private BigQueryResultSet processQueryResponseResults_thread_pooled(
-      com.google.api.services.bigquery.model.QueryResponse results) {
-    Schema schema;
-    long numRows;
-    schema = Schema.fromPb(results.getSchema());
-    numRows = results.getTotalRows().longValue();
-
-    // Producer thread for populating the buffer row by row
-    // Keeping the buffersize more than the page size and ensuring it's always a reasonable number
-    int bufferSize =
-        (int)
-            (connectionSettings.getNumBufferedRows() == null
-                    || connectionSettings.getNumBufferedRows() < 10000
-                ? 20000
-                : (connectionSettings.getNumBufferedRows() * 2));
-    BlockingQueue<AbstractList<FieldValue>> buffer = new LinkedBlockingDeque<>(bufferSize);
+            bufferSize); // this keeps the deserialized records at the row level, which will be
+    // consumed by the BQResultSet
     BlockingQueue<Tuple<Iterable<FieldValueList>, Boolean>> pageCache =
         new LinkedBlockingDeque<>(
-            getPageCacheSize(connectionSettings.getNumBufferedRows(), numRows, schema));
+            getPageCacheSize(
+                connectionSettings.getNumBufferedRows(),
+                numRows,
+                schema)); // this keeps the parsed FieldValueLists
+    BlockingQueue<Tuple<TableDataList, Boolean>> rpcResponseQueue =
+        new LinkedBlockingDeque<>(
+            getPageCacheSize(
+                connectionSettings.getNumBufferedRows(),
+                numRows,
+                schema)); // this keeps the raw RPC response
 
     JobId jobId = JobId.fromPb(results.getJobReference());
     final TableId destinationTable = queryJobsGetRpc(jobId);
 
+    // This thread makes the RPC calls and paginates
     Runnable nextPageTask =
         () -> {
-          //   long totalTime = 0, curTime =0;
           String pageToken = results.getPageToken();
           try {
-            while (pageToken != null) {
-
+            while (pageToken != null) { // paginate for non null token
               if (Thread.currentThread().isInterrupted()
-                  || isCancelled) { // do not process further pages and shutdown
+                  || queryTaskExecutor.isShutdown()) { // do not process further pages and shutdown
                 break;
               }
               TableDataList tabledataList = tableDataListRpc(destinationTable, pageToken);
               pageToken = tabledataList.getPageToken();
-              parseDataAsync(
-                  tabledataList,
-                  schema,
-                  pageCache,
-                  pageToken); // parses data on a separate thread, thus maximising processing s
-              // throughput
-              // TODO: Make sure that the order is maintained (Req in corner case when the parsing
-              // gets slower than the network I/O)
-
-              /*          //    curTime = System.currentTimeMillis();
-               Iterable<FieldValueList> fieldValueLists =
-                       getIterableFieldValueList(tabledataList.getRows(), schema); // Parse
-              // totalTime += (System.currentTimeMillis()-curTime);
-                 pageCache.put(Tuple.of(fieldValueLists, true));*/
-
+              rpcResponseQueue.put(
+                  Tuple.of(
+                      tabledataList,
+                      true)); // this will be parsed asynchronously without blocking the current
+              // thread
             }
-            //  System.out.println("Parsing time: "+totalTime);
-            // pageCache.put(Tuple.of(null, false)); // no further pages
+            rpcResponseQueue.put(
+                Tuple.of(
+                    null,
+                    false)); // this will stop the parseDataTask as well in case of interrupt or
+            // when the pagination completes
           } catch (Exception e) {
             throw new BigQueryException(0, e.getMessage(), e);
           }
         };
     queryTaskExecutor.execute(nextPageTask);
 
-    populateBuffer(results, schema, pageCache, buffer); // spawns a thread to populate the buffer
+    parseRpcDataAsync(
+        results,
+        schema,
+        pageCache,
+        rpcResponseQueue); // parses data on a separate thread, thus maximising processing
+    // throughput
+
+    populateBufferAsync(
+        rpcResponseQueue, pageCache, buffer); // spawns a thread to populate the buffer
 
     // This will work for pagination as well, as buffer is getting updated asynchronously
     return new BigQueryResultSetImpl<AbstractList<FieldValue>>(schema, numRows, buffer);
   }
 
-  private void parseDataAsync(
-      TableDataList tabledataList,
+  /*
+  This method takes TableDataList from rpcResponseQueue and populates pageCache with FieldValueList
+   */
+  private void parseRpcDataAsync(
+      com.google.api.services.bigquery.model.QueryResponse results,
       Schema schema,
       BlockingQueue<Tuple<Iterable<FieldValueList>, Boolean>> pageCache,
-      String pageToken) {
+      BlockingQueue<Tuple<TableDataList, Boolean>> rpcResponseQueue) {
+
+    // parse and put the first page in the pageCache before the other pages are parsed from the RPC
+    // calls
+    Iterable<FieldValueList> firstFieldValueLists =
+        getIterableFieldValueList(results.getRows(), schema);
+    try {
+      pageCache.put(
+          Tuple.of(firstFieldValueLists, true)); // this is the first page which we have received.
+    } catch (InterruptedException e) {
+      throw new BigQueryException(0, e.getMessage(), e);
+    }
+
+    // rpcResponseQueue will get null tuple if Cancel method is called, so no need to explicitly use
+    // thread interrupt here
     Runnable parseDataTask =
         () -> {
           try {
-            Iterable<FieldValueList> fieldValueLists =
-                getIterableFieldValueList(tabledataList.getRows(), schema); // Parse
-
-            pageCache.put(Tuple.of(fieldValueLists, true));
-
-            if (pageToken == null) {
-              pageCache.put(Tuple.of(null, false)); // no further pages
+            boolean hasMorePages = true;
+            while (hasMorePages) {
+              Tuple<TableDataList, Boolean> rpcResponse = rpcResponseQueue.take();
+              TableDataList tabledataList = rpcResponse.x();
+              hasMorePages = rpcResponse.y();
+              if (tabledataList != null) {
+                Iterable<FieldValueList> fieldValueLists =
+                    getIterableFieldValueList(tabledataList.getRows(), schema); // Parse
+                pageCache.put(Tuple.of(fieldValueLists, true));
+              }
             }
           } catch (InterruptedException e) {
-            throw new BigQueryException(0, e.getMessage(), e);
+            logger.log(
+                Level.WARNING,
+                "\n" + Thread.currentThread().getName() + " Interrupted",
+                e); // Thread might get interrupted while calling the Cancel method, which is
+            // expected, so logging this instead of throwing the exception back
+          }
+          try {
+            pageCache.put(Tuple.of(null, false)); // no further pages
+          } catch (InterruptedException e) {
+            e.printStackTrace();
           }
         };
     queryTaskExecutor.execute(parseDataTask);
   }
 
-  private void populateBuffer(
-      com.google.api.services.bigquery.model.QueryResponse results,
-      Schema schema,
+  private void populateBufferAsync(
+      BlockingQueue<Tuple<TableDataList, Boolean>> rpcResponseQueue,
       BlockingQueue<Tuple<Iterable<FieldValueList>, Boolean>> pageCache,
       BlockingQueue<AbstractList<FieldValue>> buffer) {
     Runnable populateBufferRunnable =
         () -> { // producer thread populating the buffer
-          Iterable<FieldValueList> fieldValueLists =
-              getIterableFieldValueList(results.getRows(), schema);
+          Iterable<FieldValueList> fieldValueLists = null;
           boolean hasRows = true; // as we have to process the first page
           while (hasRows) {
+            try {
+              Tuple<Iterable<FieldValueList>, Boolean> nextPageTuple = pageCache.take();
+              hasRows = nextPageTuple.y();
+              fieldValueLists = nextPageTuple.x();
+            } catch (InterruptedException e) {
+              logger.log(
+                  Level.WARNING,
+                  "\n" + Thread.currentThread().getName() + " Interrupted",
+                  e); // Thread might get interrupted while calling the Cancel method, which is
+              // expected, so logging this instead of throwing the exception back
+            }
+
+            if (Thread.currentThread().isInterrupted()
+                || fieldValueLists
+                    == null) { // do not process further pages and shutdown (outerloop)
+              break;
+            }
+
             for (FieldValueList fieldValueList : fieldValueLists) {
               try {
                 if (Thread.currentThread()
@@ -508,89 +380,26 @@ final class ConnectionImpl implements Connection {
                 throw new BigQueryException(0, e.getMessage(), e);
               }
             }
-            if (Thread.currentThread()
-                .isInterrupted()) { // do not process further pages and shutdown (outerloop)
-              break;
-            }
-            try {
-              Tuple<Iterable<FieldValueList>, Boolean> nextPageTuple = pageCache.take();
-              hasRows = nextPageTuple.y();
-              if (hasRows) {
-                fieldValueLists = nextPageTuple.x();
-              }
-            } catch (InterruptedException e) {
-              throw new BigQueryException(0, e.getMessage(), e);
-            }
           }
+
           if (Thread.currentThread()
               .isInterrupted()) { // clear the buffer for any outstanding records
             buffer.clear();
-            pageCache
+            rpcResponseQueue
                 .clear(); // IMP - so that if it's full then it unblocks and the interrupt logic
             // could trigger
           }
-          buffer.offer(
-              new EndOfFieldValueList()); // All the pages has been processed, put this marker
-          queryTaskExecutor.shutdownNow();
+
+          try {
+            buffer.put(
+                new EndOfFieldValueList()); // All the pages has been processed, put this marker
+          } catch (InterruptedException e) {
+            throw new BigQueryException(0, e.getMessage(), e);
+          }
+          queryTaskExecutor.shutdownNow(); // Shutdown the thread pool
         };
 
     queryTaskExecutor.execute(populateBufferRunnable);
-  }
-
-  // TODO(prasmish): Remove it after benchmarking
-  @Deprecated
-  private BigQueryResultSet processQueryResponseResultsSingleThreadedProducer(
-      com.google.api.services.bigquery.model.QueryResponse results) {
-    Schema schema;
-    long numRows;
-    schema = Schema.fromPb(results.getSchema());
-    numRows = results.getTotalRows().longValue();
-
-    // Producer thread for populating the buffer row by row
-    // Keeping the buffersize more than the page size and ensuring it's always a reasonable number
-    int bufferSize =
-        (int)
-            (connectionSettings.getNumBufferedRows() == null
-                    || connectionSettings.getNumBufferedRows() < 10000
-                ? 20000
-                : (connectionSettings.getNumBufferedRows() * 2));
-    BlockingQueue<AbstractList<FieldValue>> buffer = new LinkedBlockingDeque<>(bufferSize);
-
-    Runnable populateBufferRunnable =
-        () -> { // producer thread populating the buffer
-          Iterable<FieldValueList> fieldValueLists =
-              getIterableFieldValueList(results.getRows(), schema);
-
-          boolean hasRows = true; // as we have to process the first page
-          String pageToken = results.getPageToken();
-          JobId jobId = JobId.fromPb(results.getJobReference());
-          final TableId destinationTable = queryJobsGetRpc(jobId);
-          while (hasRows) {
-            for (FieldValueList fieldValueList : fieldValueLists) {
-              try {
-                buffer.put(fieldValueList);
-              } catch (InterruptedException e) {
-                e.printStackTrace();
-              }
-            }
-            if (pageToken != null) { // request next page
-              // get next set of values
-              TableDataList tabledataList = tableDataListRpc(destinationTable, pageToken);
-              fieldValueLists = getIterableFieldValueList(tabledataList.getRows(), schema);
-              hasRows = true; // new page was requested, which is not yet processed
-              pageToken = tabledataList.getPageToken(); // next page's token
-            } else { // the current page has been processed and there's no next page
-              hasRows = false;
-            }
-          }
-          buffer.offer(
-              new EndOfFieldValueList()); // All the pages has been processed, put this marker
-        };
-    Thread populateBufferWorker = new Thread(populateBufferRunnable);
-    populateBufferWorker.start(); // child process to populate the buffer
-
-    // This will work for pagination as well, as buffer is getting updated asynchronously
-    return new BigQueryResultSetImpl<AbstractList<FieldValue>>(schema, numRows, buffer);
   }
 
   /* Returns query results using either tabledata.list or the high throughput Read API */
