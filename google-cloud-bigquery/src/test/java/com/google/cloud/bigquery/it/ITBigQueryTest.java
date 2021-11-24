@@ -962,17 +962,17 @@ public class ITBigQueryTest {
                 "gs://" + BUCKET + "/" + JSON_LOAD_FILE, FormatOptions.json())
             .setSchema(TABLE_SCHEMA)
             .setConnectionId(
-                // TODO: SET UP CONNECTION FOR THE TEST
-                "projects/java-docs-samples-testing/locations/us/connections/[TODO:CONNECTION]")
+                "projects/java-docs-samples-testing/locations/us/connections/DEVREL_TEST_CONNECTION")
             .build();
     TableInfo tableInfo = TableInfo.of(tableId, externalTableDefinition);
-    // Table createdTable = bigquery.create(tableInfo);
-    //
-    // assertNotNull(createdTable);
-    // assertEquals(DATASET, createdTable.getTableId().getDataset());
-    // assertEquals(tableName, createdTable.getTableId().getTable());
-    // Table remoteTable = bigquery.getTable(DATASET, tableName);
-    // assertNotNull(remoteTable);
+    Table createdTable = bigquery.create(tableInfo);
+
+    assertNotNull(createdTable);
+    assertEquals(DATASET, createdTable.getTableId().getDataset());
+    assertEquals(tableName, createdTable.getTableId().getTable());
+    Table remoteTable = bigquery.getTable(DATASET, tableName);
+    assertNotNull(remoteTable);
+    assertTrue(remoteTable.delete());
   }
 
   @Test
