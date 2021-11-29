@@ -67,7 +67,8 @@ public class FieldValueList extends AbstractList<FieldValue> implements Serializ
   public FieldValue get(String name) {
     if (schema == null) {
       throw new UnsupportedOperationException(
-          "Retrieving field value by name is not supported when there is no fields schema provided");
+          "Retrieving field value by name is not supported when there is no fields schema"
+              + " provided");
     }
     return get(schema.getIndex(name));
   }

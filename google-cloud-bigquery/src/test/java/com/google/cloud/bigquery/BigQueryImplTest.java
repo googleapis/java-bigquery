@@ -513,7 +513,8 @@ public class BigQueryImplTest {
   private BigQueryRpc bigqueryRpcMock;
   private BigQuery bigquery;
   private static final String RATE_LIMIT_ERROR_MSG =
-      "Job exceeded rate limits: Your table exceeded quota for table update operations. For more information, see https://cloud.google.com/bigquery/docs/troubleshoot-quotas";
+      "Job exceeded rate limits: Your table exceeded quota for table update operations. For more"
+          + " information, see https://cloud.google.com/bigquery/docs/troubleshoot-quotas";
 
   @Captor private ArgumentCaptor<Map<BigQueryRpc.Option, Object>> capturedOptions;
   @Captor private ArgumentCaptor<com.google.api.services.bigquery.model.Job> jobCapture;
@@ -766,9 +767,7 @@ public class BigQueryImplTest {
   @Test
   public void testUpdateDataset() {
     DatasetInfo updatedDatasetInfo =
-        DATASET_INFO
-            .setProjectId(OTHER_PROJECT)
-            .toBuilder()
+        DATASET_INFO.setProjectId(OTHER_PROJECT).toBuilder()
             .setDescription("newDescription")
             .build();
     when(bigqueryRpcMock.patch(updatedDatasetInfo.toPb(), EMPTY_RPC_OPTIONS))
@@ -1160,9 +1159,7 @@ public class BigQueryImplTest {
   @Test
   public void testUpdateModel() {
     ModelInfo updateModelInfo =
-        MODEL_INFO_WITH_PROJECT
-            .setProjectId(OTHER_PROJECT)
-            .toBuilder()
+        MODEL_INFO_WITH_PROJECT.setProjectId(OTHER_PROJECT).toBuilder()
             .setDescription("newDescription")
             .build();
     when(bigqueryRpcMock.patch(updateModelInfo.toPb(), EMPTY_RPC_OPTIONS))
@@ -1262,8 +1259,7 @@ public class BigQueryImplTest {
         .thenThrow(new BigQueryException(500, "InternalError"))
         .thenReturn(responsePb);
     bigquery =
-        options
-            .toBuilder()
+        options.toBuilder()
             .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
             .build()
             .getService();
@@ -1306,8 +1302,7 @@ public class BigQueryImplTest {
     when(bigqueryRpcMock.insertAll(PROJECT, DATASET, TABLE, requestPb))
         .thenThrow(new BigQueryException(500, "InternalError"));
     bigquery =
-        options
-            .toBuilder()
+        options.toBuilder()
             .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
             .build()
             .getService();
@@ -2201,8 +2196,7 @@ public class BigQueryImplTest {
         .thenReturn(responsePb);
 
     bigquery =
-        options
-            .toBuilder()
+        options.toBuilder()
             .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
             .build()
             .getService();
@@ -2272,8 +2266,7 @@ public class BigQueryImplTest {
         .thenThrow(new BigQueryException(500, "InternalError"))
         .thenReturn(DATASET_INFO_WITH_PROJECT.toPb());
     bigquery =
-        options
-            .toBuilder()
+        options.toBuilder()
             .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
             .build()
             .getService();
@@ -2289,8 +2282,7 @@ public class BigQueryImplTest {
     when(bigqueryRpcMock.getDataset(PROJECT, DATASET, EMPTY_RPC_OPTIONS))
         .thenThrow(new BigQueryException(501, exceptionMessage));
     bigquery =
-        options
-            .toBuilder()
+        options.toBuilder()
             .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
             .build()
             .getService();
@@ -2309,8 +2301,7 @@ public class BigQueryImplTest {
     when(bigqueryRpcMock.getDataset(PROJECT, DATASET, EMPTY_RPC_OPTIONS))
         .thenThrow(new RuntimeException(exceptionMessage));
     bigquery =
-        options
-            .toBuilder()
+        options.toBuilder()
             .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
             .build()
             .getService();
@@ -2327,8 +2318,7 @@ public class BigQueryImplTest {
   public void testQueryDryRun() throws Exception {
     // https://github.com/googleapis/google-cloud-java/issues/2479
     try {
-      options
-          .toBuilder()
+      options.toBuilder()
           .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
           .build()
           .getService()
@@ -2359,8 +2349,7 @@ public class BigQueryImplTest {
         .thenReturn(responsePb);
 
     bigquery =
-        options
-            .toBuilder()
+        options.toBuilder()
             .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
             .build()
             .getService();
@@ -2400,8 +2389,7 @@ public class BigQueryImplTest {
         .thenReturn(responsePb);
 
     bigquery =
-        options
-            .toBuilder()
+        options.toBuilder()
             .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
             .build()
             .getService();
@@ -2444,8 +2432,7 @@ public class BigQueryImplTest {
         .thenReturn(responsePb);
 
     bigquery =
-        options
-            .toBuilder()
+        options.toBuilder()
             .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
             .build()
             .getService();
@@ -2472,7 +2459,8 @@ public class BigQueryImplTest {
   @Test
   public void testRateLimitRegEx() throws Exception {
     String msg2 =
-        "Job eceeded rate limits: Your table exceeded quota for table update operations. For more information, see https://cloud.google.com/bigquery/docs/troubleshoot-quotas";
+        "Job eceeded rate limits: Your table exceeded quota for table update operations. For more"
+            + " information, see https://cloud.google.com/bigquery/docs/troubleshoot-quotas";
     String msg3 = "exceeded rate exceeded quota for table update";
     String msg4 = "exceeded rate limits";
     assertTrue(
@@ -2512,8 +2500,7 @@ public class BigQueryImplTest {
         .thenReturn(responsePb);
 
     bigquery =
-        options
-            .toBuilder()
+        options.toBuilder()
             .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
             .build()
             .getService();
@@ -2622,9 +2609,7 @@ public class BigQueryImplTest {
   @Test
   public void testUpdateRoutine() {
     RoutineInfo updatedRoutineInfo =
-        ROUTINE_INFO
-            .setProjectId(OTHER_PROJECT)
-            .toBuilder()
+        ROUTINE_INFO.setProjectId(OTHER_PROJECT).toBuilder()
             .setDescription("newDescription")
             .build();
     when(bigqueryRpcMock.update(updatedRoutineInfo.toPb(), EMPTY_RPC_OPTIONS))

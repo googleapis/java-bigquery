@@ -75,8 +75,7 @@ public class DatasetInfoTest {
           .setDefaultPartitionExpirationMs(DEFAULT_PARTITION__EXPIRATION)
           .build();
   private static final DatasetInfo DATASET_INFO_COMPLETE =
-      DATASET_INFO
-          .toBuilder()
+      DATASET_INFO.toBuilder()
           .setDatasetId(DATASET_ID_COMPLETE)
           .setAcl(ACCESS_RULES_COMPLETE)
           .build();
@@ -90,8 +89,7 @@ public class DatasetInfoTest {
         DATASET_INFO_COMPLETE_WITH_IAM_MEMBER,
         DATASET_INFO_COMPLETE_WITH_IAM_MEMBER.toBuilder().build());
     DatasetInfo datasetInfo =
-        DATASET_INFO
-            .toBuilder()
+        DATASET_INFO.toBuilder()
             .setDatasetId(DatasetId.of("dataset2"))
             .setDescription("description2")
             .build();

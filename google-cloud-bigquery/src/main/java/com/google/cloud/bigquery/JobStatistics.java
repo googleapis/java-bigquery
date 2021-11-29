@@ -1105,7 +1105,8 @@ public abstract class JobStatistics implements Serializable {
       private String name;
       private Long slotMs;
 
-      private Builder() {};
+      private Builder() {}
+      ;
 
       Builder setName(String name) {
         this.name = name;
@@ -1191,7 +1192,8 @@ public abstract class JobStatistics implements Serializable {
 
       private String transactionId;
 
-      private Builder() {};
+      private Builder() {}
+      ;
 
       Builder setTransactionId(String transactionId) {
         this.transactionId = transactionId;
@@ -1262,7 +1264,8 @@ public abstract class JobStatistics implements Serializable {
 
       private String sessionId;
 
-      private Builder() {};
+      private Builder() {}
+      ;
 
       Builder setSessionId(String sessionId) {
         this.sessionId = sessionId;

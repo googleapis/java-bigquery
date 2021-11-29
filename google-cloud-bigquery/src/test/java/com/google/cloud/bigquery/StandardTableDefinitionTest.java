@@ -152,7 +152,9 @@ public class StandardTableDefinitionTest {
     } catch (IllegalArgumentException ie) {
       Truth.assertThat(ie.getMessage())
           .contains(
-              "Illegal Argument - Got unexpected time partitioning GHURRY in project ILLEGAL_ARG_TEST_PROJECT in dataset ILLEGAL_ARG_TEST_DATASET in table ILLEGAL_ARG_TEST_TABLE");
+              "Illegal Argument - Got unexpected time partitioning GHURRY in project"
+                  + " ILLEGAL_ARG_TEST_PROJECT in dataset ILLEGAL_ARG_TEST_DATASET in table"
+                  + " ILLEGAL_ARG_TEST_TABLE");
       return;
     }
     fail("testFromPb illegal argument exception did not throw!");

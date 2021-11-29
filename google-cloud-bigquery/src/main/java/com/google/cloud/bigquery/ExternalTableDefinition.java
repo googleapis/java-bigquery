@@ -155,7 +155,8 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     /** Sets the table Hive partitioning options. */
     public Builder setHivePartitioningOptions(HivePartitioningOptions hivePartitioningOptions) {
       return setHivePartitioningOptionsInner(hivePartitioningOptions);
-    };
+    }
+    ;
 
     abstract Builder setHivePartitioningOptionsInner(
         HivePartitioningOptions hivePartitioningOptions);
@@ -199,7 +200,8 @@ public abstract class ExternalTableDefinition extends TableDefinition {
   @Nullable
   public Boolean ignoreUnknownValues() {
     return getIgnoreUnknownValues();
-  };
+  }
+  ;
 
   @Nullable
   public abstract Boolean getIgnoreUnknownValues();

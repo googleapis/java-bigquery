@@ -138,8 +138,7 @@ public class LoadJobConfigurationTest {
   public void testToBuilder() {
     compareLoadJobConfiguration(LOAD_CONFIGURATION_CSV, LOAD_CONFIGURATION_CSV.toBuilder().build());
     LoadJobConfiguration configurationCSV =
-        LOAD_CONFIGURATION_CSV
-            .toBuilder()
+        LOAD_CONFIGURATION_CSV.toBuilder()
             .setDestinationTable(TableId.of("dataset", "newTable"))
             .build();
     assertEquals("newTable", configurationCSV.getDestinationTable().getTable());
@@ -149,8 +148,7 @@ public class LoadJobConfigurationTest {
     compareLoadJobConfiguration(
         LOAD_CONFIGURATION_BACKUP, LOAD_CONFIGURATION_BACKUP.toBuilder().build());
     LoadJobConfiguration configurationBackup =
-        LOAD_CONFIGURATION_BACKUP
-            .toBuilder()
+        LOAD_CONFIGURATION_BACKUP.toBuilder()
             .setDestinationTable(TableId.of("dataset", "newTable"))
             .build();
     assertEquals("newTable", configurationBackup.getDestinationTable().getTable());
@@ -160,8 +158,7 @@ public class LoadJobConfigurationTest {
     compareLoadJobConfiguration(
         LOAD_CONFIGURATION_AVRO, LOAD_CONFIGURATION_AVRO.toBuilder().build());
     LoadJobConfiguration configurationAvro =
-        LOAD_CONFIGURATION_AVRO
-            .toBuilder()
+        LOAD_CONFIGURATION_AVRO.toBuilder()
             .setDestinationTable(TableId.of("dataset", "newTable"))
             .build();
     assertEquals("newTable", configurationAvro.getDestinationTable().getTable());
@@ -212,8 +209,7 @@ public class LoadJobConfigurationTest {
   @Test
   public void testSetProjectIdDoNotOverride() {
     LoadConfiguration configuration =
-        LOAD_CONFIGURATION_CSV
-            .toBuilder()
+        LOAD_CONFIGURATION_CSV.toBuilder()
             .setDestinationTable(TABLE_ID.setProjectId(TEST_PROJECT_ID))
             .build()
             .setProjectId("do-not-update");

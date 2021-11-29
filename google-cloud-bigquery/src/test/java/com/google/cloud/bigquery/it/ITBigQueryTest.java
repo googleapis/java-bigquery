@@ -381,24 +381,17 @@ public class ITBigQueryTest {
           + "    \"BooleanField\": \"true\","
           + "    \"BytesField\": \""
           + BYTES_BASE64
-          + "\""
-          + "  },"
-          + "  \"IntegerField\": \"3\","
-          + "  \"FloatField\": \"1.2\","
-          + "  \"GeographyField\": \"POINT(-122.35022 47.649154)\","
-          + "  \"NumericField\": \"123456.789012345\","
-          + "  \"BigNumericField\": \"0.33333333333333333333333333333333333333\","
-          + "  \"BigNumericField1\": \"1e-38\","
-          + "  \"BigNumericField2\": \"-1e38\","
-          + "  \"BigNumericField3\": \"578960446186580977117854925043439539266.34992332820282019728792003956564819967\","
-          + "  \"BigNumericField4\": \"-578960446186580977117854925043439539266.34992332820282019728792003956564819968\""
-          + "}\n"
-          + "{"
-          + "  \"TimestampField\": \"2014-08-19 07:41:35.220 -05:00\","
-          + "  \"StringField\": \"stringValue\","
-          + "  \"IntegerArrayField\": [\"0\", \"1\"],"
-          + "  \"BooleanField\": \"false\","
-          + "  \"BytesField\": \""
+          + "\"  },  \"IntegerField\": \"3\",  \"FloatField\": \"1.2\",  \"GeographyField\":"
+          + " \"POINT(-122.35022 47.649154)\",  \"NumericField\": \"123456.789012345\", "
+          + " \"BigNumericField\": \"0.33333333333333333333333333333333333333\", "
+          + " \"BigNumericField1\": \"1e-38\",  \"BigNumericField2\": \"-1e38\", "
+          + " \"BigNumericField3\":"
+          + " \"578960446186580977117854925043439539266.34992332820282019728792003956564819967\", "
+          + " \"BigNumericField4\":"
+          + " \"-578960446186580977117854925043439539266.34992332820282019728792003956564819968\"}\n"
+          + "{  \"TimestampField\": \"2014-08-19 07:41:35.220 -05:00\",  \"StringField\":"
+          + " \"stringValue\",  \"IntegerArrayField\": [\"0\", \"1\"],  \"BooleanField\":"
+          + " \"false\",  \"BytesField\": \""
           + BYTES_BASE64
           + "\","
           + "  \"RecordField\": {"
@@ -408,18 +401,14 @@ public class ITBigQueryTest {
           + "    \"BooleanField\": \"true\","
           + "    \"BytesField\": \""
           + BYTES_BASE64
-          + "\""
-          + "  },"
-          + "  \"IntegerField\": \"3\","
-          + "  \"FloatField\": \"1.2\","
-          + "  \"GeographyField\": \"POINT(-122.35022 47.649154)\","
-          + "  \"NumericField\": \"123456.789012345\","
-          + "  \"BigNumericField\": \"0.33333333333333333333333333333333333333\","
-          + "  \"BigNumericField1\": \"1e-38\","
-          + "  \"BigNumericField2\": \"-1e38\","
-          + "  \"BigNumericField3\": \"578960446186580977117854925043439539266.34992332820282019728792003956564819967\","
-          + "  \"BigNumericField4\": \"-578960446186580977117854925043439539266.34992332820282019728792003956564819968\""
-          + "}";
+          + "\"  },  \"IntegerField\": \"3\",  \"FloatField\": \"1.2\",  \"GeographyField\":"
+          + " \"POINT(-122.35022 47.649154)\",  \"NumericField\": \"123456.789012345\", "
+          + " \"BigNumericField\": \"0.33333333333333333333333333333333333333\", "
+          + " \"BigNumericField1\": \"1e-38\",  \"BigNumericField2\": \"-1e38\", "
+          + " \"BigNumericField3\":"
+          + " \"578960446186580977117854925043439539266.34992332820282019728792003956564819967\", "
+          + " \"BigNumericField4\":"
+          + " \"-578960446186580977117854925043439539266.34992332820282019728792003956564819968\"}";
   private static final String JSON_CONTENT_SIMPLE =
       "{"
           + "  \"TimestampField\": \"2014-08-19 07:41:35.220 -05:00\","
@@ -639,8 +628,7 @@ public class ITBigQueryTest {
     updateLabels.put("a", null);
     Dataset updatedDataset =
         bigquery.update(
-            dataset
-                .toBuilder()
+            dataset.toBuilder()
                 .setDescription("Updated Description")
                 .setLabels(updateLabels)
                 .build());
@@ -805,8 +793,7 @@ public class ITBigQueryTest {
       fieldList.add(stringFieldWithPolicy);
       Schema updatedSchemaWithPolicyTag = Schema.of(fieldList);
       Table updatedTable =
-          createdTableForUpdate
-              .toBuilder()
+          createdTableForUpdate.toBuilder()
               .setDefinition(StandardTableDefinition.of(updatedSchemaWithPolicyTag))
               .build();
       updatedTable.update();
@@ -1007,7 +994,8 @@ public class ITBigQueryTest {
     MaterializedViewDefinition viewDefinition =
         MaterializedViewDefinition.newBuilder(
                 String.format(
-                    "SELECT MAX(TimestampField) AS TimestampField,StringField, MAX(BooleanField) AS BooleanField FROM %s.%s.%s GROUP BY StringField",
+                    "SELECT MAX(TimestampField) AS TimestampField,StringField, MAX(BooleanField) AS"
+                        + " BooleanField FROM %s.%s.%s GROUP BY StringField",
                     PROJECT_ID, DATASET, TABLE_ID.getTable()))
             .build();
     TableInfo tableInfo = TableInfo.of(tableId, viewDefinition);
@@ -1043,8 +1031,7 @@ public class ITBigQueryTest {
     // get and modify policy
     Policy policy = bigquery.getIamPolicy(tableId);
     Policy editedPolicy =
-        policy
-            .toBuilder()
+        policy.toBuilder()
             .addIdentity(Role.of("roles/bigquery.dataViewer"), Identity.allUsers())
             .build();
     Policy updatedPolicy = bigquery.setIamPolicy(tableId, editedPolicy);
@@ -1180,8 +1167,7 @@ public class ITBigQueryTest {
     updateLabels.put("a", null);
     Table updatedTable =
         bigquery.update(
-            createdTable
-                .toBuilder()
+            createdTable.toBuilder()
                 .setDescription("Updated Description")
                 .setLabels(updateLabels)
                 .build());
@@ -1210,11 +1196,9 @@ public class ITBigQueryTest {
         .isNull();
 
     table =
-        table
-            .toBuilder()
+        table.toBuilder()
             .setDefinition(
-                tableDefinition
-                    .toBuilder()
+                tableDefinition.toBuilder()
                     .setTimePartitioning(TimePartitioning.of(Type.DAY, 42L))
                     .build())
             .build()
@@ -1225,11 +1209,9 @@ public class ITBigQueryTest {
         .isEqualTo(42L);
 
     table =
-        table
-            .toBuilder()
+        table.toBuilder()
             .setDefinition(
-                tableDefinition
-                    .toBuilder()
+                tableDefinition.toBuilder()
                     .setTimePartitioning(TimePartitioning.of(Type.DAY))
                     .build())
             .build()
@@ -1660,8 +1642,7 @@ public class ITBigQueryTest {
 
     // Mutate metadata.
     RoutineInfo newInfo =
-        routine
-            .toBuilder()
+        routine.toBuilder()
             .setBody("x * 4")
             .setReturnType(routine.getReturnType())
             .setArguments(routine.getArguments())
@@ -2179,7 +2160,9 @@ public class ITBigQueryTest {
     // This query take more than 10s to run and should fall back on the old query path
     String slowDdlQuery =
         String.format(
-            "CREATE OR REPLACE TABLE %s AS SELECT unique_key, agency, complaint_type, descriptor, street_name, city, landmark FROM `bigquery-public-data.new_york.311_service_requests`",
+            "CREATE OR REPLACE TABLE %s AS SELECT unique_key, agency, complaint_type, descriptor,"
+                + " street_name, city, landmark FROM"
+                + " `bigquery-public-data.new_york.311_service_requests`",
             tableName);
     QueryJobConfiguration ddlConfig =
         QueryJobConfiguration.newBuilder(slowDdlQuery)
@@ -2365,7 +2348,8 @@ public class ITBigQueryTest {
   @Test
   public void testQueryParameterModeWithDryRun() {
     String query =
-        "SELECT TimestampField, StringField, BooleanField, BigNumericField, BigNumericField1, BigNumericField2, BigNumericField3, BigNumericField4 FROM "
+        "SELECT TimestampField, StringField, BooleanField, BigNumericField, BigNumericField1,"
+            + " BigNumericField2, BigNumericField3, BigNumericField4 FROM "
             + TABLE_ID.getTable()
             + " WHERE StringField = ?"
             + " AND TimestampField > ?"
@@ -2392,7 +2376,8 @@ public class ITBigQueryTest {
   @Test
   public void testPositionalQueryParameters() throws InterruptedException {
     String query =
-        "SELECT TimestampField, StringField, BooleanField, BigNumericField, BigNumericField1, BigNumericField2, BigNumericField3, BigNumericField4 FROM "
+        "SELECT TimestampField, StringField, BooleanField, BigNumericField, BigNumericField1,"
+            + " BigNumericField2, BigNumericField3, BigNumericField4 FROM "
             + TABLE_ID.getTable()
             + " WHERE StringField = ?"
             + " AND TimestampField > ?"
