@@ -363,21 +363,32 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     // This makes it difficult to translate without throwing.
     // Fixing this entails some work on BaseServiceException.translate.
     // Since that affects a bunch of APIs, we should fix this as a separate change.
+    final boolean idRandomCopy = idRandom;
+    final JobInfo jobInfoCopy = jobInfo;
     try {
       try {
         return Job.fromPb(
             this,
-            runWithRetries(
+            BigQueryRetryHelper.runWithRetries(
                 new Callable<com.google.api.services.bigquery.model.Job>() {
                   @Override
                   public com.google.api.services.bigquery.model.Job call() {
-                    return bigQueryRpc.create(jobPb, optionsMap);
+                    if(idRandomCopy){
+                      JobInfo newJobInfo = jobInfoCopy.toBuilder().setJobId(idProvider.get()).build();
+                      com.google.api.services.bigquery.model.Job newJobPb =
+                              newJobInfo.setProjectId(getOptions().getProjectId()).toPb();
+                      return bigQueryRpc.create(newJobPb, optionsMap);
+                    }
+                    else {
+                      return bigQueryRpc.create(jobPb, optionsMap);
+                    }
                   }
                 },
                 getOptions().getRetrySettings(),
-                BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
-                getOptions().getClock()));
-      } catch (RetryHelper.RetryHelperException e) {
+                EXCEPTION_HANDLER,
+                getOptions().getClock(),
+                DEFAULT_RETRY_CONFIG));
+      } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
         throw BigQueryException.translateAndThrow(e);
       }
     } catch (BigQueryException e) {
