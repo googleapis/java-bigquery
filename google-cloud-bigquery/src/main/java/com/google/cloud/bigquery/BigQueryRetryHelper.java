@@ -72,9 +72,9 @@ public class BigQueryRetryHelper extends RetryHelper {
     RetryingExecutor<V> executor = new DirectRetryingExecutor<>(retryAlgorithm);
 
     // Log retry info
-    if (LOG.isLoggable(Level.INFO)) {
+    if (LOG.isLoggable(Level.FINEST)) {
       LOG.log(
-          Level.INFO,
+          Level.FINEST,
           "Retrying with:\n{0}\n{1}",
           new Object[] {
             "BigQuery retried method: " + callable.getClass().getEnclosingMethod().getName(),

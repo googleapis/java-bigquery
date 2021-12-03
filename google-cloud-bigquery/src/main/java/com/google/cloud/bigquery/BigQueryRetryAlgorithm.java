@@ -75,9 +75,9 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
                 || shouldRetryBasedOnBigQueryRetryConfig(previousThrowable, bigQueryRetryConfig, previousResponse))
             && shouldRetryBasedOnTiming(context, nextAttemptSettings);
 
-    if (LOG.isLoggable(Level.INFO)) {
+    if (LOG.isLoggable(Level.FINEST)) {
       LOG.log(
-          Level.INFO,
+          Level.FINEST,
           "Retrying with:\n{0}\n{1}\n{2}\n{3}\n{4}\n{5}",
           new Object[] {
             "BigQuery attemptCount: " + attemptCount,
@@ -101,6 +101,11 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
     if (previousThrowable != null ){
       errorDesc = previousThrowable.getMessage();
     } else if (previousResponse != null){
+      /*
+      In some cases error messages may come without an exception
+      e.g. status code 200 with a rate limit exceeded for job create
+      in these cases there is now previousThrowable so we need to check previousResponse
+       */
       errorDesc = previousResponse.toString();
     }
 
