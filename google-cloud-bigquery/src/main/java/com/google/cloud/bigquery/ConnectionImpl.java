@@ -154,7 +154,7 @@ final class ConnectionImpl implements Connection {
 
     // Query finished running and we can paginate all the results
     if (results.getJobComplete() && results.getSchema() != null) {
-      return processQueryResponseResults(results); // processQueryResponseResults(results);
+      return processQueryResponseResults(results);
     } else {
       // Query is long running (> 10s) and hasn't completed yet, or query completed but didn't
       // return the schema, fallback to jobs.insert path. Some operations don't return the schema
@@ -184,10 +184,10 @@ final class ConnectionImpl implements Connection {
 
   // Determines the optimal number of caches pages to improve read performance
   private int getPageCacheSize(Long numBufferedRows, long numRows, Schema schema) {
-    final int MIN_CACHE_SIZE = 2; // Min number of pages in the page size
+    final int MIN_CACHE_SIZE = 3; // Min number of pages in the page size
     final int MAX_CACHE_SIZE = 20; // //Min number of pages in the page size
     int columnsRead = schema.getFields().size();
-    int numCachedPages = 10; // default page size
+    int numCachedPages;
     long numCachedRows = numBufferedRows == null ? 0 : numBufferedRows.longValue();
 
     // TODO: Further enhance this logic
@@ -236,7 +236,7 @@ final class ConnectionImpl implements Connection {
             (connectionSettings.getNumBufferedRows() == null
                     || connectionSettings.getNumBufferedRows() < 10000
                 ? 20000
-                : (connectionSettings.getNumBufferedRows() * 2));
+                : Math.min(connectionSettings.getNumBufferedRows() * 2, 100000));//ensuring that the buffer has values between 20K and 100K
     BlockingQueue<AbstractList<FieldValue>> buffer =
         new LinkedBlockingDeque<>(
             bufferSize); // this keeps the deserialized records at the row level, which will be
