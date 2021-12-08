@@ -357,7 +357,6 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     // This makes it difficult to translate without throwing.
     // Fixing this entails some work on BaseServiceException.translate.
     // Since that affects a bunch of APIs, we should fix this as a separate change.
-    final JobInfo jobInfoCopy = jobInfo;
     final JobId[] finalJobId = new JobId[1];
     try {
       try {
@@ -368,11 +367,11 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                   @Override
                   public com.google.api.services.bigquery.model.Job call() {
                     if(idRandom){
-                      // generate new random job
-                      JobInfo newJobInfo = jobInfoCopy.toBuilder().setJobId(idProvider.get()).build();
+                      // re-generate a new random job with the same jobInfo when jobId is not provided by the user
+                      JobInfo recreatedJobInfo = jobInfo.toBuilder().setJobId(idProvider.get()).build();
                       com.google.api.services.bigquery.model.Job newJobPb =
-                              newJobInfo.setProjectId(getOptions().getProjectId()).toPb();
-                      finalJobId[0] = newJobInfo.getJobId();
+                              recreatedJobInfo.setProjectId(getOptions().getProjectId()).toPb();
+                      finalJobId[0] = recreatedJobInfo.getJobId();
                       return bigQueryRpc.create(newJobPb, optionsMap);
                     }
                     else {
