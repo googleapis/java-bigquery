@@ -72,7 +72,8 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
     // the exception messages
     boolean shouldRetry =
         (shouldRetryBasedOnResult(context, previousThrowable, previousResponse)
-                || shouldRetryBasedOnBigQueryRetryConfig(previousThrowable, bigQueryRetryConfig, previousResponse))
+                || shouldRetryBasedOnBigQueryRetryConfig(
+                    previousThrowable, bigQueryRetryConfig, previousResponse))
             && shouldRetryBasedOnTiming(context, nextAttemptSettings);
 
     if (LOG.isLoggable(Level.FINEST)) {
@@ -92,15 +93,17 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
   }
 
   private boolean shouldRetryBasedOnBigQueryRetryConfig(
-      Throwable previousThrowable, BigQueryRetryConfig bigQueryRetryConfig, ResponseT previousResponse) {
+      Throwable previousThrowable,
+      BigQueryRetryConfig bigQueryRetryConfig,
+      ResponseT previousResponse) {
     /*
     We are deciding if a given error should be retried on the basis of error message.
     Cannot rely on Error/Status code as for example error code 400 (which is not retriable) could be thrown due to rateLimitExceed, which is retriable
      */
     String errorDesc = null;
-    if (previousThrowable != null ){
+    if (previousThrowable != null) {
       errorDesc = previousThrowable.getMessage();
-    } else if (previousResponse != null){
+    } else if (previousResponse != null) {
       /*
       In some cases error messages may come without an exception
       e.g. status code 200 with a rate limit exceeded for job create
@@ -109,7 +112,7 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
       errorDesc = previousResponse.toString();
     }
 
-    if (errorDesc != null){
+    if (errorDesc != null) {
       errorDesc = errorDesc.toLowerCase(); // for case insensitive comparison
       for (Iterator<String> retriableMessages =
               bigQueryRetryConfig.getRetriableErrorMessages().iterator();

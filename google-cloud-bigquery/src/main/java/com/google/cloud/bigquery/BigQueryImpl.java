@@ -366,17 +366,18 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 new Callable<com.google.api.services.bigquery.model.Job>() {
                   @Override
                   public com.google.api.services.bigquery.model.Job call() {
-                    if(idRandom){
-                      // re-generate a new random job with the same jobInfo when jobId is not provided by the user
-                      JobInfo recreatedJobInfo = jobInfo.toBuilder().setJobId(idProvider.get()).build();
+                    if (idRandom) {
+                      // re-generate a new random job with the same jobInfo when jobId is not
+                      // provided by the user
+                      JobInfo recreatedJobInfo =
+                          jobInfo.toBuilder().setJobId(idProvider.get()).build();
                       com.google.api.services.bigquery.model.Job newJobPb =
-                              recreatedJobInfo.setProjectId(getOptions().getProjectId()).toPb();
+                          recreatedJobInfo.setProjectId(getOptions().getProjectId()).toPb();
                       finalJobId[0] = recreatedJobInfo.getJobId();
                       return bigQueryRpc.create(newJobPb, optionsMap);
-                    }
-                    else {
+                    } else {
                       com.google.api.services.bigquery.model.Job jobPb =
-                              jobInfo.setProjectId(getOptions().getProjectId()).toPb();
+                          jobInfo.setProjectId(getOptions().getProjectId()).toPb();
                       return bigQueryRpc.create(jobPb, optionsMap);
                     }
                   }
