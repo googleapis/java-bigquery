@@ -236,7 +236,9 @@ final class ConnectionImpl implements Connection {
             (connectionSettings.getNumBufferedRows() == null
                     || connectionSettings.getNumBufferedRows() < 10000
                 ? 20000
-                : Math.min(connectionSettings.getNumBufferedRows() * 2, 100000));//ensuring that the buffer has values between 20K and 100K
+                : Math.min(
+                    connectionSettings.getNumBufferedRows() * 2,
+                    100000)); // ensuring that the buffer has values between 20K and 100K
     BlockingQueue<AbstractList<FieldValue>> buffer =
         new LinkedBlockingDeque<>(
             bufferSize); // this keeps the deserialized records at the row level, which will be
@@ -255,8 +257,27 @@ final class ConnectionImpl implements Connection {
                 schema)); // this keeps the raw RPC response
 
     JobId jobId = JobId.fromPb(results.getJobReference());
-    final TableId destinationTable = queryJobsGetRpc(jobId);
+    runNextPageTaskAsync(results, queryJobsGetRpc(jobId), rpcResponseQueue);
 
+    parseRpcDataAsync(
+        results,
+        schema,
+        pageCache,
+        rpcResponseQueue); // parses data on a separate thread, thus maximising processing
+    // throughput
+
+    populateBufferAsync(
+        rpcResponseQueue, pageCache, buffer); // spawns a thread to populate the buffer
+
+    // This will work for pagination as well, as buffer is getting updated asynchronously
+    return new BigQueryResultSetImpl<AbstractList<FieldValue>>(
+        schema, numRows, buffer, bigQueryResultSetStats);
+  }
+
+  private void runNextPageTaskAsync(
+      com.google.api.services.bigquery.model.QueryResponse results,
+      TableId destinationTable,
+      BlockingQueue<Tuple<TableDataList, Boolean>> rpcResponseQueue) {
     // This thread makes the RPC calls and paginates
     Runnable nextPageTask =
         () -> {
@@ -285,20 +306,6 @@ final class ConnectionImpl implements Connection {
           }
         };
     queryTaskExecutor.execute(nextPageTask);
-
-    parseRpcDataAsync(
-        results,
-        schema,
-        pageCache,
-        rpcResponseQueue); // parses data on a separate thread, thus maximising processing
-    // throughput
-
-    populateBufferAsync(
-        rpcResponseQueue, pageCache, buffer); // spawns a thread to populate the buffer
-
-    // This will work for pagination as well, as buffer is getting updated asynchronously
-    return new BigQueryResultSetImpl<AbstractList<FieldValue>>(
-        schema, numRows, buffer, bigQueryResultSetStats);
   }
 
   /*
@@ -421,12 +428,9 @@ final class ConnectionImpl implements Connection {
   private BigQueryResultSet getQueryResultsWithJobId(
       long totalRows, long pageRows, Schema schema, JobId jobId) {
     TableId destinationTable = queryJobsGetRpc(jobId);
-
-    return null; // use processQueryResponseResults(); for remaining pages
-    /*  return useReadAPI(totalRows, pageRows)
-    ? highThroughPutRead(destinationTable)
-    : null; // plugin tableDataListRpc(destinationTable, schema, null);, Use processQueryResponseResults ?
-                */
+    return useReadAPI(totalRows, pageRows)
+        ? highThroughPutRead(destinationTable)
+        : getQueryResultsRpc(jobId);
   }
 
   /* Returns Job from jobId by calling the jobs.get API */
@@ -498,8 +502,7 @@ final class ConnectionImpl implements Connection {
   }
 
   /* Returns results of the query associated with the provided job using jobs.getQueryResults API */
-  private BigQueryResultSet getQueryResultsRpc(
-      JobId jobId) { // TODO(prasmish) temp: This is a slower endpoint
+  private BigQueryResultSet getQueryResultsRpc(JobId jobId) {
     JobId completeJobId =
         jobId
             .setProjectId(bigQueryOptions.getProjectId())
@@ -508,6 +511,11 @@ final class ConnectionImpl implements Connection {
                     ? bigQueryOptions.getLocation()
                     : jobId.getLocation());
     try {
+
+      // Question: Can we use tableData.list endpoint instead?
+      // Table data.list doesn't have destination table!
+      // Cant be
+
       GetQueryResultsResponse results =
           BigQueryRetryHelper.runWithRetries(
               () ->
@@ -549,16 +557,30 @@ final class ConnectionImpl implements Connection {
     BigQueryResultSetStats bigQueryResultSetStats =
         new BigQueryResultSetStatsImpl(dmlStats, sessionInfo);
 
-    // only use this API for the first page of result
+    /* // only use this API for the first page of result
     if (results.getPageToken() == null) {
       // TODO: iterate(cachedFirstPage)
+      return processQueryResponseResults(results);
       // return new BigQueryResultSetImpl(schema, numRows, null, bigQueryResultSetStats);
       return null; // TODO: Plugin the buffer logic
-    }
+    }*/
+
+    // results
+    /* for (TableRow tr : results.getRows()) {
+      // tr.getF().
+      FieldValue.fromPb(tr.getF(), null);
+    }*/
+    // results.getp
+
+    // We need com.google.api.services.bigquery.model.QueryResponse to invoke
+    // processQueryResponseResults
+    // processQueryResponseResults(res);
+    // TODO(prasmish) : add the processQueryResponseResults logic
     // use tabledata.list or Read API to fetch subsequent pages of results
     long totalRows = results.getTotalRows() == null ? 0 : results.getTotalRows().longValue();
     long pageRows = results.getRows().size();
-    return getQueryResultsWithJobId(totalRows, pageRows, schema, jobId);
+
+    return null; // getQueryResultsWithJobId(totalRows, pageRows, schema, jobId);
   }
 
   private boolean isFastQuerySupported() {
