@@ -134,31 +134,6 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
         }
       }
     }
-    // status code 200
-    /*
-    if (previousResponse != null && (errorDesc = previousResponse.toString()) != null) {
-      errorDesc = errorDesc.toLowerCase(); // for case insensitive comparison
-      for (Iterator<String> retriableMessages =
-           bigQueryRetryConfig.getRetriableErrorMessages().iterator();
-           retriableMessages.hasNext(); ) {
-        if (errorDesc.contains(
-                retriableMessages
-                        .next()
-                        .toLowerCase())) { // Error message should be retried, implementing cases
-          // insensitive match
-          return true;
-        }
-      }
-
-      // Check if there's a regex which matches the error message. This avoids too many regex
-      // matches which is expensive
-      for (Iterator<String> retriableRegExes = bigQueryRetryConfig.getRetriableRegExes().iterator();
-           retriableRegExes.hasNext(); ) {
-        if (matchRegEx(retriableRegExes.next(), errorDesc)) {
-          return true;
-        }
-      }
-    }*/
     return false;
   }
 
