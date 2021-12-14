@@ -100,7 +100,9 @@
       <version>1.1.3</version>
       <scope>test</scope>
     </dependency>
+  <!-- [START bigquery_java_dependencies] -->
   </dependencies>
+  <!-- [END bigquery_java_dependencies] -->
 
   <build>
     <plugins>
