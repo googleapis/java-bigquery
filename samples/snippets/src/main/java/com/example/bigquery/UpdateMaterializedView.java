@@ -31,7 +31,7 @@ public class UpdateMaterializedView {
     // TODO(developer): Replace these variables before running the sample.
     String datasetName = "MY_DATASET_NAME";
     String materializedViewName = "MY_MATERIALIZED_VIEW_NAME";
-    alterMaterializedView(datasetName, materializedViewName);
+    updateMaterializedView(datasetName, materializedViewName);
   }
 
   public static void updateMaterializedView(String datasetName, String materializedViewName) {
