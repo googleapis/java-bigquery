@@ -65,7 +65,7 @@ public class AlterMaterializedViewIT {
     System.setOut(out);
 
     tableName = "MY_TABLE_NAME_TEST_" + ID;
-    materializedViewName = "MY_ALTER_MATERIALIZED_VIEW_NAME_TEST_" + ID;
+    materializedViewName = "MY_UPDATE_MATERIALIZED_VIEW_NAME_TEST_" + ID;
 
     Schema schema =
         Schema.of(
@@ -95,8 +95,8 @@ public class AlterMaterializedViewIT {
   }
 
   @Test
-  public void testAlterMaterializedView() {
-    AlterMaterializedView.alterMaterializedView(BIGQUERY_DATASET_NAME, materializedViewName);
-    assertThat(bout.toString()).contains("Materialized view altered successfully");
+  public void testUpdateMaterializedView() {
+    AlterMaterializedView.updateMaterializedView(BIGQUERY_DATASET_NAME, materializedViewName);
+    assertThat(bout.toString()).contains("Materialized view updated successfully");
   }
 }

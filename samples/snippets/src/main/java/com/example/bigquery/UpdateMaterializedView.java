@@ -16,7 +16,7 @@
 
 package com.example.bigquery;
 
-// [START bigquery_alter_materialized_view]
+// [START bigquery_update_materialized_view]
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
@@ -24,7 +24,7 @@ import com.google.cloud.bigquery.MaterializedViewDefinition;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableId;
 
-// Sample to alter materialized view
+// Sample to update materialized view
 public class AlterMaterializedView {
 
   public static void main(String[] args) {
@@ -34,7 +34,7 @@ public class AlterMaterializedView {
     alterMaterializedView(datasetName, materializedViewName);
   }
 
-  public static void alterMaterializedView(String datasetName, String materializedViewName) {
+  public static void updateMaterializedView(String datasetName, String materializedViewName) {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
@@ -52,10 +52,10 @@ public class AlterMaterializedView {
           .setRefreshIntervalMs(1000L)
           .build();
       table.toBuilder().setDefinition(materializedViewDefinition).build().update();
-      System.out.println("Materialized view altered successfully");
+      System.out.println("Materialized view updated successfully");
     } catch (BigQueryException e) {
-      System.out.println("Materialized view was not altered. \n" + e.toString());
+      System.out.println("Materialized view was not updated. \n" + e.toString());
     }
   }
 }
-// [END bigquery_alter_materialized_view]
+// [END bigquery_update_materialized_view]
