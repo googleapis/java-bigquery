@@ -32,7 +32,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class AlterMaterializedViewIT {
+public class UpdateMaterializedViewIT {
 
   private static final String ID = UUID.randomUUID().toString().substring(0, 8);
   private final Logger log = Logger.getLogger(this.getClass().getName());
@@ -96,7 +96,7 @@ public class AlterMaterializedViewIT {
 
   @Test
   public void testUpdateMaterializedView() {
-    AlterMaterializedView.updateMaterializedView(BIGQUERY_DATASET_NAME, materializedViewName);
+    UpdateMaterializedView.updateMaterializedView(BIGQUERY_DATASET_NAME, materializedViewName);
     assertThat(bout.toString()).contains("Materialized view updated successfully");
   }
 }

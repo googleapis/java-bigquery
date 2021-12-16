@@ -25,7 +25,7 @@ import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableId;
 
 // Sample to update materialized view
-public class AlterMaterializedView {
+public class UpdateMaterializedView {
 
   public static void main(String[] args) {
     // TODO(developer): Replace these variables before running the sample.
@@ -45,7 +45,7 @@ public class AlterMaterializedView {
       // Get existing materialized view
       Table table = bigquery.getTable(tableId);
       MaterializedViewDefinition materializedViewDefinition = table.getDefinition();
-      // Alter materialized view
+      // Update materialized view
       materializedViewDefinition
           .toBuilder()
           .setEnableRefresh(true)
