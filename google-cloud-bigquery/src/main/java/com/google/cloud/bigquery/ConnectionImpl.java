@@ -77,9 +77,13 @@ final class ConnectionImpl implements Connection {
 
   @Override
   public BigQueryDryRunResult dryRun(String sql) throws BigQuerySQLException {
-    // TODO: run a dummy query using tabaledata.list end point ? What are the query params
-    // jobs.query or jobs.getqueuryresults queryrequestinfo.java
-    return null;
+    QueryJobConfiguration queryConfig =
+        QueryJobConfiguration.newBuilder(sql).setDryRun(true).setUseQueryCache(false).build();
+    Job job = BigQueryOptions.getDefaultInstance().getService().create(JobInfo.of(queryConfig));
+    JobStatistics.QueryStatistics statistics = job.getStatistics();
+
+    return new BigQueryDryRunResultImpl(
+        statistics.getSchema(), queryConfig.toPb().getQuery().getQueryParameters());
   }
 
   @Override
