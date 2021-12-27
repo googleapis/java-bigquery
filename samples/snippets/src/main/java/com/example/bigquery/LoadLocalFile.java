@@ -75,7 +75,7 @@ public class LoadLocalFile {
       } else if (completedJob.getStatus().getError() != null) {
         System.out.println(
             "BigQuery was unable to load local file to the table due to an error: \n"
-                + job.getStatus().getError());
+                + completedJob.getStatus().getError());
         return;
       }
 
