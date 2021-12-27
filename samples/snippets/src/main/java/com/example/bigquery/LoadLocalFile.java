@@ -80,7 +80,7 @@ public class LoadLocalFile {
       }
 
       // Get output status
-      LoadStatistics stats = job.getStatistics();
+      LoadStatistics stats = completedJob.getStatistics();
       System.out.printf("Successfully loaded %d rows. \n", stats.getOutputRows());
     } catch (BigQueryException e) {
       System.out.println("Local file not loaded. \n" + e.toString());
