@@ -78,12 +78,47 @@ final class ConnectionImpl implements Connection {
   @Override
   public BigQueryDryRunResult dryRun(String sql) throws BigQuerySQLException {
     QueryJobConfiguration queryConfig =
-        QueryJobConfiguration.newBuilder(sql).setDryRun(true).setUseQueryCache(false).build();
-    Job job = BigQueryOptions.getDefaultInstance().getService().create(JobInfo.of(queryConfig));
-    JobStatistics.QueryStatistics statistics = job.getStatistics();
+        QueryJobConfiguration.newBuilder(sql).setDryRun(true).build();
+    // Job job = BigQueryOptions.getDefaultInstance().getService().create(JobInfo.of(queryConfig));
+    /*//TODO: WIP implementation
+       JobId jobId = JobId.of(UUID.randomUUID().toString());
+       Job job = BigQueryOptions.getDefaultInstance().getService().create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
 
-    return new BigQueryDryRunResultImpl(
-        statistics.getSchema(), queryConfig.toPb().getQuery().getQueryParameters());
+       try {
+         if(!job.isDone()){//wait if job is still running. TODO(prasmish): Doublecheck if this check is required
+           job = job.waitFor();
+         }
+
+        // response.get
+       } catch (InterruptedException e) {
+         e.printStackTrace();
+       }
+       JobStatistics.QueryStatistics statistics = job.getStatistics();
+       try {
+         TableResult tr = job.getQueryResults();
+        // job.getBigQuery().getQueryResults().
+        // tr.get
+      //   job.getConfiguration().g
+       } catch (InterruptedException e) {
+         e.printStackTrace();
+       }
+       com.google.cloud.bigquery.QueryResponse response = BigQueryOptions.getDefaultInstance().getService().getQueryResults(jobId);
+       JobId jobId = JobId.fromPb(response.getJobReference());
+
+       com.google.api.services.bigquery.model.QueryResponse results;
+       results.getJobReference().getJobId()
+
+       JobId jobIdd = JobId.fromPb(results.getJobReference()).get;
+       //response.
+
+      JobConfigurationQuery d =  queryConfig.toPb().getQuery();
+     List<QueryParameter> qp =  d.getQueryParameters();
+       //response.
+       return new BigQueryDryRunResultImpl(
+               response.getSchema(), queryConfig.toPb().getQuery().getQueryParameters());
+
+    */
+    return null;
   }
 
   @Override
@@ -97,7 +132,10 @@ final class ConnectionImpl implements Connection {
     // use jobs.insert otherwise
     com.google.api.services.bigquery.model.Job queryJob =
         createQueryJob(sql, connectionSettings, null, null);
-    return null; // TODO getQueryResultsRpc(JobId.fromPb(queryJob.getJobReference()));
+    JobId jobId = JobId.fromPb(queryJob.getJobReference());
+    GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
+    return getQueryResultsWithJobId(
+        firstPage.getTotalRows().longValue(), firstPage.getRows().size(), null, jobId, firstPage);
   }
 
   @Override
@@ -114,7 +152,10 @@ final class ConnectionImpl implements Connection {
     // use jobs.insert otherwise
     com.google.api.services.bigquery.model.Job queryJob =
         createQueryJob(sql, connectionSettings, parameters, labels);
-    return null; // TODO getQueryResultsRpc(JobId.fromPb(queryJob.getJobReference()));
+    JobId jobId = JobId.fromPb(queryJob.getJobReference());
+    GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
+    return getQueryResultsWithJobId(
+        firstPage.getTotalRows().longValue(), firstPage.getRows().size(), null, jobId, firstPage);
   }
 
   static class EndOfFieldValueList
@@ -167,7 +208,7 @@ final class ConnectionImpl implements Connection {
       long totalRows = results.getTotalRows().longValue();
       long pageRows = results.getRows().size();
       JobId jobId = JobId.fromPb(results.getJobReference());
-      return getQueryResultsWithJobId(totalRows, pageRows, null, jobId);
+      return getQueryResultsWithJobId(totalRows, pageRows, null, jobId, null);
     }
   }
 
@@ -216,6 +257,7 @@ final class ConnectionImpl implements Connection {
             MAX_CACHE_SIZE)); // numCachedPages should be between the defined min and max
   }
 
+  // TODO: Write a IT with order by query
   /* This method processed the first page of GetQueryResultsResponse and then it uses tabledata.list */
   private BigQueryResultSet processGetQueryResponseResults(
       GetQueryResultsResponse results, JobId completeJobId) {
@@ -493,11 +535,15 @@ final class ConnectionImpl implements Connection {
 
   /* Returns query results using either tabledata.list or the high throughput Read API */
   private BigQueryResultSet getQueryResultsWithJobId(
-      long totalRows, long pageRows, Schema schema, JobId jobId) {
+      long totalRows,
+      long pageRows,
+      Schema schema,
+      JobId jobId,
+      GetQueryResultsResponse firstPage) {
     TableId destinationTable = queryJobsGetRpc(jobId);
     return useReadAPI(totalRows, pageRows)
         ? highThroughPutRead(destinationTable)
-        : getQueryResultsRpc(jobId);
+        : getQueryResultsRpc(jobId, firstPage);
   }
 
   /* Returns Job from jobId by calling the jobs.get API */
@@ -569,7 +615,21 @@ final class ConnectionImpl implements Connection {
   }
 
   /* Returns results of the query associated with the provided job using jobs.getQueryResults API */
-  private BigQueryResultSet getQueryResultsRpc(JobId jobId) {
+  private BigQueryResultSet getQueryResultsRpc(JobId jobId, GetQueryResultsResponse firstPage) {
+    try {
+      // paginate using multi threaded logic and return BigQueryResultSet
+      if (firstPage == null) {
+        return processGetQueryResponseResults(getQueryResultsFirstPage(jobId), jobId);
+      } else { // we already received the firstpage using the jobId
+        return processGetQueryResponseResults(firstPage, jobId);
+      }
+    } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    }
+  }
+
+  /*Returns just the first page of GetQueryResultsResponse using the jobId*/
+  private GetQueryResultsResponse getQueryResultsFirstPage(JobId jobId) {
     JobId completeJobId =
         jobId
             .setProjectId(bigQueryOptions.getProjectId())
@@ -578,11 +638,6 @@ final class ConnectionImpl implements Connection {
                     ? bigQueryOptions.getLocation()
                     : jobId.getLocation());
     try {
-
-      // Question: Can we use tableData.list endpoint instead?
-      // Table data.list doesn't have destination table!
-      // Cant be
-
       GetQueryResultsResponse results =
           BigQueryRetryHelper.runWithRetries(
               () ->
@@ -605,8 +660,7 @@ final class ConnectionImpl implements Connection {
         // with the case where there there is a HTTP error
         throw new BigQueryException(bigQueryErrors);
       }
-      // return processGetQueryResults(jobId, results);
-      return processGetQueryResponseResults(results, jobId);
+      return results;
     } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
     }
