@@ -40,14 +40,13 @@ import java.util.stream.Collectors;
 /** Implementation for {@link Connection}, the generic BigQuery connection API (not JDBC). */
 final class ConnectionImpl implements Connection {
 
-  private ConnectionSettings connectionSettings;
-  private BigQueryOptions bigQueryOptions;
-  private BigQueryRpc bigQueryRpc;
-  private BigQueryRetryConfig retryConfig;
-  // false even after interrupting it here! This could be due to the retrial logic, so
-  // using it as a workaround.
+  private final ConnectionSettings connectionSettings;
+  private final BigQueryOptions bigQueryOptions;
+  private final BigQueryRpc bigQueryRpc;
+  private final BigQueryRetryConfig retryConfig;
+  private final int bufferSize; // buffer size in Producer Thread
   private final int MAX_PROCESS_QUERY_THREADS_CNT = 5;
-  private ExecutorService queryTaskExecutor =
+  private final ExecutorService queryTaskExecutor =
       Executors.newFixedThreadPool(MAX_PROCESS_QUERY_THREADS_CNT);
   private final Logger logger = Logger.getLogger(this.getClass().getName());
 
@@ -60,14 +59,18 @@ final class ConnectionImpl implements Connection {
     this.bigQueryOptions = bigQueryOptions;
     this.bigQueryRpc = bigQueryRpc;
     this.retryConfig = retryConfig;
+    this.bufferSize =
+        (int)
+            (connectionSettings.getNumBufferedRows() == null
+                    || connectionSettings.getNumBufferedRows() < 10000
+                ? 20000
+                : Math.min(connectionSettings.getNumBufferedRows() * 2, 100000));
   }
 
   /*
-  Cancel method shutdowns the pageFetcher and producerWorker threads gracefully using interrupt
-
-  The pageFetcher threat wont request for any subsequent threads after interrupting and shutdown as soon as any ongoing RPC call returns
-
-  The producerWorker wont populate the buffer with any further records and clear the buffer, put a EoF marker and shutdown
+  Cancel method shutdowns the pageFetcher and producerWorker threads gracefully using interrupt.
+  The pageFetcher threat will not request for any subsequent threads after interrupting and shutdown as soon as any ongoing RPC call returns.
+  The producerWorker will not populate the buffer with any further records and clear the buffer, put a EoF marker and shutdown.
    */
   @Override
   public synchronized Boolean cancel() throws BigQuerySQLException {
@@ -134,8 +137,8 @@ final class ConnectionImpl implements Connection {
         createQueryJob(sql, connectionSettings, null, null);
     JobId jobId = JobId.fromPb(queryJob.getJobReference());
     GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
-    return getQueryResultsWithJobId(
-        firstPage.getTotalRows().longValue(), firstPage.getRows().size(), null, jobId, firstPage);
+    return getQueryResultsWithJob(
+        firstPage.getTotalRows().longValue(), firstPage.getRows().size(), jobId, firstPage);
   }
 
   @Override
@@ -154,8 +157,8 @@ final class ConnectionImpl implements Connection {
         createQueryJob(sql, connectionSettings, parameters, labels);
     JobId jobId = JobId.fromPb(queryJob.getJobReference());
     GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
-    return getQueryResultsWithJobId(
-        firstPage.getTotalRows().longValue(), firstPage.getRows().size(), null, jobId, firstPage);
+    return getQueryResultsWithJob(
+        firstPage.getTotalRows().longValue(), firstPage.getRows().size(), jobId, firstPage);
   }
 
   static class EndOfFieldValueList
@@ -192,8 +195,8 @@ final class ConnectionImpl implements Connection {
           results.getErrors().stream()
               .map(BigQueryError.FROM_PB_FUNCTION)
               .collect(Collectors.toList());
-      // Throwing BigQueryException since there may be no JobId and we want to stay consistent
-      // with the case where there there is a HTTP error
+      // Throwing BigQueryException since there may be no JobId, and we want to stay consistent
+      // with the case where there is an HTTP error
       throw new BigQueryException(bigQueryErrors);
     }
 
@@ -201,72 +204,27 @@ final class ConnectionImpl implements Connection {
     if (results.getJobComplete() && results.getSchema() != null) {
       return processQueryResponseResults(results);
     } else {
-      // Query is long running (> 10s) and hasn't completed yet, or query completed but didn't
+      // Query is long-running (> 10s) and hasn't completed yet, or query completed but didn't
       // return the schema, fallback to jobs.insert path. Some operations don't return the schema
-      // and
-      // can be optimized here, but this is left as future work.
+      // and can be optimized here, but this is left as future work.
       long totalRows = results.getTotalRows().longValue();
       long pageRows = results.getRows().size();
       JobId jobId = JobId.fromPb(results.getJobReference());
-      return getQueryResultsWithJobId(totalRows, pageRows, null, jobId, null);
+      GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
+      return getQueryResultsWithJob(totalRows, pageRows, jobId, firstPage);
     }
-  }
-
-  private static Iterable<FieldValueList> getIterableFieldValueList(
-      Iterable<TableRow> tableDataPb, final Schema schema) {
-    return ImmutableList.copyOf(
-        Iterables.transform(
-            tableDataPb != null ? tableDataPb : ImmutableList.<TableRow>of(),
-            new Function<TableRow, FieldValueList>() {
-              FieldList fields = schema != null ? schema.getFields() : null;
-
-              @Override
-              public FieldValueList apply(TableRow rowPb) {
-                return FieldValueList.fromPb(rowPb.getF(), fields);
-              }
-            }));
-  }
-
-  // Determines the optimal number of caches pages to improve read performance
-  private int getPageCacheSize(Long numBufferedRows, long numRows, Schema schema) {
-    final int MIN_CACHE_SIZE = 3; // Min number of pages in the page size
-    final int MAX_CACHE_SIZE = 20; // //Min number of pages in the page size
-    int columnsRead = schema.getFields().size();
-    int numCachedPages;
-    long numCachedRows = numBufferedRows == null ? 0 : numBufferedRows.longValue();
-
-    // TODO: Further enhance this logic
-    if (numCachedRows > 10000) {
-      numCachedPages =
-          2; // the size of numBufferedRows is quite large and as per our tests we should be able to
-      // do enough even with low
-    } else if (columnsRead > 15
-        && numCachedRows
-            > 5000) { // too many fields are being read, setting the page size on the lower end
-      numCachedPages = 3;
-    } else if (numCachedRows < 2000
-        && columnsRead < 15) { // low pagesize with fewer number of columns, we can cache more pages
-      numCachedPages = 20;
-    } else { // default - under 10K numCachedRows with any number of columns
-      numCachedPages = 5;
-    }
-    return numCachedPages < MIN_CACHE_SIZE
-        ? MIN_CACHE_SIZE
-        : (Math.min(
-            numCachedPages,
-            MAX_CACHE_SIZE)); // numCachedPages should be between the defined min and max
   }
 
   // TODO: Write a IT with order by query
   /* This method processed the first page of GetQueryResultsResponse and then it uses tabledata.list */
-  private BigQueryResultSet processGetQueryResponseResults(
-      GetQueryResultsResponse results, JobId completeJobId) {
+  private BigQueryResultSet getSubsequentPagesOfResults(
+      GetQueryResultsResponse firstPage, JobId completeJobId) {
     Schema schema;
     long numRows;
-    schema = Schema.fromPb(results.getSchema());
-    numRows = results.getTotalRows().longValue();
+    schema = Schema.fromPb(firstPage.getSchema());
+    numRows = firstPage.getTotalRows().longValue();
 
-    // Get query statistics
+    // Create GetQueryResultsResponse query statistics
     Job queryJob = getQueryJobRpc(completeJobId);
     JobStatistics.QueryStatistics statistics = queryJob.getStatistics();
     DmlStats dmlStats = statistics.getDmlStats() == null ? null : statistics.getDmlStats();
@@ -275,39 +233,25 @@ final class ConnectionImpl implements Connection {
     BigQueryResultSetStats bigQueryResultSetStats =
         new BigQueryResultSetStatsImpl(dmlStats, sessionInfo);
 
-    // Producer thread for populating the buffer row by row
-    // Keeping the buffersize more than the page size and ensuring it's always a reasonable number
-    int bufferSize =
-        (int)
-            (connectionSettings.getNumBufferedRows() == null
-                    || connectionSettings.getNumBufferedRows() < 10000
-                ? 20000
-                : Math.min(
-                    connectionSettings.getNumBufferedRows() * 2,
-                    100000)); // ensuring that the buffer has values between 20K and 100K
-    BlockingQueue<AbstractList<FieldValue>> buffer =
-        new LinkedBlockingDeque<>(
-            bufferSize); // this keeps the deserialized records at the row level, which will be
-    // consumed by the BQResultSet
+    // Keeps the deserialized records at the row level, which is consumed by BigQueryResultSet
+    BlockingQueue<AbstractList<FieldValue>> buffer = new LinkedBlockingDeque<>(bufferSize);
+
+    // Keeps the parsed FieldValueLists
     BlockingQueue<Tuple<Iterable<FieldValueList>, Boolean>> pageCache =
         new LinkedBlockingDeque<>(
-            getPageCacheSize(
-                connectionSettings.getNumBufferedRows(),
-                numRows,
-                schema)); // this keeps the parsed FieldValueLists
+            getPageCacheSize(connectionSettings.getNumBufferedRows(), numRows, schema));
+
+    // Keeps the raw RPC responses
     BlockingQueue<Tuple<TableDataList, Boolean>> rpcResponseQueue =
         new LinkedBlockingDeque<>(
-            getPageCacheSize(
-                connectionSettings.getNumBufferedRows(),
-                numRows,
-                schema)); // this keeps the raw RPC response
+            getPageCacheSize(connectionSettings.getNumBufferedRows(), numRows, schema));
 
-    JobId jobId = JobId.fromPb(results.getJobReference());
+    JobId jobId = JobId.fromPb(firstPage.getJobReference());
 
-    runNextPageTaskAsync(results.getPageToken(), queryJobsGetRpc(jobId), rpcResponseQueue);
+    runNextPageTaskAsync(firstPage.getPageToken(), getDestinationTable(jobId), rpcResponseQueue);
 
     parseRpcDataAsync(
-        results.getRows(),
+        firstPage.getRows(),
         schema,
         pageCache,
         rpcResponseQueue); // parses data on a separate thread, thus maximising processing
@@ -328,7 +272,7 @@ final class ConnectionImpl implements Connection {
     schema = Schema.fromPb(results.getSchema());
     numRows = results.getTotalRows().longValue();
 
-    // Get query statistics
+    // Create QueryResponse query statistics
     DmlStats dmlStats =
         results.getDmlStats() == null ? null : DmlStats.fromPb(results.getDmlStats());
     JobStatistics.SessionInfo sessionInfo =
@@ -338,47 +282,21 @@ final class ConnectionImpl implements Connection {
     BigQueryResultSetStats bigQueryResultSetStats =
         new BigQueryResultSetStatsImpl(dmlStats, sessionInfo);
 
-    // Producer thread for populating the buffer row by row
-    // Keeping the buffersize more than the page size and ensuring it's always a reasonable number
-    int bufferSize =
-        (int)
-            (connectionSettings.getNumBufferedRows() == null
-                    || connectionSettings.getNumBufferedRows() < 10000
-                ? 20000
-                : Math.min(
-                    connectionSettings.getNumBufferedRows() * 2,
-                    100000)); // ensuring that the buffer has values between 20K and 100K
-    BlockingQueue<AbstractList<FieldValue>> buffer =
-        new LinkedBlockingDeque<>(
-            bufferSize); // this keeps the deserialized records at the row level, which will be
-    // consumed by the BQResultSet
+    BlockingQueue<AbstractList<FieldValue>> buffer = new LinkedBlockingDeque<>(bufferSize);
     BlockingQueue<Tuple<Iterable<FieldValueList>, Boolean>> pageCache =
         new LinkedBlockingDeque<>(
-            getPageCacheSize(
-                connectionSettings.getNumBufferedRows(),
-                numRows,
-                schema)); // this keeps the parsed FieldValueLists
+            getPageCacheSize(connectionSettings.getNumBufferedRows(), numRows, schema));
     BlockingQueue<Tuple<TableDataList, Boolean>> rpcResponseQueue =
         new LinkedBlockingDeque<>(
-            getPageCacheSize(
-                connectionSettings.getNumBufferedRows(),
-                numRows,
-                schema)); // this keeps the raw RPC response
+            getPageCacheSize(connectionSettings.getNumBufferedRows(), numRows, schema));
 
     JobId jobId = JobId.fromPb(results.getJobReference());
-    runNextPageTaskAsync(results.getPageToken(), queryJobsGetRpc(jobId), rpcResponseQueue);
+    runNextPageTaskAsync(results.getPageToken(), getDestinationTable(jobId), rpcResponseQueue);
 
-    parseRpcDataAsync(
-        results.getRows(),
-        schema,
-        pageCache,
-        rpcResponseQueue); // parses data on a separate thread, thus maximising processing
-    // throughput
+    parseRpcDataAsync(results.getRows(), schema, pageCache, rpcResponseQueue);
 
-    populateBufferAsync(
-        rpcResponseQueue, pageCache, buffer); // spawns a thread to populate the buffer
+    populateBufferAsync(rpcResponseQueue, pageCache, buffer);
 
-    // This will work for pagination as well, as buffer is getting updated asynchronously
     return new BigQueryResultSetImpl<AbstractList<FieldValue>>(
         schema, numRows, buffer, bigQueryResultSetStats);
   }
@@ -533,17 +451,59 @@ final class ConnectionImpl implements Connection {
     queryTaskExecutor.execute(populateBufferRunnable);
   }
 
+  /* Helper method that parse and populate a page with TableRows */
+  private static Iterable<FieldValueList> getIterableFieldValueList(
+      Iterable<TableRow> tableDataPb, final Schema schema) {
+    return ImmutableList.copyOf(
+        Iterables.transform(
+            tableDataPb != null ? tableDataPb : ImmutableList.of(),
+            new Function<TableRow, FieldValueList>() {
+              final FieldList fields = schema != null ? schema.getFields() : null;
+
+              @Override
+              public FieldValueList apply(TableRow rowPb) {
+                return FieldValueList.fromPb(rowPb.getF(), fields);
+              }
+            }));
+  }
+
+  /* Helper method that determines the optimal number of caches pages to improve read performance */
+  private int getPageCacheSize(Long numBufferedRows, long numRows, Schema schema) {
+    final int MIN_CACHE_SIZE = 3; // Min number of pages in the page size
+    final int MAX_CACHE_SIZE = 20; // //Min number of pages in the page size
+    int columnsRead = schema.getFields().size();
+    int numCachedPages;
+    long numCachedRows = numBufferedRows == null ? 0 : numBufferedRows.longValue();
+
+    // TODO: Further enhance this logic
+    if (numCachedRows > 10000) {
+      numCachedPages =
+          2; // the size of numBufferedRows is quite large and as per our tests we should be able to
+      // do enough even with low
+    } else if (columnsRead > 15
+        && numCachedRows
+            > 5000) { // too many fields are being read, setting the page size on the lower end
+      numCachedPages = 3;
+    } else if (numCachedRows < 2000
+        && columnsRead < 15) { // low pagesize with fewer number of columns, we can cache more pages
+      numCachedPages = 20;
+    } else { // default - under 10K numCachedRows with any number of columns
+      numCachedPages = 5;
+    }
+    return numCachedPages < MIN_CACHE_SIZE
+        ? MIN_CACHE_SIZE
+        : (Math.min(
+            numCachedPages,
+            MAX_CACHE_SIZE)); // numCachedPages should be between the defined min and max
+  }
+
   /* Returns query results using either tabledata.list or the high throughput Read API */
-  private BigQueryResultSet getQueryResultsWithJobId(
-      long totalRows,
-      long pageRows,
-      Schema schema,
-      JobId jobId,
-      GetQueryResultsResponse firstPage) {
-    TableId destinationTable = queryJobsGetRpc(jobId);
+  private BigQueryResultSet getQueryResultsWithJob(
+      long totalRows, long pageRows, JobId jobId, GetQueryResultsResponse firstPage) {
+    TableId destinationTable = getDestinationTable(jobId);
     return useReadAPI(totalRows, pageRows)
         ? highThroughPutRead(destinationTable)
-        : getQueryResultsRpc(jobId, firstPage);
+        : getSubsequentPagesOfResults(firstPage, jobId);
   }
 
   /* Returns Job from jobId by calling the jobs.get API */
@@ -577,7 +537,7 @@ final class ConnectionImpl implements Connection {
   }
 
   /* Returns the destinationTable from jobId by calling jobs.get API */
-  private TableId queryJobsGetRpc(JobId jobId) {
+  private TableId getDestinationTable(JobId jobId) {
     Job job = getQueryJobRpc(jobId);
     return ((QueryJobConfiguration) job.getConfiguration()).getDestinationTable();
   }
@@ -612,20 +572,6 @@ final class ConnectionImpl implements Connection {
 
   private BigQueryResultSet highThroughPutRead(TableId destinationTable) {
     return null;
-  }
-
-  /* Returns results of the query associated with the provided job using jobs.getQueryResults API */
-  private BigQueryResultSet getQueryResultsRpc(JobId jobId, GetQueryResultsResponse firstPage) {
-    try {
-      // paginate using multi threaded logic and return BigQueryResultSet
-      if (firstPage == null) {
-        return processGetQueryResponseResults(getQueryResultsFirstPage(jobId), jobId);
-      } else { // we already received the firstpage using the jobId
-        return processGetQueryResponseResults(firstPage, jobId);
-      }
-    } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
-      throw BigQueryException.translateAndThrow(e);
-    }
   }
 
   /*Returns just the first page of GetQueryResultsResponse using the jobId*/
@@ -730,12 +676,15 @@ final class ConnectionImpl implements Connection {
   }
 
   private boolean useReadAPI(Long totalRows, Long pageRows) {
-    long resultRatio = totalRows / pageRows;
-    return resultRatio
-            > connectionSettings
-                .getReadClientConnectionConfiguration()
-                .getTotalToPageRowCountRatio()
-        && totalRows > connectionSettings.getReadClientConnectionConfiguration().getMinResultSize();
+    return false;
+    // TODO: IMPLEMENT READ API LOGIC IN THE NEXT PHASE
+    // long resultRatio = totalRows / pageRows;
+    // return resultRatio
+    //         > connectionSettings
+    //             .getReadClientConnectionConfiguration()
+    //             .getTotalToPageRowCountRatio()
+    //     && totalRows >
+    // connectionSettings.getReadClientConnectionConfiguration().getMinResultSize();
   }
 
   // Used for job.query API endpoint
