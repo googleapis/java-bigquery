@@ -502,7 +502,7 @@ final class ConnectionImpl implements Connection {
     return useReadAPI(totalRows, pageRows)
         ? highThroughPutRead(
             destinationTable) // discord first page and stream the entire BigQueryResultSet using
-                              // the Read API
+        // the Read API
         : tableDataList(firstPage, jobId);
   }
 
