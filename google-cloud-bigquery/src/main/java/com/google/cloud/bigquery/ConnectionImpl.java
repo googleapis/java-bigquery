@@ -137,7 +137,7 @@ final class ConnectionImpl implements Connection {
         createQueryJob(sql, connectionSettings, null, null);
     JobId jobId = JobId.fromPb(queryJob.getJobReference());
     GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
-    return getQueryResultsWithJob(
+    return getSubsequentQueryResultsWithJob(
         firstPage.getTotalRows().longValue(), firstPage.getRows().size(), jobId, firstPage);
   }
 
@@ -157,7 +157,7 @@ final class ConnectionImpl implements Connection {
         createQueryJob(sql, connectionSettings, parameters, labels);
     JobId jobId = JobId.fromPb(queryJob.getJobReference());
     GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
-    return getQueryResultsWithJob(
+    return getSubsequentQueryResultsWithJob(
         firstPage.getTotalRows().longValue(), firstPage.getRows().size(), jobId, firstPage);
   }
 
@@ -211,21 +211,20 @@ final class ConnectionImpl implements Connection {
       long pageRows = results.getRows().size();
       JobId jobId = JobId.fromPb(results.getJobReference());
       GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
-      return getQueryResultsWithJob(totalRows, pageRows, jobId, firstPage);
+      return getSubsequentQueryResultsWithJob(totalRows, pageRows, jobId, firstPage);
     }
   }
 
   // TODO: Write a IT with order by query
   /* This method processed the first page of GetQueryResultsResponse and then it uses tabledata.list */
-  private BigQueryResultSet getSubsequentPagesOfResults(
-      GetQueryResultsResponse firstPage, JobId completeJobId) {
+  private BigQueryResultSet tableDataList(GetQueryResultsResponse firstPage, JobId jobId) {
     Schema schema;
     long numRows;
     schema = Schema.fromPb(firstPage.getSchema());
     numRows = firstPage.getTotalRows().longValue();
 
     // Create GetQueryResultsResponse query statistics
-    Job queryJob = getQueryJobRpc(completeJobId);
+    Job queryJob = getQueryJobRpc(jobId);
     JobStatistics.QueryStatistics statistics = queryJob.getStatistics();
     DmlStats dmlStats = statistics.getDmlStats() == null ? null : statistics.getDmlStats();
     JobStatistics.SessionInfo sessionInfo =
@@ -245,8 +244,6 @@ final class ConnectionImpl implements Connection {
     BlockingQueue<Tuple<TableDataList, Boolean>> rpcResponseQueue =
         new LinkedBlockingDeque<>(
             getPageCacheSize(connectionSettings.getNumBufferedRows(), numRows, schema));
-
-    JobId jobId = JobId.fromPb(firstPage.getJobReference());
 
     runNextPageTaskAsync(firstPage.getPageToken(), getDestinationTable(jobId), rpcResponseQueue);
 
@@ -291,6 +288,7 @@ final class ConnectionImpl implements Connection {
             getPageCacheSize(connectionSettings.getNumBufferedRows(), numRows, schema));
 
     JobId jobId = JobId.fromPb(results.getJobReference());
+
     runNextPageTaskAsync(results.getPageToken(), getDestinationTable(jobId), rpcResponseQueue);
 
     parseRpcDataAsync(results.getRows(), schema, pageCache, rpcResponseQueue);
@@ -498,12 +496,14 @@ final class ConnectionImpl implements Connection {
   }
 
   /* Returns query results using either tabledata.list or the high throughput Read API */
-  private BigQueryResultSet getQueryResultsWithJob(
+  private BigQueryResultSet getSubsequentQueryResultsWithJob(
       long totalRows, long pageRows, JobId jobId, GetQueryResultsResponse firstPage) {
     TableId destinationTable = getDestinationTable(jobId);
     return useReadAPI(totalRows, pageRows)
-        ? highThroughPutRead(destinationTable)
-        : getSubsequentPagesOfResults(firstPage, jobId);
+        ? highThroughPutRead(
+            destinationTable) // discord first page and stream the entire BigQueryResultSet using
+                              // the Read API
+        : tableDataList(firstPage, jobId);
   }
 
   /* Returns Job from jobId by calling the jobs.get API */
