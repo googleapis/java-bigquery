@@ -2222,6 +2222,80 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testConnectionImplDryRun() throws SQLException {
+    String query =
+        "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, FloatField, "
+            + "NumericField, TimeField, DateField,  DateTimeField , GeographyField, RecordField.BytesField, RecordField.BooleanField, IntegerArrayField from "
+            + TABLE_ID_FASTQUERY_BQ_RESULTSET.getTable()
+            + " order by TimestampField";
+    ConnectionSettings connectionSettings =
+        ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
+    Connection connection = bigquery.createConnection(connectionSettings);
+    BigQueryDryRunResult bigQueryDryRunResultSet = connection.dryRun(query);
+    Schema sc = bigQueryDryRunResultSet.getSchema();
+    assertEquals(BQ_RESULTSET_EXPECTED_SCHEMA, sc); // match the schema
+    // TODO(prasmish): Validate QueryParameters after the implementation is complete
+  }
+
+  @Test
+  // This test case test the order of the records, making sure that the result is not jumbled up due
+  // to the multithreaded BigQueryResultSet implementation
+  public void testBQResultSetMultiThreadedOrder() throws SQLException {
+    String query =
+        "SELECT date FROM "
+            + TABLE_ID_LARGE.getTable()
+            + " where date is not null order by date asc limit 300000";
+    ConnectionSettings connectionSettings =
+        ConnectionSettings.newBuilder()
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .setNumBufferedRows(10000L) // page size
+            .build();
+    Connection connection = bigquery.createConnection(connectionSettings);
+    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
+    ResultSet rs = bigQueryResultSet.getResultSet();
+    int cnt = 0;
+    assertTrue(rs.next());
+    ++cnt;
+    java.sql.Date lastDate = rs.getDate(0);
+    while (rs.next()) {
+      assertNotNull(rs.getDate(0));
+      assertTrue(rs.getDate(0).getTime() >= lastDate.getTime()); // sorted order is maintained
+      lastDate = rs.getDate(0);
+      ++cnt;
+    }
+    assertEquals(300000, cnt); // total 300000 rows should be read
+  }
+
+  @Test
+  public void testBQResultSetPaginationSlowQuery() throws SQLException {
+    String query =
+        "SELECT date, county, state_name, confirmed_cases, deaths FROM "
+            + TABLE_ID_LARGE.getTable()
+            + " where date is not null and county is not null and state_name is not null order by date limit 300000";
+    ConnectionSettings connectionSettings =
+        ConnectionSettings.newBuilder()
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .setNumBufferedRows(10000L) // page size
+            .setJobTimeoutMs(
+                15000L) // So that ConnectionImpl.isFastQuerySupported returns false, and the slow
+            // query route gets executed
+            .build();
+    Connection connection = bigquery.createConnection(connectionSettings);
+    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
+    ResultSet rs = bigQueryResultSet.getResultSet();
+    int cnt = 0;
+    while (rs.next()) { // pagination starts after approx 120,000 records
+      assertNotNull(rs.getDate(0));
+      assertNotNull(rs.getString(1));
+      assertNotNull(rs.getString(2));
+      assertTrue(rs.getInt(3) >= 0);
+      assertTrue(rs.getInt(4) >= 0);
+      ++cnt;
+    }
+    assertEquals(300000, cnt); // total 300000 rows should be read
+  }
+
+  @Test
   public void testExecuteSelectSinglePageTableRow() throws SQLException {
     String query =
         "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, FloatField, "
