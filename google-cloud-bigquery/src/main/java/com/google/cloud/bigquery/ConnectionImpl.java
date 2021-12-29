@@ -731,11 +731,17 @@ final class ConnectionImpl implements Connection {
 
   private boolean useReadAPI(Long totalRows, Long pageRows) {
     long resultRatio = totalRows / pageRows;
-    return resultRatio
-            > connectionSettings
-                .getReadClientConnectionConfiguration()
-                .getTotalToPageRowCountRatio()
-        && totalRows > connectionSettings.getReadClientConnectionConfiguration().getMinResultSize();
+    if (connectionSettings.getReadClientConnectionConfiguration()
+        != null) { // Adding a null check to avoid NPE
+      return resultRatio
+              > connectionSettings
+                  .getReadClientConnectionConfiguration()
+                  .getTotalToPageRowCountRatio()
+          && totalRows
+              > connectionSettings.getReadClientConnectionConfiguration().getMinResultSize();
+    } else {
+      return false;
+    }
   }
 
   // Used for job.query API endpoint
