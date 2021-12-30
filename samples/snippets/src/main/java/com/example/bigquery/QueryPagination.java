@@ -21,7 +21,6 @@ import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.QueryJobConfiguration;
-import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableResult;
 
 // Sample to run query with pagination.
@@ -45,17 +44,13 @@ public class QueryPagination {
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
-      TableId tableId = TableId.of(datasetName, tableName);
       QueryJobConfiguration queryConfig =
           QueryJobConfiguration.newBuilder(query)
               // save results into a table.
               .setDestinationTable(tableId)
               .build();
 
-      bigquery.query(queryConfig);
-
-      TableResult results =
-          bigquery.listTableData(tableId, BigQuery.TableDataListOption.pageSize(20));
+      TableResult results = bigquery.query(queryConfig);
 
       // First Page
       results
