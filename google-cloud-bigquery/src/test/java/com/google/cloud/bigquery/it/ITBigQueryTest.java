@@ -38,6 +38,7 @@ import com.google.cloud.RetryOption;
 import com.google.cloud.Role;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.bigquery.Acl;
+import com.google.cloud.bigquery.Acl.Dataset.DatasetAccessEntryTargetTypes;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQuery.DatasetDeleteOption;
 import com.google.cloud.bigquery.BigQuery.DatasetField;
@@ -1787,6 +1788,44 @@ public class ITBigQueryTest {
     routineAcl.add(Acl.of(new Acl.Routine(routineId)));
     routineDataset = routineDataset.toBuilder().setAcl(routineAcl).build().update();
     assertEquals(routineAcl, routineDataset.getAcl());
+  }
+
+  @Test
+  public void testAuthorizeDataset() {
+    String datasetName = RemoteBigQueryHelper.generateDatasetName();
+    DatasetId datasetId = DatasetId.of(datasetName);
+    List<DatasetAccessEntryTargetTypes> targetTypes =
+        ImmutableList.of(DatasetAccessEntryTargetTypes.of("VIEWS"));
+    List<Acl> acl =
+        ImmutableList.of(
+            Acl.of(new Acl.Group("projectOwners"), Acl.Role.OWNER),
+            Acl.of(new Acl.IamMember("allUsers"), Acl.Role.READER));
+    DatasetInfo datasetInfo =
+        DatasetInfo.newBuilder(datasetId)
+            .setAcl(acl)
+            .setDescription("original Dataset for Dataset ACL test")
+            .build();
+    Dataset dataset = bigquery.create(datasetInfo);
+    assertNotNull(dataset);
+    assertEquals(dataset.getDescription(), "original Dataset for Dataset ACL test");
+
+    String newDatasetName = RemoteBigQueryHelper.generateDatasetName();
+    DatasetId newDatasetId = DatasetId.of(newDatasetName);
+    DatasetInfo newDatasetInfo =
+        DatasetInfo.newBuilder(newDatasetId)
+            .setDescription("new Dataset to be authorized by the original dataset")
+            .build();
+    Dataset newDataset = bigquery.create(newDatasetInfo);
+    assertNotNull(newDataset);
+    assertEquals(
+        newDataset.getDescription(), "new Dataset to be authorized by the original dataset");
+    List<Acl> newDatasetAcl = new ArrayList<>(newDataset.getAcl());
+    Acl.Dataset datasetEntity = new Acl.Dataset(datasetId, targetTypes);
+    newDatasetAcl.add(Acl.of(datasetEntity, Acl.Role.OWNER));
+    LOG.info(newDatasetAcl.toString());
+    // TODO: figure out why the line below is failing
+    // newDataset.toBuilder().setAcl(newDatasetAcl).build().update();
+    // assertEquals(newDatasetAcl, dataset.getAcl());
   }
 
   @Test

@@ -16,13 +16,21 @@
 
 package com.google.cloud.bigquery;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Strings.isNullOrEmpty;
 
 import com.google.api.core.ApiFunction;
 import com.google.api.services.bigquery.model.Dataset.Access;
+import com.google.api.services.bigquery.model.DatasetAccessEntry;
+import com.google.api.services.bigquery.model.DatasetAccessEntry.TargetTypes;
 import com.google.cloud.StringEnumType;
 import com.google.cloud.StringEnumValue;
+import com.google.cloud.bigquery.Acl.Dataset.DatasetAccessEntryTargetTypes;
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -92,7 +100,7 @@ public final class Acl implements Serializable {
   }
 
   /** Base class for BigQuery entities that can be grant access to the dataset. */
-  public abstract static class Entity implements Serializable {
+  public abstract static class Entity /* TODO: ADD IT BACK*/ {
 
     private static final long serialVersionUID = 8111776788607959944L;
 
@@ -105,7 +113,8 @@ public final class Acl implements Serializable {
       USER,
       VIEW,
       IAM_MEMBER,
-      ROUTINE
+      ROUTINE,
+      DATASET
     }
 
     Entity(Type type) {
@@ -119,6 +128,13 @@ public final class Acl implements Serializable {
     abstract Access toPb();
 
     static Entity fromPb(Access access) {
+      if (access.getDataset() != null) {
+        return new Dataset(
+            DatasetId.fromPb(access.getDataset().getDataset()),
+            Lists.transform(
+                access.getDataset().getTargetTypes(),
+                DatasetAccessEntryTargetTypes.FROM_PB_FUNCTION));
+      }
       if (access.getDomain() != null) {
         return new Domain(access.getDomain());
       }
@@ -143,6 +159,121 @@ public final class Acl implements Serializable {
       // Unreachable
       throw new BigQueryException(
           BigQueryException.UNKNOWN_CODE, "Unrecognized access configuration");
+    }
+  }
+
+  /**
+   * Class for a BigQuery Dataset entity. Objects of this class represent a dataset from a different
+   * dataset to grant access to. Only views are supported for now. The role field is not required
+   * when this field is set. If that dataset is deleted and re-created, its access needs to be
+   * granted again via an update operation.
+   */
+  public static final class Dataset extends Entity {
+
+    private static final long serialVersionUID = -8392885851733136526L;
+
+    private final DatasetId id;
+    private final List<DatasetAccessEntryTargetTypes> targetTypes;
+
+    /** Creates a Dataset entity given the dataset's id. */
+    public Dataset(DatasetId id, List<DatasetAccessEntryTargetTypes> targetTypes) {
+      super(Type.DATASET);
+      this.id = id;
+      this.targetTypes = targetTypes;
+    }
+
+    /** Returns dataset's identity. */
+    public DatasetId getId() {
+      return id;
+    }
+
+    public List<DatasetAccessEntryTargetTypes> getTargetTypes() {
+      return targetTypes;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null || getClass() != obj.getClass()) {
+        return false;
+      }
+      Dataset dataset = (Dataset) obj;
+      return Objects.equals(getType(), dataset.getType()) && Objects.equals(id, dataset.id);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(getType(), id);
+    }
+
+    @Override
+    public String toString() {
+      return toPb().toString();
+    }
+
+    @Override
+    Access toPb() {
+      return new Access()
+          .setDataset(
+              new DatasetAccessEntry()
+                  .setDataset(id.toPb())
+                  .setTargetTypes(
+                      targetTypes == null
+                          ? null
+                          : Lists.transform(
+                              targetTypes, DatasetAccessEntryTargetTypes.TO_PB_FUNCTION)));
+    }
+
+    /** Wrapper class for TargetTypes model class */
+    public static final class DatasetAccessEntryTargetTypes {
+
+      private final String targetType;
+
+      public String getTargetType() {
+        return targetType;
+      }
+
+      static final Function<TargetTypes, DatasetAccessEntryTargetTypes> FROM_PB_FUNCTION =
+          DatasetAccessEntryTargetTypes::fromPb;
+
+      static final Function<DatasetAccessEntryTargetTypes, TargetTypes> TO_PB_FUNCTION =
+          DatasetAccessEntryTargetTypes::toPb;
+
+      private DatasetAccessEntryTargetTypes(String targetType) {
+        checkArgument(!isNullOrEmpty(targetType), "Provided targetType is null or empty");
+        this.targetType = targetType;
+      }
+
+      public static DatasetAccessEntryTargetTypes of(String targetType) {
+        return new DatasetAccessEntryTargetTypes((targetType));
+      }
+
+      @Override
+      public boolean equals(Object obj) {
+        return obj == this
+            || obj instanceof DatasetAccessEntryTargetTypes
+                && Objects.equals(toPb(), ((DatasetAccessEntryTargetTypes) obj).toPb());
+      }
+
+      @Override
+      public int hashCode() {
+        return Objects.hash(targetType);
+      }
+
+      @Override
+      public String toString() {
+        return toPb().toString();
+      }
+
+      TargetTypes toPb() {
+        return new TargetTypes().setTargetType(targetType);
+      }
+
+      static DatasetAccessEntryTargetTypes fromPb(TargetTypes targetTypes) {
+        return new DatasetAccessEntryTargetTypes(targetTypes.getTargetType());
+      }
     }
   }
 
@@ -514,6 +645,11 @@ public final class Acl implements Serializable {
    */
   public static Acl of(Entity entity, Role role) {
     return new Acl(entity, role);
+  }
+
+  /** Returns an Acl object for a dataset entity. */
+  public static Acl of(Dataset dataset) {
+    return new Acl(dataset, null);
   }
 
   /** Returns an Acl object for a view entity. */
