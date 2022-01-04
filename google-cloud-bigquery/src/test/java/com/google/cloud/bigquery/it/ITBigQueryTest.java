@@ -1801,31 +1801,31 @@ public class ITBigQueryTest {
             Acl.of(new Acl.Group("projectOwners"), Acl.Role.OWNER),
             Acl.of(new Acl.IamMember("allUsers"), Acl.Role.READER));
     DatasetInfo datasetInfo =
-        DatasetInfo.newBuilder(datasetId)
-            .setAcl(acl)
-            .setDescription("original Dataset for Dataset ACL test")
-            .build();
-    Dataset dataset = bigquery.create(datasetInfo);
-    assertNotNull(dataset);
-    assertEquals(dataset.getDescription(), "original Dataset for Dataset ACL test");
+        DatasetInfo.newBuilder(datasetId).setAcl(acl).setDescription("shared Dataset").build();
+    Dataset sharedDataset = bigquery.create(datasetInfo);
+    assertNotNull(sharedDataset);
+    assertEquals(sharedDataset.getDescription(), "shared Dataset");
+    // Get the current metadata for the dataset you want to share by calling the datasets.get method
+    List<Acl> sharedDatasetAcl = new ArrayList<>(sharedDataset.getAcl());
 
-    String newDatasetName = RemoteBigQueryHelper.generateDatasetName();
-    DatasetId newDatasetId = DatasetId.of(newDatasetName);
-    DatasetInfo newDatasetInfo =
-        DatasetInfo.newBuilder(newDatasetId)
-            .setDescription("new Dataset to be authorized by the original dataset")
+    // Create a new dataset to be authorized
+    String authorizedDatasetName = RemoteBigQueryHelper.generateDatasetName();
+    DatasetId authorizedDatasetId = DatasetId.of(authorizedDatasetName);
+    DatasetInfo authorizedDatasetInfo =
+        DatasetInfo.newBuilder(authorizedDatasetId)
+            .setDescription("new Dataset to be authorized by the sharedDataset")
             .build();
-    Dataset newDataset = bigquery.create(newDatasetInfo);
-    assertNotNull(newDataset);
+    Dataset authorizedDataset = bigquery.create(authorizedDatasetInfo);
+    assertNotNull(authorizedDataset);
     assertEquals(
-        newDataset.getDescription(), "new Dataset to be authorized by the original dataset");
-    List<Acl> newDatasetAcl = new ArrayList<>(newDataset.getAcl());
+        authorizedDataset.getDescription(), "new Dataset to be authorized by the sharedDataset");
+
+    // Add the new DatasetAccessEntry object to the existing sharedDatasetAcl list
     Acl.Dataset datasetEntity = new Acl.Dataset(datasetId, targetTypes);
-    newDatasetAcl.add(Acl.of(datasetEntity, Acl.Role.OWNER));
-    LOG.info(newDatasetAcl.toString());
+    sharedDatasetAcl.add(Acl.of(datasetEntity));
     // TODO: figure out why the line below is failing
-    // newDataset.toBuilder().setAcl(newDatasetAcl).build().update();
-    // assertEquals(newDatasetAcl, dataset.getAcl());
+    // sharedDataset.toBuilder().setAcl(sharedDatasetAcl).build().update();
+    // assertEquals(sharedDatasetAcl, sharedDataset.getAcl());
   }
 
   @Test
