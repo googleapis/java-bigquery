@@ -100,7 +100,7 @@ public final class Acl implements Serializable {
   }
 
   /** Base class for BigQuery entities that can be grant access to the dataset. */
-  public abstract static class Entity /* TODO: ADD IT BACK*/ {
+  public abstract static class Entity implements Serializable {
 
     private static final long serialVersionUID = 8111776788607959944L;
 
