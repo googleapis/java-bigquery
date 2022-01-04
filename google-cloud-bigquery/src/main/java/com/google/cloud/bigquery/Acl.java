@@ -26,7 +26,6 @@ import com.google.api.services.bigquery.model.DatasetAccessEntry;
 import com.google.api.services.bigquery.model.DatasetAccessEntry.TargetTypes;
 import com.google.cloud.StringEnumType;
 import com.google.cloud.StringEnumValue;
-import com.google.cloud.bigquery.Acl.Dataset.DatasetAccessEntryTargetTypes;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import java.io.Serializable;
@@ -225,55 +224,55 @@ public final class Acl implements Serializable {
                           : Lists.transform(
                               targetTypes, DatasetAccessEntryTargetTypes.TO_PB_FUNCTION)));
     }
+  }
 
-    /** Wrapper class for TargetTypes model class */
-    public static final class DatasetAccessEntryTargetTypes {
+  /** Wrapper class for TargetTypes model class */
+  public static final class DatasetAccessEntryTargetTypes implements Serializable {
 
-      private final String targetType;
+    private final String targetType;
 
-      public String getTargetType() {
-        return targetType;
-      }
+    public String getTargetType() {
+      return targetType;
+    }
 
-      static final Function<TargetTypes, DatasetAccessEntryTargetTypes> FROM_PB_FUNCTION =
-          DatasetAccessEntryTargetTypes::fromPb;
+    static final Function<TargetTypes, DatasetAccessEntryTargetTypes> FROM_PB_FUNCTION =
+        DatasetAccessEntryTargetTypes::fromPb;
 
-      static final Function<DatasetAccessEntryTargetTypes, TargetTypes> TO_PB_FUNCTION =
-          DatasetAccessEntryTargetTypes::toPb;
+    static final Function<DatasetAccessEntryTargetTypes, TargetTypes> TO_PB_FUNCTION =
+        DatasetAccessEntryTargetTypes::toPb;
 
-      private DatasetAccessEntryTargetTypes(String targetType) {
-        checkArgument(!isNullOrEmpty(targetType), "Provided targetType is null or empty");
-        this.targetType = targetType;
-      }
+    private DatasetAccessEntryTargetTypes(String targetType) {
+      checkArgument(!isNullOrEmpty(targetType), "Provided targetType is null or empty");
+      this.targetType = targetType;
+    }
 
-      public static DatasetAccessEntryTargetTypes of(String targetType) {
-        return new DatasetAccessEntryTargetTypes((targetType));
-      }
+    public static DatasetAccessEntryTargetTypes of(String targetType) {
+      return new DatasetAccessEntryTargetTypes((targetType));
+    }
 
-      @Override
-      public boolean equals(Object obj) {
-        return obj == this
-            || obj instanceof DatasetAccessEntryTargetTypes
-                && Objects.equals(toPb(), ((DatasetAccessEntryTargetTypes) obj).toPb());
-      }
+    @Override
+    public boolean equals(Object obj) {
+      return obj == this
+          || obj instanceof DatasetAccessEntryTargetTypes
+              && Objects.equals(toPb(), ((DatasetAccessEntryTargetTypes) obj).toPb());
+    }
 
-      @Override
-      public int hashCode() {
-        return Objects.hash(targetType);
-      }
+    @Override
+    public int hashCode() {
+      return Objects.hash(targetType);
+    }
 
-      @Override
-      public String toString() {
-        return toPb().toString();
-      }
+    @Override
+    public String toString() {
+      return toPb().toString();
+    }
 
-      TargetTypes toPb() {
-        return new TargetTypes().setTargetType(targetType);
-      }
+    TargetTypes toPb() {
+      return new TargetTypes().setTargetType(targetType);
+    }
 
-      static DatasetAccessEntryTargetTypes fromPb(TargetTypes targetTypes) {
-        return new DatasetAccessEntryTargetTypes(targetTypes.getTargetType());
-      }
+    static DatasetAccessEntryTargetTypes fromPb(TargetTypes targetTypes) {
+      return new DatasetAccessEntryTargetTypes(targetTypes.getTargetType());
     }
   }
 

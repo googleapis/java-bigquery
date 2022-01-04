@@ -19,7 +19,7 @@ package com.google.cloud.bigquery;
 import static org.junit.Assert.assertEquals;
 
 import com.google.api.services.bigquery.model.Dataset;
-import com.google.cloud.bigquery.Acl.Dataset.DatasetAccessEntryTargetTypes;
+import com.google.cloud.bigquery.Acl.DatasetAccessEntryTargetTypes;
 import com.google.cloud.bigquery.Acl.Domain;
 import com.google.cloud.bigquery.Acl.Entity;
 import com.google.cloud.bigquery.Acl.Entity.Type;

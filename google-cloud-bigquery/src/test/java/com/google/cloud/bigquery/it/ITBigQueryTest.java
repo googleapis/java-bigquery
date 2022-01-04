@@ -38,7 +38,7 @@ import com.google.cloud.RetryOption;
 import com.google.cloud.Role;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.bigquery.Acl;
-import com.google.cloud.bigquery.Acl.Dataset.DatasetAccessEntryTargetTypes;
+import com.google.cloud.bigquery.Acl.DatasetAccessEntryTargetTypes;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQuery.DatasetDeleteOption;
 import com.google.cloud.bigquery.BigQuery.DatasetField;
