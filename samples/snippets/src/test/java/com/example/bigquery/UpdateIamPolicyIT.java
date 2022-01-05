@@ -63,7 +63,6 @@ public class UpdateIamPolicyIT {
     // create a temporary table
     tableName = "UPDATE_POLICY_TABLE_TEST_" + UUID.randomUUID().toString().substring(0, 8);
     CreateTable.createTable(BIGQUERY_DATASET_NAME, tableName, Schema.of());
-    CreateIamPolicy.createIamPolicy(BIGQUERY_DATASET_NAME, tableName);
   }
 
   @After
