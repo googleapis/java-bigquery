@@ -47,10 +47,10 @@ public class UpdateIamPolicy {
       TableId tableId = TableId.of(datasetName, tableName);
 
       Policy policy = bigquery.getIamPolicy(tableId);
-      Map<Role, Set<Identity>> binding = new HashMap<>(policy.getBindings());
-      binding.remove(Role.of("roles/bigquery.dataViewer"));
-
-      policy.toBuilder().setBindings(binding).build();
+      policy
+          .toBuilder()
+          .addIdentity(Role.of("roles/bigquery.dataViewer"), Identity.allUsers())
+          .build();
       bigquery.setIamPolicy(tableId, policy);
 
       System.out.println("Iam policy updated successfully");
