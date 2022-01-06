@@ -72,6 +72,10 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 @InternalExtensionOnly
 public class HttpBigQueryRpc implements BigQueryRpc {
@@ -242,6 +246,23 @@ public class HttpBigQueryRpc implements BigQueryRpc {
 
   @Override
   public Dataset patch(Dataset dataset, Map<Option, ?> options) {
+    Logger logger = Logger.getLogger(HttpTransport.class.getName());
+    logger.setLevel(Level.CONFIG);
+    logger.addHandler(new Handler() {
+      @Override
+      public void close() throws SecurityException {
+      }
+      @Override
+      public void flush() {
+      }
+      @Override
+      public void publish(LogRecord record) {
+        // Default ConsoleHandler will print >= INFO to System.err.
+        if (record.getLevel().intValue() < Level.INFO.intValue()) {
+          System.out.println("*****************STEPHWANG DEBUG*****************" + record.getMessage());
+        }
+      }
+    });
     try {
       DatasetReference reference = dataset.getDatasetReference();
       return bigquery
