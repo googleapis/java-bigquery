@@ -19,7 +19,12 @@ package com.google.cloud.bigquery;
 import static com.google.cloud.RetryHelper.runWithRetries;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
-import com.google.api.services.bigquery.model.*;
+import com.google.api.services.bigquery.model.GetQueryResultsResponse;
+import com.google.api.services.bigquery.model.JobConfigurationQuery;
+import com.google.api.services.bigquery.model.QueryParameter;
+import com.google.api.services.bigquery.model.QueryRequest;
+import com.google.api.services.bigquery.model.TableDataList;
+import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.RetryHelper;
 import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
@@ -28,7 +33,10 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import java.util.*;
+import java.util.AbstractList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -80,48 +88,11 @@ final class ConnectionImpl implements Connection {
 
   @Override
   public BigQueryDryRunResult dryRun(String sql) throws BigQuerySQLException {
-    QueryJobConfiguration queryConfig =
-        QueryJobConfiguration.newBuilder(sql).setDryRun(true).build();
-    // Job job = BigQueryOptions.getDefaultInstance().getService().create(JobInfo.of(queryConfig));
-    /*//TODO: WIP implementation
-       JobId jobId = JobId.of(UUID.randomUUID().toString());
-       Job job = BigQueryOptions.getDefaultInstance().getService().create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
-
-       try {
-         if(!job.isDone()){//wait if job is still running. TODO(prasmish): Doublecheck if this check is required
-           job = job.waitFor();
-         }
-
-        // response.get
-       } catch (InterruptedException e) {
-         e.printStackTrace();
-       }
-       JobStatistics.QueryStatistics statistics = job.getStatistics();
-       try {
-         TableResult tr = job.getQueryResults();
-        // job.getBigQuery().getQueryResults().
-        // tr.get
-      //   job.getConfiguration().g
-       } catch (InterruptedException e) {
-         e.printStackTrace();
-       }
-       com.google.cloud.bigquery.QueryResponse response = BigQueryOptions.getDefaultInstance().getService().getQueryResults(jobId);
-       JobId jobId = JobId.fromPb(response.getJobReference());
-
-       com.google.api.services.bigquery.model.QueryResponse results;
-       results.getJobReference().getJobId()
-
-       JobId jobIdd = JobId.fromPb(results.getJobReference()).get;
-       //response.
-
-      JobConfigurationQuery d =  queryConfig.toPb().getQuery();
-     List<QueryParameter> qp =  d.getQueryParameters();
-       //response.
-       return new BigQueryDryRunResultImpl(
-               response.getSchema(), queryConfig.toPb().getQuery().getQueryParameters());
-
-    */
-    return null;
+    com.google.api.services.bigquery.model.Job dryRunJob = createDryRunJob(sql);
+    Schema schema = Schema.fromPb(dryRunJob.getStatistics().getQuery().getSchema());
+    List<QueryParameter> queryParameters =
+        dryRunJob.getStatistics().getQuery().getUndeclaredQueryParameters();
+    return new BigQueryDryRunResultImpl(schema, queryParameters);
   }
 
   @Override
@@ -730,7 +701,7 @@ final class ConnectionImpl implements Connection {
     return content;
   }
 
-  // Used for jobs.getQueryResults API endpoint
+  // Used by jobs.getQueryResults API endpoint
   private com.google.api.services.bigquery.model.Job createQueryJob(
       String sql,
       ConnectionSettings connectionSettings,
@@ -846,5 +817,39 @@ final class ConnectionImpl implements Connection {
       throw BigQueryException.translateAndThrow(e);
     }
     return queryJob;
+  }
+
+  // Used by dryRun
+  private com.google.api.services.bigquery.model.Job createDryRunJob(String sql) {
+    com.google.api.services.bigquery.model.JobConfiguration configurationPb =
+        new com.google.api.services.bigquery.model.JobConfiguration();
+    configurationPb.setDryRun(true);
+    JobConfigurationQuery queryConfigurationPb = new JobConfigurationQuery();
+    String parameterMode = sql.contains("?") ? "POSITIONAL" : "NAMED";
+    queryConfigurationPb.setParameterMode(parameterMode);
+    queryConfigurationPb.setQuery(sql);
+    // UndeclaredQueryParameter is only supported in StandardSQL
+    queryConfigurationPb.setUseLegacySql(false);
+    if (connectionSettings.getDefaultDataset() != null) {
+      queryConfigurationPb.setDefaultDataset(connectionSettings.getDefaultDataset().toPb());
+    }
+    configurationPb.setQuery(queryConfigurationPb);
+
+    com.google.api.services.bigquery.model.Job jobPb =
+        JobInfo.of(QueryJobConfiguration.fromPb(configurationPb)).toPb();
+
+    com.google.api.services.bigquery.model.Job dryRunJob;
+    try {
+      dryRunJob =
+          BigQueryRetryHelper.runWithRetries(
+              () -> bigQueryRpc.createJobForQuery(jobPb),
+              bigQueryOptions.getRetrySettings(),
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
+              bigQueryOptions.getClock(),
+              retryConfig);
+    } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    }
+    return dryRunJob;
   }
 }

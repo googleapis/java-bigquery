@@ -29,6 +29,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.api.gax.paging.Page;
+import com.google.api.services.bigquery.model.QueryParameter;
+import com.google.api.services.bigquery.model.QueryParameterType;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.Date;
@@ -2225,17 +2227,19 @@ public class ITBigQueryTest {
   @Test
   public void testConnectionImplDryRun() throws SQLException {
     String query =
-        "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, FloatField, "
-            + "NumericField, TimeField, DateField,  DateTimeField , GeographyField, RecordField.BytesField, RecordField.BooleanField, IntegerArrayField from "
+        "select StringField from "
             + TABLE_ID_FASTQUERY_BQ_RESULTSET.getTable()
-            + " order by TimestampField";
+            + " where StringField = ?";
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
     Connection connection = bigquery.createConnection(connectionSettings);
     BigQueryDryRunResult bigQueryDryRunResultSet = connection.dryRun(query);
-    // Schema sc = bigQueryDryRunResultSet.getSchema();
-    // assertEquals(BQ_RESULTSET_EXPECTED_SCHEMA, sc); // match the schema
-    // TODO(prasmish): Validate QueryParameters after the implementation is complete
+    assertNotNull(bigQueryDryRunResultSet.getSchema());
+    List<QueryParameter> queryParameters = bigQueryDryRunResultSet.getQueryParameters();
+    List<QueryParameter> expectedQueryParameters =
+        ImmutableList.of(
+            new QueryParameter().setParameterType(new QueryParameterType().setType("STRING")));
+    assertEquals(expectedQueryParameters, queryParameters);
   }
 
   @Test
