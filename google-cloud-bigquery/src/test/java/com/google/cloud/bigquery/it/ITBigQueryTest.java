@@ -2227,14 +2227,16 @@ public class ITBigQueryTest {
   @Test
   public void testConnectionImplDryRun() throws SQLException {
     String query =
-        "select StringField from "
-            + TABLE_ID_FASTQUERY_BQ_RESULTSET.getTable()
-            + " where StringField = ?";
+        String.format(
+            "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, FloatField, NumericField, TimeField, DateField,  DateTimeField , GeographyField, RecordField.BytesField, RecordField.BooleanField, IntegerArrayField from %s order by TimestampField",
+            TABLE_ID_FASTQUERY_BQ_RESULTSET.getTable());
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
     Connection connection = bigquery.createConnection(connectionSettings);
     BigQueryDryRunResult bigQueryDryRunResultSet = connection.dryRun(query);
     assertNotNull(bigQueryDryRunResultSet.getSchema());
+    assertEquals(
+        BQ_RESULTSET_EXPECTED_SCHEMA, bigQueryDryRunResultSet.getSchema()); // match the schema
     List<QueryParameter> queryParameters = bigQueryDryRunResultSet.getQueryParameters();
     List<QueryParameter> expectedQueryParameters =
         ImmutableList.of(
