@@ -75,10 +75,14 @@ final class ConnectionImpl implements Connection {
                 : Math.min(connectionSettings.getNumBufferedRows() * 2, 100000));
   }
 
-  /*
-  Cancel method shutdowns the pageFetcher and producerWorker threads gracefully using interrupt.
-  The pageFetcher threat will not request for any subsequent threads after interrupting and shutdown as soon as any ongoing RPC call returns.
-  The producerWorker will not populate the buffer with any further records and clear the buffer, put a EoF marker and shutdown.
+  /**
+   * Cancel method shutdowns the pageFetcher and producerWorker threads gracefully using interrupt.
+   * The pageFetcher threat will not request for any subsequent threads after interrupting and
+   * shutdown as soon as any ongoing RPC call returns. The producerWorker will not populate the
+   * buffer with any further records and clear the buffer, put a EoF marker and shutdown.
+   *
+   * @return Boolean value true if the threads were interrupted
+   * @throws BigQuerySQLException
    */
   @Override
   public synchronized Boolean cancel() throws BigQuerySQLException {
@@ -86,6 +90,13 @@ final class ConnectionImpl implements Connection {
     return queryTaskExecutor.isShutdown();
   }
 
+  /**
+   * This method runs a dry run query
+   *
+   * @param sql SQL SELECT statement
+   * @return BigQueryDryRunResult containing List<QueryParameter> and Schema
+   * @throws BigQuerySQLException
+   */
   @Override
   public BigQueryDryRunResult dryRun(String sql) throws BigQuerySQLException {
     com.google.api.services.bigquery.model.Job dryRunJob = createDryRunJob(sql);
@@ -95,6 +106,13 @@ final class ConnectionImpl implements Connection {
     return new BigQueryDryRunResultImpl(schema, queryParameters);
   }
 
+  /**
+   * This method executes a SQL SELECT query
+   *
+   * @param sql SQL SELECT statement
+   * @return BigQueryResultSet containing the output of the query
+   * @throws BigQuerySQLException
+   */
   @Override
   public BigQueryResultSet executeSelect(String sql) throws BigQuerySQLException {
     // use jobs.query if all the properties of connectionSettings are supported
@@ -112,6 +130,20 @@ final class ConnectionImpl implements Connection {
         firstPage.getTotalRows().longValue(), firstPage.getRows().size(), jobId, firstPage);
   }
 
+  /**
+   * This method executes a SQL SELECT query
+   *
+   * @param sql SQL SELECT query
+   * @param parameters named or positional parameters. The set of query parameters must either be
+   *     all positional or all named parameters.
+   * @param labels the labels associated with this query. You can use these to organize and group
+   *     your query jobs. Label keys and values can be no longer than 63 characters, can only
+   *     contain lowercase letters, numeric characters, underscores and dashes. International
+   *     characters are allowed. Label values are optional. Label keys must start with a letter and
+   *     each label in the list must have a different key.
+   * @return BigQueryResultSet containing the output of the query
+   * @throws BigQuerySQLException
+   */
   @Override
   public BigQueryResultSet executeSelect(
       String sql, List<QueryParameter> parameters, Map<String, String> labels)
@@ -582,52 +614,6 @@ final class ConnectionImpl implements Connection {
       throw BigQueryException.translateAndThrow(e);
     }
   }
-
-  /*
-  //TODO(prasmish): We have wired processQueryResponseResults(results, jobId) method instead, delete this after code review
-
-  private BigQueryResultSet processGetQueryResults(JobId jobId, GetQueryResultsResponse results) {
-    long numRows = results.getTotalRows() == null ? 0 : results.getTotalRows().longValue();
-    Schema schema = results.getSchema() == null ? null : Schema.fromPb(results.getSchema());
-
-    // Get query statistics
-    Job queryJob = getQueryJobRpc(jobId);
-    JobStatistics.QueryStatistics statistics = queryJob.getStatistics();
-    DmlStats dmlStats = statistics.getDmlStats() == null ? null : statistics.getDmlStats();
-    JobStatistics.SessionInfo sessionInfo =
-        statistics.getSessionInfo() == null ? null : statistics.getSessionInfo();
-    BigQueryResultSetStats bigQueryResultSetStats =
-        new BigQueryResultSetStatsImpl(dmlStats, sessionInfo);
-
-    */
-  /* // only use this API for the first page of result
-  if (results.getPageToken() == null) {
-
-    return processQueryResponseResults(results);
-    // return new BigQueryResultSetImpl(schema, numRows, null, bigQueryResultSetStats);
-    return null; //
-  }*/
-  /*
-
-  // results
-  */
-  /* for (TableRow tr : results.getRows()) {
-    // tr.getF().
-    FieldValue.fromPb(tr.getF(), null);
-  }*/
-  /*
-    // results.getp
-
-    // We need com.google.api.services.bigquery.model.QueryResponse to invoke
-    // processQueryResponseResults
-    // processQueryResponseResults(results);
-
-    // use tabledata.list or Read API to fetch subsequent pages of results
-    long totalRows = results.getTotalRows() == null ? 0 : results.getTotalRows().longValue();
-    long pageRows = results.getRows().size();
-
-    return null; // getQueryResultsWithJobId(totalRows, pageRows, schema, jobId);
-  }*/
 
   private boolean isFastQuerySupported() {
     // TODO: add regex logic to check for scripting
