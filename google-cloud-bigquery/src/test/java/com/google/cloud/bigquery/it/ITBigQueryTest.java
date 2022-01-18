@@ -708,6 +708,60 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testJsonType() throws InterruptedException {
+    String tableName = "test_create_table_jsontype";
+    TableId tableId = TableId.of(DATASET, tableName);
+    Schema schema = Schema.of(Field.of("jsonField", StandardSQLTypeName.JSON));
+    StandardTableDefinition standardTableDefinition = StandardTableDefinition.of(schema);
+    try {
+      // Create a table with a JSON column
+      Table createdTable = bigquery.create(TableInfo.of(tableId, standardTableDefinition));
+      assertNotNull(createdTable);
+
+      // Insert data into JSON column
+      Map<String, Object> jsonRow = new HashMap<>();
+      jsonRow.put("jsonField", "{\"class\" : {\"students\" : [{\"name\" : \"Jane\"}]}}");
+      InsertAllRequest request = InsertAllRequest.newBuilder(tableId).addRow(jsonRow).build();
+      InsertAllResponse response = bigquery.insertAll(request);
+      assertFalse(response.hasErrors());
+      assertEquals(0, response.getInsertErrors().size());
+
+      // Query the JSON column with string positional query parameter
+      String sql =
+          "SELECT JSON_VALUE(jsonField, \"$.class.students[0].name\") FROM "
+              + tableId.getTable()
+              + " WHERE JSON_VALUE(jsonField, \"$.class.students[0].name\")  = ? ";
+      QueryParameterValue stringParameter = QueryParameterValue.string("Jane");
+      QueryJobConfiguration queryJobConfiguration =
+          QueryJobConfiguration.newBuilder(sql)
+              .setDefaultDataset(DatasetId.of(DATASET))
+              .setUseLegacySql(false)
+              .addPositionalParameter(stringParameter)
+              .build();
+      TableResult result = bigquery.query(queryJobConfiguration);
+      for (FieldValueList values : result.iterateAll()) {
+        assertEquals("Jane", values.get(0).getValue());
+      }
+
+      // Add a new JSON row with json positional query parameter
+      String dml = "INSERT INTO " + tableId.getTable() + " (jsonField) VALUES(?)";
+      QueryParameterValue jsonParameter =
+          QueryParameterValue.json("{\"class\" : {\"students\" : [{\"name\" : \"Joy\"}]}}");
+      QueryJobConfiguration dmlQueryJobConfiguration =
+          QueryJobConfiguration.newBuilder(dml)
+              .setDefaultDataset(DatasetId.of(DATASET))
+              .setUseLegacySql(false)
+              .addPositionalParameter(jsonParameter)
+              .build();
+      bigquery.query(dmlQueryJobConfiguration);
+      Page<FieldValueList> rows = bigquery.listTableData(tableId);
+      assertEquals(2, Iterables.size(rows.getValues()));
+    } finally {
+      assertTrue(bigquery.delete(tableId));
+    }
+  }
+
+  @Test
   public void testCreateTableWithConstraints() {
     String tableName = "test_create_table_with_constraints";
     TableId tableId = TableId.of(DATASET, tableName);

@@ -194,6 +194,17 @@ public class QueryParameterValueTest {
   }
 
   @Test
+  public void testJson() {
+    QueryParameterValue value =
+        QueryParameterValue.json("{\"class\" : {\"students\" : [{\"name\" : \"Jane\"}]}}");
+    assertThat(value.getValue())
+        .isEqualTo("{\"class\" : {\"students\" : [{\"name\" : \"Jane\"}]}}");
+    assertThat(value.getType()).isEqualTo(StandardSQLTypeName.JSON);
+    assertThat(value.getArrayType()).isNull();
+    assertThat(value.getArrayValues()).isNull();
+  }
+
+  @Test
   public void testBytes() {
     QueryParameterValue value = QueryParameterValue.bytes(new byte[] {1, 3});
     assertThat(value.getValue()).isEqualTo("AQM=");

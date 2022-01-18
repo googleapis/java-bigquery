@@ -61,6 +61,7 @@ import org.threeten.bp.format.DateTimeParseException;
  *   <li>Float: StandardSQLTypeName.FLOAT64
  *   <li>BigDecimal: StandardSQLTypeName.NUMERIC
  *   <li>BigNumeric: StandardSQLTypeName.BIGNUMERIC
+ *   <li>JSON: StandardSQLTypeName.JSON
  * </ul>
  *
  * <p>No other types are supported through that entry point. The other types can be created by
@@ -254,6 +255,14 @@ public abstract class QueryParameterValue implements Serializable {
     return of(value, StandardSQLTypeName.STRING);
   }
 
+  /**
+   * Creates a {@code QueryParameterValue} object with a type of JSON. This is only supported in
+   * INSERT, not in query as a filter
+   */
+  public static QueryParameterValue json(String value) {
+    return of(value, StandardSQLTypeName.JSON);
+  }
+
   /** Creates a {@code QueryParameterValue} object with a type of BYTES. */
   public static QueryParameterValue bytes(byte[] value) {
     return of(value, StandardSQLTypeName.BYTES);
@@ -347,6 +356,8 @@ public abstract class QueryParameterValue implements Serializable {
       return StandardSQLTypeName.NUMERIC;
     } else if (Date.class.isAssignableFrom(type)) {
       return StandardSQLTypeName.DATE;
+    } else if (String.class.isAssignableFrom(type)) {
+      return StandardSQLTypeName.JSON;
     }
     throw new IllegalArgumentException("Unsupported object type for QueryParameter: " + type);
   }
@@ -384,6 +395,10 @@ public abstract class QueryParameterValue implements Serializable {
         break;
       case STRING:
         return value.toString();
+      case JSON:
+        if (value instanceof String) {
+          return value.toString();
+        }
       case STRUCT:
         throw new IllegalArgumentException("Cannot convert STRUCT to String value");
       case ARRAY:
