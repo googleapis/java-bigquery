@@ -42,6 +42,7 @@ public class ConnectionImplTest {
   private Connection connection;
   private static final String PROJECT = "project";
   private static final String DEFAULT_TEST_DATASET = "bigquery_test_dataset";
+  private static final String PAGE_TOKEN = "ABCD123";
   private static final String FAST_SQL =
       "SELECT  county, state_name FROM bigquery_test_dataset.large_data_testing_table limit 2";
   private static final long DEFAULT_PAGE_SIZE = 10000L;
@@ -57,6 +58,9 @@ public class ConnectionImplTest {
   private static final TableSchema FAST_QUERY_TABLESCHEMA = FAST_QUERY_SCHEMA.toPb();
   private static final BigQueryResultSet BQ_RS_MOCK_RES =
       new BigQueryResultSetImpl(FAST_QUERY_SCHEMA, 2, null, null);
+
+  private static final BigQueryResultSet BQ_RS_MOCK_RES_MULTI_PAGE =
+      new BigQueryResultSetImpl(FAST_QUERY_SCHEMA, 4, null, null);
 
   private BigQueryOptions createBigQueryOptionsForProject(
       String project, BigQueryRpcFactory rpcFactory) {
@@ -92,12 +96,7 @@ public class ConnectionImplTest {
   }
 
   @Test
-  public void testCancel() throws BigQuerySQLException {
-    // TODO
-  }
-
-  @Test
-  public void testExecuteSelect() throws BigQuerySQLException {
+  public void testFastQuerySinglePage() throws BigQuerySQLException {
     com.google.api.services.bigquery.model.QueryResponse mockQueryRes =
         new QueryResponse().setSchema(FAST_QUERY_TABLESCHEMA).setJobComplete(true);
     when(bigqueryRpcMock.queryRpc(any(String.class), any(QueryRequest.class)))
@@ -116,6 +115,43 @@ public class ConnectionImplTest {
             any(com.google.api.services.bigquery.model.QueryResponse.class));
   }
 
+  @Test
+  public void testFastQueryMultiplePages() throws BigQuerySQLException {
+    com.google.api.services.bigquery.model.QueryResponse mockQueryRes =
+        new QueryResponse()
+            .setSchema(FAST_QUERY_TABLESCHEMA)
+            .setJobComplete(true)
+            .setPageToken(PAGE_TOKEN);
+    when(bigqueryRpcMock.queryRpc(any(String.class), any(QueryRequest.class)))
+        .thenReturn(mockQueryRes);
+    Connection connectionSpy = Mockito.spy(connection);
+
+    doReturn(BQ_RS_MOCK_RES_MULTI_PAGE)
+        .when(connectionSpy)
+        .processQueryResponseResults(
+            any(com.google.api.services.bigquery.model.QueryResponse.class));
+
+    BigQueryResultSet res = connectionSpy.executeSelect(FAST_SQL);
+    assertEquals(res.getTotalRows(), 4);
+    assertEquals(FAST_QUERY_SCHEMA, res.getSchema());
+    verify(connectionSpy, times(1))
+        .processQueryResponseResults(
+            any(com.google.api.services.bigquery.model.QueryResponse.class));
+  }
+
+  @Test
+  public void testCancel() throws BigQuerySQLException {
+    boolean cancelled = connection.cancel();
+    assertTrue(cancelled);
+  }
+
+  @Test
+  public void testQueryDryRun() throws BigQuerySQLException {
+    // TODO
+
+  }
+
+  // Question: Shall I expose these as well for testing and test using some mock/dummy data?
   // TODO: Add testNextPageTask()
 
   // TODO: Add testParseDataTask()
@@ -123,8 +159,6 @@ public class ConnectionImplTest {
   // TODO: Add testPopulateBuffer()
 
   // TODO: Add testGetQueryResultsFirstPage()
-
-  // TODO: Add testFastQuerySinglePage()
 
   // TODO: Add testFastQueryMultiplePages() --> should exercise processQueryResponseResults() method
 
