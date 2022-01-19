@@ -16,20 +16,14 @@
 
 package com.google.cloud.bigquery;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Strings.isNullOrEmpty;
 
 import com.google.api.core.ApiFunction;
 import com.google.api.services.bigquery.model.Dataset.Access;
 import com.google.api.services.bigquery.model.DatasetAccessEntry;
-import com.google.api.services.bigquery.model.DatasetAccessEntry.TargetTypes;
 import com.google.cloud.StringEnumType;
 import com.google.cloud.StringEnumValue;
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
 import java.io.Serializable;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -130,9 +124,7 @@ public final class Acl implements Serializable {
       if (access.getDataset() != null) {
         return new Dataset(
             DatasetId.fromPb(access.getDataset().getDataset()),
-            Lists.transform(
-                access.getDataset().getTargetTypes(),
-                DatasetAccessEntryTargetTypes.FROM_PB_FUNCTION));
+            access.getDataset().getTargetTypes());
       }
       if (access.getDomain() != null) {
         return new Domain(access.getDomain());
@@ -172,10 +164,10 @@ public final class Acl implements Serializable {
     private static final long serialVersionUID = -8392885851733136526L;
 
     private final DatasetId id;
-    private final List<DatasetAccessEntryTargetTypes> targetTypes;
+    private final String targetTypes;
 
     /** Creates a Dataset entity given the dataset's id. */
-    public Dataset(DatasetId id, List<DatasetAccessEntryTargetTypes> targetTypes) {
+    public Dataset(DatasetId id, String targetTypes) {
       super(Type.DATASET);
       this.id = id;
       this.targetTypes = targetTypes;
@@ -186,7 +178,7 @@ public final class Acl implements Serializable {
       return id;
     }
 
-    public List<DatasetAccessEntryTargetTypes> getTargetTypes() {
+    public String getTargetTypes() {
       return targetTypes;
     }
 
@@ -215,64 +207,7 @@ public final class Acl implements Serializable {
     @Override
     Access toPb() {
       return new Access()
-          .setDataset(
-              new DatasetAccessEntry()
-                  .setDataset(id.toPb())
-                  .setTargetTypes(
-                      targetTypes == null
-                          ? null
-                          : Lists.transform(
-                              targetTypes, DatasetAccessEntryTargetTypes.TO_PB_FUNCTION)));
-    }
-  }
-
-  /** Wrapper class for TargetTypes model class */
-  public static final class DatasetAccessEntryTargetTypes implements Serializable {
-
-    private final String targetType;
-
-    public String getTargetType() {
-      return targetType;
-    }
-
-    static final Function<TargetTypes, DatasetAccessEntryTargetTypes> FROM_PB_FUNCTION =
-        DatasetAccessEntryTargetTypes::fromPb;
-
-    static final Function<DatasetAccessEntryTargetTypes, TargetTypes> TO_PB_FUNCTION =
-        DatasetAccessEntryTargetTypes::toPb;
-
-    private DatasetAccessEntryTargetTypes(String targetType) {
-      checkArgument(!isNullOrEmpty(targetType), "Provided targetType is null or empty");
-      this.targetType = targetType;
-    }
-
-    public static DatasetAccessEntryTargetTypes of(String targetType) {
-      return new DatasetAccessEntryTargetTypes((targetType));
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      return obj == this
-          || obj instanceof DatasetAccessEntryTargetTypes
-              && Objects.equals(toPb(), ((DatasetAccessEntryTargetTypes) obj).toPb());
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(targetType);
-    }
-
-    @Override
-    public String toString() {
-      return toPb().toString();
-    }
-
-    TargetTypes toPb() {
-      return new TargetTypes().setTargetType(targetType);
-    }
-
-    static DatasetAccessEntryTargetTypes fromPb(TargetTypes targetTypes) {
-      return new DatasetAccessEntryTargetTypes(targetTypes.getTargetType());
+          .setDataset(new DatasetAccessEntry().setDataset(id.toPb()).setTargetTypes(targetTypes));
     }
   }
 

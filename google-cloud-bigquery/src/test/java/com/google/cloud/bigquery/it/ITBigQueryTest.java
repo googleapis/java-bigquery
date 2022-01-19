@@ -38,7 +38,6 @@ import com.google.cloud.RetryOption;
 import com.google.cloud.Role;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.bigquery.Acl;
-import com.google.cloud.bigquery.Acl.DatasetAccessEntryTargetTypes;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQuery.DatasetDeleteOption;
 import com.google.cloud.bigquery.BigQuery.DatasetField;
@@ -1793,9 +1792,9 @@ public class ITBigQueryTest {
   @Test
   public void testAuthorizeDataset() {
     String datasetName = RemoteBigQueryHelper.generateDatasetName();
-    DatasetId datasetId = DatasetId.of(datasetName);
-    List<DatasetAccessEntryTargetTypes> targetTypes =
-        ImmutableList.of(DatasetAccessEntryTargetTypes.of("VIEWS"));
+    DatasetId datasetId = DatasetId.of(PROJECT_ID, datasetName);
+    String targetTypes = "VIEWS";
+    // Specify the acl which will be shared to the authorized dataset
     List<Acl> acl =
         ImmutableList.of(
             Acl.of(new Acl.Group("projectOwners"), Acl.Role.OWNER),
@@ -1810,7 +1809,7 @@ public class ITBigQueryTest {
 
     // Create a new dataset to be authorized
     String authorizedDatasetName = RemoteBigQueryHelper.generateDatasetName();
-    DatasetId authorizedDatasetId = DatasetId.of(authorizedDatasetName);
+    DatasetId authorizedDatasetId = DatasetId.of(PROJECT_ID, authorizedDatasetName);
     DatasetInfo authorizedDatasetInfo =
         DatasetInfo.newBuilder(authorizedDatasetId)
             .setDescription("new Dataset to be authorized by the sharedDataset")
@@ -1821,11 +1820,14 @@ public class ITBigQueryTest {
         authorizedDataset.getDescription(), "new Dataset to be authorized by the sharedDataset");
 
     // Add the new DatasetAccessEntry object to the existing sharedDatasetAcl list
-    Acl.Dataset datasetEntity = new Acl.Dataset(datasetId, targetTypes);
+    Acl.Dataset datasetEntity = new Acl.Dataset(authorizedDatasetId, targetTypes);
     sharedDatasetAcl.add(Acl.of(datasetEntity));
-    // TODO: figure out why the line below is failing
-    // sharedDataset.toBuilder().setAcl(sharedDatasetAcl).build().update();
-    // assertEquals(sharedDatasetAcl, sharedDataset.getAcl());
+
+    // Update the dataset with the added authorization
+    Dataset updatedDataset = sharedDataset.toBuilder().setAcl(sharedDatasetAcl).build().update();
+
+    // Verify that the authorized dataset has been added
+    assertEquals(sharedDatasetAcl, updatedDataset.getAcl());
   }
 
   @Test
