@@ -19,13 +19,15 @@ package com.google.cloud.bigquery;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
 
-import com.google.api.services.bigquery.model.QueryRequest;
+import com.google.api.services.bigquery.model.*;
 import com.google.api.services.bigquery.model.QueryResponse;
-import com.google.api.services.bigquery.model.TableSchema;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.bigquery.spi.BigQueryRpcFactory;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,6 +47,8 @@ public class ConnectionImplTest {
   private static final String PAGE_TOKEN = "ABCD123";
   private static final String FAST_SQL =
       "SELECT  county, state_name FROM bigquery_test_dataset.large_data_testing_table limit 2";
+  private static final String DRY_RUN_SQL =
+      "SELECT  county, state_name FROM bigquery_test_dataset.large_data_testing_table where country = ?";
   private static final long DEFAULT_PAGE_SIZE = 10000L;
   private ConnectionSettings connectionSettings;
   private static final Schema FAST_QUERY_SCHEMA =
@@ -116,6 +120,8 @@ public class ConnectionImplTest {
   }
 
   @Test
+  // NOTE: This doesn't truly paginates. Returns a response while mocking
+  // processQueryResponseResults
   public void testFastQueryMultiplePages() throws BigQuerySQLException {
     com.google.api.services.bigquery.model.QueryResponse mockQueryRes =
         new QueryResponse()
@@ -147,8 +153,28 @@ public class ConnectionImplTest {
 
   @Test
   public void testQueryDryRun() throws BigQuerySQLException {
-    // TODO
+    List<QueryParameter> queryParametersMock =
+        ImmutableList.of(
+            new QueryParameter().setParameterType(new QueryParameterType().setType("STRING")));
+    com.google.api.services.bigquery.model.JobStatistics2 queryMock =
+        new com.google.api.services.bigquery.model.JobStatistics2()
+            .setSchema(FAST_QUERY_TABLESCHEMA)
+            .setUndeclaredQueryParameters(queryParametersMock);
+    com.google.api.services.bigquery.model.JobStatistics jobStatsMock =
+        new com.google.api.services.bigquery.model.JobStatistics()
+            .setCreationTime(1234L)
+            .setStartTime(5678L)
+            .setQuery(queryMock);
+    com.google.api.services.bigquery.model.Job mockDryRunJob =
+        new com.google.api.services.bigquery.model.Job().setStatistics(jobStatsMock);
 
+    when(bigqueryRpcMock.createJobForQuery(any(com.google.api.services.bigquery.model.Job.class)))
+        .thenReturn(mockDryRunJob);
+    BigQueryDryRunResult dryRunResult = connection.dryRun(DRY_RUN_SQL);
+    assertEquals(1, dryRunResult.getQueryParameters().size());
+    assertEquals(FAST_QUERY_SCHEMA, dryRunResult.getSchema());
+    verify(bigqueryRpcMock, times(1))
+        .createJobForQuery(any(com.google.api.services.bigquery.model.Job.class));
   }
 
   // Question: Shall I expose these as well for testing and test using some mock/dummy data?
@@ -160,8 +186,6 @@ public class ConnectionImplTest {
 
   // TODO: Add testGetQueryResultsFirstPage()
 
-  // TODO: Add testFastQueryMultiplePages() --> should exercise processQueryResponseResults() method
-
   // TODO: Add testFastQueryLongRunning() --> should exercise getSubsequentQueryResultsWithJob()
   // method
 
@@ -170,7 +194,5 @@ public class ConnectionImplTest {
 
   // TODO: Add testLegacyQueryMultiplePages() --> should exercise processQueryResponseResults()
   // method
-
-  // TODO: Add testQueryDryRun()
 
 }
