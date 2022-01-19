@@ -19,6 +19,7 @@ package com.google.cloud.bigquery;
 import static com.google.cloud.RetryHelper.runWithRetries;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
+import com.google.api.core.InternalApi;
 import com.google.api.services.bigquery.model.GetQueryResultsResponse;
 import com.google.api.services.bigquery.model.JobConfigurationQuery;
 import com.google.api.services.bigquery.model.QueryParameter;
@@ -46,7 +47,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /** Implementation for {@link Connection}, the generic BigQuery connection API (not JDBC). */
-final class ConnectionImpl implements Connection {
+class ConnectionImpl implements Connection {
 
   private final ConnectionSettings connectionSettings;
   private final BigQueryOptions bigQueryOptions;
@@ -265,7 +266,8 @@ final class ConnectionImpl implements Connection {
         schema, numRows, buffer, bigQueryResultSetStats);
   }
 
-  private BigQueryResultSet processQueryResponseResults(
+  @InternalApi("Exposed for testing")
+  public BigQueryResultSet processQueryResponseResults(
       com.google.api.services.bigquery.model.QueryResponse results) {
     Schema schema;
     long numRows;
