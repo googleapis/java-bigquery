@@ -24,10 +24,14 @@ import static org.mockito.Mockito.verify;
 import com.google.api.services.bigquery.model.*;
 import com.google.api.services.bigquery.model.QueryResponse;
 import com.google.cloud.ServiceOptions;
+import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.spi.BigQueryRpcFactory;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
 import com.google.common.collect.ImmutableList;
+import java.util.AbstractList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,6 +49,9 @@ public class ConnectionImplTest {
   private static final String PROJECT = "project";
   private static final String DEFAULT_TEST_DATASET = "bigquery_test_dataset";
   private static final String PAGE_TOKEN = "ABCD123";
+  private static final TableId TABLE_NAME = TableId.of(DEFAULT_TEST_DATASET, PROJECT);
+  private static final TableCell STRING_CELL = new TableCell().setV("Value");
+  private static final TableRow TABLE_ROW = new TableRow().setF(ImmutableList.of(STRING_CELL));
   private static final String FAST_SQL =
       "SELECT  county, state_name FROM bigquery_test_dataset.large_data_testing_table limit 2";
   private static final String DRY_RUN_SQL =
@@ -56,7 +63,7 @@ public class ConnectionImplTest {
           Field.newBuilder("country", StandardSQLTypeName.STRING)
               .setMode(Field.Mode.NULLABLE)
               .build(),
-          Field.newBuilder("state_name", StandardSQLTypeName.BIGNUMERIC)
+          Field.newBuilder("state_name", StandardSQLTypeName.STRING)
               .setMode(Field.Mode.NULLABLE)
               .build());
   private static final TableSchema FAST_QUERY_TABLESCHEMA = FAST_QUERY_SCHEMA.toPb();
@@ -177,12 +184,109 @@ public class ConnectionImplTest {
         .createJobForQuery(any(com.google.api.services.bigquery.model.Job.class));
   }
 
-  // Question: Shall I expose these as well for testing and test using some mock/dummy data?
-  // TODO: Add testNextPageTask()
+  @Test
+  public void testParseDataTask() throws InterruptedException {
+    List<TableRow> tableRows =
+        ImmutableList.of(
+            new TableRow()
+                .setF(
+                    ImmutableList.of(
+                        new TableCell().setV("Value1"), new TableCell().setV("Value2"))),
+            new TableRow()
+                .setF(
+                    ImmutableList.of(
+                        new TableCell().setV("Value3"), new TableCell().setV("Value4"))));
 
-  // TODO: Add testParseDataTask()
+    BlockingQueue<Tuple<Iterable<FieldValueList>, Boolean>> pageCache =
+        new LinkedBlockingDeque<>(2);
+    BlockingQueue<Tuple<TableDataList, Boolean>> rpcResponseQueue = new LinkedBlockingDeque<>(2);
+    rpcResponseQueue.offer(Tuple.of(null, false));
+    // This call should populate page cache
+    Connection connectionSpy = Mockito.spy(connection);
+    connectionSpy.parseRpcDataAsync(tableRows, FAST_QUERY_SCHEMA, pageCache, rpcResponseQueue);
+    Tuple<Iterable<FieldValueList>, Boolean> fvlTupple =
+        pageCache.take(); // wait for the parser thread to parse the data
+    assertNotNull(fvlTupple);
+    Iterable<FieldValueList> iterableFvl = fvlTupple.x();
+    int rowCnt = 0;
+    for (FieldValueList fvl : iterableFvl) {
+      assertEquals(2, fvl.size()); // both the rows should have 2 fields each
+      rowCnt++;
+    }
+    assertEquals(2, rowCnt); // row rows read
 
-  // TODO: Add testPopulateBuffer()
+    verify(connectionSpy, times(1))
+        .parseRpcDataAsync(
+            any(List.class), any(Schema.class), any(BlockingQueue.class), any(BlockingQueue.class));
+  }
+
+  @Test
+  public void testPopulateBuffer() throws InterruptedException {
+    List<TableRow> tableRows =
+        ImmutableList.of(
+            new TableRow()
+                .setF(
+                    ImmutableList.of(
+                        new TableCell().setV("Value1"), new TableCell().setV("Value2"))),
+            new TableRow()
+                .setF(
+                    ImmutableList.of(
+                        new TableCell().setV("Value3"), new TableCell().setV("Value4"))));
+
+    BlockingQueue<Tuple<Iterable<FieldValueList>, Boolean>> pageCache =
+        new LinkedBlockingDeque<>(2);
+    BlockingQueue<Tuple<TableDataList, Boolean>> rpcResponseQueue = new LinkedBlockingDeque<>(2);
+    BlockingQueue<AbstractList<FieldValue>> buffer = new LinkedBlockingDeque<>(5);
+    rpcResponseQueue.offer(Tuple.of(null, false));
+    // This call should populate page cache
+    Connection connectionSpy = Mockito.spy(connection);
+
+    connectionSpy.parseRpcDataAsync(tableRows, FAST_QUERY_SCHEMA, pageCache, rpcResponseQueue);
+
+    verify(connectionSpy, times(1))
+        .parseRpcDataAsync(
+            any(List.class), any(Schema.class), any(BlockingQueue.class), any(BlockingQueue.class));
+
+    // now pass the pageCache to populateBuffer method
+    connectionSpy.populateBufferAsync(rpcResponseQueue, pageCache, buffer);
+    // check if buffer was populated with two rows async by using the blocking take method
+    AbstractList<FieldValue> fvl1 = buffer.take();
+    assertNotNull(fvl1);
+    assertEquals(2, fvl1.size());
+    assertEquals("Value1", fvl1.get(0).getValue().toString());
+    assertEquals("Value2", fvl1.get(1).getValue().toString());
+    AbstractList<FieldValue> fvl2 = buffer.take();
+    assertNotNull(fvl2);
+    assertEquals(2, fvl2.size());
+    assertEquals("Value3", fvl2.get(0).getValue().toString());
+    assertEquals("Value4", fvl2.get(1).getValue().toString());
+    verify(connectionSpy, times(1))
+        .populateBufferAsync(
+            any(BlockingQueue.class), any(BlockingQueue.class), any(BlockingQueue.class));
+  }
+
+  @Test
+  public void testNextPageTask() throws InterruptedException {
+    BlockingQueue<Tuple<TableDataList, Boolean>> rpcResponseQueue = new LinkedBlockingDeque<>(2);
+    TableDataList mockTabledataList =
+        new TableDataList()
+            .setPageToken(PAGE_TOKEN)
+            .setRows(ImmutableList.of(TABLE_ROW))
+            .setTotalRows(1L);
+    Connection connectionSpy = Mockito.spy(connection);
+    doReturn(mockTabledataList)
+        .when(connectionSpy)
+        .tableDataListRpc(any(TableId.class), any(String.class));
+    connectionSpy.runNextPageTaskAsync(PAGE_TOKEN, TABLE_NAME, rpcResponseQueue);
+    Tuple<TableDataList, Boolean> tableDataListTuple = rpcResponseQueue.take();
+    assertNotNull(tableDataListTuple);
+    TableDataList tableDataList = tableDataListTuple.x();
+    assertNotNull(tableDataList);
+    assertEquals("ABCD123", tableDataList.getPageToken());
+    assertEquals(Long.valueOf(1), tableDataList.getTotalRows());
+    verify(connectionSpy, times(1))
+        .runNextPageTaskAsync(any(String.class), any(TableId.class), any(BlockingQueue.class));
+  }
 
   // TODO: Add testGetQueryResultsFirstPage()
 
