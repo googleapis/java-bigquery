@@ -27,6 +27,8 @@ import com.google.cloud.bigquery.Acl.IamMember;
 import com.google.cloud.bigquery.Acl.Role;
 import com.google.cloud.bigquery.Acl.User;
 import com.google.cloud.bigquery.Acl.View;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import org.junit.Test;
 
 public class AclTest {
@@ -34,7 +36,7 @@ public class AclTest {
   @Test
   public void testDatasetEntity() {
     DatasetId datasetId = DatasetId.of("dataset");
-    String targetTypes = "VIEWS";
+    List<String> targetTypes = ImmutableList.of("VIEWS");
     Acl.Dataset entity = new Acl.Dataset(datasetId, targetTypes);
     assertEquals(datasetId, entity.getId());
     assertEquals(targetTypes, entity.getTargetTypes());

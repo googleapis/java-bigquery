@@ -1793,7 +1793,7 @@ public class ITBigQueryTest {
   public void testAuthorizeDataset() {
     String datasetName = RemoteBigQueryHelper.generateDatasetName();
     DatasetId datasetId = DatasetId.of(PROJECT_ID, datasetName);
-    String targetTypes = "VIEWS";
+    List<String> targetTypes = ImmutableList.of("VIEWS");
     // Specify the acl which will be shared to the authorized dataset
     List<Acl> acl =
         ImmutableList.of(

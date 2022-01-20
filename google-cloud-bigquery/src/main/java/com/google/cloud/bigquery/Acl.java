@@ -24,6 +24,7 @@ import com.google.api.services.bigquery.model.DatasetAccessEntry;
 import com.google.cloud.StringEnumType;
 import com.google.cloud.StringEnumValue;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -164,10 +165,10 @@ public final class Acl implements Serializable {
     private static final long serialVersionUID = -8392885851733136526L;
 
     private final DatasetId id;
-    private final String targetTypes;
+    private final List<String> targetTypes;
 
     /** Creates a Dataset entity given the dataset's id. */
-    public Dataset(DatasetId id, String targetTypes) {
+    public Dataset(DatasetId id, List<String> targetTypes) {
       super(Type.DATASET);
       this.id = id;
       this.targetTypes = targetTypes;
@@ -178,7 +179,7 @@ public final class Acl implements Serializable {
       return id;
     }
 
-    public String getTargetTypes() {
+    public List<String> getTargetTypes() {
       return targetTypes;
     }
 

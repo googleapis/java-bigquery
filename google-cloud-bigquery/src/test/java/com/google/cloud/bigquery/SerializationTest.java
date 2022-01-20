@@ -48,7 +48,7 @@ public class SerializationTest extends BaseSerializationTest {
   private static final String LOCATION = "";
   private static final String SELF_LINK = "http://bigquery/p/d";
   private static final DatasetId DATASET_ID = DatasetId.of("project", "dataset");
-  private static final String TARGET_TYPES = "VIEWS";
+  private static final List<String> TARGET_TYPES = ImmutableList.of("VIEWS");
   private static final Acl DATASET_ACCESS = Acl.of(new Acl.Dataset(DATASET_ID, TARGET_TYPES));
   private static final List<Acl> ACCESS_RULES =
       ImmutableList.of(
