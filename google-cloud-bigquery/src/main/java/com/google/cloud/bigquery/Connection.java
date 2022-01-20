@@ -118,4 +118,7 @@ public interface Connection {
       String firstPageToken,
       TableId destinationTable,
       BlockingQueue<Tuple<TableDataList, Boolean>> rpcResponseQueue);
+
+  @InternalApi("Exposed for testing")
+  public TableDataList tableDataListRpc(TableId destinationTable, String pageToken);
 }
