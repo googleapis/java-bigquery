@@ -550,7 +550,8 @@ class ConnectionImpl implements Connection {
     return ((QueryJobConfiguration) job.getConfiguration()).getDestinationTable();
   }
 
-  private TableDataList tableDataListRpc(TableId destinationTable, String pageToken) {
+  @InternalApi("Exposed for testing")
+  public TableDataList tableDataListRpc(TableId destinationTable, String pageToken) {
     try {
       final TableId completeTableId =
           destinationTable.setProjectId(
