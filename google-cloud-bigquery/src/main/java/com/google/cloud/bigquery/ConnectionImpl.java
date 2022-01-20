@@ -304,7 +304,8 @@ class ConnectionImpl implements Connection {
         schema, numRows, buffer, bigQueryResultSetStats);
   }
 
-  private void runNextPageTaskAsync(
+  @InternalApi("Exposed for testing")
+  public void runNextPageTaskAsync(
       String firstPageToken,
       TableId destinationTable,
       BlockingQueue<Tuple<TableDataList, Boolean>> rpcResponseQueue) {
@@ -341,7 +342,8 @@ class ConnectionImpl implements Connection {
   /*
   This method takes TableDataList from rpcResponseQueue and populates pageCache with FieldValueList
    */
-  private void parseRpcDataAsync(
+  @InternalApi("Exposed for testing")
+  public void parseRpcDataAsync(
       // com.google.api.services.bigquery.model.QueryResponse results,
       List<TableRow> tableRows,
       Schema schema,
@@ -394,7 +396,8 @@ class ConnectionImpl implements Connection {
     queryTaskExecutor.execute(parseDataTask);
   }
 
-  private void populateBufferAsync(
+  @InternalApi("Exposed for testing")
+  public void populateBufferAsync(
       BlockingQueue<Tuple<TableDataList, Boolean>> rpcResponseQueue,
       BlockingQueue<Tuple<Iterable<FieldValueList>, Boolean>> pageCache,
       BlockingQueue<AbstractList<FieldValue>> buffer) {
