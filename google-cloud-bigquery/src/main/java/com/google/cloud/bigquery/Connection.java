@@ -17,6 +17,7 @@
 package com.google.cloud.bigquery;
 
 import com.google.api.core.InternalApi;
+import com.google.api.services.bigquery.model.GetQueryResultsResponse;
 import com.google.api.services.bigquery.model.QueryParameter;
 import com.google.api.services.bigquery.model.TableDataList;
 import com.google.api.services.bigquery.model.TableRow;
@@ -121,4 +122,14 @@ public interface Connection {
 
   @InternalApi("Exposed for testing")
   public TableDataList tableDataListRpc(TableId destinationTable, String pageToken);
+
+  @InternalApi("Exposed for testing")
+  public GetQueryResultsResponse getQueryResultsFirstPage(JobId jobId);
+
+  @InternalApi("Exposed for testing")
+  public boolean isFastQuerySupported();
+
+  @InternalApi("Exposed for testing")
+  public BigQueryResultSet getSubsequentQueryResultsWithJob(
+      Long totalRows, Long pageRows, JobId jobId, GetQueryResultsResponse firstPage);
 }
