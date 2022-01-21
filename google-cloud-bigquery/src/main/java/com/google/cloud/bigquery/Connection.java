@@ -132,4 +132,10 @@ public interface Connection {
   @InternalApi("Exposed for testing")
   public BigQueryResultSet getSubsequentQueryResultsWithJob(
       Long totalRows, Long pageRows, JobId jobId, GetQueryResultsResponse firstPage);
+
+  @InternalApi("Exposed for testing")
+  public TableId getDestinationTable(JobId jobId);
+
+  @InternalApi("Exposed for testing")
+  public BigQueryResultSet tableDataList(GetQueryResultsResponse firstPage, JobId jobId);
 }
