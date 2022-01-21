@@ -128,7 +128,7 @@ class ConnectionImpl implements Connection {
     JobId jobId = JobId.fromPb(queryJob.getJobReference());
     GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
     return getSubsequentQueryResultsWithJob(
-        firstPage.getTotalRows().longValue(), firstPage.getRows().size(), jobId, firstPage);
+        firstPage.getTotalRows().longValue(), (long) firstPage.getRows().size(), jobId, firstPage);
   }
 
   /**
@@ -162,7 +162,7 @@ class ConnectionImpl implements Connection {
     JobId jobId = JobId.fromPb(queryJob.getJobReference());
     GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
     return getSubsequentQueryResultsWithJob(
-        firstPage.getTotalRows().longValue(), firstPage.getRows().size(), jobId, firstPage);
+        firstPage.getTotalRows().longValue(), (long) firstPage.getRows().size(), jobId, firstPage);
   }
 
   static class EndOfFieldValueList
@@ -504,8 +504,9 @@ class ConnectionImpl implements Connection {
   }
 
   /* Returns query results using either tabledata.list or the high throughput Read API */
-  private BigQueryResultSet getSubsequentQueryResultsWithJob(
-      long totalRows, long pageRows, JobId jobId, GetQueryResultsResponse firstPage) {
+  @InternalApi("Exposed for testing")
+  public BigQueryResultSet getSubsequentQueryResultsWithJob(
+      Long totalRows, Long pageRows, JobId jobId, GetQueryResultsResponse firstPage) {
     TableId destinationTable = getDestinationTable(jobId);
     return useReadAPI(totalRows, pageRows)
         ? highThroughPutRead(
@@ -584,7 +585,8 @@ class ConnectionImpl implements Connection {
   }
 
   /*Returns just the first page of GetQueryResultsResponse using the jobId*/
-  private GetQueryResultsResponse getQueryResultsFirstPage(JobId jobId) {
+  @InternalApi("Exposed for testing")
+  public GetQueryResultsResponse getQueryResultsFirstPage(JobId jobId) {
     JobId completeJobId =
         jobId
             .setProjectId(bigQueryOptions.getProjectId())
@@ -621,7 +623,8 @@ class ConnectionImpl implements Connection {
     }
   }
 
-  private boolean isFastQuerySupported() {
+  @InternalApi("Exposed for testing")
+  public boolean isFastQuerySupported() {
     // TODO: add regex logic to check for scripting
     return connectionSettings.getClustering() == null
         && connectionSettings.getCreateDisposition() == null
