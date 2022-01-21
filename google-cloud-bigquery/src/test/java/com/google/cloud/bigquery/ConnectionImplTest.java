@@ -359,12 +359,6 @@ public class ConnectionImplTest {
                     ImmutableList.of(
                         new TableCell().setV("Value3"), new TableCell().setV("Value4"))));
     Connection connectionSpy = Mockito.spy(connection);
-    com.google.api.services.bigquery.model.Job jobResponseMock =
-        new com.google.api.services.bigquery.model.Job()
-            // .setConfiguration(QUERY_JOB.g)
-            .setJobReference(QUERY_JOB.toPb())
-            .setId(JOB)
-            .setStatus(new com.google.api.services.bigquery.model.JobStatus().setState("DONE"));
     // emulating a fast query
     doReturn(true).when(connectionSpy).isFastQuerySupported();
     doReturn(GET_QUERY_RESULTS_RESPONSE)
@@ -385,14 +379,42 @@ public class ConnectionImplTest {
             .setRows(tableRows);
     when(bigqueryRpcMock.queryRpc(any(String.class), any(QueryRequest.class)))
         .thenReturn(mockQueryRes);
-
     BigQueryResultSet res = connectionSpy.executeSelect(SQL_QUERY);
     assertEquals(res.getTotalRows(), 2);
     assertEquals(QUERY_SCHEMA, res.getSchema());
     verify(bigqueryRpcMock, times(1)).queryRpc(any(String.class), any(QueryRequest.class));
   }
 
-  // TODO: Add testLegacyQueryMultiplePages() --> should exercise processQueryResponseResults()
-  // method
-
+  @Test
+  // Emulates first page response using getQueryResultsFirstPage(jobId) and then subsequent pages
+  // using getQueryResultsFirstPage(jobId) getSubsequentQueryResultsWithJob(
+  public void testLegacyQueryMultiplePages() throws SQLException {
+    Connection connectionSpy = Mockito.spy(connection);
+    com.google.api.services.bigquery.model.JobStatistics jobStatistics =
+        new com.google.api.services.bigquery.model.JobStatistics();
+    // emulating a Legacy query
+    doReturn(false).when(connectionSpy).isFastQuerySupported();
+    doReturn(GET_QUERY_RESULTS_RESPONSE)
+        .when(connectionSpy)
+        .getQueryResultsFirstPage(any(JobId.class));
+    doReturn(TABLE_NAME).when(connectionSpy).getDestinationTable(any(JobId.class));
+    doReturn(BQ_RS_MOCK_RES)
+        .when(connectionSpy)
+        .tableDataList(any(GetQueryResultsResponse.class), any(JobId.class));
+    com.google.api.services.bigquery.model.Job jobResponseMock =
+        new com.google.api.services.bigquery.model.Job()
+            .setJobReference(QUERY_JOB.toPb())
+            .setId(JOB)
+            .setStatus(new com.google.api.services.bigquery.model.JobStatus().setState("DONE"))
+            .setStatistics(jobStatistics);
+    when(bigqueryRpcMock.createJobForQuery(any(com.google.api.services.bigquery.model.Job.class)))
+        .thenReturn(jobResponseMock); // RPC call in createQueryJob
+    BigQueryResultSet res = connectionSpy.executeSelect(SQL_QUERY);
+    assertEquals(res.getTotalRows(), 2);
+    assertEquals(QUERY_SCHEMA, res.getSchema());
+    verify(bigqueryRpcMock, times(1))
+        .createJobForQuery(any(com.google.api.services.bigquery.model.Job.class));
+    verify(connectionSpy, times(1))
+        .tableDataList(any(GetQueryResultsResponse.class), any(JobId.class));
+  }
 }
