@@ -29,6 +29,7 @@ import com.google.cloud.bigquery.spi.BigQueryRpcFactory;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
 import com.google.common.collect.ImmutableList;
 import java.math.BigInteger;
+import java.sql.SQLException;
 import java.util.AbstractList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -344,8 +345,52 @@ public class ConnectionImplTest {
         .createJobForQuery(any(com.google.api.services.bigquery.model.Job.class));
   }
 
-  // TODO: Add testFastQueryLongRunning() --> should exercise getSubsequentQueryResultsWithJob()
-  // method
+  // exercises getSubsequentQueryResultsWithJob for fast running queries
+  @Test
+  public void testFastQueryLongRunning() throws SQLException {
+    List<TableRow> tableRows =
+        ImmutableList.of(
+            new TableRow()
+                .setF(
+                    ImmutableList.of(
+                        new TableCell().setV("Value1"), new TableCell().setV("Value2"))),
+            new TableRow()
+                .setF(
+                    ImmutableList.of(
+                        new TableCell().setV("Value3"), new TableCell().setV("Value4"))));
+    Connection connectionSpy = Mockito.spy(connection);
+    com.google.api.services.bigquery.model.Job jobResponseMock =
+        new com.google.api.services.bigquery.model.Job()
+            // .setConfiguration(QUERY_JOB.g)
+            .setJobReference(QUERY_JOB.toPb())
+            .setId(JOB)
+            .setStatus(new com.google.api.services.bigquery.model.JobStatus().setState("DONE"));
+    // emulating a fast query
+    doReturn(true).when(connectionSpy).isFastQuerySupported();
+    doReturn(GET_QUERY_RESULTS_RESPONSE)
+        .when(connectionSpy)
+        .getQueryResultsFirstPage(any(JobId.class));
+
+    doReturn(TABLE_NAME).when(connectionSpy).getDestinationTable(any(JobId.class));
+    doReturn(BQ_RS_MOCK_RES)
+        .when(connectionSpy)
+        .tableDataList(any(GetQueryResultsResponse.class), any(JobId.class));
+
+    com.google.api.services.bigquery.model.QueryResponse mockQueryRes =
+        new QueryResponse()
+            .setSchema(FAST_QUERY_TABLESCHEMA)
+            .setJobComplete(false)
+            .setTotalRows(new BigInteger(String.valueOf(4L)))
+            .setJobReference(QUERY_JOB.toPb())
+            .setRows(tableRows);
+    when(bigqueryRpcMock.queryRpc(any(String.class), any(QueryRequest.class)))
+        .thenReturn(mockQueryRes);
+
+    BigQueryResultSet res = connectionSpy.executeSelect(SQL_QUERY);
+    assertEquals(res.getTotalRows(), 2);
+    assertEquals(QUERY_SCHEMA, res.getSchema());
+    verify(bigqueryRpcMock, times(1)).queryRpc(any(String.class), any(QueryRequest.class));
+  }
 
   // TODO: Add testLegacyQueryMultiplePages() --> should exercise processQueryResponseResults()
   // method
