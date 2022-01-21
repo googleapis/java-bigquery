@@ -28,6 +28,7 @@ import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.spi.BigQueryRpcFactory;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
 import com.google.common.collect.ImmutableList;
+import java.math.BigInteger;
 import java.util.AbstractList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -47,18 +48,20 @@ public class ConnectionImplTest {
   private BigQuery bigquery;
   private Connection connection;
   private static final String PROJECT = "project";
+  private static final String JOB = "job";
+  private static final String LOCATION = "US";
   private static final String DEFAULT_TEST_DATASET = "bigquery_test_dataset";
   private static final String PAGE_TOKEN = "ABCD123";
   private static final TableId TABLE_NAME = TableId.of(DEFAULT_TEST_DATASET, PROJECT);
   private static final TableCell STRING_CELL = new TableCell().setV("Value");
   private static final TableRow TABLE_ROW = new TableRow().setF(ImmutableList.of(STRING_CELL));
-  private static final String FAST_SQL =
+  private static final String SQL_QUERY =
       "SELECT  county, state_name FROM bigquery_test_dataset.large_data_testing_table limit 2";
   private static final String DRY_RUN_SQL =
       "SELECT  county, state_name FROM bigquery_test_dataset.large_data_testing_table where country = ?";
   private static final long DEFAULT_PAGE_SIZE = 10000L;
   private ConnectionSettings connectionSettings;
-  private static final Schema FAST_QUERY_SCHEMA =
+  private static final Schema QUERY_SCHEMA =
       Schema.of(
           Field.newBuilder("country", StandardSQLTypeName.STRING)
               .setMode(Field.Mode.NULLABLE)
@@ -66,12 +69,24 @@ public class ConnectionImplTest {
           Field.newBuilder("state_name", StandardSQLTypeName.STRING)
               .setMode(Field.Mode.NULLABLE)
               .build());
-  private static final TableSchema FAST_QUERY_TABLESCHEMA = FAST_QUERY_SCHEMA.toPb();
+  private static final TableSchema FAST_QUERY_TABLESCHEMA = QUERY_SCHEMA.toPb();
   private static final BigQueryResultSet BQ_RS_MOCK_RES =
-      new BigQueryResultSetImpl(FAST_QUERY_SCHEMA, 2, null, null);
+      new BigQueryResultSetImpl(QUERY_SCHEMA, 2, null, null);
 
   private static final BigQueryResultSet BQ_RS_MOCK_RES_MULTI_PAGE =
-      new BigQueryResultSetImpl(FAST_QUERY_SCHEMA, 4, null, null);
+      new BigQueryResultSetImpl(QUERY_SCHEMA, 4, null, null);
+
+  private static final JobId QUERY_JOB = JobId.of(PROJECT, JOB).setLocation(LOCATION);
+  private static final GetQueryResultsResponse GET_QUERY_RESULTS_RESPONSE =
+      new GetQueryResultsResponse()
+          .setJobReference(QUERY_JOB.toPb())
+          .setRows(ImmutableList.of(TABLE_ROW))
+          .setJobComplete(true)
+          .setCacheHit(false)
+          .setPageToken(PAGE_TOKEN)
+          .setTotalBytesProcessed(42L)
+          .setTotalRows(BigInteger.valueOf(1L))
+          .setSchema(FAST_QUERY_TABLESCHEMA);
 
   private BigQueryOptions createBigQueryOptionsForProject(
       String project, BigQueryRpcFactory rpcFactory) {
@@ -118,9 +133,9 @@ public class ConnectionImplTest {
         .processQueryResponseResults(
             any(com.google.api.services.bigquery.model.QueryResponse.class));
 
-    BigQueryResultSet res = connectionSpy.executeSelect(FAST_SQL);
+    BigQueryResultSet res = connectionSpy.executeSelect(SQL_QUERY);
     assertEquals(res.getTotalRows(), 2);
-    assertEquals(FAST_QUERY_SCHEMA, res.getSchema());
+    assertEquals(QUERY_SCHEMA, res.getSchema());
     verify(connectionSpy, times(1))
         .processQueryResponseResults(
             any(com.google.api.services.bigquery.model.QueryResponse.class));
@@ -144,9 +159,9 @@ public class ConnectionImplTest {
         .processQueryResponseResults(
             any(com.google.api.services.bigquery.model.QueryResponse.class));
 
-    BigQueryResultSet res = connectionSpy.executeSelect(FAST_SQL);
+    BigQueryResultSet res = connectionSpy.executeSelect(SQL_QUERY);
     assertEquals(res.getTotalRows(), 4);
-    assertEquals(FAST_QUERY_SCHEMA, res.getSchema());
+    assertEquals(QUERY_SCHEMA, res.getSchema());
     verify(connectionSpy, times(1))
         .processQueryResponseResults(
             any(com.google.api.services.bigquery.model.QueryResponse.class));
@@ -179,7 +194,7 @@ public class ConnectionImplTest {
         .thenReturn(mockDryRunJob);
     BigQueryDryRunResult dryRunResult = connection.dryRun(DRY_RUN_SQL);
     assertEquals(1, dryRunResult.getQueryParameters().size());
-    assertEquals(FAST_QUERY_SCHEMA, dryRunResult.getSchema());
+    assertEquals(QUERY_SCHEMA, dryRunResult.getSchema());
     verify(bigqueryRpcMock, times(1))
         .createJobForQuery(any(com.google.api.services.bigquery.model.Job.class));
   }
@@ -203,7 +218,7 @@ public class ConnectionImplTest {
     rpcResponseQueue.offer(Tuple.of(null, false));
     // This call should populate page cache
     Connection connectionSpy = Mockito.spy(connection);
-    connectionSpy.parseRpcDataAsync(tableRows, FAST_QUERY_SCHEMA, pageCache, rpcResponseQueue);
+    connectionSpy.parseRpcDataAsync(tableRows, QUERY_SCHEMA, pageCache, rpcResponseQueue);
     Tuple<Iterable<FieldValueList>, Boolean> fvlTupple =
         pageCache.take(); // wait for the parser thread to parse the data
     assertNotNull(fvlTupple);
@@ -241,7 +256,7 @@ public class ConnectionImplTest {
     // This call should populate page cache
     Connection connectionSpy = Mockito.spy(connection);
 
-    connectionSpy.parseRpcDataAsync(tableRows, FAST_QUERY_SCHEMA, pageCache, rpcResponseQueue);
+    connectionSpy.parseRpcDataAsync(tableRows, QUERY_SCHEMA, pageCache, rpcResponseQueue);
 
     verify(connectionSpy, times(1))
         .parseRpcDataAsync(
@@ -288,13 +303,49 @@ public class ConnectionImplTest {
         .runNextPageTaskAsync(any(String.class), any(TableId.class), any(BlockingQueue.class));
   }
 
-  // TODO: Add testGetQueryResultsFirstPage()
+  @Test
+  public void testGetQueryResultsFirstPage() {
+    when(bigqueryRpcMock.getQueryResultsWithRowLimit(
+            any(String.class), any(String.class), any(String.class), any(Long.class)))
+        .thenReturn(GET_QUERY_RESULTS_RESPONSE);
+    GetQueryResultsResponse response = connection.getQueryResultsFirstPage(QUERY_JOB);
+    assertNotNull(response);
+    assertEquals(GET_QUERY_RESULTS_RESPONSE, response);
+    verify(bigqueryRpcMock, times(1))
+        .getQueryResultsWithRowLimit(
+            any(String.class), any(String.class), any(String.class), any(Long.class));
+  }
+
+  // calls executeSelect with a nonFast query and exercises createQueryJob
+  @Test
+  public void testLegacyQuerySinglePage() throws BigQuerySQLException {
+    Connection connectionSpy = Mockito.spy(connection);
+    com.google.api.services.bigquery.model.Job jobResponseMock =
+        new com.google.api.services.bigquery.model.Job()
+            // .setConfiguration(QUERY_JOB.g)
+            .setJobReference(QUERY_JOB.toPb())
+            .setId(JOB)
+            .setStatus(new com.google.api.services.bigquery.model.JobStatus().setState("DONE"));
+    // emulating a legacy query
+    doReturn(false).when(connectionSpy).isFastQuerySupported();
+    doReturn(GET_QUERY_RESULTS_RESPONSE)
+        .when(connectionSpy)
+        .getQueryResultsFirstPage(any(JobId.class));
+    doReturn(BQ_RS_MOCK_RES)
+        .when(connectionSpy)
+        .getSubsequentQueryResultsWithJob(
+            any(Long.class), any(Long.class), any(JobId.class), any(GetQueryResultsResponse.class));
+    when(bigqueryRpcMock.createJobForQuery(any(com.google.api.services.bigquery.model.Job.class)))
+        .thenReturn(jobResponseMock); // RPC call in createQueryJob
+    BigQueryResultSet res = connectionSpy.executeSelect(SQL_QUERY);
+    assertEquals(res.getTotalRows(), 2);
+    assertEquals(QUERY_SCHEMA, res.getSchema());
+    verify(bigqueryRpcMock, times(1))
+        .createJobForQuery(any(com.google.api.services.bigquery.model.Job.class));
+  }
 
   // TODO: Add testFastQueryLongRunning() --> should exercise getSubsequentQueryResultsWithJob()
   // method
-
-  // TODO: Add testLegacyQuerySinglePage() --> should exercise createQueryJob() and
-  // getQueryResultsFirstPage()
 
   // TODO: Add testLegacyQueryMultiplePages() --> should exercise processQueryResponseResults()
   // method
