@@ -220,7 +220,8 @@ class ConnectionImpl implements Connection {
   }
 
   /* This method processed the first page of GetQueryResultsResponse and then it uses tabledata.list */
-  private BigQueryResultSet tableDataList(GetQueryResultsResponse firstPage, JobId jobId) {
+  @InternalApi("Exposed for testing")
+  public BigQueryResultSet tableDataList(GetQueryResultsResponse firstPage, JobId jobId) {
     Schema schema;
     long numRows;
     schema = Schema.fromPb(firstPage.getSchema());
@@ -545,7 +546,8 @@ class ConnectionImpl implements Connection {
   }
 
   /* Returns the destinationTable from jobId by calling jobs.get API */
-  private TableId getDestinationTable(JobId jobId) {
+  @InternalApi("Exposed for testing")
+  public TableId getDestinationTable(JobId jobId) {
     Job job = getQueryJobRpc(jobId);
     return ((QueryJobConfiguration) job.getConfiguration()).getDestinationTable();
   }
