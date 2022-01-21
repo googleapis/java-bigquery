@@ -219,7 +219,6 @@ class ConnectionImpl implements Connection {
     }
   }
 
-  // TODO: Write a IT with order by query
   /* This method processed the first page of GetQueryResultsResponse and then it uses tabledata.list */
   private BigQueryResultSet tableDataList(GetQueryResultsResponse firstPage, JobId jobId) {
     Schema schema;
