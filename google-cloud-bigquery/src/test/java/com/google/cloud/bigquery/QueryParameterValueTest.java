@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.threeten.bp.Instant;
@@ -197,11 +198,17 @@ public class QueryParameterValueTest {
   public void testJson() {
     QueryParameterValue value =
         QueryParameterValue.json("{\"class\" : {\"students\" : [{\"name\" : \"Jane\"}]}}");
+    JSONObject jsonObject = new JSONObject().put("class", "student");
+    QueryParameterValue value1 = QueryParameterValue.json(jsonObject);
     assertThat(value.getValue())
         .isEqualTo("{\"class\" : {\"students\" : [{\"name\" : \"Jane\"}]}}");
+    assertThat(value1.getValue()).isEqualTo("{\"class\":\"student\"}");
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.JSON);
+    assertThat(value1.getType()).isEqualTo(StandardSQLTypeName.JSON);
     assertThat(value.getArrayType()).isNull();
+    assertThat(value1.getArrayType()).isNull();
     assertThat(value.getArrayValues()).isNull();
+    assertThat(value1.getArrayType()).isNull();
   }
 
   @Test

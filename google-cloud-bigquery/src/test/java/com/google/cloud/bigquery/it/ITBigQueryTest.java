@@ -143,6 +143,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -718,19 +719,34 @@ public class ITBigQueryTest {
       Table createdTable = bigquery.create(TableInfo.of(tableId, standardTableDefinition));
       assertNotNull(createdTable);
 
-      // Insert data into JSON column
-      Map<String, Object> jsonRow = new HashMap<>();
-      jsonRow.put("jsonField", "{\"class\" : {\"students\" : [{\"name\" : \"Jane\"}]}}");
-      InsertAllRequest request = InsertAllRequest.newBuilder(tableId).addRow(jsonRow).build();
+      // Insert 4 rows of JSON data into the JSON column
+      Map<String, Object> jsonRow1 =
+          Collections.singletonMap(
+              "jsonField", "{\"student\" : {\"name\" : \"Jane\", \"id\": 10}}");
+      Map<String, Object> jsonRow2 =
+          Collections.singletonMap("jsonField", "{\"student\" : {\"name\" : \"Joy\", \"id\": 11}}");
+      Map<String, Object> jsonRow3 =
+          Collections.singletonMap(
+              "jsonField", "{\"student\" : {\"name\" : \"Alice\", \"id\": 12}}");
+      Map<String, Object> jsonRow4 =
+          Collections.singletonMap(
+              "jsonField", "{\"student\" : {\"name\" : \"Bijoy\", \"id\": 14}}");
+      InsertAllRequest request =
+          InsertAllRequest.newBuilder(tableId)
+              .addRow(jsonRow1)
+              .addRow(jsonRow2)
+              .addRow(jsonRow3)
+              .addRow(jsonRow4)
+              .build();
       InsertAllResponse response = bigquery.insertAll(request);
       assertFalse(response.hasErrors());
       assertEquals(0, response.getInsertErrors().size());
 
       // Query the JSON column with string positional query parameter
       String sql =
-          "SELECT JSON_VALUE(jsonField, \"$.class.students[0].name\") FROM "
+          "SELECT jsonField.class.student.id FROM "
               + tableId.getTable()
-              + " WHERE JSON_VALUE(jsonField, \"$.class.students[0].name\")  = ? ";
+              + " WHERE JSON_VALUE(jsonField, \"$.class.student.name\")  = ? ";
       QueryParameterValue stringParameter = QueryParameterValue.string("Jane");
       QueryJobConfiguration queryJobConfiguration =
           QueryJobConfiguration.newBuilder(sql)
@@ -740,13 +756,13 @@ public class ITBigQueryTest {
               .build();
       TableResult result = bigquery.query(queryJobConfiguration);
       for (FieldValueList values : result.iterateAll()) {
-        assertEquals("Jane", values.get(0).getValue());
+        assertEquals("10", values.get(0).getValue());
       }
 
-      // Add a new JSON row with json positional query parameter
+      // Insert another JSON row parsed from a String with json positional query parameter
       String dml = "INSERT INTO " + tableId.getTable() + " (jsonField) VALUES(?)";
       QueryParameterValue jsonParameter =
-          QueryParameterValue.json("{\"class\" : {\"students\" : [{\"name\" : \"Joy\"}]}}");
+          QueryParameterValue.json("{\"class\" : {\"student\" : [{\"name\" : \"Amy\"}]}}");
       QueryJobConfiguration dmlQueryJobConfiguration =
           QueryJobConfiguration.newBuilder(dml)
               .setDefaultDataset(DatasetId.of(DATASET))
@@ -755,7 +771,20 @@ public class ITBigQueryTest {
               .build();
       bigquery.query(dmlQueryJobConfiguration);
       Page<FieldValueList> rows = bigquery.listTableData(tableId);
-      assertEquals(2, Iterables.size(rows.getValues()));
+      assertEquals(5, Iterables.size(rows.getValues()));
+
+      // Insert another JSON row parsed from a JsonObject with json positional query parameter
+      JSONObject jsonObject = new JSONObject().put("class", "student");
+      QueryParameterValue jsonParameter1 = QueryParameterValue.json(jsonObject);
+      QueryJobConfiguration dmlQueryJobConfiguration1 =
+          QueryJobConfiguration.newBuilder(dml)
+              .setDefaultDataset(DatasetId.of(DATASET))
+              .setUseLegacySql(false)
+              .addPositionalParameter(jsonParameter1)
+              .build();
+      bigquery.query(dmlQueryJobConfiguration1);
+      Page<FieldValueList> rows1 = bigquery.listTableData(tableId);
+      assertEquals(6, Iterables.size(rows1.getValues()));
     } finally {
       assertTrue(bigquery.delete(tableId));
     }
