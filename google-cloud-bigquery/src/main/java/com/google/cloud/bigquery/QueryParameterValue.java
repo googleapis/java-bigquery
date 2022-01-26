@@ -369,8 +369,6 @@ public abstract class QueryParameterValue implements Serializable {
       return StandardSQLTypeName.JSON;
     } else if (JSONObject.class.isAssignableFrom(type)) {
       return StandardSQLTypeName.JSON;
-    } else if (Map.class.isAssignableFrom(type)) {
-      return StandardSQLTypeName.JSON;
     }
     throw new IllegalArgumentException("Unsupported object type for QueryParameter: " + type);
   }
