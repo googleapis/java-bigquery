@@ -804,7 +804,7 @@ public class ITBigQueryTest {
               .build();
       try {
         bigquery.query(dmlQueryJobConfiguration2);
-        fail("Quering with malformed JSON shouldn't work");
+        fail("Querying with malformed JSON shouldn't work");
       } catch (BigQueryException e) {
         BigQueryError error = e.getError();
         assertNotNull(error);
