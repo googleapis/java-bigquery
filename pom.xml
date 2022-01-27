@@ -93,12 +93,6 @@
         <version>${google-api-services-bigquery.version}</version>
       </dependency>
 
-      <dependency>
-        <groupId>org.json</groupId>
-        <artifactId>json</artifactId>
-        <version>20200518</version>
-      </dependency>
-
       <!-- Test dependencies -->
       <dependency>
         <groupId>junit</groupId>

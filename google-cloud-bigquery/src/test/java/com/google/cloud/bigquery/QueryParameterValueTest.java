@@ -24,13 +24,13 @@ import static org.threeten.bp.temporal.ChronoField.SECOND_OF_MINUTE;
 
 import com.google.api.services.bigquery.model.QueryParameterType;
 import com.google.common.collect.ImmutableMap;
+import com.google.gson.JsonObject;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.threeten.bp.Instant;
@@ -198,7 +198,8 @@ public class QueryParameterValueTest {
   public void testJson() {
     QueryParameterValue value =
         QueryParameterValue.json("{\"class\" : {\"students\" : [{\"name\" : \"Jane\"}]}}");
-    JSONObject jsonObject = new JSONObject().put("class", "student");
+    JsonObject jsonObject = new JsonObject();
+    jsonObject.addProperty("class", "student");
     QueryParameterValue value1 = QueryParameterValue.json(jsonObject);
     assertThat(value.getValue())
         .isEqualTo("{\"class\" : {\"students\" : [{\"name\" : \"Jane\"}]}}");

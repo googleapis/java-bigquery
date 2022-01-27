@@ -122,6 +122,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
+import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
@@ -143,7 +144,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -774,7 +774,8 @@ public class ITBigQueryTest {
       assertEquals(5, Iterables.size(rows.getValues()));
 
       // Insert another JSON row parsed from a JsonObject with json positional query parameter
-      JSONObject jsonObject = new JSONObject().put("class", "student");
+      JsonObject jsonObject = new JsonObject();
+      jsonObject.addProperty("class", "student");
       QueryParameterValue jsonParameter1 = QueryParameterValue.json(jsonObject);
       QueryJobConfiguration dmlQueryJobConfiguration1 =
           QueryJobConfiguration.newBuilder(dml)
@@ -785,6 +786,30 @@ public class ITBigQueryTest {
       bigquery.query(dmlQueryJobConfiguration1);
       Page<FieldValueList> rows1 = bigquery.listTableData(tableId);
       assertEquals(6, Iterables.size(rows1.getValues()));
+      int rowCount = 0;
+      for (FieldValueList row : rows1.iterateAll()) {
+        FieldValue jsonCell = row.get(0);
+        if (rowCount == 1) assertEquals("{\"class\":\"student\"}", jsonCell.getStringValue());
+        rowCount++;
+      }
+
+      // Try inserting a malformed JSON
+      QueryParameterValue badJsonParameter =
+          QueryParameterValue.json("{\"class\" : {\"student\" : [{\"name\" : \"BadBoy\"}}");
+      QueryJobConfiguration dmlQueryJobConfiguration2 =
+          QueryJobConfiguration.newBuilder(dml)
+              .setDefaultDataset(DatasetId.of(DATASET))
+              .setUseLegacySql(false)
+              .addPositionalParameter(badJsonParameter)
+              .build();
+      try {
+        bigquery.query(dmlQueryJobConfiguration2);
+        fail("Quering with malformed JSON shouldn't work");
+      } catch (BigQueryException e) {
+        BigQueryError error = e.getError();
+        assertNotNull(error);
+        assertEquals("invalidQuery", error.getReason());
+      }
     } finally {
       assertTrue(bigquery.delete(tableId));
     }

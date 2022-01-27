@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.BaseEncoding;
+import com.google.gson.JsonObject;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -37,7 +38,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
-import org.json.JSONObject;
 import org.threeten.bp.Instant;
 import org.threeten.bp.ZoneOffset;
 import org.threeten.bp.format.DateTimeFormatter;
@@ -268,7 +268,7 @@ public abstract class QueryParameterValue implements Serializable {
    * Creates a {@code QueryParameterValue} object with a type of JSON. Currently, this is only
    * supported in INSERT, not in query as a filter
    */
-  public static QueryParameterValue json(JSONObject value) {
+  public static QueryParameterValue json(JsonObject value) {
     return of(value, StandardSQLTypeName.JSON);
   }
 
@@ -367,7 +367,7 @@ public abstract class QueryParameterValue implements Serializable {
       return StandardSQLTypeName.DATE;
     } else if (String.class.isAssignableFrom(type)) {
       return StandardSQLTypeName.JSON;
-    } else if (JSONObject.class.isAssignableFrom(type)) {
+    } else if (JsonObject.class.isAssignableFrom(type)) {
       return StandardSQLTypeName.JSON;
     }
     throw new IllegalArgumentException("Unsupported object type for QueryParameter: " + type);
@@ -407,7 +407,7 @@ public abstract class QueryParameterValue implements Serializable {
       case STRING:
         return value.toString();
       case JSON:
-        if (value instanceof String || value instanceof JSONObject) return value.toString();
+        if (value instanceof String || value instanceof JsonObject) return value.toString();
         break;
       case STRUCT:
         throw new IllegalArgumentException("Cannot convert STRUCT to String value");
