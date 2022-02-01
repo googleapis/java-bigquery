@@ -46,8 +46,7 @@ public class UpdateMaterializedView {
       Table table = bigquery.getTable(tableId);
       MaterializedViewDefinition materializedViewDefinition = table.getDefinition();
       // Update materialized view
-      materializedViewDefinition
-          .toBuilder()
+      materializedViewDefinition.toBuilder()
           .setEnableRefresh(true)
           .setRefreshIntervalMs(1000L)
           .build();

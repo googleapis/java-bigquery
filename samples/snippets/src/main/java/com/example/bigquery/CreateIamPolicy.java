@@ -44,8 +44,7 @@ public class CreateIamPolicy {
       TableId tableId = TableId.of(datasetName, tableName);
 
       Policy policy = bigquery.getIamPolicy(tableId);
-      policy
-          .toBuilder()
+      policy.toBuilder()
           .addIdentity(Role.of("roles/bigquery.dataViewer"), Identity.allUsers())
           .build();
       bigquery.setIamPolicy(tableId, policy);
