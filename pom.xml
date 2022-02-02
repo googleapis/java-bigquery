@@ -158,21 +158,28 @@
   <dependencies>
     <!-- Dependency for bigquerystorage-->
     <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-bigquerystorage</artifactId>
       <version>2.8.3</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.arrow</groupId>
-      <artifactId>arrow-vector</artifactId>
-      <version>5.0.0</version>
+      <groupId>com.google.api.grpc</groupId>
+      <artifactId>proto-google-cloud-bigquerystorage-v1</artifactId>
+      <version>2.8.3</version>
     </dependency>
-
     <dependency>
       <groupId>org.apache.arrow</groupId>
-      <artifactId>arrow-memory-netty</artifactId>
-      <version>5.0.0</version>
-      <scope>runtime</scope>
+      <artifactId>arrow-vector</artifactId>
+      <version>6.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.arrow</groupId>
+      <artifactId>arrow-memory-core</artifactId>
+      <version>6.0.0</version>
     </dependency>
   </dependencies>
 
