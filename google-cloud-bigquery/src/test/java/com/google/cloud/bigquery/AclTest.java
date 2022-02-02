@@ -19,6 +19,7 @@ package com.google.cloud.bigquery;
 import static org.junit.Assert.assertEquals;
 
 import com.google.api.services.bigquery.model.Dataset;
+import com.google.cloud.bigquery.Acl.DatasetAclEntity;
 import com.google.cloud.bigquery.Acl.Domain;
 import com.google.cloud.bigquery.Acl.Entity;
 import com.google.cloud.bigquery.Acl.Entity.Type;
@@ -37,7 +38,7 @@ public class AclTest {
   public void testDatasetEntity() {
     DatasetId datasetId = DatasetId.of("dataset");
     List<String> targetTypes = ImmutableList.of("VIEWS");
-    Acl.Dataset entity = new Acl.Dataset(datasetId, targetTypes);
+    DatasetAclEntity entity = new DatasetAclEntity(datasetId, targetTypes);
     assertEquals(datasetId, entity.getId());
     assertEquals(targetTypes, entity.getTargetTypes());
     Dataset.Access pb = entity.toPb();

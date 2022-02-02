@@ -20,6 +20,7 @@ import com.google.cloud.BaseSerializationTest;
 import com.google.cloud.NoCredentials;
 import com.google.cloud.PageImpl;
 import com.google.cloud.Restorable;
+import com.google.cloud.bigquery.Acl.DatasetAclEntity;
 import com.google.cloud.bigquery.StandardTableDefinition.StreamingBuffer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -49,7 +50,7 @@ public class SerializationTest extends BaseSerializationTest {
   private static final String SELF_LINK = "http://bigquery/p/d";
   private static final DatasetId DATASET_ID = DatasetId.of("project", "dataset");
   private static final List<String> TARGET_TYPES = ImmutableList.of("VIEWS");
-  private static final Acl DATASET_ACCESS = Acl.of(new Acl.Dataset(DATASET_ID, TARGET_TYPES));
+  private static final Acl DATASET_ACCESS = Acl.of(new DatasetAclEntity(DATASET_ID, TARGET_TYPES));
   private static final List<Acl> ACCESS_RULES =
       ImmutableList.of(
           DOMAIN_ACCESS, GROUP_ACCESS, VIEW_ACCESS, ROUTINE_ACCESS, USER_ACCESS, DATASET_ACCESS);

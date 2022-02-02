@@ -38,6 +38,7 @@ import com.google.cloud.RetryOption;
 import com.google.cloud.Role;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.bigquery.Acl;
+import com.google.cloud.bigquery.Acl.DatasetAclEntity;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQuery.DatasetDeleteOption;
 import com.google.cloud.bigquery.BigQuery.DatasetField;
@@ -1928,7 +1929,7 @@ public class ITBigQueryTest {
         authorizedDataset.getDescription(), "new Dataset to be authorized by the sharedDataset");
 
     // Add the new DatasetAccessEntry object to the existing sharedDatasetAcl list
-    Acl.Dataset datasetEntity = new Acl.Dataset(authorizedDatasetId, targetTypes);
+    DatasetAclEntity datasetEntity = new DatasetAclEntity(authorizedDatasetId, targetTypes);
     sharedDatasetAcl.add(Acl.of(datasetEntity));
 
     // Update the dataset with the added authorization
