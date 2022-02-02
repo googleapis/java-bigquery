@@ -29,15 +29,15 @@ import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.RetryHelper;
 import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
+import com.google.cloud.bigquery.storage.v1.*;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import java.util.AbstractList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -45,6 +45,13 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.apache.arrow.memory.BufferAllocator;
+import org.apache.arrow.memory.RootAllocator;
+import org.apache.arrow.vector.*;
+import org.apache.arrow.vector.ipc.ReadChannel;
+import org.apache.arrow.vector.ipc.message.MessageSerializer;
+import org.apache.arrow.vector.types.pojo.Field;
+import org.apache.arrow.vector.util.ByteArrayReadableSeekableByteChannel;
 
 /** Implementation for {@link Connection}, the generic BigQuery connection API (not JDBC). */
 class ConnectionImpl implements Connection {
@@ -581,10 +588,155 @@ class ConnectionImpl implements Connection {
     }
   }
 
+  private BigQueryReadClient
+      bqReadClient; // TODO - Check if this instance be reused, currently it's being initialized on
+  // every call
+  // query result should be saved in the destination table
   private BigQueryResultSet highThroughPutRead(TableId destinationTable) {
-    return null;
+
+    try {
+      bqReadClient = BigQueryReadClient.create();
+      String parent = String.format("projects/%s", destinationTable.getProject());
+      String srcTable =
+          String.format(
+              "projects/%s/datasets/%s/tables/%s",
+              destinationTable.getProject(),
+              destinationTable.getDataset(),
+              destinationTable.getProject());
+
+      /*  ReadSession.TableReadOptions options =
+      ReadSession.TableReadOptions.newBuilder().
+                                  .build();*/
+
+      // Read all the columns if the source table and stream the data back in Arrow format
+      ReadSession.Builder sessionBuilder =
+          ReadSession.newBuilder().setTable(srcTable).setDataFormat(DataFormat.ARROW)
+          // .setReadOptions(options)//TODO: Check if entire table be read if we are not specifying
+          // the options
+          ;
+
+      CreateReadSessionRequest.Builder builder =
+          CreateReadSessionRequest.newBuilder()
+              .setParent(parent)
+              .setReadSession(sessionBuilder)
+              .setMaxStreamCount(1) // Currently just one stream is allowed
+          // DO a regex check using order by and use multiple streams
+          ;
+
+      ReadSession readSession = bqReadClient.createReadSession(builder.build());
+
+      // TODO(prasmish) Modify the type in the Tuple, dynamically determine the capacity
+      BlockingQueue<Tuple<Object, Boolean>> buffer = new LinkedBlockingDeque<>(500);
+
+      // deserialize and populate the buffer async, so that the client isn't blocked
+      processArrowStreamAsync(readSession, buffer);
+
+      // TODO(prasmish) pass the right value
+      return new BigQueryResultSetImpl<Tuple<Object, Boolean>>(null, -1, buffer, null);
+
+    } catch (IOException e) {
+      // Throw Error
+      e.printStackTrace();
+      throw new RuntimeException(e.getMessage()); // TODO exception handling
+    }
+
+    // return null;
   }
 
+  private void processArrowStreamAsync(
+      ReadSession readSession, BlockingQueue<Tuple<Object, Boolean>> buffer) {
+
+    Runnable arrowStreamProcessor =
+        () -> {
+          try (SimpleRowReader reader = new SimpleRowReader(readSession.getArrowSchema())) {
+            // Use the first stream to perform reading.
+            String streamName = readSession.getStreams(0).getName();
+
+            ReadRowsRequest readRowsRequest =
+                ReadRowsRequest.newBuilder().setReadStream(streamName).build();
+
+            // Process each block of rows as they arrive and decode using our simple row reader.
+            com.google.api.gax.rpc.ServerStream<ReadRowsResponse> stream =
+                bqReadClient.readRowsCallable().call(readRowsRequest);
+            for (ReadRowsResponse response : stream) {
+              reader.processRows(response.getArrowRecordBatch(), buffer);
+            }
+          } catch (Exception e) {
+
+          }
+        };
+
+    queryTaskExecutor.execute(arrowStreamProcessor);
+  }
+
+  // TODO(prasmish) - refactor
+  private ArrowSchema arrowSchema;
+
+  /*
+   * SimpleRowReader handles deserialization of the Apache Arrow-encoded row batches transmitted
+   * from the storage API using a generic datum decoder.
+   */
+  private static class SimpleRowReader implements AutoCloseable {
+
+    BufferAllocator allocator = new RootAllocator(Long.MAX_VALUE);
+
+    // Decoder object will be reused to avoid re-allocation and too much garbage collection.
+    private final VectorSchemaRoot root;
+    private final VectorLoader loader;
+
+    public SimpleRowReader(ArrowSchema arrowSchema) throws IOException {
+      org.apache.arrow.vector.types.pojo.Schema schema =
+          MessageSerializer.deserializeSchema(
+              new org.apache.arrow.vector.ipc.ReadChannel(
+                  new ByteArrayReadableSeekableByteChannel(
+                      arrowSchema.getSerializedSchema().toByteArray())));
+      Preconditions.checkNotNull(schema);
+      List<FieldVector> vectors = new ArrayList<>();
+      for (Field field : schema.getFields()) {
+        vectors.add(field.createVector(allocator));
+      }
+      root = new VectorSchemaRoot(vectors);
+      loader = new VectorLoader(root);
+    }
+
+    /** @param batch object returned from the ReadRowsResponse. */
+    public void processRows(ArrowRecordBatch batch, BlockingQueue<Tuple<Object, Boolean>> buffer)
+        throws IOException { // deserialize the values and consume the hash of the values
+      org.apache.arrow.vector.ipc.message.ArrowRecordBatch deserializedBatch =
+          MessageSerializer.deserializeRecordBatch(
+              new ReadChannel(
+                  new ByteArrayReadableSeekableByteChannel(
+                      batch.getSerializedRecordBatch().toByteArray())),
+              allocator);
+
+      loader.load(deserializedBatch);
+      // Release buffers from batch (they are still held in the vectors in root).
+      deserializedBatch.close();
+
+      for (int i = 0; i < root.getRowCount(); i++) {
+
+        try {
+          buffer.put(
+              Tuple.of(new String(((VarCharVector) root.getVector("vendor_id")).get(i)), true));
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+
+      root.clear();
+      try {
+        buffer.put(Tuple.of(null, false)); // marking End of the stream
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+
+    @Override
+    public void close() {
+      root.close();
+      allocator.close();
+    }
+  }
   /*Returns just the first page of GetQueryResultsResponse using the jobId*/
   @InternalApi("Exposed for testing")
   public GetQueryResultsResponse getQueryResultsFirstPage(JobId jobId) {
