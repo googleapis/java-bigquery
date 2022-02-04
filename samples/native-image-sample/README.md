@@ -8,7 +8,7 @@ The BigQuery sample application demonstrates some common operations with [Google
 
 2. [Enable the BigQuery APIs](https://console.cloud.google.com/apis/api/bigquery.googleapis.com).
 
-### Run with Native Image Compilation
+### Run with Native Image Support
 
 Navigate to this directory in a new terminal.
 
@@ -21,7 +21,7 @@ Navigate to this directory in a new terminal.
 2. Run the application:
 
     ```
-    ./target/bigquery-sample
+    ./target/native-image-sample
     ```
 
 3. The application will create a sample BigQuery dataset in your GCP project called `nativeimage_test_dataset` and perform some simple operations like creating a table, inserting data, and running a query.
@@ -38,7 +38,7 @@ Navigate to this directory in a new terminal.
     Deleted table: nativeimage_test_table_2351b0891d2f48af9309bd289c3bad13
    ```
 
-### Sample Integration test with Native Image Compilation
+### Sample Integration test with Native Image Support
 
 In order to run the sample integration test, call the following command:
 
