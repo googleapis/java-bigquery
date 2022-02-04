@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!--
-  ~ Copyright 2020 Google LLC
+  ~ Copyright 2022 Google LLC
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -34,10 +34,6 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-  <!-- [START bigquery_install_with_bom] -->
-  <!-- [START bigquery_java_dependencies] -->
-  <!--  Using libraries-bom to manage versions.
-  See https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google-Cloud-Platform-Libraries-BOM -->
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -55,35 +51,8 @@
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-bigquery</artifactId>
     </dependency>
-    <!-- [END bigquery_java_dependencies] -->
-    <!-- [END bigquery_install_with_bom] -->
-
-    <!-- [START bigquery-enduser-installed-packages] -->
-    <dependency>
-      <groupId>com.google.oauth-client</groupId>
-      <artifactId>google-oauth-client-java6</artifactId>
-      <version>1.33.0</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.oauth-client</groupId>
-      <artifactId>google-oauth-client-jetty</artifactId>
-      <version>1.33.0</version>
-    </dependency>
-    <!-- [END bigquery-enduser-installed-packages] -->
 
     <!-- Test dependencies -->
-    <dependency>
-      <groupId>com.google.cloud</groupId>
-      <artifactId>google-cloud-bigtable</artifactId>
-      <version>2.5.2</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.google.cloud</groupId>
-      <artifactId>google-cloud-bigqueryconnection</artifactId>
-      <version>2.1.8</version>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -106,7 +75,8 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>com.example.bigquery.NativeImageBigquerySample</mainClass>
+              <mainClass>com.example.bigquery.NativeImageBigquerySample
+              </mainClass>
             </manifest>
           </archive>
         </configuration>
@@ -131,17 +101,36 @@
           <version>5.8.2</version>
           <scope>test</scope>
         </dependency>
+        <dependency>
+          <groupId>org.graalvm.buildtools</groupId>
+          <artifactId>junit-platform-native</artifactId>
+          <version>0.9.9</version>
+          <scope>test</scope>
+        </dependency>
+
       </dependencies>
 
       <build>
         <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin
+            </artifactId> <!-- Must use older version of surefire plugin for native-image testing. -->
+            <version>2.22.2</version>
+            <configuration>
+              <includes>
+                <include>**/*IT</include>
+              </includes>
+            </configuration>
+          </plugin>
           <plugin>
             <groupId>org.graalvm.buildtools</groupId>
             <artifactId>native-maven-plugin</artifactId>
             <version>0.9.9</version>
             <extensions>true</extensions>
             <configuration>
-              <mainClass>com.example.bigquery.NativeImageBigquerySample</mainClass>
+              <mainClass>com.example.bigquery.NativeImageBigquerySample
+              </mainClass>
               <buildArgs>
                 <buildArg>--no-fallback</buildArg>
                 <buildArg>--no-server</buildArg>
@@ -157,11 +146,11 @@
                 <phase>package</phase>
               </execution>
               <execution>
-              <id>test-native</id>
-              <goals>
-              <goal>test</goal>
-              </goals>
-              <phase>test</phase>
+                <id>test-native</id>
+                <goals>
+                  <goal>test</goal>
+                </goals>
+                <phase>test</phase>
               </execution>
             </executions>
           </plugin>

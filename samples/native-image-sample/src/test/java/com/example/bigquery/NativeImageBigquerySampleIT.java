@@ -30,7 +30,7 @@ import org.junit.Test;
 /**
  * Tests for {@link NativeImageBigquerySample}
  */
-public class NativeImageBigquerySampleTests {
+public class NativeImageBigquerySampleIT {
 
   private static final String DATASET_ID = "nativeimage_it_dataset";
 
