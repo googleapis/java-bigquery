@@ -43,10 +43,9 @@ import java.util.UUID;
 /**
  * Sample application demonstrating BigQuery operations.
  *
- * <p>Note: This application will create a BigQuery dataset in your GCP project.
- * You can delete this by viewing BigQuery in Cloud Console
- * https://console.cloud.google.com/bigquery or by uncommenting the call to `deleteDataset(..)`
- * made in main().
+ * <p>Note: This application will create a BigQuery dataset in your GCP project. You can delete this
+ * by viewing BigQuery in Cloud Console https://console.cloud.google.com/bigquery or by uncommenting
+ * the call to `deleteDataset(..)` made in main().
  */
 public class NativeImageBigquerySample {
 
@@ -54,13 +53,11 @@ public class NativeImageBigquerySample {
 
   private static final String TABLE_ID = "nativeimage_test_table";
 
-  private static final Schema TABLE_SCHEMA = Schema.of(
-      Field.of("id", StandardSQLTypeName.STRING),
-      Field.of("age", StandardSQLTypeName.INT64));
+  private static final Schema TABLE_SCHEMA =
+      Schema.of(
+          Field.of("id", StandardSQLTypeName.STRING), Field.of("age", StandardSQLTypeName.INT64));
 
-  /**
-   * Entrypoint to the application.
-   */
+  /** Entrypoint to the application. */
   public static void main(String[] args) throws InterruptedException {
     BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
 
@@ -68,8 +65,7 @@ public class NativeImageBigquerySample {
       createDataset(bigQuery, DATASET_ID);
     }
 
-    String tableName = TABLE_ID + "_"
-        + UUID.randomUUID().toString().replace("-", "");
+    String tableName = TABLE_ID + "_" + UUID.randomUUID().toString().replace("-", "");
     createTable(bigQuery, DATASET_ID, tableName, TABLE_SCHEMA);
     String testId = "TestUser-" + UUID.randomUUID().toString();
     int testAge = 40;
@@ -83,8 +79,8 @@ public class NativeImageBigquerySample {
     // deleteDataset(bigQuery, DATASET_ID);
   }
 
-   static String queryTable(
-      BigQuery bigQuery, String datasetName, String tableName) throws InterruptedException {
+  static String queryTable(BigQuery bigQuery, String datasetName, String tableName)
+      throws InterruptedException {
     String fullyQualifiedTable = datasetName + "." + tableName;
     String query = "SELECT * FROM " + fullyQualifiedTable;
 
@@ -94,7 +90,10 @@ public class NativeImageBigquerySample {
     String result = "";
     System.out.println("Queried the following records: ");
     for (FieldValueList row : results.iterateAll()) {
-      String rowStatement = String.format("User id: %s | age: %d\n", row.get("id").getStringValue(),row.get("age").getLongValue());
+      String rowStatement =
+          String.format(
+              "User id: %s | age: %d\n",
+              row.get("id").getStringValue(), row.get("age").getLongValue());
       result += rowStatement;
       System.out.println(row);
     }
@@ -109,9 +108,7 @@ public class NativeImageBigquerySample {
     rowContent.put("age", age);
 
     InsertAllRequest request =
-        InsertAllRequest.newBuilder(datasetName, tableName)
-            .addRow(rowContent)
-            .build();
+        InsertAllRequest.newBuilder(datasetName, tableName).addRow(rowContent).build();
 
     InsertAllResponse response = bigQuery.insertAll(request);
 
@@ -125,8 +122,7 @@ public class NativeImageBigquerySample {
     }
   }
 
-   static void createTable(
-      BigQuery bigQuery, String datasetName, String tableName, Schema schema) {
+  static void createTable(BigQuery bigQuery, String datasetName, String tableName, Schema schema) {
 
     TableId tableId = TableId.of(datasetName, tableName);
     TableDefinition tableDefinition = StandardTableDefinition.of(schema);
@@ -135,8 +131,7 @@ public class NativeImageBigquerySample {
     System.out.println("Created new table: " + tableName);
   }
 
-  static boolean hasTable(
-      BigQuery bigQuery, String datasetName, String tableName) {
+  static boolean hasTable(BigQuery bigQuery, String datasetName, String tableName) {
 
     Page<Table> tables = bigQuery.listTables(datasetName);
     for (Table table : tables.iterateAll()) {
@@ -147,13 +142,13 @@ public class NativeImageBigquerySample {
     return false;
   }
 
-   static void createDataset(BigQuery bigQuery, String datasetName) {
+  static void createDataset(BigQuery bigQuery, String datasetName) {
     DatasetInfo datasetInfo = DatasetInfo.newBuilder(datasetName).build();
     Dataset newDataset = bigQuery.create(datasetInfo);
     System.out.println("Created new dataset: " + newDataset.getDatasetId().getDataset());
   }
 
-   static boolean hasDataset(BigQuery bigQuery, String datasetName) {
+  static boolean hasDataset(BigQuery bigQuery, String datasetName) {
     Page<Dataset> datasets = bigQuery.listDatasets();
     for (Dataset dataset : datasets.iterateAll()) {
       if (datasetName.equals(dataset.getDatasetId().getDataset())) {
@@ -168,7 +163,7 @@ public class NativeImageBigquerySample {
     System.out.println("Deleted table: " + tableName);
   }
 
-   static void deleteDataset(BigQuery bigQuery, String datasetName) {
+  static void deleteDataset(BigQuery bigQuery, String datasetName) {
     bigQuery.getDataset(datasetName).delete();
     System.out.println("Deleting dataset " + datasetName);
   }

@@ -27,18 +27,16 @@ import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * Tests for {@link NativeImageBigquerySample}
- */
+/** Tests for {@link NativeImageBigquerySample} */
 public class NativeImageBigquerySampleIT {
 
   private static final String DATASET_ID = "nativeimage_it_dataset";
 
   private static final String TABLE_ID = "nativeimage_it_table";
 
-  private static final Schema TABLE_SCHEMA = Schema.of(
-      Field.of("id", StandardSQLTypeName.STRING),
-      Field.of("age", StandardSQLTypeName.INT64));
+  private static final Schema TABLE_SCHEMA =
+      Schema.of(
+          Field.of("id", StandardSQLTypeName.STRING), Field.of("age", StandardSQLTypeName.INT64));
 
   private BigQuery bigQuery;
 
@@ -47,8 +45,7 @@ public class NativeImageBigquerySampleIT {
   @Before
   public void setUp() {
     bigQuery = BigQueryOptions.getDefaultInstance().getService();
-    tableName = TABLE_ID + "_"
-        + UUID.randomUUID().toString().replace("-", "");
+    tableName = TABLE_ID + "_" + UUID.randomUUID().toString().replace("-", "");
     if (!NativeImageBigquerySample.hasDataset(bigQuery, DATASET_ID)) {
       NativeImageBigquerySample.createDataset(bigQuery, DATASET_ID);
     }
