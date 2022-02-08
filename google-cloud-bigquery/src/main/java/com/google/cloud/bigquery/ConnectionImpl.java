@@ -26,6 +26,7 @@ import com.google.api.services.bigquery.model.QueryParameter;
 import com.google.api.services.bigquery.model.QueryRequest;
 import com.google.api.services.bigquery.model.TableDataList;
 import com.google.api.services.bigquery.model.TableRow;
+import com.google.api.services.bigquery.model.TableSchema;
 import com.google.cloud.RetryHelper;
 import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
@@ -521,6 +522,7 @@ class ConnectionImpl implements Connection {
         ? highThroughPutRead(
             destinationTable,
             firstPage.getTotalRows().longValue(),
+            firstPage.getSchema(),
             getBigQueryResultSetStats(
                 jobId)) // discord first page and stream the entire BigQueryResultSet using
         // the Read API
@@ -598,7 +600,10 @@ class ConnectionImpl implements Connection {
   // every call
   // query result should be saved in the destination table
   private BigQueryResultSet highThroughPutRead(
-      TableId destinationTable, long totalRows, BigQueryResultSetStats stats) {
+      TableId destinationTable,
+      long totalRows,
+      TableSchema tableSchema,
+      BigQueryResultSetStats stats) {
 
     try {
       bqReadClient = BigQueryReadClient.create();
@@ -637,8 +642,8 @@ class ConnectionImpl implements Connection {
       // deserialize and populate the buffer async, so that the client isn't blocked
       processArrowStreamAsync(readSession, buffer);
 
-      return new BigQueryResultSetImpl<Tuple<Object, Boolean>>(
-          readSession.getArrowSchema(), totalRows, buffer, stats);
+      Schema schema = Schema.fromPb(tableSchema);
+      return new BigQueryResultSetImpl<Tuple<Object, Boolean>>(schema, totalRows, buffer, stats);
 
     } catch (IOException e) {
       // Throw Error
@@ -718,6 +723,9 @@ class ConnectionImpl implements Connection {
       deserializedBatch.close();
 
       for (int i = 0; i < root.getRowCount(); i++) {
+        FieldVector fv = root.getVector(0);
+
+        fv.getField().getType();
 
         try {
           buffer.put(
