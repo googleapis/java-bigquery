@@ -16,6 +16,7 @@
 
 package com.google.cloud.bigquery;
 
+import com.google.cloud.bigquery.storage.v1.ArrowSchema;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.ResultSet;
@@ -28,7 +29,8 @@ import java.util.concurrent.BlockingQueue;
 // TODO: This implementation deals with the JSON response. We can have respective implementations
 public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
 
-  private final Schema schema;
+  private Schema schema;
+  private ArrowSchema arrowSchema;
   private final long totalRows;
   private final BlockingQueue<T> buffer;
   private T cursor;
@@ -36,11 +38,16 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
   private final BigQueryResultSetStats bigQueryResultSetStats;
 
   public BigQueryResultSetImpl(
-      Schema schema,
+      Object schema,
       long totalRows,
       BlockingQueue<T> buffer,
       BigQueryResultSetStats bigQueryResultSetStats) {
-    this.schema = schema;
+    if (schema instanceof Schema) {
+      this.schema = (Schema) schema;
+    } else if (schema instanceof ArrowSchema) {
+      this.arrowSchema = (ArrowSchema) schema;
+    }
+
     this.totalRows = totalRows;
     this.buffer = buffer;
     this.underlyingResultSet = new ResultSetWrapper();
@@ -51,6 +58,8 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
   public Schema getSchema() {
     return schema;
   }
+
+  // TODO(prasmish): Implement a method to return ArrowSchema
 
   @Override
   public long getTotalRows() {
