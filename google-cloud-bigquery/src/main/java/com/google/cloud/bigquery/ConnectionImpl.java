@@ -226,6 +226,15 @@ class ConnectionImpl implements Connection {
     }
   }
 
+  private BigQueryResultSetStats getBigQueryResultSetStats(JobId jobId) {
+    // Create GetQueryResultsResponse query statistics
+    Job queryJob = getQueryJobRpc(jobId);
+    JobStatistics.QueryStatistics statistics = queryJob.getStatistics();
+    DmlStats dmlStats = statistics.getDmlStats() == null ? null : statistics.getDmlStats();
+    JobStatistics.SessionInfo sessionInfo =
+        statistics.getSessionInfo() == null ? null : statistics.getSessionInfo();
+    return new BigQueryResultSetStatsImpl(dmlStats, sessionInfo);
+  }
   /* This method processed the first page of GetQueryResultsResponse and then it uses tabledata.list */
   @InternalApi("Exposed for testing")
   public BigQueryResultSet tableDataList(GetQueryResultsResponse firstPage, JobId jobId) {
@@ -234,14 +243,7 @@ class ConnectionImpl implements Connection {
     schema = Schema.fromPb(firstPage.getSchema());
     numRows = firstPage.getTotalRows().longValue();
 
-    // Create GetQueryResultsResponse query statistics
-    Job queryJob = getQueryJobRpc(jobId);
-    JobStatistics.QueryStatistics statistics = queryJob.getStatistics();
-    DmlStats dmlStats = statistics.getDmlStats() == null ? null : statistics.getDmlStats();
-    JobStatistics.SessionInfo sessionInfo =
-        statistics.getSessionInfo() == null ? null : statistics.getSessionInfo();
-    BigQueryResultSetStats bigQueryResultSetStats =
-        new BigQueryResultSetStatsImpl(dmlStats, sessionInfo);
+    BigQueryResultSetStats bigQueryResultSetStats = getBigQueryResultSetStats(jobId);
 
     // Keeps the deserialized records at the row level, which is consumed by BigQueryResultSet
     BlockingQueue<AbstractList<FieldValue>> buffer = new LinkedBlockingDeque<>(bufferSize);
@@ -517,7 +519,10 @@ class ConnectionImpl implements Connection {
     TableId destinationTable = getDestinationTable(jobId);
     return useReadAPI(totalRows, pageRows)
         ? highThroughPutRead(
-            destinationTable) // discord first page and stream the entire BigQueryResultSet using
+            destinationTable,
+            firstPage.getTotalRows().longValue(),
+            getBigQueryResultSetStats(
+                jobId)) // discord first page and stream the entire BigQueryResultSet using
         // the Read API
         : tableDataList(firstPage, jobId);
   }
@@ -592,7 +597,8 @@ class ConnectionImpl implements Connection {
       bqReadClient; // TODO - Check if this instance be reused, currently it's being initialized on
   // every call
   // query result should be saved in the destination table
-  private BigQueryResultSet highThroughPutRead(TableId destinationTable) {
+  private BigQueryResultSet highThroughPutRead(
+      TableId destinationTable, long totalRows, BigQueryResultSetStats stats) {
 
     try {
       bqReadClient = BigQueryReadClient.create();
@@ -631,16 +637,14 @@ class ConnectionImpl implements Connection {
       // deserialize and populate the buffer async, so that the client isn't blocked
       processArrowStreamAsync(readSession, buffer);
 
-      // TODO(prasmish) pass the right value
-      return new BigQueryResultSetImpl<Tuple<Object, Boolean>>(null, -1, buffer, null);
+      return new BigQueryResultSetImpl<Tuple<Object, Boolean>>(
+          readSession.getArrowSchema(), totalRows, buffer, stats);
 
     } catch (IOException e) {
       // Throw Error
       e.printStackTrace();
       throw new RuntimeException(e.getMessage()); // TODO exception handling
     }
-
-    // return null;
   }
 
   private void processArrowStreamAsync(
