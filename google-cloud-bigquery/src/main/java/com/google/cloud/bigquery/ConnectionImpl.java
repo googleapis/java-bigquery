@@ -283,7 +283,6 @@ class ConnectionImpl implements Connection {
     long numRows;
     schema = Schema.fromPb(results.getSchema());
     numRows = results.getTotalRows().longValue();
-
     // Create QueryResponse query statistics
     DmlStats dmlStats =
         results.getDmlStats() == null ? null : DmlStats.fromPb(results.getDmlStats());
@@ -637,13 +636,19 @@ class ConnectionImpl implements Connection {
       ReadSession readSession = bqReadClient.createReadSession(builder.build());
 
       // TODO(prasmish) Modify the type in the Tuple, dynamically determine the capacity
-      BlockingQueue<Tuple<Object, Boolean>> buffer = new LinkedBlockingDeque<>(500);
+      BlockingQueue<Tuple<Map<String, Object>, Boolean>> buffer = new LinkedBlockingDeque<>(500);
 
-      // deserialize and populate the buffer async, so that the client isn't blocked
-      processArrowStreamAsync(readSession, buffer);
-
+      Map<String, Integer> arrowNameToIndex = new HashMap<>();
       Schema schema = Schema.fromPb(tableSchema);
-      return new BigQueryResultSetImpl<Tuple<Object, Boolean>>(schema, totalRows, buffer, stats);
+      // deserialize and populate the buffer async, so that the client isn't blocked
+      processArrowStreamAsync(
+          readSession,
+          buffer,
+          new ArrowRowReader(readSession.getArrowSchema(), arrowNameToIndex),
+          schema);
+
+      return new BigQueryResultSetImpl<Tuple<Map<String, Object>, Boolean>>(
+          schema, totalRows, buffer, stats);
 
     } catch (IOException e) {
       // Throw Error
@@ -653,11 +658,15 @@ class ConnectionImpl implements Connection {
   }
 
   private void processArrowStreamAsync(
-      ReadSession readSession, BlockingQueue<Tuple<Object, Boolean>> buffer) {
+      ReadSession readSession,
+      BlockingQueue<Tuple<Map<String, Object>, Boolean>> buffer,
+      ArrowRowReader reader,
+      Schema schema) {
 
     Runnable arrowStreamProcessor =
         () -> {
-          try (SimpleRowReader reader = new SimpleRowReader(readSession.getArrowSchema())) {
+          try // (ArrowRowReader reader = new ArrowRowReader(readSession.getArrowSchema()))
+          {
             // Use the first stream to perform reading.
             String streamName = readSession.getStreams(0).getName();
 
@@ -668,8 +677,9 @@ class ConnectionImpl implements Connection {
             com.google.api.gax.rpc.ServerStream<ReadRowsResponse> stream =
                 bqReadClient.readRowsCallable().call(readRowsRequest);
             for (ReadRowsResponse response : stream) {
-              reader.processRows(response.getArrowRecordBatch(), buffer);
+              reader.processRows(response.getArrowRecordBatch(), buffer, schema);
             }
+            buffer.put(Tuple.of(null, false)); // marking end of stream
           } catch (Exception e) {
 
           }
@@ -678,14 +688,7 @@ class ConnectionImpl implements Connection {
     queryTaskExecutor.execute(arrowStreamProcessor);
   }
 
-  // TODO(prasmish) - refactor
-  private ArrowSchema arrowSchema;
-
-  /*
-   * SimpleRowReader handles deserialization of the Apache Arrow-encoded row batches transmitted
-   * from the storage API using a generic datum decoder.
-   */
-  private static class SimpleRowReader implements AutoCloseable {
+  private static class ArrowRowReader implements AutoCloseable {
 
     BufferAllocator allocator = new RootAllocator(Long.MAX_VALUE);
 
@@ -693,7 +696,8 @@ class ConnectionImpl implements Connection {
     private final VectorSchemaRoot root;
     private final VectorLoader loader;
 
-    public SimpleRowReader(ArrowSchema arrowSchema) throws IOException {
+    public ArrowRowReader(ArrowSchema arrowSchema, Map<String, Integer> arrowNameToIndex)
+        throws IOException {
       org.apache.arrow.vector.types.pojo.Schema schema =
           MessageSerializer.deserializeSchema(
               new org.apache.arrow.vector.ipc.ReadChannel(
@@ -701,15 +705,22 @@ class ConnectionImpl implements Connection {
                       arrowSchema.getSerializedSchema().toByteArray())));
       Preconditions.checkNotNull(schema);
       List<FieldVector> vectors = new ArrayList<>();
-      for (Field field : schema.getFields()) {
-        vectors.add(field.createVector(allocator));
+      List<Field> fields = schema.getFields();
+      for (int i = 0; i < fields.size(); i++) {
+        vectors.add(fields.get(i).createVector(allocator));
+        arrowNameToIndex.put(
+            fields.get(i).getName(),
+            i); // mapping for getting against the field name in the result set
       }
       root = new VectorSchemaRoot(vectors);
       loader = new VectorLoader(root);
     }
 
     /** @param batch object returned from the ReadRowsResponse. */
-    public void processRows(ArrowRecordBatch batch, BlockingQueue<Tuple<Object, Boolean>> buffer)
+    public void processRows(
+        ArrowRecordBatch batch,
+        BlockingQueue<Tuple<Map<String, Object>, Boolean>> buffer,
+        Schema schema)
         throws IOException { // deserialize the values and consume the hash of the values
       org.apache.arrow.vector.ipc.message.ArrowRecordBatch deserializedBatch =
           MessageSerializer.deserializeRecordBatch(
@@ -722,16 +733,42 @@ class ConnectionImpl implements Connection {
       // Release buffers from batch (they are still held in the vectors in root).
       deserializedBatch.close();
 
-      for (int i = 0; i < root.getRowCount(); i++) {
-        FieldVector fv = root.getVector(0);
+      // Parse the vectors using BQ Schema. Deserialize the data at the row level and add it to the
+      // buffer
+      FieldList fields = schema.getFields();
+      for (int rowNum = 0;
+          rowNum < root.getRowCount();
+          rowNum++) { // for the given number of rows in the batch
 
-        fv.getField().getType();
-
+        Map<String, Object> curRow = new HashMap<>();
+        for (int col = 0; col < fields.size(); col++) { // iterate all the vectors for a given row
+          com.google.cloud.bigquery.Field field = fields.get(col);
+          //  System.out.printf("field.getName() %s, field.getType() %s", field.getName(),
+          // field.getType() == LegacySQLTypeName.DATE);
+          FieldVector curFieldVec =
+              root.getVector(
+                  field.getName()); // can be accessed using the index or Vector/column name
+          // Now cast the FieldVector depending on the type
+          if (field.getType() == LegacySQLTypeName.STRING) {
+            VarCharVector varCharVector = (VarCharVector) curFieldVec;
+            curRow.put(
+                field.getName(),
+                new String(varCharVector.get(rowNum))); // store the row:value mapping
+          } else if (field.getType() == LegacySQLTypeName.TIMESTAMP) {
+            TimeStampMicroVector timeStampMicroVector = (TimeStampMicroVector) curFieldVec;
+            curRow.put(
+                field.getName(), timeStampMicroVector.get(rowNum)); // store the row:value mapping
+          } else if (field.getType() == LegacySQLTypeName.INTEGER) {
+            BigIntVector bigIntVector = (BigIntVector) curFieldVec;
+            curRow.put(field.getName(), bigIntVector.get(rowNum)); // store the row:value mapping
+          } else {
+            throw new RuntimeException("TODO: Implement remaining support type conversions");
+          }
+        }
         try {
-          buffer.put(
-              Tuple.of(new String(((VarCharVector) root.getVector("vendor_id")).get(i)), true));
+          buffer.put(Tuple.of(curRow, true));
         } catch (InterruptedException e) {
-          e.printStackTrace();
+          e.printStackTrace(); // TODO: Exception handling
         }
       }
 
