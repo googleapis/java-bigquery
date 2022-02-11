@@ -16,6 +16,7 @@
 
 package com.google.cloud.bigquery;
 
+import com.google.cloud.Tuple;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.ResultSet;
@@ -23,6 +24,7 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalTime;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 // TODO: This implementation deals with the JSON response. We can have respective implementations
@@ -34,6 +36,7 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
   private T cursor;
   private final ResultSetWrapper underlyingResultSet;
   private final BigQueryResultSetStats bigQueryResultSetStats;
+  private final FieldList schemaFieldList;
 
   public BigQueryResultSetImpl(
       Schema schema,
@@ -45,6 +48,7 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
     this.buffer = buffer;
     this.underlyingResultSet = new ResultSetWrapper();
     this.bigQueryResultSetStats = bigQueryResultSetStats;
+    this.schemaFieldList = schema.getFields();
   }
 
   @Override
@@ -71,6 +75,12 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
         if (isEndOfStream(cursor)) { // check for end of stream
           cursor = null;
           return false;
+        } else if (cursor instanceof Tuple) {
+          Tuple<Map<String, Object>, Boolean> curTup = (Tuple<Map<String, Object>, Boolean>) cursor;
+          if (!curTup.y()) { // last Tuple
+            cursor = null;
+            return false;
+          }
         }
       } catch (InterruptedException e) {
         throw new SQLException("Error occurred while reading buffer");
@@ -80,9 +90,7 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
     }
 
     private boolean isEndOfStream(T cursor) {
-      return cursor
-          instanceof
-          ConnectionImpl.EndOfFieldValueList; // TODO: Similar check will be required for Arrow
+      return cursor instanceof ConnectionImpl.EndOfFieldValueList;
     }
 
     @Override
@@ -120,8 +128,10 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
         return fieldValue.getValue() == null ? null : fieldValue.getStringValue();
+      } else { // Data received from Read API (Arrow)
+        Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
+        return (String) curTuple.x().get(fieldName);
       }
-      return null; // TODO: Implementation for Arrow
     }
 
     @Override
@@ -131,8 +141,9 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
         return fieldValue.getValue() == null ? null : fieldValue.getStringValue();
+      } else { // Data received from Read API (Arrow)
+        return getString(schemaFieldList.get(columnIndex).getName());
       }
-      return null; // TODO: Implementation for Arrow
     }
 
     @Override
@@ -146,8 +157,10 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
         return fieldValue.getValue() == null ? 0 : fieldValue.getNumericValue().intValue();
+      } else {
+        Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
+        return (Integer) curTuple.x().get(fieldName);
       }
-      return 0; // TODO: Implementation for Arrow
     }
 
     @Override
@@ -158,8 +171,9 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
         return fieldValue.getValue() == null ? 0 : fieldValue.getNumericValue().intValue();
+      } else { // Data received from Read API (Arrow)
+        return getInt(schemaFieldList.get(columnIndex).getName());
       }
-      return 0; // TODO: Implementation for Arrow
     }
 
     @Override
@@ -314,8 +328,11 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
                 fieldValue.getTimestampValue()
                     / 1000); // getTimestampValue returns time in microseconds, and TimeStamp
         // expects it in millis
+      } else {
+        Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
+        return new Timestamp(
+            (Long) curTuple.x().get(fieldName) / 1000); // Timestamp is represented as a Long
       }
-      return null; // TODO: Implementation for Arrow
     }
 
     @Override
@@ -330,8 +347,9 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
                 fieldValue.getTimestampValue()
                     / 1000); // getTimestampValue returns time in microseconds, and TimeStamp
         // expects it in millis
+      } else {
+        return getTimestamp(schemaFieldList.get(columnIndex).getName());
       }
-      return null; // TODO: Implementation for Arrow
     }
 
     @Override
