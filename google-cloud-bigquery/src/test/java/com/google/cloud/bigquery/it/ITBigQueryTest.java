@@ -130,6 +130,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.time.Instant;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -151,6 +152,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.threeten.bp.Duration;
+import org.threeten.extra.PeriodDuration;
 
 public class ITBigQueryTest {
 
@@ -841,6 +843,7 @@ public class ITBigQueryTest {
 
       // Insert another Interval row parsed from a String with Interval positional query parameter
       String dml = "INSERT INTO " + tableId.getTable() + " (intervalField) VALUES(?)";
+      // Parsing from ISO 8610 format String
       QueryParameterValue intervalParameter =
           QueryParameterValue.interval("P125Y7M-19DT0H24M12.000006S");
       QueryJobConfiguration dmlQueryJobConfiguration =
@@ -853,15 +856,29 @@ public class ITBigQueryTest {
       Page<FieldValueList> rows = bigquery.listTableData(tableId);
       assertEquals(3, Iterables.size(rows.getValues()));
 
+      // Parsing from threeten-extra PeriodDuration
+      QueryParameterValue intervalParameter1 =
+          QueryParameterValue.interval(
+              PeriodDuration.of(Period.of(1, 2, 25), java.time.Duration.ofHours(8)));
+      QueryJobConfiguration dmlQueryJobConfiguration1 =
+          QueryJobConfiguration.newBuilder(dml)
+              .setDefaultDataset(DatasetId.of(DATASET))
+              .setUseLegacySql(false)
+              .addPositionalParameter(intervalParameter1)
+              .build();
+      bigquery.query(dmlQueryJobConfiguration1);
+      Page<FieldValueList> rows1 = bigquery.listTableData(tableId);
+      assertEquals(4, Iterables.size(rows1.getValues()));
+
       // Query the Interval column with Interval positional query parameter
       String sql = "SELECT intervalField FROM " + tableId.getTable() + " WHERE intervalField = ? ";
-      QueryParameterValue intervalParameter1 =
+      QueryParameterValue intervalParameter2 =
           QueryParameterValue.interval("P125Y7M-19DT0H24M12.000006S");
       QueryJobConfiguration queryJobConfiguration =
           QueryJobConfiguration.newBuilder(sql)
               .setDefaultDataset(DatasetId.of(DATASET))
               .setUseLegacySql(false)
-              .addPositionalParameter(intervalParameter1)
+              .addPositionalParameter(intervalParameter2)
               .build();
       TableResult result = bigquery.query(queryJobConfiguration);
       for (FieldValueList values : result.iterateAll()) {

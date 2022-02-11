@@ -43,6 +43,7 @@ import org.threeten.bp.ZoneOffset;
 import org.threeten.bp.format.DateTimeFormatter;
 import org.threeten.bp.format.DateTimeFormatterBuilder;
 import org.threeten.bp.format.DateTimeParseException;
+import org.threeten.extra.PeriodDuration;
 
 /**
  * A value for a QueryParameter along with its type.
@@ -324,6 +325,11 @@ public abstract class QueryParameterValue implements Serializable {
     return of(value, StandardSQLTypeName.INTERVAL);
   }
 
+  /** Creates a {@code QueryParameterValue} object with a type of INTERVAL. */
+  public static QueryParameterValue interval(PeriodDuration value) {
+    return of(value, StandardSQLTypeName.INTERVAL);
+  }
+
   /**
    * Creates a {@code QueryParameterValue} object with a type of ARRAY, and an array element type
    * based on the given class.
@@ -419,7 +425,7 @@ public abstract class QueryParameterValue implements Serializable {
       case JSON:
         if (value instanceof String || value instanceof JsonObject) return value.toString();
       case INTERVAL:
-        if (value instanceof String) return value.toString();
+        if (value instanceof String || value instanceof PeriodDuration) return value.toString();
         break;
       case STRUCT:
         throw new IllegalArgumentException("Cannot convert STRUCT to String value");
