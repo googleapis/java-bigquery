@@ -817,6 +817,62 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testIntervalType() throws InterruptedException {
+    String tableName = "test_create_table_intervaltype";
+    TableId tableId = TableId.of(DATASET, tableName);
+    Schema schema = Schema.of(Field.of("intervalField", StandardSQLTypeName.INTERVAL));
+    StandardTableDefinition standardTableDefinition = StandardTableDefinition.of(schema);
+    try {
+      // Create a table with a JSON column
+      Table createdTable = bigquery.create(TableInfo.of(tableId, standardTableDefinition));
+      assertNotNull(createdTable);
+
+      // Insert 3 rows of Interval data into the Interval column
+      Map<String, Object> intervalRow1 =
+          Collections.singletonMap("intervalField", "123-7 -19 0:24:12.000006");
+      Map<String, Object> intervalRow2 =
+          Collections.singletonMap("intervalField", "P123Y7M-19DT0H24M12.000006S");
+
+      InsertAllRequest request =
+          InsertAllRequest.newBuilder(tableId).addRow(intervalRow1).addRow(intervalRow2).build();
+      InsertAllResponse response = bigquery.insertAll(request);
+      assertFalse(response.hasErrors());
+      assertEquals(0, response.getInsertErrors().size());
+
+      // Insert another Interval row parsed from a String with Interval positional query parameter
+      String dml = "INSERT INTO " + tableId.getTable() + " (intervalField) VALUES(?)";
+      QueryParameterValue intervalParameter =
+          QueryParameterValue.interval("P125Y7M-19DT0H24M12.000006S");
+      QueryJobConfiguration dmlQueryJobConfiguration =
+          QueryJobConfiguration.newBuilder(dml)
+              .setDefaultDataset(DatasetId.of(DATASET))
+              .setUseLegacySql(false)
+              .addPositionalParameter(intervalParameter)
+              .build();
+      bigquery.query(dmlQueryJobConfiguration);
+      Page<FieldValueList> rows = bigquery.listTableData(tableId);
+      assertEquals(3, Iterables.size(rows.getValues()));
+
+      // Query the Interval column with Interval positional query parameter
+      String sql = "SELECT intervalField FROM " + tableId.getTable() + " WHERE intervalField = ? ";
+      QueryParameterValue intervalParameter1 =
+          QueryParameterValue.interval("P125Y7M-19DT0H24M12.000006S");
+      QueryJobConfiguration queryJobConfiguration =
+          QueryJobConfiguration.newBuilder(sql)
+              .setDefaultDataset(DatasetId.of(DATASET))
+              .setUseLegacySql(false)
+              .addPositionalParameter(intervalParameter1)
+              .build();
+      TableResult result = bigquery.query(queryJobConfiguration);
+      for (FieldValueList values : result.iterateAll()) {
+        assertEquals("125-7 -19 0:24:12.000006", values.get(0).getValue());
+      }
+    } finally {
+      assertTrue(bigquery.delete(tableId));
+    }
+  }
+
+  @Test
   public void testCreateTableWithConstraints() {
     String tableName = "test_create_table_with_constraints";
     TableId tableId = TableId.of(DATASET, tableName);

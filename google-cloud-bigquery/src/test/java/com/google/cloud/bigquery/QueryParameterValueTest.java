@@ -213,6 +213,18 @@ public class QueryParameterValueTest {
   }
 
   @Test
+  public void testInterval() {
+    QueryParameterValue value = QueryParameterValue.interval("123-7 -19 0:24:12.000006");
+    QueryParameterValue value1 = QueryParameterValue.interval("P123Y7M-19DT0H24M12.000006S");
+    assertThat(value.getValue()).isEqualTo("123-7 -19 0:24:12.000006");
+    assertThat(value1.getValue()).isEqualTo("P123Y7M-19DT0H24M12.000006S");
+    assertThat(value.getType()).isEqualTo(StandardSQLTypeName.INTERVAL);
+    assertThat(value1.getType()).isEqualTo(StandardSQLTypeName.INTERVAL);
+    assertThat(value.getArrayType()).isNull();
+    assertThat(value1.getArrayType()).isNull();
+  }
+
+  @Test
   public void testBytes() {
     QueryParameterValue value = QueryParameterValue.bytes(new byte[] {1, 3});
     assertThat(value.getValue()).isEqualTo("AQM=");
