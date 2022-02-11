@@ -743,8 +743,6 @@ class ConnectionImpl implements Connection {
         Map<String, Object> curRow = new HashMap<>();
         for (int col = 0; col < fields.size(); col++) { // iterate all the vectors for a given row
           com.google.cloud.bigquery.Field field = fields.get(col);
-          //  System.out.printf("field.getName() %s, field.getType() %s", field.getName(),
-          // field.getType() == LegacySQLTypeName.DATE);
           FieldVector curFieldVec =
               root.getVector(
                   field.getName()); // can be accessed using the index or Vector/column name
@@ -760,7 +758,8 @@ class ConnectionImpl implements Connection {
                 field.getName(), timeStampMicroVector.get(rowNum)); // store the row:value mapping
           } else if (field.getType() == LegacySQLTypeName.INTEGER) {
             BigIntVector bigIntVector = (BigIntVector) curFieldVec;
-            curRow.put(field.getName(), bigIntVector.get(rowNum)); // store the row:value mapping
+            curRow.put(
+                field.getName(), (int) bigIntVector.get(rowNum)); // store the row:value mapping
           } else {
             throw new RuntimeException("TODO: Implement remaining support type conversions");
           }
