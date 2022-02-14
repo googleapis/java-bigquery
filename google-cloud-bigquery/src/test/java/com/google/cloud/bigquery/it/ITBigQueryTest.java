@@ -129,7 +129,6 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystems;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -471,8 +470,8 @@ public class ITBigQueryTest {
             .setContentType("application/json")
             .build(),
         JSON_CONTENT_SIMPLE.getBytes(StandardCharsets.UTF_8));
-    InputStream stream = ITBigQueryTest.class.getClassLoader()
-        .getResourceAsStream("QueryTestData.csv");
+    InputStream stream =
+        ITBigQueryTest.class.getClassLoader().getResourceAsStream("QueryTestData.csv");
     storage.createFrom(
         BlobInfo.newBuilder(BUCKET, LOAD_FILE_LARGE).setContentType("text/plain").build(), stream);
     DatasetInfo info =
