@@ -32,7 +32,6 @@ import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
 import com.google.cloud.bigquery.storage.v1.*;
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -681,14 +680,15 @@ class ConnectionImpl implements Connection {
             }
             buffer.put(Tuple.of(null, false)); // marking end of stream
           } catch (Exception e) {
-
+            throw BigQueryException.translateAndThrow(e);
           }
         };
 
     queryTaskExecutor.execute(arrowStreamProcessor);
   }
 
-  private static class ArrowRowReader implements AutoCloseable {
+  private class ArrowRowReader
+      implements AutoCloseable { // TODO: Update to recent version of Arrow to avoid memoryleak
 
     BufferAllocator allocator = new RootAllocator(Long.MAX_VALUE);
 
@@ -703,7 +703,6 @@ class ConnectionImpl implements Connection {
               new org.apache.arrow.vector.ipc.ReadChannel(
                   new ByteArrayReadableSeekableByteChannel(
                       arrowSchema.getSerializedSchema().toByteArray())));
-      Preconditions.checkNotNull(schema);
       List<FieldVector> vectors = new ArrayList<>();
       List<Field> fields = schema.getFields();
       for (int i = 0; i < fields.size(); i++) {
@@ -722,60 +721,63 @@ class ConnectionImpl implements Connection {
         BlockingQueue<Tuple<Map<String, Object>, Boolean>> buffer,
         Schema schema)
         throws IOException { // deserialize the values and consume the hash of the values
-      org.apache.arrow.vector.ipc.message.ArrowRecordBatch deserializedBatch =
-          MessageSerializer.deserializeRecordBatch(
-              new ReadChannel(
-                  new ByteArrayReadableSeekableByteChannel(
-                      batch.getSerializedRecordBatch().toByteArray())),
-              allocator);
-
-      loader.load(deserializedBatch);
-      // Release buffers from batch (they are still held in the vectors in root).
-      deserializedBatch.close();
-
-      // Parse the vectors using BQ Schema. Deserialize the data at the row level and add it to the
-      // buffer
-      FieldList fields = schema.getFields();
-      for (int rowNum = 0;
-          rowNum < root.getRowCount();
-          rowNum++) { // for the given number of rows in the batch
-
-        Map<String, Object> curRow = new HashMap<>();
-        for (int col = 0; col < fields.size(); col++) { // iterate all the vectors for a given row
-          com.google.cloud.bigquery.Field field = fields.get(col);
-          FieldVector curFieldVec =
-              root.getVector(
-                  field.getName()); // can be accessed using the index or Vector/column name
-          // Now cast the FieldVector depending on the type
-          if (field.getType() == LegacySQLTypeName.STRING) {
-            VarCharVector varCharVector = (VarCharVector) curFieldVec;
-            curRow.put(
-                field.getName(),
-                new String(varCharVector.get(rowNum))); // store the row:value mapping
-          } else if (field.getType() == LegacySQLTypeName.TIMESTAMP) {
-            TimeStampMicroVector timeStampMicroVector = (TimeStampMicroVector) curFieldVec;
-            curRow.put(
-                field.getName(), timeStampMicroVector.get(rowNum)); // store the row:value mapping
-          } else if (field.getType() == LegacySQLTypeName.INTEGER) {
-            BigIntVector bigIntVector = (BigIntVector) curFieldVec;
-            curRow.put(
-                field.getName(), (int) bigIntVector.get(rowNum)); // store the row:value mapping
-          } else {
-            throw new RuntimeException("TODO: Implement remaining support type conversions");
-          }
-        }
-        try {
-          buffer.put(Tuple.of(curRow, true));
-        } catch (InterruptedException e) {
-          e.printStackTrace(); // TODO: Exception handling
-        }
-      }
-
-      root.clear();
       try {
-        buffer.put(Tuple.of(null, false)); // marking End of the stream
+        org.apache.arrow.vector.ipc.message.ArrowRecordBatch deserializedBatch =
+            MessageSerializer.deserializeRecordBatch(
+                new ReadChannel(
+                    new ByteArrayReadableSeekableByteChannel(
+                        batch.getSerializedRecordBatch().toByteArray())),
+                allocator);
+
+        loader.load(deserializedBatch);
+        // Release buffers from batch (they are still held in the vectors in root).
+        deserializedBatch.close();
+
+        // Parse the vectors using BQ Schema. Deserialize the data at the row level and add it to
+        // the
+        // buffer
+        FieldList fields = schema.getFields();
+        for (int rowNum = 0;
+            rowNum < root.getRowCount();
+            rowNum++) { // for the given number of rows in the batch
+
+          Map<String, Object> curRow = new HashMap<>();
+          for (int col = 0; col < fields.size(); col++) { // iterate all the vectors for a given row
+            com.google.cloud.bigquery.Field field = fields.get(col);
+            FieldVector curFieldVec =
+                root.getVector(
+                    field.getName()); // can be accessed using the index or Vector/column name
+            // Now cast the FieldVector depending on the type
+            if (field.getType() == LegacySQLTypeName.STRING) {
+              VarCharVector varCharVector = (VarCharVector) curFieldVec;
+              curRow.put(
+                  field.getName(),
+                  new String(varCharVector.get(rowNum))); // store the row:value mapping
+            } else if (field.getType() == LegacySQLTypeName.TIMESTAMP) {
+              TimeStampMicroVector timeStampMicroVector = (TimeStampMicroVector) curFieldVec;
+              curRow.put(
+                  field.getName(), timeStampMicroVector.get(rowNum)); // store the row:value mapping
+            } else if (field.getType() == LegacySQLTypeName.INTEGER) {
+              BigIntVector bigIntVector = (BigIntVector) curFieldVec;
+              curRow.put(
+                  field.getName(), (int) bigIntVector.get(rowNum)); // store the row:value mapping
+            } else {
+              throw new RuntimeException("TODO: Implement remaining support type conversions");
+            }
+          }
+          buffer.put(Tuple.of(curRow, true));
+        }
+        root.clear(); // TODO: make sure to clear the root while implementing the thread
+        // interruption logic (Connection.close method)
+
       } catch (InterruptedException e) {
-        e.printStackTrace();
+        throw BigQueryException.translateAndThrow(e);
+      } finally {
+        try {
+          root.clear();
+        } catch (RuntimeException e) {
+          logger.log(Level.WARNING, "\n Error while clearing VectorSchemaRoot ", e);
+        }
       }
     }
 
