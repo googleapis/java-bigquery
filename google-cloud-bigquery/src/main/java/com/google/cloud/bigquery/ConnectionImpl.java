@@ -65,6 +65,7 @@ class ConnectionImpl implements Connection {
   private final ExecutorService queryTaskExecutor =
       Executors.newFixedThreadPool(MAX_PROCESS_QUERY_THREADS_CNT);
   private final Logger logger = Logger.getLogger(this.getClass().getName());
+  private BigQueryReadClient bqReadClient;
 
   ConnectionImpl(
       ConnectionSettings connectionSettings,
@@ -593,10 +594,6 @@ class ConnectionImpl implements Connection {
     }
   }
 
-  private BigQueryReadClient
-      bqReadClient; // TODO - Check if this instance be reused, currently it's being initialized on
-  // every call
-  // query result should be saved in the destination table
   private BigQueryResultSet highThroughPutRead(
       TableId destinationTable,
       long totalRows,
@@ -604,25 +601,21 @@ class ConnectionImpl implements Connection {
       BigQueryResultSetStats stats) {
 
     try {
-      bqReadClient = BigQueryReadClient.create();
+      if (bqReadClient == null) { // if the read client isn't already initialized. Not thread safe.
+        bqReadClient = BigQueryReadClient.create();
+      }
       String parent = String.format("projects/%s", destinationTable.getProject());
       String srcTable =
           String.format(
               "projects/%s/datasets/%s/tables/%s",
               destinationTable.getProject(),
               destinationTable.getDataset(),
-              destinationTable.getProject());
+              destinationTable.getTable());
 
-      /*  ReadSession.TableReadOptions options =
-      ReadSession.TableReadOptions.newBuilder().
-                                  .build();*/
-
-      // Read all the columns if the source table and stream the data back in Arrow format
+      // Read all the columns if the source table (temp table) and stream the data back in Arrow
+      // format
       ReadSession.Builder sessionBuilder =
-          ReadSession.newBuilder().setTable(srcTable).setDataFormat(DataFormat.ARROW)
-          // .setReadOptions(options)//TODO: Check if entire table be read if we are not specifying
-          // the options
-          ;
+          ReadSession.newBuilder().setTable(srcTable).setDataFormat(DataFormat.ARROW);
 
       CreateReadSessionRequest.Builder builder =
           CreateReadSessionRequest.newBuilder()
@@ -633,10 +626,8 @@ class ConnectionImpl implements Connection {
           ;
 
       ReadSession readSession = bqReadClient.createReadSession(builder.build());
-
-      // TODO(prasmish) Modify the type in the Tuple, dynamically determine the capacity
-      BlockingQueue<Tuple<Map<String, Object>, Boolean>> buffer = new LinkedBlockingDeque<>(500);
-
+      BlockingQueue<Tuple<Map<String, Object>, Boolean>> buffer =
+          new LinkedBlockingDeque<>(bufferSize);
       Map<String, Integer> arrowNameToIndex = new HashMap<>();
       Schema schema = Schema.fromPb(tableSchema);
       // deserialize and populate the buffer async, so that the client isn't blocked
@@ -650,9 +641,7 @@ class ConnectionImpl implements Connection {
           schema, totalRows, buffer, stats);
 
     } catch (IOException e) {
-      // Throw Error
-      e.printStackTrace();
-      throw new RuntimeException(e.getMessage()); // TODO exception handling
+      throw BigQueryException.translateAndThrow(e);
     }
   }
 
@@ -664,11 +653,9 @@ class ConnectionImpl implements Connection {
 
     Runnable arrowStreamProcessor =
         () -> {
-          try // (ArrowRowReader reader = new ArrowRowReader(readSession.getArrowSchema()))
-          {
+          try {
             // Use the first stream to perform reading.
             String streamName = readSession.getStreams(0).getName();
-
             ReadRowsRequest readRowsRequest =
                 ReadRowsRequest.newBuilder().setReadStream(streamName).build();
 
