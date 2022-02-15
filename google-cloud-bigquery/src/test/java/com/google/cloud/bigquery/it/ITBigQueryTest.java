@@ -2014,6 +2014,37 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testDebugAuthorizedDataset() {
+    // source dataset object creation
+    String sourceDatasetName = RemoteBigQueryHelper.generateDatasetName();
+    DatasetId sourceDatasetId = DatasetId.of(PROJECT_ID, sourceDatasetName);
+    DatasetInfo sourceDatasetInfo =
+        DatasetInfo.newBuilder(sourceDatasetId).setDescription("sourceDataset").build();
+    Dataset sourceDataset = bigquery.create(sourceDatasetInfo);
+    assertNotNull(sourceDataset);
+    List<String> targetTypes = ImmutableList.of("VIEWS");
+    // get the source dataset ACL’s
+    ArrayList<Acl> sourceAcl = new ArrayList<>(sourceDataset.getAcl());
+
+    // Create a new dataset to be authorized
+    String userDatasetName = RemoteBigQueryHelper.generateDatasetName();
+    DatasetId userDatasetId = DatasetId.of(PROJECT_ID, userDatasetName);
+    DatasetInfo userDatasetInfo =
+        DatasetInfo.newBuilder(userDatasetId)
+            .setDescription("new Dataset to be authorized by the sourceDataset")
+            .build();
+    Dataset userDataset = bigquery.create(userDatasetInfo);
+    assertNotNull(userDataset);
+
+    // Creating DatasetAclEntity Object and adding new entry in the source ACL
+    DatasetAclEntity datasetEntity = new DatasetAclEntity(userDatasetId, targetTypes);
+    sourceAcl.add(Acl.of(datasetEntity));
+
+    // update the source ACL
+    sourceDataset.toBuilder().setAcl(sourceAcl).build().update();
+  }
+
+  @Test
   public void testSingleStatementsQueryException() throws InterruptedException {
     String invalidQuery =
         String.format("INSERT %s.%s VALUES('3', 10);", DATASET, TABLE_ID.getTable());
