@@ -19,7 +19,6 @@ package com.google.cloud.bigquery;
 import static com.google.cloud.RetryHelper.runWithRetries;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
-import com.google.api.core.InternalApi;
 import com.google.api.services.bigquery.model.GetQueryResultsResponse;
 import com.google.api.services.bigquery.model.JobConfigurationQuery;
 import com.google.api.services.bigquery.model.QueryParameter;
@@ -30,14 +29,27 @@ import com.google.api.services.bigquery.model.TableSchema;
 import com.google.cloud.RetryHelper;
 import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
-import com.google.cloud.bigquery.storage.v1.*;
+import com.google.cloud.bigquery.storage.v1.ArrowRecordBatch;
+import com.google.cloud.bigquery.storage.v1.ArrowSchema;
+import com.google.cloud.bigquery.storage.v1.BigQueryReadClient;
+import com.google.cloud.bigquery.storage.v1.CreateReadSessionRequest;
+import com.google.cloud.bigquery.storage.v1.DataFormat;
+import com.google.cloud.bigquery.storage.v1.ReadRowsRequest;
+import com.google.cloud.bigquery.storage.v1.ReadRowsResponse;
+import com.google.cloud.bigquery.storage.v1.ReadSession;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import java.io.IOException;
-import java.util.*;
+import java.util.AbstractList;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,7 +59,12 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
-import org.apache.arrow.vector.*;
+import org.apache.arrow.vector.BigIntVector;
+import org.apache.arrow.vector.FieldVector;
+import org.apache.arrow.vector.TimeStampMicroVector;
+import org.apache.arrow.vector.VarCharVector;
+import org.apache.arrow.vector.VectorLoader;
+import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.ipc.ReadChannel;
 import org.apache.arrow.vector.ipc.message.MessageSerializer;
 import org.apache.arrow.vector.types.pojo.Field;
@@ -237,8 +254,8 @@ class ConnectionImpl implements Connection {
     return new BigQueryResultSetStatsImpl(dmlStats, sessionInfo);
   }
   /* This method processed the first page of GetQueryResultsResponse and then it uses tabledata.list */
-  @InternalApi("Exposed for testing")
-  public BigQueryResultSet tableDataList(GetQueryResultsResponse firstPage, JobId jobId) {
+  @VisibleForTesting
+  BigQueryResultSet tableDataList(GetQueryResultsResponse firstPage, JobId jobId) {
     Schema schema;
     long numRows;
     schema = Schema.fromPb(firstPage.getSchema());
@@ -276,8 +293,8 @@ class ConnectionImpl implements Connection {
         schema, numRows, buffer, bigQueryResultSetStats);
   }
 
-  @InternalApi("Exposed for testing")
-  public BigQueryResultSet processQueryResponseResults(
+  @VisibleForTesting
+  BigQueryResultSet processQueryResponseResults(
       com.google.api.services.bigquery.model.QueryResponse results) {
     Schema schema;
     long numRows;
@@ -313,8 +330,8 @@ class ConnectionImpl implements Connection {
         schema, numRows, buffer, bigQueryResultSetStats);
   }
 
-  @InternalApi("Exposed for testing")
-  public void runNextPageTaskAsync(
+  @VisibleForTesting
+  void runNextPageTaskAsync(
       String firstPageToken,
       TableId destinationTable,
       BlockingQueue<Tuple<TableDataList, Boolean>> rpcResponseQueue) {
@@ -351,8 +368,8 @@ class ConnectionImpl implements Connection {
   /*
   This method takes TableDataList from rpcResponseQueue and populates pageCache with FieldValueList
    */
-  @InternalApi("Exposed for testing")
-  public void parseRpcDataAsync(
+  @VisibleForTesting
+  void parseRpcDataAsync(
       // com.google.api.services.bigquery.model.QueryResponse results,
       List<TableRow> tableRows,
       Schema schema,
@@ -405,8 +422,8 @@ class ConnectionImpl implements Connection {
     queryTaskExecutor.execute(parseDataTask);
   }
 
-  @InternalApi("Exposed for testing")
-  public void populateBufferAsync(
+  @VisibleForTesting
+  void populateBufferAsync(
       BlockingQueue<Tuple<TableDataList, Boolean>> rpcResponseQueue,
       BlockingQueue<Tuple<Iterable<FieldValueList>, Boolean>> pageCache,
       BlockingQueue<AbstractList<FieldValue>> buffer) {
@@ -513,8 +530,8 @@ class ConnectionImpl implements Connection {
   }
 
   /* Returns query results using either tabledata.list or the high throughput Read API */
-  @InternalApi("Exposed for testing")
-  public BigQueryResultSet getSubsequentQueryResultsWithJob(
+  @VisibleForTesting
+  BigQueryResultSet getSubsequentQueryResultsWithJob(
       Long totalRows, Long pageRows, JobId jobId, GetQueryResultsResponse firstPage) {
     TableId destinationTable = getDestinationTable(jobId);
     return useReadAPI(totalRows, pageRows)
@@ -559,14 +576,14 @@ class ConnectionImpl implements Connection {
   }
 
   /* Returns the destinationTable from jobId by calling jobs.get API */
-  @InternalApi("Exposed for testing")
-  public TableId getDestinationTable(JobId jobId) {
+  @VisibleForTesting
+  TableId getDestinationTable(JobId jobId) {
     Job job = getQueryJobRpc(jobId);
     return ((QueryJobConfiguration) job.getConfiguration()).getDestinationTable();
   }
 
-  @InternalApi("Exposed for testing")
-  public TableDataList tableDataListRpc(TableId destinationTable, String pageToken) {
+  @VisibleForTesting
+  TableDataList tableDataListRpc(TableId destinationTable, String pageToken) {
     try {
       final TableId completeTableId =
           destinationTable.setProjectId(
@@ -775,8 +792,8 @@ class ConnectionImpl implements Connection {
     }
   }
   /*Returns just the first page of GetQueryResultsResponse using the jobId*/
-  @InternalApi("Exposed for testing")
-  public GetQueryResultsResponse getQueryResultsFirstPage(JobId jobId) {
+  @VisibleForTesting
+  GetQueryResultsResponse getQueryResultsFirstPage(JobId jobId) {
     JobId completeJobId =
         jobId
             .setProjectId(bigQueryOptions.getProjectId())
@@ -813,8 +830,8 @@ class ConnectionImpl implements Connection {
     }
   }
 
-  @InternalApi("Exposed for testing")
-  public boolean isFastQuerySupported() {
+  @VisibleForTesting
+  boolean isFastQuerySupported() {
     // TODO: add regex logic to check for scripting
     return connectionSettings.getClustering() == null
         && connectionSettings.getCreateDisposition() == null

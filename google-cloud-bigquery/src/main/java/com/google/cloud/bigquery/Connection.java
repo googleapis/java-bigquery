@@ -16,16 +16,9 @@
 
 package com.google.cloud.bigquery;
 
-import com.google.api.core.InternalApi;
-import com.google.api.services.bigquery.model.GetQueryResultsResponse;
 import com.google.api.services.bigquery.model.QueryParameter;
-import com.google.api.services.bigquery.model.TableDataList;
-import com.google.api.services.bigquery.model.TableRow;
-import com.google.cloud.Tuple;
-import java.util.AbstractList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
 
 /**
  * A Connection is a session between a Java application and BigQuery. SQL statements are executed
@@ -96,46 +89,4 @@ public interface Connection {
   BigQueryResultSet executeSelect(
       String sql, List<QueryParameter> parameters, Map<String, String> labels)
       throws BigQuerySQLException;
-
-  @InternalApi("Exposed for testing")
-  BigQueryResultSet processQueryResponseResults(
-      com.google.api.services.bigquery.model.QueryResponse results);
-
-  @InternalApi("Exposed for testing")
-  public void parseRpcDataAsync(
-      List<TableRow> tableRows,
-      Schema schema,
-      BlockingQueue<Tuple<Iterable<FieldValueList>, Boolean>> pageCache,
-      BlockingQueue<Tuple<TableDataList, Boolean>> rpcResponseQueue);
-
-  @InternalApi("Exposed for testing")
-  public void populateBufferAsync(
-      BlockingQueue<Tuple<TableDataList, Boolean>> rpcResponseQueue,
-      BlockingQueue<Tuple<Iterable<FieldValueList>, Boolean>> pageCache,
-      BlockingQueue<AbstractList<FieldValue>> buffer);
-
-  @InternalApi("Exposed for testing")
-  public void runNextPageTaskAsync(
-      String firstPageToken,
-      TableId destinationTable,
-      BlockingQueue<Tuple<TableDataList, Boolean>> rpcResponseQueue);
-
-  @InternalApi("Exposed for testing")
-  public TableDataList tableDataListRpc(TableId destinationTable, String pageToken);
-
-  @InternalApi("Exposed for testing")
-  public GetQueryResultsResponse getQueryResultsFirstPage(JobId jobId);
-
-  @InternalApi("Exposed for testing")
-  public boolean isFastQuerySupported();
-
-  @InternalApi("Exposed for testing")
-  public BigQueryResultSet getSubsequentQueryResultsWithJob(
-      Long totalRows, Long pageRows, JobId jobId, GetQueryResultsResponse firstPage);
-
-  @InternalApi("Exposed for testing")
-  public TableId getDestinationTable(JobId jobId);
-
-  @InternalApi("Exposed for testing")
-  public BigQueryResultSet tableDataList(GetQueryResultsResponse firstPage, JobId jobId);
 }
