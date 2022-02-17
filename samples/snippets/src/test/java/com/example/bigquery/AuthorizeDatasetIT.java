@@ -38,8 +38,7 @@ public class AuthorizeDatasetIT {
   private PrintStream originalPrintStream;
   private static final String GOOGLE_CLOUD_PROJECT = System.getenv("GOOGLE_CLOUD_PROJECT");
   private static final String BIGQUERY_DATASET_NAME = System.getenv("BIGQUERY_DATASET_NAME");
-  private DatasetId sourceDatasetId;
-  private DatasetId userDatasetId;
+  private DatasetId sourceDatasetId, userDatasetId;
 
   private static void requireEnvVar(String varName) {
     assertNotNull(
