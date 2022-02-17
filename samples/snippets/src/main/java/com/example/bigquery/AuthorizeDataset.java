@@ -92,4 +92,4 @@ public class AuthorizeDataset {
     }
   }
 }
-// [END bigquery_authorize_dataset_scope]
+// [END bigquery_authorized_dataset]
