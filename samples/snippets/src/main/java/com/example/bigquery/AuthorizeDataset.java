@@ -16,7 +16,7 @@
 
 package com.example.bigquery;
 
-// [START bigquery_authorize_dataset_scope]
+// [START bigquery_authorized_dataset]
 import com.google.cloud.bigquery.Acl;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
