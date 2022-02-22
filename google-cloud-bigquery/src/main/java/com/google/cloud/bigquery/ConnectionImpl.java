@@ -752,16 +752,16 @@ class ConnectionImpl implements Connection {
                 root.getVector(
                     field.getName()); // can be accessed using the index or Vector/column name
             // Now cast the FieldVector depending on the type
-            if (field.getType() == LegacySQLTypeName.STRING) {
+            if (field.getType().getStandardType() == StandardSQLTypeName.STRING) {
               VarCharVector varCharVector = (VarCharVector) curFieldVec;
               curRow.put(
                   field.getName(),
                   new String(varCharVector.get(rowNum))); // store the row:value mapping
-            } else if (field.getType() == LegacySQLTypeName.TIMESTAMP) {
+            } else if (field.getType().getStandardType() == StandardSQLTypeName.TIMESTAMP) {
               TimeStampMicroVector timeStampMicroVector = (TimeStampMicroVector) curFieldVec;
               curRow.put(
                   field.getName(), timeStampMicroVector.get(rowNum)); // store the row:value mapping
-            } else if (field.getType() == LegacySQLTypeName.INTEGER) {
+            } else if (field.getType().getStandardType() == StandardSQLTypeName.INT64) {
               BigIntVector bigIntVector = (BigIntVector) curFieldVec;
               curRow.put(
                   field.getName(), (int) bigIntVector.get(rowNum)); // store the row:value mapping
