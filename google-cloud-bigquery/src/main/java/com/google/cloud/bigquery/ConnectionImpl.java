@@ -60,8 +60,11 @@ import java.util.stream.Collectors;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.BigIntVector;
+import org.apache.arrow.vector.BitVector;
 import org.apache.arrow.vector.FieldVector;
+import org.apache.arrow.vector.Float8Vector;
 import org.apache.arrow.vector.TimeStampMicroVector;
+import org.apache.arrow.vector.VarBinaryVector;
 import org.apache.arrow.vector.VarCharVector;
 import org.apache.arrow.vector.VectorLoader;
 import org.apache.arrow.vector.VectorSchemaRoot;
@@ -752,21 +755,48 @@ class ConnectionImpl implements Connection {
                 root.getVector(
                     field.getName()); // can be accessed using the index or Vector/column name
             // Now cast the FieldVector depending on the type
-            if (field.getType().getStandardType() == StandardSQLTypeName.STRING) {
+            if (field.getType().getStandardType()
+                == StandardSQLTypeName.STRING) { // maps with getString
               VarCharVector varCharVector = (VarCharVector) curFieldVec;
               curRow.put(
                   field.getName(),
                   new String(varCharVector.get(rowNum))); // store the row:value mapping
-            } else if (field.getType().getStandardType() == StandardSQLTypeName.TIMESTAMP) {
+            } else if (field.getType().getStandardType()
+                == StandardSQLTypeName.TIMESTAMP) { // maps with getTimeStamp
               TimeStampMicroVector timeStampMicroVector = (TimeStampMicroVector) curFieldVec;
               curRow.put(
                   field.getName(), timeStampMicroVector.get(rowNum)); // store the row:value mapping
-            } else if (field.getType().getStandardType() == StandardSQLTypeName.INT64) {
+            } else if (field.getType().getStandardType()
+                == StandardSQLTypeName.INT64) { // maps with getLong and getInt
               BigIntVector bigIntVector = (BigIntVector) curFieldVec;
               curRow.put(
-                  field.getName(), (int) bigIntVector.get(rowNum)); // store the row:value mapping
+                  field.getName(),
+                  bigIntVector.get(
+                      rowNum)); // store the row:value mapping. Storing the value as long, it will
+                                // be used as long in getLong method, and it will be casted back to
+                                // int in getInt
+            } else if (field.getType().getStandardType() == StandardSQLTypeName.FLOAT64
+                || field.getType().getStandardType()
+                    == StandardSQLTypeName.NUMERIC) { // maps with getDouble and getBigDecimal
+              Float8Vector float8Vector = (Float8Vector) curFieldVec;
+              curRow.put(field.getName(), float8Vector.get(rowNum)); // store the row:value mapping
+            } else if (field.getType().getStandardType()
+                == StandardSQLTypeName.BOOL) { // maps with getBoolean
+              BitVector bitVector = (BitVector) curFieldVec;
+              curRow.put(
+                  field.getName(),
+                  bitVector.get(rowNum)
+                      == 1); // store the row:value mapping, checking if the bit (it's a 1 bit
+                             // vector) is set using equals
+            } else if (field.getType().getStandardType()
+                == StandardSQLTypeName.BYTES) { // maps with getBoolean
+              VarBinaryVector binaryVector = (VarBinaryVector) curFieldVec;
+              curRow.put(field.getName(), binaryVector.get(rowNum)); // store the row:value mapping
             } else {
-              throw new RuntimeException("TODO: Implement remaining support type conversions");
+              throw new RuntimeException(
+                  String.format(
+                      "StandardSQLTypeName %s is not implemented",
+                      field.getType().getStandardType()));
             }
           }
           buffer.put(Tuple.of(curRow, true));
@@ -774,7 +804,7 @@ class ConnectionImpl implements Connection {
         root.clear(); // TODO: make sure to clear the root while implementing the thread
         // interruption logic (Connection.close method)
 
-      } catch (InterruptedException e) {
+      } catch (RuntimeException | InterruptedException e) {
         throw BigQueryException.translateAndThrow(e);
       } finally {
         try {
