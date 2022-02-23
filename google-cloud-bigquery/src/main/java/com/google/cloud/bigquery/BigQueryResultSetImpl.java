@@ -157,9 +157,10 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
         return fieldValue.getValue() == null ? 0 : fieldValue.getNumericValue().intValue();
-      } else {
+      } else { // Data received from Read API (Arrow)
         Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
-        return (Integer) curTuple.x().get(fieldName);
+        return ((Long) curTuple.x().get(fieldName))
+            .intValue(); // BigIntVector.get(...) returns Long
       }
     }
 
@@ -187,8 +188,10 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
         return fieldValue.getValue() == null ? 0L : fieldValue.getNumericValue().longValue();
+      } else { // Data received from Read API (Arrow)
+        Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
+        return (Long) curTuple.x().get(fieldName); // BigIntVector.get(...) returns Long
       }
-      return 0L; // TODO: Implementation for Arrow
     }
 
     @Override
@@ -199,8 +202,9 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
         return fieldValue.getValue() == null ? 0L : fieldValue.getNumericValue().longValue();
+      } else { // Data received from Read API (Arrow)
+        return getInt(schemaFieldList.get(columnIndex).getName());
       }
-      return 0L; // TODO: Implementation for Arrow
     }
 
     @Override
@@ -214,8 +218,10 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
         return fieldValue.getValue() == null ? 0d : fieldValue.getNumericValue().doubleValue();
+      } else { // Data received from Read API (Arrow)
+        Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
+        return (Double) curTuple.x().get(fieldName);
       }
-      return 0d; // TODO: Implementation for Arrow
     }
 
     @Override
@@ -226,8 +232,9 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
         return fieldValue.getValue() == null ? 0d : fieldValue.getNumericValue().doubleValue();
+      } else { // Data received from Read API (Arrow)
+        return getDouble(schemaFieldList.get(columnIndex).getName());
       }
-      return 0d; // TODO: Implementation for Arrow
     }
 
     @Override
@@ -244,8 +251,9 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
         return fieldValue.getValue() == null
             ? null
             : BigDecimal.valueOf(fieldValue.getNumericValue().doubleValue());
+      } else { // Data received from Read API (Arrow)
+        return BigDecimal.valueOf(getDouble(fieldName));
       }
-      return null; // TODO: Implementation for Arrow
     }
 
     @Override
@@ -259,8 +267,9 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
         return fieldValue.getValue() == null
             ? null
             : BigDecimal.valueOf(fieldValue.getNumericValue().doubleValue());
+      } else { // Data received from Read API (Arrow)
+        return getBigDecimal(schemaFieldList.get(columnIndex).getName());
       }
-      return null; // TODO: Implementation for Arrow
     }
 
     @Override
@@ -273,8 +282,10 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
         return fieldValue.getValue() != null && fieldValue.getBooleanValue();
+      } else { // Data received from Read API (Arrow)
+        Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
+        return (Boolean) curTuple.x().get(fieldName);
       }
-      return false; // TODO: Implementation for Arrow
     }
 
     @Override
@@ -284,8 +295,9 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
         return fieldValue.getValue() != null && fieldValue.getBooleanValue();
+      } else { // Data received from Read API (Arrow)
+        return getBoolean(schemaFieldList.get(columnIndex).getName());
       }
-      return false; // TODO: Implementation for Arrow
     }
 
     @Override
@@ -298,8 +310,10 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
         return fieldValue.getValue() == null ? null : fieldValue.getBytesValue();
+      } else { // Data received from Read API (Arrow)
+        Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
+        return (byte[]) curTuple.x().get(fieldName);
       }
-      return null; // TODO: Implementation for Arrow
     }
 
     @Override
@@ -309,8 +323,9 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
         return fieldValue.getValue() == null ? null : fieldValue.getBytesValue();
+      } else { // Data received from Read API (Arrow)
+        return getBytes(schemaFieldList.get(columnIndex).getName());
       }
-      return null; // TODO: Implementation for Arrow
     }
 
     @Override
