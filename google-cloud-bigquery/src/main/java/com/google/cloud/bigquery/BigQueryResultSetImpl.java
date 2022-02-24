@@ -103,8 +103,10 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
         return fieldValue.getValue() == null ? null : fieldValue.getValue();
+      } else { // Data received from Read API (Arrow)
+        Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
+        return curTuple.x().get(fieldName);
       }
-      return null; // TODO: Implementation for Arrow
     }
 
     @Override
@@ -114,8 +116,9 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
         return fieldValue.getValue() == null ? null : fieldValue.getValue();
+      } else { // Data received from Read API (Arrow)
+        return getObject(schemaFieldList.get(columnIndex).getName());
       }
-      return null; // TODO: Implementation for Arrow
     }
 
     @Override
@@ -130,7 +133,12 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
         return fieldValue.getValue() == null ? null : fieldValue.getStringValue();
       } else { // Data received from Read API (Arrow)
         Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
-        return (String) curTuple.x().get(fieldName);
+        Object currentVal = curTuple.x().get(fieldName);
+        if (currentVal instanceof String) {
+          return (String) curTuple.x().get(fieldName);
+        } else {
+          return curTuple.x().get(fieldName).toString();
+        }
       }
     }
 
@@ -362,7 +370,7 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
                 fieldValue.getTimestampValue()
                     / 1000); // getTimestampValue returns time in microseconds, and TimeStamp
         // expects it in millis
-      } else {
+      } else { // Data received from Read API (Arrow)
         return getTimestamp(schemaFieldList.get(columnIndex).getName());
       }
     }
@@ -377,8 +385,11 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
         return getTime(fieldValue);
+      } else { // Data received from Read API (Arrow)
+        Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
+        Integer timeInMilli = (Integer) curTuple.x().get(fieldName);
+        return new Time(timeInMilli);
       }
-      return null; // TODO: Implementation for Arrow
     }
 
     @Override
@@ -388,8 +399,9 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
         return getTime(fieldValue);
+      } else { // Data received from Read API (Arrow)
+        return getTime(schemaFieldList.get(columnIndex).getName());
       }
-      return null; // TODO: Implementation for Arrow
     }
 
     private Time getTime(FieldValue fieldValue) throws SQLException {
