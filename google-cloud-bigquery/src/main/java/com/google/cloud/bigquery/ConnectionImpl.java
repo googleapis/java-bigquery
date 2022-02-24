@@ -482,8 +482,9 @@ class ConnectionImpl implements Connection {
                 new EndOfFieldValueList()); // All the pages has been processed, put this marker
           } catch (InterruptedException e) {
             throw new BigQueryException(0, e.getMessage(), e);
+          } finally {
+            queryTaskExecutor.shutdownNow(); // Shutdown the thread pool
           }
-          queryTaskExecutor.shutdownNow(); // Shutdown the thread pool
         };
 
     queryTaskExecutor.execute(populateBufferRunnable);
@@ -686,11 +687,22 @@ class ConnectionImpl implements Connection {
             com.google.api.gax.rpc.ServerStream<ReadRowsResponse> stream =
                 bqReadClient.readRowsCallable().call(readRowsRequest);
             for (ReadRowsResponse response : stream) {
+              if (Thread.currentThread().isInterrupted()
+                  || queryTaskExecutor.isShutdown()) { // do not process and shutdown
+                break;
+              }
               reader.processRows(response.getArrowRecordBatch(), buffer, schema);
             }
-            buffer.put(Tuple.of(null, false)); // marking end of stream
+
           } catch (Exception e) {
             throw BigQueryException.translateAndThrow(e);
+          } finally {
+            try {
+              buffer.put(Tuple.of(null, false)); // marking end of stream
+              queryTaskExecutor.shutdownNow(); // Shutdown the thread pool
+            } catch (InterruptedException e) {
+              logger.log(Level.WARNING, "\n Error occurred ", e);
+            }
           }
         };
 
@@ -750,6 +762,11 @@ class ConnectionImpl implements Connection {
         for (int rowNum = 0;
             rowNum < root.getRowCount();
             rowNum++) { // for the given number of rows in the batch
+
+          if (Thread.currentThread().isInterrupted()
+              || queryTaskExecutor.isShutdown()) { // do not process and shutdown
+            break; // exit the loop, root will be cleared in the finally block
+          }
 
           Map<String, Object> curRow = new HashMap<>();
           for (int col = 0; col < fields.size(); col++) { // iterate all the vectors for a given row
