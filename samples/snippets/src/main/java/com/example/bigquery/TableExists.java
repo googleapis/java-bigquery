@@ -40,7 +40,8 @@ public class TableExists {
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
       Table table = bigquery.getTable(TableId.of(datasetName, tableName));
-      if (table.exists()) {
+      if (table != null
+          && table.exists()) { // table will be null if it is not found and setThrowNotFound is set
         System.out.println("Table already exist");
       } else {
         System.out.println("Table not found");
