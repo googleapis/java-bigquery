@@ -43,7 +43,7 @@ public class TableExists {
       if (table != null
           && table
               .exists()) { // table will be null if it is not found and setThrowNotFound is not set
-                           // to `true`
+        // to `true`
         System.out.println("Table already exist");
       } else {
         System.out.println("Table not found");
