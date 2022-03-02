@@ -223,12 +223,12 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
      */
     try {
       JSONObject jsonObject = new JSONObject(previousResponse.toString());
-      if(jsonObject.has("status") && jsonObject.getJSONObject("status").has("errorResult") ){
+      if (jsonObject.has("status") && jsonObject.getJSONObject("status").has("errorResult")) {
         return jsonObject.getJSONObject("status").getJSONObject("errorResult").getString("message");
       } else {
         return null;
       }
-    } catch(Exception e) {
+    } catch (Exception e) {
       // exceptions here implies no error message present in response, returning null
       return null;
     }
