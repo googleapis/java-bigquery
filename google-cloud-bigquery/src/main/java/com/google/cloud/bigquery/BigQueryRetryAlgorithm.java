@@ -34,7 +34,6 @@ import java.util.regex.Pattern;
 import org.json.JSONObject;
 import org.threeten.bp.Duration;
 
-
 public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT> {
   private final BigQueryRetryConfig bigQueryRetryConfig;
   private final ResultRetryAlgorithm<ResponseT> resultAlgorithm;
