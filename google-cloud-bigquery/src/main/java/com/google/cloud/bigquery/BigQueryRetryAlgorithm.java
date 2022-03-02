@@ -31,7 +31,9 @@ import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import org.json.JSONObject;
 import org.threeten.bp.Duration;
+
 
 public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT> {
   private final BigQueryRetryConfig bigQueryRetryConfig;
@@ -107,9 +109,10 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
       /*
       In some cases error messages may come without an exception
       e.g. status code 200 with a rate limit exceeded for job create
-      in these cases there is now previousThrowable so we need to check previousResponse
+      in these cases there is no previousThrowable so we need
+      to check for error messages in previousResponse
        */
-      errorDesc = previousResponse.toString();
+      errorDesc = getErrorDescFromResponse(previousResponse);
     }
 
     if (errorDesc != null) {
@@ -211,5 +214,24 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
       return timedAlgorithmWithContext.createNextAttempt(context, previousSettings);
     }
     return getTimedAlgorithm().createNextAttempt(previousSettings);
+  }
+
+  private String getErrorDescFromResponse(ResponseT previousResponse) {
+    /*
+    error messages may come without an exception and must be extracted from response
+    following logic based on response body of jobs.insert method, so far the only
+    known case where a response with status code 200 may contain an error message
+     */
+    try {
+      JSONObject jsonObject = new JSONObject(previousResponse.toString());
+      if(jsonObject.has("status") && jsonObject.getJSONObject("status").has("errorResult") ){
+        return jsonObject.getJSONObject("status").getJSONObject("errorResult").getString("message");
+      } else {
+        return null;
+      }
+    } catch(Exception e) {
+      // exceptions here implies no error message present in response, returning null
+      return null;
+    }
   }
 }
