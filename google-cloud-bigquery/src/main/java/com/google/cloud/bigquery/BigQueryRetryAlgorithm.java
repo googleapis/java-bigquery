@@ -25,13 +25,14 @@ import com.google.api.gax.retrying.RetryingContext;
 import com.google.api.gax.retrying.TimedAttemptSettings;
 import com.google.api.gax.retrying.TimedRetryAlgorithm;
 import com.google.api.gax.retrying.TimedRetryAlgorithmWithContext;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.util.Iterator;
 import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import org.json.JSONObject;
 import org.threeten.bp.Duration;
 
 public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT> {
@@ -222,9 +223,14 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
     known case where a response with status code 200 may contain an error message
      */
     try {
-      JSONObject jsonObject = new JSONObject(previousResponse.toString());
-      if (jsonObject.has("status") && jsonObject.getJSONObject("status").has("errorResult")) {
-        return jsonObject.getJSONObject("status").getJSONObject("errorResult").getString("message");
+      JsonObject responseJson =
+          JsonParser.parseString(previousResponse.toString()).getAsJsonObject();
+      if (responseJson.has("status") && responseJson.getAsJsonObject("status").has("errorResult")) {
+        return responseJson
+            .getAsJsonObject("status")
+            .getAsJsonObject("errorResult")
+            .get("message")
+            .toString();
       } else {
         return null;
       }
