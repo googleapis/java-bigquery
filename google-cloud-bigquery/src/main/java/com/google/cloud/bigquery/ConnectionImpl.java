@@ -44,7 +44,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,15 +59,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
-import org.apache.arrow.vector.BigIntVector;
-import org.apache.arrow.vector.BitVector;
-import org.apache.arrow.vector.DateMilliVector;
 import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.Float8Vector;
-import org.apache.arrow.vector.TimeMilliVector;
-import org.apache.arrow.vector.TimeStampMicroVector;
-import org.apache.arrow.vector.VarBinaryVector;
-import org.apache.arrow.vector.VarCharVector;
 import org.apache.arrow.vector.VectorLoader;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.ipc.ReadChannel;
@@ -661,6 +652,7 @@ class ConnectionImpl implements Connection {
           new ArrowRowReader(readSession.getArrowSchema(), arrowNameToIndex),
           schema);
 
+      logger.log(Level.INFO, "\n Using BigQuery Read API");
       return new BigQueryResultSetImpl<Tuple<Map<String, Object>, Boolean>>(
           schema, totalRows, buffer, stats);
 
@@ -774,75 +766,7 @@ class ConnectionImpl implements Connection {
             FieldVector curFieldVec =
                 root.getVector(
                     field.getName()); // can be accessed using the index or Vector/column name
-            // Now cast the FieldVector depending on the type
-            if (field.getType().getStandardType() == StandardSQLTypeName.STRING
-                || field.getType().getStandardType()
-                    == StandardSQLTypeName
-                        .GEOGRAPHY) { // maps with getString (for both String and Geography)
-              VarCharVector varCharVector = (VarCharVector) curFieldVec;
-              curRow.put(
-                  field.getName(),
-                  new String(varCharVector.get(rowNum))); // store the row:value mapping
-            } else if (field.getType().getStandardType()
-                == StandardSQLTypeName.TIMESTAMP) { // maps with getTimeStamp
-              TimeStampMicroVector timeStampMicroVector = (TimeStampMicroVector) curFieldVec;
-              curRow.put(
-                  field.getName(), timeStampMicroVector.get(rowNum)); // store the row:value mapping
-            } else if (field.getType().getStandardType()
-                == StandardSQLTypeName.INT64) { // maps with getLong and getInt
-              BigIntVector bigIntVector = (BigIntVector) curFieldVec;
-              curRow.put(
-                  field.getName(),
-                  bigIntVector.get(
-                      rowNum)); // store the row:value mapping. Storing the value as long, it will
-              // be used as long in getLong method, and it will be casted back to
-              // int in getInt
-            } else if (field.getType().getStandardType() == StandardSQLTypeName.FLOAT64
-                || field.getType().getStandardType()
-                    == StandardSQLTypeName.NUMERIC) { // maps with getDouble and getBigDecimal
-              Float8Vector float8Vector = (Float8Vector) curFieldVec;
-              curRow.put(field.getName(), float8Vector.get(rowNum)); // store the row:value mapping
-            } else if (field.getType().getStandardType()
-                == StandardSQLTypeName.BOOL) { // maps with getBoolean
-              BitVector bitVector = (BitVector) curFieldVec;
-              curRow.put(
-                  field.getName(),
-                  bitVector.get(rowNum)
-                      == 1); // store the row:value mapping, checking if the bit (it's a 1 bit
-              // vector) is set using equals
-            } else if (field.getType().getStandardType()
-                == StandardSQLTypeName.BYTES) { // maps with getBoolean
-              VarBinaryVector binaryVector = (VarBinaryVector) curFieldVec;
-              curRow.put(field.getName(), binaryVector.get(rowNum)); // store the row:value mapping
-            } else if (field.getType().getStandardType()
-                == StandardSQLTypeName
-                    .DATETIME) { // maps with getString (Converting DATETIME back to String)
-              DateMilliVector dateMilliVector = (DateMilliVector) curFieldVec;
-              Timestamp dateTime = new Timestamp(dateMilliVector.get(rowNum));
-              curRow.put(field.getName(), dateTime.toString()); // store the row:value mapping
-            } else if (field.getType().getStandardType()
-                == StandardSQLTypeName.TIME) { // maps with getTime
-              TimeMilliVector timeMilliVector = (TimeMilliVector) curFieldVec;
-              curRow.put(
-                  field.getName(), timeMilliVector.get(rowNum)); // store the row:value mapping
-            } else if (field.getType().getStandardType()
-                == StandardSQLTypeName.STRUCT) { // maps with getString and getObject
-              curRow.put(
-                  field.getName(),
-                  curFieldVec.getObject(
-                      rowNum)); // TODO(prasmish): Check how to convert the object back to string
-            } else if (field.getType().getStandardType()
-                == StandardSQLTypeName.ARRAY) { // maps with getString
-              curRow.put(
-                  field.getName(),
-                  curFieldVec.getObject(
-                      rowNum)); // TODO(prasmish): Check how to convert the object back to string
-            } else {
-              throw new RuntimeException(
-                  String.format(
-                      "StandardSQLTypeName %s is not implemented",
-                      field.getType().getStandardType()));
-            }
+            curRow.put(field.getName(), curFieldVec.getObject(rowNum)); // Added the raw value
           }
           buffer.put(Tuple.of(curRow, true));
         }
