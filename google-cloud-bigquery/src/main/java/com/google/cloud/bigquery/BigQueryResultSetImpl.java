@@ -26,6 +26,7 @@ import java.sql.Timestamp;
 import java.time.LocalTime;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import org.apache.arrow.vector.util.JsonStringArrayList;
 import org.apache.arrow.vector.util.Text;
 
 // TODO: This implementation deals with the JSON response. We can have respective implementations
@@ -144,8 +145,13 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
         if (currentVal == null) {
           return null;
         }
-        Text textVal = (Text) currentVal;
-        return textVal.toString();
+        if (currentVal instanceof JsonStringArrayList) { // arrays
+          JsonStringArrayList jsnAry = (JsonStringArrayList) currentVal;
+          return jsnAry.toString();
+        } else {
+          Text textVal = (Text) currentVal;
+          return textVal.toString();
+        }
       }
     }
 
