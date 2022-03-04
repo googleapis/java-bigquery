@@ -849,8 +849,9 @@ class ConnectionImpl implements Connection {
 
   private boolean useReadAPI(Long totalRows, Long pageRows) {
     long resultRatio = totalRows / pageRows;
-    if (connectionSettings.getReadClientConnectionConfiguration()
-        != null) { // Adding a null check to avoid NPE
+    if (connectionSettings.getUseReadAPI()
+        && connectionSettings.getReadClientConnectionConfiguration()
+            != null) { // Adding a null check to avoid NPE
       return resultRatio
               > connectionSettings
                   .getReadClientConnectionConfiguration()
