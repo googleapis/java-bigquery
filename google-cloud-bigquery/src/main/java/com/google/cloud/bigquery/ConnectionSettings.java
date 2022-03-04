@@ -32,6 +32,13 @@ public abstract class ConnectionSettings {
     // Package private so users can't subclass it but AutoValue can.
   }
 
+  /**
+   * Returns useReadAPI flag, enabled by default. Read API will be used if the underlying conditions
+   * are satisfied and this flag is enabled
+   */
+  @Nullable
+  public abstract Boolean getUseReadAPI();
+
   /** Returns the synchronous response timeoutMs associated with this query */
   @Nullable
   public abstract Long getRequestTimeout();
@@ -188,6 +195,15 @@ public abstract class ConnectionSettings {
 
   @AutoValue.Builder
   public abstract static class Builder {
+
+    /**
+     * Sets useReadAPI flag, enabled by default. Read API will be used if the underlying conditions
+     * are satisfied and this flag is enabled
+     *
+     * @param useReadAPI or {@code true} for none
+     */
+    @Nullable
+    public abstract Builder setUseReadAPI(Boolean useReadAPI);
 
     /**
      * Sets how long to wait for the query to complete, in milliseconds, before the request times
