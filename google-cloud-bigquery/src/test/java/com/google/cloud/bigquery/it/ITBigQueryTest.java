@@ -133,10 +133,10 @@ import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
 import com.google.gson.JsonObject;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystems;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
@@ -692,9 +692,10 @@ public class ITBigQueryTest {
             .setContentType("application/json")
             .build(),
         JSON_CONTENT_SIMPLE.getBytes(StandardCharsets.UTF_8));
+    InputStream stream =
+        ITBigQueryTest.class.getClassLoader().getResourceAsStream("QueryTestData.csv");
     storage.createFrom(
-        BlobInfo.newBuilder(BUCKET, LOAD_FILE_LARGE).setContentType("text/plain").build(),
-        FileSystems.getDefault().getPath("src/test/resources", "QueryTestData.csv"));
+        BlobInfo.newBuilder(BUCKET, LOAD_FILE_LARGE).setContentType("text/plain").build(), stream);
     storage.create(
         BlobInfo.newBuilder(BUCKET, JSON_LOAD_FILE_BQ_RESULTSET)
             .setContentType("application/json")
