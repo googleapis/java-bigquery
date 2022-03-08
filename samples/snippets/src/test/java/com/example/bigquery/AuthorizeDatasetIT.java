@@ -38,7 +38,6 @@ public class AuthorizeDatasetIT {
   private PrintStream out;
   private PrintStream originalPrintStream;
   private static final String GOOGLE_CLOUD_PROJECT = System.getenv("GOOGLE_CLOUD_PROJECT");
-  private static final String BIGQUERY_DATASET_NAME = System.getenv("BIGQUERY_DATASET_NAME");
   private DatasetId sourceDatasetId;
   private DatasetId userDatasetId;
 
@@ -51,7 +50,6 @@ public class AuthorizeDatasetIT {
   @BeforeClass
   public static void checkRequirements() {
     requireEnvVar("GOOGLE_CLOUD_PROJECT");
-    // requireEnvVar("BIGQUERY_DATASET_NAME");
   }
 
   @Before
