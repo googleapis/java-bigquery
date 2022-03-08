@@ -63,8 +63,9 @@ public class AuthorizeDatasetIT {
     originalPrintStream = System.out;
     System.setOut(out);
     CreateDataset.createDataset(userDatasetName);
-    sourceDatasetId = DatasetId.of(GOOGLE_CLOUD_PROJECT, srcDatasetName);
+    CreateDataset.createDataset(srcDatasetName);
     userDatasetId = DatasetId.of(GOOGLE_CLOUD_PROJECT, userDatasetName);
+    sourceDatasetId = DatasetId.of(GOOGLE_CLOUD_PROJECT, srcDatasetName);
   }
 
   @After
