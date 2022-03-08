@@ -490,7 +490,12 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
           return null;
         } else {
           Integer dateInt = (Integer) dateObj;
-          return new Date(dateInt);
+          long dateInMillis =
+              Long.valueOf(dateInt)
+                  * (24 * 60 * 60
+                      * 1000); // For example int 18993 represents 2022-01-01, converting time to
+                               // milli seconds
+          return new Date(dateInMillis);
         }
       }
     }
