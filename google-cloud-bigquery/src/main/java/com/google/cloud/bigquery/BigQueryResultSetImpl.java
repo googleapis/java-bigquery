@@ -428,7 +428,6 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
         if (!curTuple.x().containsKey(fieldName)) {
           throw new SQLException(String.format("Field %s not found", fieldName));
         }
-
         Object timeStampObj = curTuple.x().get(fieldName);
         return timeStampObj == null ? null : new Time(((Long) timeStampObj).intValue());
       }
@@ -494,7 +493,7 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
               Long.valueOf(dateInt)
                   * (24 * 60 * 60
                       * 1000); // For example int 18993 represents 2022-01-01, converting time to
-                               // milli seconds
+          // milli seconds
           return new Date(dateInMillis);
         }
       }
