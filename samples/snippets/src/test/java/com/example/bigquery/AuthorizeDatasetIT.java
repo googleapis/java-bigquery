@@ -33,6 +33,7 @@ import org.junit.Test;
 public class AuthorizeDatasetIT {
   private final Logger log = Logger.getLogger(this.getClass().getName());
   private String userDatasetName;
+  private String srcDatasetName;
   private ByteArrayOutputStream bout;
   private PrintStream out;
   private PrintStream originalPrintStream;
@@ -50,18 +51,19 @@ public class AuthorizeDatasetIT {
   @BeforeClass
   public static void checkRequirements() {
     requireEnvVar("GOOGLE_CLOUD_PROJECT");
-    requireEnvVar("BIGQUERY_DATASET_NAME");
+    // requireEnvVar("BIGQUERY_DATASET_NAME");
   }
 
   @Before
   public void setUp() {
     userDatasetName = RemoteBigQueryHelper.generateDatasetName();
+    srcDatasetName = RemoteBigQueryHelper.generateDatasetName();
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
     originalPrintStream = System.out;
     System.setOut(out);
     CreateDataset.createDataset(userDatasetName);
-    sourceDatasetId = DatasetId.of(GOOGLE_CLOUD_PROJECT, BIGQUERY_DATASET_NAME);
+    sourceDatasetId = DatasetId.of(GOOGLE_CLOUD_PROJECT, srcDatasetName);
     userDatasetId = DatasetId.of(GOOGLE_CLOUD_PROJECT, userDatasetName);
   }
 
@@ -69,6 +71,7 @@ public class AuthorizeDatasetIT {
   public void tearDown() {
     // Clean up
     DeleteDataset.deleteDataset(GOOGLE_CLOUD_PROJECT, userDatasetName);
+    DeleteDataset.deleteDataset(GOOGLE_CLOUD_PROJECT, srcDatasetName);
     // restores print statements in the original method
     System.out.flush();
     System.setOut(originalPrintStream);
