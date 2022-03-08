@@ -47,8 +47,10 @@ import java.io.IOException;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -532,7 +534,7 @@ class ConnectionImpl implements Connection {
   BigQueryResultSet getSubsequentQueryResultsWithJob(
       Long totalRows, Long pageRows, JobId jobId, GetQueryResultsResponse firstPage) {
     TableId destinationTable = getDestinationTable(jobId);
-    return useReadAPI(totalRows, pageRows)
+    return useReadAPI(totalRows, pageRows, Schema.fromPb(firstPage.getSchema()))
         ? highThroughPutRead(
             destinationTable,
             firstPage.getTotalRows().longValue(),
@@ -847,7 +849,14 @@ class ConnectionImpl implements Connection {
         && connectionSettings.getWriteDisposition() == null;
   }
 
-  private boolean useReadAPI(Long totalRows, Long pageRows) {
+  private boolean useReadAPI(Long totalRows, Long pageRows, Schema schema) {
+
+    if (!containsIntervalType(
+        schema)) { // finds out if there's an interval type in the schema. Implementation to be used
+                   // until ReadAPI supports Interval
+      logger.log(Level.INFO, "\n Schema has IntervalType, Disabling ReadAPI");
+      return false;
+    }
     long resultRatio = totalRows / pageRows;
     if (Boolean.TRUE.equals(connectionSettings.getUseReadAPI())
         && connectionSettings.getReadClientConnectionConfiguration()
@@ -861,6 +870,23 @@ class ConnectionImpl implements Connection {
     } else {
       return false;
     }
+  }
+
+  // Does a BFS iteration to find out if there's an interval type in the schema. Implementation to
+  // be used until ReadAPI supports IntervalType
+  private boolean containsIntervalType(Schema schema) {
+    Queue<com.google.cloud.bigquery.Field> fields =
+        new LinkedList<com.google.cloud.bigquery.Field>(schema.getFields());
+    while (!fields.isEmpty()) {
+      com.google.cloud.bigquery.Field curField = fields.poll();
+      if (curField.getType().getStandardType() == StandardSQLTypeName.INTERVAL) {
+        return true;
+      } else if (curField.getType().getStandardType() == StandardSQLTypeName.STRUCT
+          || curField.getType().getStandardType() == StandardSQLTypeName.ARRAY) {
+        fields.addAll(curField.getSubFields());
+      }
+    }
+    return false;
   }
 
   // Used for job.query API endpoint
