@@ -851,9 +851,9 @@ class ConnectionImpl implements Connection {
 
   private boolean useReadAPI(Long totalRows, Long pageRows, Schema schema) {
 
-    if (!containsIntervalType(
+    if (containsIntervalType(
         schema)) { // finds out if there's an interval type in the schema. Implementation to be used
-                   // until ReadAPI supports Interval
+      // until ReadAPI supports Interval
       logger.log(Level.INFO, "\n Schema has IntervalType, Disabling ReadAPI");
       return false;
     }
