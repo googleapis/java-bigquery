@@ -24,7 +24,9 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.BlockingQueue;
 import org.apache.arrow.vector.util.JsonStringArrayList;
 import org.apache.arrow.vector.util.Text;
@@ -429,8 +431,18 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
           throw new SQLException(String.format("Field %s not found", fieldName));
         }
         Object timeStampObj = curTuple.x().get(fieldName);
-        return timeStampObj == null ? null : new Time(((Long) timeStampObj).intValue());
+        return timeStampObj == null
+            ? null
+            : new Time(
+                ((Long) timeStampObj)
+                    / 1000); // Time.toString() will return 12:11:35 in GMT as 17:41:35 in
+                             // (GMT+5:30). This can be offset using getTimeZoneOffset
       }
+    }
+
+    private int getTimeZoneOffset() {
+      TimeZone timeZone = TimeZone.getTimeZone(ZoneId.systemDefault());
+      return timeZone.getOffset(new java.util.Date().getTime()); // offset in seconds
     }
 
     @Override
