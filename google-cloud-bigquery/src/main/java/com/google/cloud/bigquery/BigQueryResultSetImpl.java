@@ -137,7 +137,15 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
         return null;
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
-        return fieldValue.getValue() == null ? null : fieldValue.getStringValue();
+        if (fieldValue.getValue() == null) {
+          return null;
+        } else if (fieldValue
+            .getAttribute()
+            .equals(FieldValue.Attribute.REPEATED)) { // Case for Arrays
+          return fieldValue.getValue().toString();
+        } else {
+          return fieldValue.getStringValue();
+        }
       } else { // Data received from Read API (Arrow)
         Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
         if (!curTuple.x().containsKey(fieldName)) {
@@ -436,7 +444,7 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
             : new Time(
                 ((Long) timeStampObj)
                     / 1000); // Time.toString() will return 12:11:35 in GMT as 17:41:35 in
-                             // (GMT+5:30). This can be offset using getTimeZoneOffset
+        // (GMT+5:30). This can be offset using getTimeZoneOffset
       }
     }
 
