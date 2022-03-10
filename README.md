@@ -21,7 +21,7 @@ See https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>libraries-bom</artifactId>
-      <version>24.0.0</version>
+      <version>24.4.0</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>
@@ -33,6 +33,7 @@ See https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google
     <groupId>com.google.cloud</groupId>
     <artifactId>google-cloud-bigquery</artifactId>
   </dependency>
+</dependencies>
 
 ```
 
@@ -43,7 +44,7 @@ If you are using Maven without BOM, add this to your dependencies:
 <dependency>
   <groupId>com.google.cloud</groupId>
   <artifactId>google-cloud-bigquery</artifactId>
-  <version>2.3.3</version>
+  <version>2.9.4</version>
 </dependency>
 
 ```
@@ -51,7 +52,7 @@ If you are using Maven without BOM, add this to your dependencies:
 If you are using Gradle 5.x or later, add this to your dependencies
 
 ```Groovy
-implementation platform('com.google.cloud:libraries-bom:24.4.0')
+implementation platform('com.google.cloud:libraries-bom:25.0.0')
 
 implementation 'com.google.cloud:google-cloud-bigquery'
 ```
@@ -110,13 +111,14 @@ Samples are in the [`samples/`](https://github.com/googleapis/java-bigquery/tree
 
 | Sample                      | Source Code                       | Try it |
 | --------------------------- | --------------------------------- | ------ |
+| Native Image Bigquery Sample | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/native-image-sample/src/main/java/com/example/bigquery/NativeImageBigquerySample.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/native-image-sample/src/main/java/com/example/bigquery/NativeImageBigquerySample.java) |
 | Add Column Load Append | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/AddColumnLoadAppend.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/AddColumnLoadAppend.java) |
 | Add Empty Column | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/AddEmptyColumn.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/AddEmptyColumn.java) |
-| Alter Materialized View | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/AlterMaterializedView.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/AlterMaterializedView.java) |
 | Auth Drive Scope | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/AuthDriveScope.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/AuthDriveScope.java) |
 | Auth Snippets | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/AuthSnippets.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/AuthSnippets.java) |
 | Auth User Flow | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/AuthUserFlow.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/AuthUserFlow.java) |
 | Auth User Query | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/AuthUserQuery.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/AuthUserQuery.java) |
+| Authorize Dataset | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/AuthorizeDataset.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/AuthorizeDataset.java) |
 | Authorized View Tutorial | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/AuthorizedViewTutorial.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/AuthorizedViewTutorial.java) |
 | Browse Table | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/BrowseTable.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/BrowseTable.java) |
 | Cancel Job | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/CancelJob.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/CancelJob.java) |
@@ -234,6 +236,7 @@ Samples are in the [`samples/`](https://github.com/googleapis/java-bigquery/tree
 | Update Dataset Expiration | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/UpdateDatasetExpiration.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/UpdateDatasetExpiration.java) |
 | Update Dataset Partition Expiration | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/UpdateDatasetPartitionExpiration.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/UpdateDatasetPartitionExpiration.java) |
 | Update Iam Policy | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/UpdateIamPolicy.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/UpdateIamPolicy.java) |
+| Update Materialized View | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/UpdateMaterializedView.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/UpdateMaterializedView.java) |
 | Update Model Description | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/UpdateModelDescription.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/UpdateModelDescription.java) |
 | Update Routine | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/UpdateRoutine.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/UpdateRoutine.java) |
 | Update Table Cmek | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/UpdateTableCmek.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/UpdateTableCmek.java) |
@@ -339,7 +342,7 @@ Java is a registered trademark of Oracle and/or its affiliates.
 [kokoro-badge-link-4]: http://storage.googleapis.com/cloud-devrel-public/java/badges/java-bigquery/java8-win.html
 [kokoro-badge-image-5]: http://storage.googleapis.com/cloud-devrel-public/java/badges/java-bigquery/java11.svg
 [kokoro-badge-link-5]: http://storage.googleapis.com/cloud-devrel-public/java/badges/java-bigquery/java11.html
-[stability-image]: https://img.shields.io/badge/stability-ga-green
+[stability-image]: https://img.shields.io/badge/stability-stable-green
 [maven-version-image]: https://img.shields.io/maven-central/v/com.google.cloud/google-cloud-bigquery.svg
 [maven-version-link]: https://search.maven.org/search?q=g:com.google.cloud%20AND%20a:google-cloud-bigquery&core=gav
 [authentication]: https://github.com/googleapis/google-cloud-java#authentication

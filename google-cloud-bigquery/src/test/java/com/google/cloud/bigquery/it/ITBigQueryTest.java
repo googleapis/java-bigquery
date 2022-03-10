@@ -38,6 +38,7 @@ import com.google.cloud.RetryOption;
 import com.google.cloud.Role;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.bigquery.Acl;
+import com.google.cloud.bigquery.Acl.DatasetAclEntity;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQuery.DatasetDeleteOption;
 import com.google.cloud.bigquery.BigQuery.DatasetField;
@@ -122,12 +123,14 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
+import com.google.gson.JsonObject;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystems;
 import java.time.Instant;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -149,6 +152,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.threeten.bp.Duration;
+import org.threeten.extra.PeriodDuration;
 
 public class ITBigQueryTest {
 
@@ -468,9 +472,10 @@ public class ITBigQueryTest {
             .setContentType("application/json")
             .build(),
         JSON_CONTENT_SIMPLE.getBytes(StandardCharsets.UTF_8));
+    InputStream stream =
+        ITBigQueryTest.class.getClassLoader().getResourceAsStream("QueryTestData.csv");
     storage.createFrom(
-        BlobInfo.newBuilder(BUCKET, LOAD_FILE_LARGE).setContentType("text/plain").build(),
-        FileSystems.getDefault().getPath("src/test/resources", "QueryTestData.csv"));
+        BlobInfo.newBuilder(BUCKET, LOAD_FILE_LARGE).setContentType("text/plain").build(), stream);
     DatasetInfo info =
         DatasetInfo.newBuilder(DATASET).setDescription(DESCRIPTION).setLabels(LABELS).build();
     bigquery.create(info);
@@ -704,6 +709,184 @@ public class ITBigQueryTest {
           remoteTable.<StandardTableDefinition>getDefinition().getRangePartitioning());
     } finally {
       bigquery.delete(tableId);
+    }
+  }
+
+  @Test
+  public void testJsonType() throws InterruptedException {
+    String tableName = "test_create_table_jsontype";
+    TableId tableId = TableId.of(DATASET, tableName);
+    Schema schema = Schema.of(Field.of("jsonField", StandardSQLTypeName.JSON));
+    StandardTableDefinition standardTableDefinition = StandardTableDefinition.of(schema);
+    try {
+      // Create a table with a JSON column
+      Table createdTable = bigquery.create(TableInfo.of(tableId, standardTableDefinition));
+      assertNotNull(createdTable);
+
+      // Insert 4 rows of JSON data into the JSON column
+      Map<String, Object> jsonRow1 =
+          Collections.singletonMap(
+              "jsonField", "{\"student\" : {\"name\" : \"Jane\", \"id\": 10}}");
+      Map<String, Object> jsonRow2 =
+          Collections.singletonMap("jsonField", "{\"student\" : {\"name\" : \"Joy\", \"id\": 11}}");
+      Map<String, Object> jsonRow3 =
+          Collections.singletonMap(
+              "jsonField", "{\"student\" : {\"name\" : \"Alice\", \"id\": 12}}");
+      Map<String, Object> jsonRow4 =
+          Collections.singletonMap(
+              "jsonField", "{\"student\" : {\"name\" : \"Bijoy\", \"id\": 14}}");
+      InsertAllRequest request =
+          InsertAllRequest.newBuilder(tableId)
+              .addRow(jsonRow1)
+              .addRow(jsonRow2)
+              .addRow(jsonRow3)
+              .addRow(jsonRow4)
+              .build();
+      InsertAllResponse response = bigquery.insertAll(request);
+      assertFalse(response.hasErrors());
+      assertEquals(0, response.getInsertErrors().size());
+
+      // Query the JSON column with string positional query parameter
+      String sql =
+          "SELECT jsonField.class.student.id FROM "
+              + tableId.getTable()
+              + " WHERE JSON_VALUE(jsonField, \"$.class.student.name\")  = ? ";
+      QueryParameterValue stringParameter = QueryParameterValue.string("Jane");
+      QueryJobConfiguration queryJobConfiguration =
+          QueryJobConfiguration.newBuilder(sql)
+              .setDefaultDataset(DatasetId.of(DATASET))
+              .setUseLegacySql(false)
+              .addPositionalParameter(stringParameter)
+              .build();
+      TableResult result = bigquery.query(queryJobConfiguration);
+      for (FieldValueList values : result.iterateAll()) {
+        assertEquals("10", values.get(0).getValue());
+      }
+
+      // Insert another JSON row parsed from a String with json positional query parameter
+      String dml = "INSERT INTO " + tableId.getTable() + " (jsonField) VALUES(?)";
+      QueryParameterValue jsonParameter =
+          QueryParameterValue.json("{\"class\" : {\"student\" : [{\"name\" : \"Amy\"}]}}");
+      QueryJobConfiguration dmlQueryJobConfiguration =
+          QueryJobConfiguration.newBuilder(dml)
+              .setDefaultDataset(DatasetId.of(DATASET))
+              .setUseLegacySql(false)
+              .addPositionalParameter(jsonParameter)
+              .build();
+      bigquery.query(dmlQueryJobConfiguration);
+      Page<FieldValueList> rows = bigquery.listTableData(tableId);
+      assertEquals(5, Iterables.size(rows.getValues()));
+
+      // Insert another JSON row parsed from a JsonObject with json positional query parameter
+      JsonObject jsonObject = new JsonObject();
+      jsonObject.addProperty("class", "student");
+      QueryParameterValue jsonParameter1 = QueryParameterValue.json(jsonObject);
+      QueryJobConfiguration dmlQueryJobConfiguration1 =
+          QueryJobConfiguration.newBuilder(dml)
+              .setDefaultDataset(DatasetId.of(DATASET))
+              .setUseLegacySql(false)
+              .addPositionalParameter(jsonParameter1)
+              .build();
+      bigquery.query(dmlQueryJobConfiguration1);
+      Page<FieldValueList> rows1 = bigquery.listTableData(tableId);
+      assertEquals(6, Iterables.size(rows1.getValues()));
+      int rowCount = 0;
+      for (FieldValueList row : rows1.iterateAll()) {
+        FieldValue jsonCell = row.get(0);
+        if (rowCount == 1) assertEquals("{\"class\":\"student\"}", jsonCell.getStringValue());
+        rowCount++;
+      }
+
+      // Try inserting a malformed JSON
+      QueryParameterValue badJsonParameter =
+          QueryParameterValue.json("{\"class\" : {\"student\" : [{\"name\" : \"BadBoy\"}}");
+      QueryJobConfiguration dmlQueryJobConfiguration2 =
+          QueryJobConfiguration.newBuilder(dml)
+              .setDefaultDataset(DatasetId.of(DATASET))
+              .setUseLegacySql(false)
+              .addPositionalParameter(badJsonParameter)
+              .build();
+      try {
+        bigquery.query(dmlQueryJobConfiguration2);
+        fail("Querying with malformed JSON shouldn't work");
+      } catch (BigQueryException e) {
+        BigQueryError error = e.getError();
+        assertNotNull(error);
+        assertEquals("invalidQuery", error.getReason());
+      }
+    } finally {
+      assertTrue(bigquery.delete(tableId));
+    }
+  }
+
+  @Test
+  public void testIntervalType() throws InterruptedException {
+    String tableName = "test_create_table_intervaltype";
+    TableId tableId = TableId.of(DATASET, tableName);
+    Schema schema = Schema.of(Field.of("intervalField", StandardSQLTypeName.INTERVAL));
+    StandardTableDefinition standardTableDefinition = StandardTableDefinition.of(schema);
+    try {
+      // Create a table with a JSON column
+      Table createdTable = bigquery.create(TableInfo.of(tableId, standardTableDefinition));
+      assertNotNull(createdTable);
+
+      // Insert 3 rows of Interval data into the Interval column
+      Map<String, Object> intervalRow1 =
+          Collections.singletonMap("intervalField", "123-7 -19 0:24:12.000006");
+      Map<String, Object> intervalRow2 =
+          Collections.singletonMap("intervalField", "P123Y7M-19DT0H24M12.000006S");
+
+      InsertAllRequest request =
+          InsertAllRequest.newBuilder(tableId).addRow(intervalRow1).addRow(intervalRow2).build();
+      InsertAllResponse response = bigquery.insertAll(request);
+      assertFalse(response.hasErrors());
+      assertEquals(0, response.getInsertErrors().size());
+
+      // Insert another Interval row parsed from a String with Interval positional query parameter
+      String dml = "INSERT INTO " + tableId.getTable() + " (intervalField) VALUES(?)";
+      // Parsing from ISO 8610 format String
+      QueryParameterValue intervalParameter =
+          QueryParameterValue.interval("P125Y7M-19DT0H24M12.000006S");
+      QueryJobConfiguration dmlQueryJobConfiguration =
+          QueryJobConfiguration.newBuilder(dml)
+              .setDefaultDataset(DatasetId.of(DATASET))
+              .setUseLegacySql(false)
+              .addPositionalParameter(intervalParameter)
+              .build();
+      bigquery.query(dmlQueryJobConfiguration);
+      Page<FieldValueList> rows = bigquery.listTableData(tableId);
+      assertEquals(3, Iterables.size(rows.getValues()));
+
+      // Parsing from threeten-extra PeriodDuration
+      QueryParameterValue intervalParameter1 =
+          QueryParameterValue.interval(
+              PeriodDuration.of(Period.of(1, 2, 25), java.time.Duration.ofHours(8)));
+      QueryJobConfiguration dmlQueryJobConfiguration1 =
+          QueryJobConfiguration.newBuilder(dml)
+              .setDefaultDataset(DatasetId.of(DATASET))
+              .setUseLegacySql(false)
+              .addPositionalParameter(intervalParameter1)
+              .build();
+      bigquery.query(dmlQueryJobConfiguration1);
+      Page<FieldValueList> rows1 = bigquery.listTableData(tableId);
+      assertEquals(4, Iterables.size(rows1.getValues()));
+
+      // Query the Interval column with Interval positional query parameter
+      String sql = "SELECT intervalField FROM " + tableId.getTable() + " WHERE intervalField = ? ";
+      QueryParameterValue intervalParameter2 =
+          QueryParameterValue.interval("P125Y7M-19DT0H24M12.000006S");
+      QueryJobConfiguration queryJobConfiguration =
+          QueryJobConfiguration.newBuilder(sql)
+              .setDefaultDataset(DatasetId.of(DATASET))
+              .setUseLegacySql(false)
+              .addPositionalParameter(intervalParameter2)
+              .build();
+      TableResult result = bigquery.query(queryJobConfiguration);
+      for (FieldValueList values : result.iterateAll()) {
+        assertEquals("125-7 -19 0:24:12.000006", values.get(0).getValue());
+      }
+    } finally {
+      assertTrue(bigquery.delete(tableId));
     }
   }
 
@@ -1809,6 +1992,47 @@ public class ITBigQueryTest {
     routineAcl.add(Acl.of(new Acl.Routine(routineId)));
     routineDataset = routineDataset.toBuilder().setAcl(routineAcl).build().update();
     assertEquals(routineAcl, routineDataset.getAcl());
+  }
+
+  @Test
+  public void testAuthorizeDataset() {
+    String datasetName = RemoteBigQueryHelper.generateDatasetName();
+    DatasetId datasetId = DatasetId.of(PROJECT_ID, datasetName);
+    List<String> targetTypes = ImmutableList.of("VIEWS");
+    // Specify the acl which will be shared to the authorized dataset
+    List<Acl> acl =
+        ImmutableList.of(
+            Acl.of(new Acl.Group("projectOwners"), Acl.Role.OWNER),
+            Acl.of(new Acl.IamMember("allUsers"), Acl.Role.READER));
+    DatasetInfo datasetInfo =
+        DatasetInfo.newBuilder(datasetId).setAcl(acl).setDescription("shared Dataset").build();
+    Dataset sharedDataset = bigquery.create(datasetInfo);
+    assertNotNull(sharedDataset);
+    assertEquals(sharedDataset.getDescription(), "shared Dataset");
+    // Get the current metadata for the dataset you want to share by calling the datasets.get method
+    List<Acl> sharedDatasetAcl = new ArrayList<>(sharedDataset.getAcl());
+
+    // Create a new dataset to be authorized
+    String authorizedDatasetName = RemoteBigQueryHelper.generateDatasetName();
+    DatasetId authorizedDatasetId = DatasetId.of(PROJECT_ID, authorizedDatasetName);
+    DatasetInfo authorizedDatasetInfo =
+        DatasetInfo.newBuilder(authorizedDatasetId)
+            .setDescription("new Dataset to be authorized by the sharedDataset")
+            .build();
+    Dataset authorizedDataset = bigquery.create(authorizedDatasetInfo);
+    assertNotNull(authorizedDataset);
+    assertEquals(
+        authorizedDataset.getDescription(), "new Dataset to be authorized by the sharedDataset");
+
+    // Add the new DatasetAccessEntry object to the existing sharedDatasetAcl list
+    DatasetAclEntity datasetEntity = new DatasetAclEntity(authorizedDatasetId, targetTypes);
+    sharedDatasetAcl.add(Acl.of(datasetEntity));
+
+    // Update the dataset with the added authorization
+    Dataset updatedDataset = sharedDataset.toBuilder().setAcl(sharedDatasetAcl).build().update();
+
+    // Verify that the authorized dataset has been added
+    assertEquals(sharedDatasetAcl, updatedDataset.getAcl());
   }
 
   @Test
@@ -2922,6 +3146,14 @@ public class ITBigQueryTest {
     assertTrue(bigquery.delete(destinationTable));
     Job queryJob = bigquery.getJob(remoteJob.getJobId());
     JobStatistics.QueryStatistics statistics = queryJob.getStatistics();
+    if (statistics.getBiEngineStats() != null) {
+      assertEquals(statistics.getBiEngineStats().getBiEngineMode(), "DISABLED");
+      assertEquals(
+          statistics.getBiEngineStats().getBiEngineReasons().get(0).getCode(), "OTHER_REASON");
+      assertEquals(
+          statistics.getBiEngineStats().getBiEngineReasons().get(0).getMessage(),
+          "Query output to destination table is not supported.");
+    }
     assertNotNull(statistics.getQueryPlan());
   }
 

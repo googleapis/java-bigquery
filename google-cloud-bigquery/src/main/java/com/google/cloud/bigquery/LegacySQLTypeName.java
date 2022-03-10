@@ -93,6 +93,12 @@ public final class LegacySQLTypeName extends StringEnumValue {
   /** A record type with a nested schema. */
   public static final LegacySQLTypeName RECORD =
       type.createAndRegister("RECORD").setStandardType(StandardSQLTypeName.STRUCT);
+  /** Represents JSON data */
+  public static final LegacySQLTypeName JSON =
+      type.createAndRegister("JSON").setStandardType(StandardSQLTypeName.JSON);
+  /** Represents duration or amount of time. */
+  public static final LegacySQLTypeName INTERVAL =
+      type.createAndRegister("INTERVAL").setStandardType(StandardSQLTypeName.INTERVAL);
 
   private static Map<StandardSQLTypeName, LegacySQLTypeName> standardToLegacyMap = new HashMap<>();
 
