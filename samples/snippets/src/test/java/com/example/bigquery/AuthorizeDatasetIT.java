@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Google LLC
+ * Copyright 2022 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,10 @@ package com.example.bigquery;
 import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertNotNull;
 
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.Schema;
-import com.google.cloud.bigquery.StandardSQLTypeName;
+import com.google.cloud.bigquery.DatasetId;
+import com.google.cloud.bigquery.testing.RemoteBigQueryHelper;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.After;
@@ -32,16 +30,16 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class UndeleteTableIT {
-
+public class AuthorizeDatasetIT {
   private final Logger log = Logger.getLogger(this.getClass().getName());
-  private String tableName;
-  private String recoverTableName;
+  private String userDatasetName;
+  private String srcDatasetName;
   private ByteArrayOutputStream bout;
   private PrintStream out;
   private PrintStream originalPrintStream;
-
-  private static final String BIGQUERY_DATASET_NAME = System.getenv("BIGQUERY_DATASET_NAME");
+  private static final String GOOGLE_CLOUD_PROJECT = System.getenv("GOOGLE_CLOUD_PROJECT");
+  private DatasetId sourceDatasetId;
+  private DatasetId userDatasetId;
 
   private static void requireEnvVar(String varName) {
     assertNotNull(
@@ -51,30 +49,28 @@ public class UndeleteTableIT {
 
   @BeforeClass
   public static void checkRequirements() {
-    requireEnvVar("BIGQUERY_DATASET_NAME");
+    requireEnvVar("GOOGLE_CLOUD_PROJECT");
   }
 
   @Before
   public void setUp() {
+    userDatasetName = RemoteBigQueryHelper.generateDatasetName();
+    srcDatasetName = RemoteBigQueryHelper.generateDatasetName();
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
     originalPrintStream = System.out;
     System.setOut(out);
-
-    tableName = "UNDELETE_TABLE_TEST_" + UUID.randomUUID().toString().substring(0, 8);
-    recoverTableName = "RECOVER_DELETE_TABLE_TEST_" + UUID.randomUUID().toString().substring(0, 8);
-    // Create table in dataset for testing
-    Schema schema =
-        Schema.of(
-            Field.of("stringField", StandardSQLTypeName.STRING),
-            Field.of("booleanField", StandardSQLTypeName.BOOL));
-    CreateTable.createTable(BIGQUERY_DATASET_NAME, tableName, schema);
+    CreateDataset.createDataset(userDatasetName);
+    CreateDataset.createDataset(srcDatasetName);
+    userDatasetId = DatasetId.of(GOOGLE_CLOUD_PROJECT, userDatasetName);
+    sourceDatasetId = DatasetId.of(GOOGLE_CLOUD_PROJECT, srcDatasetName);
   }
 
   @After
   public void tearDown() {
     // Clean up
-    DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, recoverTableName);
+    DeleteDataset.deleteDataset(GOOGLE_CLOUD_PROJECT, userDatasetName);
+    DeleteDataset.deleteDataset(GOOGLE_CLOUD_PROJECT, srcDatasetName);
     // restores print statements in the original method
     System.out.flush();
     System.setOut(originalPrintStream);
@@ -82,8 +78,8 @@ public class UndeleteTableIT {
   }
 
   @Test
-  public void testUndeleteTable() {
-    UndeleteTable.undeleteTable(BIGQUERY_DATASET_NAME, tableName, recoverTableName);
-    assertThat(bout.toString()).contains("Undelete table recovered successfully.");
+  public void testCreateDataset() {
+    AuthorizeDataset.authorizeDataset(sourceDatasetId, userDatasetId);
+    assertThat(bout.toString()).contains(userDatasetId + " updated with the added authorization");
   }
 }
