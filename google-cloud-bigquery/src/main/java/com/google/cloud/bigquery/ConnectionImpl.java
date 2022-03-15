@@ -25,7 +25,6 @@ import com.google.api.services.bigquery.model.QueryParameter;
 import com.google.api.services.bigquery.model.QueryRequest;
 import com.google.api.services.bigquery.model.TableDataList;
 import com.google.api.services.bigquery.model.TableRow;
-import com.google.api.services.bigquery.model.TableSchema;
 import com.google.cloud.RetryHelper;
 import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
@@ -151,8 +150,26 @@ class ConnectionImpl implements Connection {
         createQueryJob(sql, connectionSettings, null, null);
     JobId jobId = JobId.fromPb(queryJob.getJobReference());
     GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
-    return getSubsequentQueryResultsWithJob(
-        firstPage.getTotalRows().longValue(), (long) firstPage.getRows().size(), jobId, firstPage);
+    return getResultSet(firstPage, jobId, sql);
+  }
+
+  private BigQueryResultSet getResultSet(
+      GetQueryResultsResponse firstPage, JobId jobId, String sql) {
+    if (firstPage.getJobComplete()
+        && firstPage.getTotalRows()
+            != null) { // firstPage.getTotalRows() is null if job is not complete
+      return getSubsequentQueryResultsWithJob(
+          firstPage.getTotalRows().longValue(),
+          (long) firstPage.getRows().size(),
+          jobId,
+          firstPage);
+    } else { // job is still running, use dryrun to get Schema
+      com.google.api.services.bigquery.model.Job dryRunJob = createDryRunJob(sql);
+      Schema schema = Schema.fromPb(dryRunJob.getStatistics().getQuery().getSchema());
+      // TODO: check how can we get totalRows and pageRows while the job is still running.
+      // `firstPage.getTotalRows()` returns null
+      return getSubsequentQueryResultsWithJob(null, null, jobId, firstPage, schema);
+    }
   }
 
   /**
@@ -185,8 +202,7 @@ class ConnectionImpl implements Connection {
         createQueryJob(sql, connectionSettings, parameters, labels);
     JobId jobId = JobId.fromPb(queryJob.getJobReference());
     GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
-    return getSubsequentQueryResultsWithJob(
-        firstPage.getTotalRows().longValue(), (long) firstPage.getRows().size(), jobId, firstPage);
+    return getResultSet(firstPage, jobId, sql);
   }
 
   static class EndOfFieldValueList
@@ -538,7 +554,30 @@ class ConnectionImpl implements Connection {
         ? highThroughPutRead(
             destinationTable,
             firstPage.getTotalRows().longValue(),
-            firstPage.getSchema(),
+            Schema.fromPb(firstPage.getSchema()),
+            getBigQueryResultSetStats(
+                jobId)) // discord first page and stream the entire BigQueryResultSet using
+        // the Read API
+        : tableDataList(firstPage, jobId);
+  }
+
+  /* Returns query results using either tabledata.list or the high throughput Read API */
+  private BigQueryResultSet getSubsequentQueryResultsWithJob(
+      Long totalRows,
+      Long pageRows,
+      JobId jobId,
+      GetQueryResultsResponse firstPage,
+      Schema schema) {
+    TableId destinationTable = getDestinationTable(jobId);
+    return useReadAPI(totalRows, pageRows, schema)
+        ? highThroughPutRead(
+            destinationTable,
+            totalRows == null
+                ? -1L
+                : totalRows
+                    .longValue(), // totalRows is null when the job is still running. TODO: Check if
+            // any workaround is possible
+            schema,
             getBigQueryResultSetStats(
                 jobId)) // discord first page and stream the entire BigQueryResultSet using
         // the Read API
@@ -612,10 +651,7 @@ class ConnectionImpl implements Connection {
   }
 
   private BigQueryResultSet highThroughPutRead(
-      TableId destinationTable,
-      long totalRows,
-      TableSchema tableSchema,
-      BigQueryResultSetStats stats) {
+      TableId destinationTable, long totalRows, Schema schema, BigQueryResultSetStats stats) {
 
     try {
       if (bqReadClient == null) { // if the read client isn't already initialized. Not thread safe.
@@ -646,7 +682,6 @@ class ConnectionImpl implements Connection {
       BlockingQueue<Tuple<Map<String, Object>, Boolean>> buffer =
           new LinkedBlockingDeque<>(bufferSize);
       Map<String, Integer> arrowNameToIndex = new HashMap<>();
-      Schema schema = Schema.fromPb(tableSchema);
       // deserialize and populate the buffer async, so that the client isn't blocked
       processArrowStreamAsync(
           readSession,
@@ -851,12 +886,24 @@ class ConnectionImpl implements Connection {
 
   private boolean useReadAPI(Long totalRows, Long pageRows, Schema schema) {
 
+    // TODO(prasmish) get this logic review - totalRows and pageRows are returned null when the job
+    // is not complete
+    if ((totalRows == null || pageRows == null)
+        && Boolean.TRUE.equals(
+            connectionSettings
+                .getUseReadAPI())) { // totalRows and pageRows are returned null when the job is not
+      // complete
+      return true;
+    }
+
+    // Schema schema = Schema.fromPb(tableSchema);
     if (containsIntervalType(
         schema)) { // finds out if there's an interval type in the schema. Implementation to be used
       // until ReadAPI supports Interval
       logger.log(Level.INFO, "\n Schema has IntervalType, Disabling ReadAPI");
       return false;
     }
+
     long resultRatio = totalRows / pageRows;
     if (Boolean.TRUE.equals(connectionSettings.getUseReadAPI())
         && connectionSettings.getReadClientConnectionConfiguration()
