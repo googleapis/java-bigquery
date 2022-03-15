@@ -23,11 +23,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.google.cloud.ServiceOptions;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryError;
 import com.google.cloud.bigquery.BigQueryException;
-import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.BigQueryResultSet;
 import com.google.cloud.bigquery.Connection;
 import com.google.cloud.bigquery.ConnectionSettings;
@@ -56,6 +54,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.arrow.vector.util.JsonStringArrayList;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -67,17 +66,16 @@ public class ITNightlyBigQueryTest {
   private static final String DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String TABLE = "TEMP_RS_TEST_TABLE";
   // Script will populate NUM_BATCHES*REC_PER_BATCHES number of records (eg: 100*10000 = 1M)
-  private static final int NUM_BATCHES = 100;
+  private static final int NUM_BATCHES = 55;
   private static final int REC_PER_BATCHES = 10000;
-  private static final int LIMIT_RECS = 900000;
+  private static final int LIMIT_RECS = 500000;
   private static int rowCnt = 0;
-  private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
   private static BigQuery bigquery;
   private static final String QUERY =
-      "select StringField, GeographyField, BooleanField, BigNumericField, IntegerField, NumericField, BytesField, TimestampField, "
-          + " TimeField, DateField, IntegerArrayField,   RecordField.BooleanField, RecordField.StringField , JSONField"
-          + " from BQ_RS_ARROW_TESTING.Table1 order by IntegerField asc LIMIT "
-          + LIMIT_RECS;
+      String.format(
+          "select StringField, GeographyField, BooleanField, BigNumericField, IntegerField, NumericField, BytesField, TimestampField, TimeField, DateField, "
+              + "IntegerArrayField,  RecordField.BooleanField, RecordField.StringField , JSONField from %s order by IntegerField asc LIMIT %s",
+          TABLE, LIMIT_RECS);
 
   private static final Schema BQ_SCHEMA =
       Schema.of(
@@ -187,7 +185,7 @@ public class ITNightlyBigQueryTest {
             .build();
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder()
-            .setDefaultDataset(DatasetId.of("BQ_RS_ARROW_TESTING"))
+            .setDefaultDataset(DatasetId.of(DATASET))
             .setNumBufferedRows(10000L) // page size
             .setPriority(
                 QueryJobConfiguration.Priority
@@ -195,53 +193,56 @@ public class ITNightlyBigQueryTest {
             .setReadClientConnectionConfiguration(clientConnectionConfiguration)
             .setUseReadAPI(true)
             .build();
-    Connection connection =
-        BigQueryOptions.getDefaultInstance().getService().createConnection(connectionSettings);
+    Connection connection = bigquery.createConnection(connectionSettings);
 
     BigQueryResultSet bigQueryResultSet = connection.executeSelect(QUERY);
     ResultSet rs = bigQueryResultSet.getResultSet();
     int cnt = 0;
 
-    assertTrue(rs.next()); // read first record, which is null
-    ++cnt;
-    assertNull(rs.getString("StringField"));
-    assertNull(rs.getString("GeographyField"));
-    assertNull(rs.getObject("IntegerArrayField"));
-    assertFalse(rs.getBoolean("BooleanField"));
-    assertTrue(0.0d == rs.getDouble("BigNumericField"));
-    assertTrue(0 == rs.getInt("IntegerField"));
-    assertTrue(0L == rs.getLong("NumericField"));
-    assertNull(rs.getBytes("BytesField"));
-    assertNull(rs.getTimestamp("TimestampField"));
-    assertNull(rs.getTime("TimeField"));
-    assertNull(rs.getDate("DateField"));
-    assertNull(rs.getString("JSONField"));
-    assertFalse(rs.getBoolean("BooleanField_1"));
-    assertNull(rs.getString("StringField_1"));
     int prevIntegerFieldVal = 0;
     while (rs.next()) {
       ++cnt;
+      if (cnt == 1) { // first row is supposed to be null
+        assertNull(rs.getString("StringField"));
+        assertNull(rs.getString("GeographyField"));
+        Object intAryField = rs.getObject("IntegerArrayField");
+        if (intAryField instanceof JsonStringArrayList) {
+          assertEquals(
+              new JsonStringArrayList(),
+              ((JsonStringArrayList) intAryField)); // null array is returned as an empty array
+        }
+        assertFalse(rs.getBoolean("BooleanField"));
+        assertTrue(0.0d == rs.getDouble("BigNumericField"));
+        assertTrue(0 == rs.getInt("IntegerField"));
+        assertTrue(0L == rs.getLong("NumericField"));
+        assertNull(rs.getBytes("BytesField"));
+        assertNull(rs.getTimestamp("TimestampField"));
+        assertNull(rs.getTime("TimeField"));
+        assertNull(rs.getDate("DateField"));
+        assertNull(rs.getString("JSONField"));
+        assertFalse(rs.getBoolean("BooleanField_1"));
+        assertNull(rs.getString("StringField_1"));
+      } else { // remaining rows are supposed to be non null
+        assertNotNull(rs.getString("StringField"));
+        assertNotNull(rs.getString("GeographyField"));
+        assertNotNull(rs.getObject("IntegerArrayField"));
+        assertTrue(rs.getBoolean("BooleanField"));
+        assertTrue(0.0d < rs.getDouble("BigNumericField"));
+        assertTrue(0 < rs.getInt("IntegerField"));
+        assertTrue(0L < rs.getLong("NumericField"));
+        assertNotNull(rs.getBytes("BytesField"));
+        assertNotNull(rs.getTimestamp("TimestampField"));
+        assertNotNull(rs.getTime("TimeField"));
+        assertNotNull(rs.getDate("DateField"));
+        assertNotNull(rs.getString("JSONField"));
+        assertFalse(rs.getBoolean("BooleanField_1"));
+        assertNotNull(rs.getString("StringField_1"));
 
-      assertNotNull(rs.getString("StringField"));
-      assertNotNull(rs.getString("GeographyField"));
-      assertNotNull(rs.getObject("IntegerArrayField"));
-      assertTrue(rs.getBoolean("BooleanField"));
-      assertTrue(0.0d < rs.getDouble("BigNumericField"));
-      assertTrue(0 < rs.getInt("IntegerField"));
-      assertTrue(0L < rs.getLong("NumericField"));
-      assertNotNull(rs.getBytes("BytesField"));
-      assertNotNull(rs.getTimestamp("TimestampField"));
-      assertNotNull(rs.getTime("TimeField"));
-      assertNotNull(rs.getDate("DateField"));
-      assertNotNull(rs.getString("JSONField"));
-      assertFalse(rs.getBoolean("BooleanField_1"));
-      assertNotNull(rs.getString("StringField_1"));
-
-      // check the order of the records
-      assertTrue(prevIntegerFieldVal < rs.getInt("IntegerField"));
-      prevIntegerFieldVal = rs.getInt("IntegerField");
+        // check the order of the records
+        assertTrue(prevIntegerFieldVal < rs.getInt("IntegerField"));
+        prevIntegerFieldVal = rs.getInt("IntegerField");
+      }
     }
-
     assertEquals(LIMIT_RECS, cnt);
   }
 
