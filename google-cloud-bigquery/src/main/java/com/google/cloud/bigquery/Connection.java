@@ -16,6 +16,7 @@
 
 package com.google.cloud.bigquery;
 
+import com.google.api.core.BetaApi;
 import com.google.api.services.bigquery.model.QueryParameter;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ import java.util.Map;
 public interface Connection {
 
   /** Sends a query cancel request. This call will return immediately */
+  @BetaApi
   Boolean cancel() throws BigQuerySQLException;
 
   /**
@@ -36,6 +38,7 @@ public interface Connection {
    * @param sql typically a static SQL SELECT statement
    * @exception BigQuerySQLException if a database access error occurs
    */
+  @BetaApi
   BigQueryDryRunResult dryRun(String sql) throws BigQuerySQLException;
 
   /**
@@ -69,6 +72,7 @@ public interface Connection {
    * @return a ResultSet that contains the data produced by the query
    * @exception BigQuerySQLException if a database access error occurs
    */
+  @BetaApi
   BigQueryResultSet executeSelect(String sql) throws BigQuerySQLException;
 
   /**
@@ -86,6 +90,7 @@ public interface Connection {
    * @return a ResultSet that contains the data produced by the query
    * @exception BigQuerySQLException if a database access error occurs
    */
+  @BetaApi
   BigQueryResultSet executeSelect(
       String sql, List<QueryParameter> parameters, Map<String, String> labels)
       throws BigQuerySQLException;
