@@ -19,6 +19,7 @@ package com.google.cloud.bigquery;
 import static com.google.cloud.RetryHelper.runWithRetries;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
+import com.google.api.core.BetaApi;
 import com.google.api.services.bigquery.model.GetQueryResultsResponse;
 import com.google.api.services.bigquery.model.JobConfigurationQuery;
 import com.google.api.services.bigquery.model.QueryParameter;
@@ -108,6 +109,7 @@ class ConnectionImpl implements Connection {
    * @return Boolean value true if the threads were interrupted
    * @throws BigQuerySQLException
    */
+  @BetaApi
   @Override
   public synchronized Boolean cancel() throws BigQuerySQLException {
     queryTaskExecutor.shutdownNow();
@@ -121,6 +123,7 @@ class ConnectionImpl implements Connection {
    * @return BigQueryDryRunResult containing List<QueryParameter> and Schema
    * @throws BigQuerySQLException
    */
+  @BetaApi
   @Override
   public BigQueryDryRunResult dryRun(String sql) throws BigQuerySQLException {
     com.google.api.services.bigquery.model.Job dryRunJob = createDryRunJob(sql);
@@ -137,6 +140,7 @@ class ConnectionImpl implements Connection {
    * @return BigQueryResultSet containing the output of the query
    * @throws BigQuerySQLException
    */
+  @BetaApi
   @Override
   public BigQueryResultSet executeSelect(String sql) throws BigQuerySQLException {
     // use jobs.query if all the properties of connectionSettings are supported
@@ -186,6 +190,7 @@ class ConnectionImpl implements Connection {
    * @return BigQueryResultSet containing the output of the query
    * @throws BigQuerySQLException
    */
+  @BetaApi
   @Override
   public BigQueryResultSet executeSelect(
       String sql, List<QueryParameter> parameters, Map<String, String> labels)
@@ -747,7 +752,7 @@ class ConnectionImpl implements Connection {
     private final VectorSchemaRoot root;
     private final VectorLoader loader;
 
-    public ArrowRowReader(ArrowSchema arrowSchema, Map<String, Integer> arrowNameToIndex)
+    private ArrowRowReader(ArrowSchema arrowSchema, Map<String, Integer> arrowNameToIndex)
         throws IOException {
       org.apache.arrow.vector.types.pojo.Schema schema =
           MessageSerializer.deserializeSchema(
@@ -767,7 +772,7 @@ class ConnectionImpl implements Connection {
     }
 
     /** @param batch object returned from the ReadRowsResponse. */
-    public void processRows(
+    private void processRows(
         ArrowRecordBatch batch,
         BlockingQueue<Tuple<Map<String, Object>, Boolean>> buffer,
         Schema schema)
