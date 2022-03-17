@@ -157,8 +157,8 @@ class ConnectionImpl implements Connection {
     return getResultSet(firstPage, jobId, sql);
   }
 
-  private BigQueryResultSet getResultSet(
-      GetQueryResultsResponse firstPage, JobId jobId, String sql) {
+  @VisibleForTesting
+  BigQueryResultSet getResultSet(GetQueryResultsResponse firstPage, JobId jobId, String sql) {
     if (firstPage.getJobComplete()
         && firstPage.getTotalRows()
             != null) { // firstPage.getTotalRows() is null if job is not complete
@@ -264,7 +264,8 @@ class ConnectionImpl implements Connection {
     }
   }
 
-  private BigQueryResultSetStats getBigQueryResultSetStats(JobId jobId) {
+  @VisibleForTesting
+  BigQueryResultSetStats getBigQueryResultSetStats(JobId jobId) {
     // Create GetQueryResultsResponse query statistics
     Job queryJob = getQueryJobRpc(jobId);
     JobStatistics.QueryStatistics statistics = queryJob.getStatistics();
@@ -521,7 +522,8 @@ class ConnectionImpl implements Connection {
   }
 
   /* Helper method that determines the optimal number of caches pages to improve read performance */
-  private int getPageCacheSize(Long numBufferedRows, long numRows, Schema schema) {
+  @VisibleForTesting
+  int getPageCacheSize(Long numBufferedRows, long numRows, Schema schema) {
     final int MIN_CACHE_SIZE = 3; // Min number of pages in the page size
     final int MAX_CACHE_SIZE = 20; // //Min number of pages in the page size
     int columnsRead = schema.getFields().size();
@@ -567,7 +569,8 @@ class ConnectionImpl implements Connection {
   }
 
   /* Returns query results using either tabledata.list or the high throughput Read API */
-  private BigQueryResultSet getSubsequentQueryResultsWithJob(
+  @VisibleForTesting
+  BigQueryResultSet getSubsequentQueryResultsWithJob(
       Long totalRows,
       Long pageRows,
       JobId jobId,
@@ -655,7 +658,8 @@ class ConnectionImpl implements Connection {
     }
   }
 
-  private BigQueryResultSet highThroughPutRead(
+  @VisibleForTesting
+  BigQueryResultSet highThroughPutRead(
       TableId destinationTable, long totalRows, Schema schema, BigQueryResultSetStats stats) {
 
     try {
@@ -889,7 +893,8 @@ class ConnectionImpl implements Connection {
         && connectionSettings.getWriteDisposition() == null;
   }
 
-  private boolean useReadAPI(Long totalRows, Long pageRows, Schema schema) {
+  @VisibleForTesting
+  boolean useReadAPI(Long totalRows, Long pageRows, Schema schema) {
 
     // TODO(prasmish) get this logic review - totalRows and pageRows are returned null when the job
     // is not complete
@@ -942,7 +947,8 @@ class ConnectionImpl implements Connection {
   }
 
   // Used for job.query API endpoint
-  private QueryRequest createQueryRequest(
+  @VisibleForTesting
+  QueryRequest createQueryRequest(
       ConnectionSettings connectionSettings,
       String sql,
       List<QueryParameter> queryParameters,
@@ -982,7 +988,8 @@ class ConnectionImpl implements Connection {
   }
 
   // Used by jobs.getQueryResults API endpoint
-  private com.google.api.services.bigquery.model.Job createQueryJob(
+  @VisibleForTesting
+  com.google.api.services.bigquery.model.Job createQueryJob(
       String sql,
       ConnectionSettings connectionSettings,
       List<QueryParameter> queryParameters,
