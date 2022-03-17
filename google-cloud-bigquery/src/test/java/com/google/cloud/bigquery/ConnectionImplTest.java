@@ -17,6 +17,7 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verify;
@@ -31,7 +32,10 @@ import com.google.common.collect.ImmutableList;
 import java.math.BigInteger;
 import java.sql.SQLException;
 import java.util.AbstractList;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import org.junit.Before;
@@ -415,5 +419,102 @@ public class ConnectionImplTest {
         .createJobForQuery(any(com.google.api.services.bigquery.model.Job.class));
     verify(connectionSpy, times(1))
         .tableDataList(any(GetQueryResultsResponse.class), any(JobId.class));
+  }
+
+  @Test
+  public void testExecuteSelectSlow() throws BigQuerySQLException {
+    ConnectionImpl connectionSpy = Mockito.spy(connection);
+    doReturn(false).when(connectionSpy).isFastQuerySupported();
+    com.google.api.services.bigquery.model.JobStatistics jobStatistics =
+        new com.google.api.services.bigquery.model.JobStatistics();
+    com.google.api.services.bigquery.model.Job jobResponseMock =
+        new com.google.api.services.bigquery.model.Job()
+            .setJobReference(QUERY_JOB.toPb())
+            .setId(JOB)
+            .setStatus(new com.google.api.services.bigquery.model.JobStatus().setState("DONE"))
+            .setStatistics(jobStatistics);
+
+    doReturn(jobResponseMock)
+        .when(connectionSpy)
+        .createQueryJob(SQL_QUERY, connectionSettings, null, null);
+    doReturn(GET_QUERY_RESULTS_RESPONSE)
+        .when(connectionSpy)
+        .getQueryResultsFirstPage(any(JobId.class));
+    doReturn(BQ_RS_MOCK_RES)
+        .when(connectionSpy)
+        .getResultSet(any(GetQueryResultsResponse.class), any(JobId.class), any(String.class));
+    BigQueryResultSet res = connectionSpy.executeSelect(SQL_QUERY);
+    assertEquals(res.getTotalRows(), 2);
+    assertEquals(QUERY_SCHEMA, res.getSchema());
+    verify(connectionSpy, times(1))
+        .getResultSet(any(GetQueryResultsResponse.class), any(JobId.class), any(String.class));
+  }
+
+  @Test
+  public void testExecuteSelectSlowWithParams() throws BigQuerySQLException {
+    ConnectionImpl connectionSpy = Mockito.spy(connection);
+    List<QueryParameter> parameters = new ArrayList<>();
+    Map<String, String> labels = new HashMap<>();
+    doReturn(false).when(connectionSpy).isFastQuerySupported();
+    com.google.api.services.bigquery.model.JobStatistics jobStatistics =
+        new com.google.api.services.bigquery.model.JobStatistics();
+    com.google.api.services.bigquery.model.Job jobResponseMock =
+        new com.google.api.services.bigquery.model.Job()
+            .setJobReference(QUERY_JOB.toPb())
+            .setId(JOB)
+            .setStatus(new com.google.api.services.bigquery.model.JobStatus().setState("DONE"))
+            .setStatistics(jobStatistics);
+
+    doReturn(jobResponseMock)
+        .when(connectionSpy)
+        .createQueryJob(SQL_QUERY, connectionSettings, parameters, labels);
+    doReturn(GET_QUERY_RESULTS_RESPONSE)
+        .when(connectionSpy)
+        .getQueryResultsFirstPage(any(JobId.class));
+    doReturn(BQ_RS_MOCK_RES)
+        .when(connectionSpy)
+        .getResultSet(any(GetQueryResultsResponse.class), any(JobId.class), any(String.class));
+    BigQueryResultSet res = connectionSpy.executeSelect(SQL_QUERY, parameters, labels);
+    assertEquals(res.getTotalRows(), 2);
+    assertEquals(QUERY_SCHEMA, res.getSchema());
+    verify(connectionSpy, times(1))
+        .getResultSet(any(GetQueryResultsResponse.class), any(JobId.class), any(String.class));
+  }
+
+  @Test
+  public void testGetSubsequentQueryResultsWithJob() {
+    ConnectionImpl connectionSpy = Mockito.spy(connection);
+    JobId jobId = mock(JobId.class);
+    BigQueryResultSetStats bqRsStats = mock(BigQueryResultSetStats.class);
+    doReturn(true)
+        .when(connectionSpy)
+        .useReadAPI(any(Long.class), any(Long.class), any(Schema.class));
+    doReturn(BQ_RS_MOCK_RES)
+        .when(connectionSpy)
+        .highThroughPutRead(
+            any(TableId.class),
+            any(Long.class),
+            any(Schema.class),
+            any(BigQueryResultSetStats.class));
+
+    doReturn(TABLE_NAME).when(connectionSpy).getDestinationTable(any(JobId.class));
+    doReturn(bqRsStats).when(connectionSpy).getBigQueryResultSetStats(any(JobId.class));
+    BigQueryResultSet res =
+        connectionSpy.getSubsequentQueryResultsWithJob(
+            10000L, 100L, jobId, GET_QUERY_RESULTS_RESPONSE);
+    assertEquals(res.getTotalRows(), 2);
+    assertEquals(QUERY_SCHEMA, res.getSchema());
+    verify(connectionSpy, times(1))
+        .getSubsequentQueryResultsWithJob(10000L, 100L, jobId, GET_QUERY_RESULTS_RESPONSE);
+  }
+
+  @Test
+  public void testGetPageCacheSize() {
+    ConnectionImpl connectionSpy = Mockito.spy(connection);
+    // number of cached pages should be within a range
+    assertTrue(connectionSpy.getPageCacheSize(10000L, 100, QUERY_SCHEMA) >= 3);
+    assertTrue(connectionSpy.getPageCacheSize(100000000L, 100, QUERY_SCHEMA) <= 20);
+    verify(connectionSpy, times(2))
+        .getPageCacheSize(any(Long.class), any(Long.class), any(Schema.class));
   }
 }
