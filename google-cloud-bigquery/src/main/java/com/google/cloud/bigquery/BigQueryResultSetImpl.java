@@ -23,6 +23,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Map;
@@ -154,10 +155,12 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
         Object currentVal = curTuple.x().get(fieldName);
         if (currentVal == null) {
           return null;
-        }
-        if (currentVal instanceof JsonStringArrayList) { // arrays
+        } else if (currentVal instanceof JsonStringArrayList) { // arrays
           JsonStringArrayList jsnAry = (JsonStringArrayList) currentVal;
           return jsnAry.toString();
+        } else if (currentVal instanceof LocalDateTime) {
+          LocalDateTime dateTime = (LocalDateTime) currentVal;
+          return dateTime.toString();
         } else {
           Text textVal = (Text) currentVal;
           return textVal.toString();
