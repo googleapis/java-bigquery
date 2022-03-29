@@ -25,7 +25,8 @@ public interface BigQueryResultSet<T> {
 
   /**
    * Returns the total number of rows in the complete result set, which can be more than the number
-   * of rows in the first page of results.
+   * of rows in the first page of results. This might return -1 if the query is long running and the
+   * job is not complete at the time this object is returned.
    */
   long getTotalRows();
 
