@@ -950,6 +950,7 @@ public class ITBigQueryTest {
     }
   }
 
+  /* TODO(prasmish): replicate this test case for executeSelect on the relevant part */
   @Test
   public void testJsonType() throws InterruptedException {
     String tableName = "test_create_table_jsontype";
@@ -1057,6 +1058,7 @@ public class ITBigQueryTest {
     }
   }
 
+  /* TODO(prasmish): replicate this test case for executeSelect on the relevant part */
   @Test
   public void testIntervalType() throws InterruptedException {
     String tableName = "test_create_table_intervaltype";
@@ -1938,6 +1940,7 @@ public class ITBigQueryTest {
     assertTrue(bigquery.delete(TableId.of(DATASET, tableName)));
   }
 
+  /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testListAllTableData() {
     Page<FieldValueList> rows = bigquery.listTableData(TABLE_ID);
@@ -2273,6 +2276,7 @@ public class ITBigQueryTest {
     assertEquals(sharedDatasetAcl, updatedDataset.getAcl());
   }
 
+  /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testSingleStatementsQueryException() throws InterruptedException {
     String invalidQuery =
@@ -2289,6 +2293,7 @@ public class ITBigQueryTest {
     }
   }
 
+  /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testMultipleStatementsQueryException() throws InterruptedException {
     String invalidQuery =
@@ -2307,6 +2312,7 @@ public class ITBigQueryTest {
     }
   }
 
+  /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testQuery() throws InterruptedException {
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
@@ -2339,6 +2345,7 @@ public class ITBigQueryTest {
     assertNotNull(statistics.getQueryPlan());
   }
 
+  /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testQueryTimeStamp() throws InterruptedException {
     String query = "SELECT TIMESTAMP '2022-01-24T23:54:25.095574Z'";
@@ -2373,6 +2380,7 @@ public class ITBigQueryTest {
     }
   }
 
+  /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testQueryCaseInsensitiveSchemaFieldByGetName() throws InterruptedException {
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
@@ -2401,6 +2409,7 @@ public class ITBigQueryTest {
     assertEquals(2, rowCount);
   }
 
+  /* TODO(prasmish): replicate bigquery.query part of the test case for executeSelect - modify this test case */
   @Test
   public void testQueryExternalHivePartitioningOptionAutoLayout() throws InterruptedException {
     String tableName = "test_queryexternalhivepartition_autolayout_table";
@@ -2435,6 +2444,7 @@ public class ITBigQueryTest {
     assertTrue(bigquery.delete(tableId));
   }
 
+  /* TODO(prasmish): replicate bigquery.query part of the test case for executeSelect - modify this test case */
   @Test
   public void testQueryExternalHivePartitioningOptionCustomLayout() throws InterruptedException {
     String tableName = "test_queryexternalhivepartition_customlayout_table";
@@ -2848,6 +2858,7 @@ public class ITBigQueryTest {
     assertEquals(10, arrayOfStructFieldValue.get(1).getRecordValue().get(1).getLongValue());
   }
 
+  /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testFastQueryMultipleRuns() throws InterruptedException {
     String query =
@@ -2880,6 +2891,7 @@ public class ITBigQueryTest {
     assertFalse(result2.hasNextPage());
   }
 
+  /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testFastQuerySinglePageDuplicateRequestIds() throws InterruptedException {
     String query =
@@ -2909,6 +2921,7 @@ public class ITBigQueryTest {
     assertFalse(result2.hasNextPage());
   }
 
+  /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testFastSQLQuery() throws InterruptedException {
     String query =
@@ -2938,6 +2951,7 @@ public class ITBigQueryTest {
     }
   }
 
+  /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testFastSQLQueryMultiPage() throws InterruptedException {
     String query =
@@ -3064,6 +3078,7 @@ public class ITBigQueryTest {
     }
   }
 
+  /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testFastQueryHTTPException() throws InterruptedException {
     String queryInvalid =
@@ -3166,6 +3181,7 @@ public class ITBigQueryTest {
     assertEquals(2L, statistics.getDmlStats().getUpdatedRowCount().longValue());
   }
 
+  /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testTransactionInfo() throws InterruptedException {
     String tableName = TABLE_ID_FASTQUERY.getTable();
@@ -3187,6 +3203,7 @@ public class ITBigQueryTest {
     }
   }
 
+  /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testScriptStatistics() throws InterruptedException {
     String script =
@@ -3267,6 +3284,7 @@ public class ITBigQueryTest {
     assertNotNull(statistics.getTotalBytesProcessed());
   }
 
+  /* TODO(prasmish): replicate relevant parts of the test case for executeSelect */
   @Test
   public void testPositionalQueryParameters() throws InterruptedException {
     String query =
@@ -3337,6 +3355,7 @@ public class ITBigQueryTest {
     }
   }
 
+  /* TODO(prasmish): replicate relevant parts of the test case for executeSelect */
   @Test
   public void testNamedQueryParameters() throws InterruptedException {
     String query =
@@ -3359,6 +3378,7 @@ public class ITBigQueryTest {
     assertEquals(2, Iterables.size(result.getValues()));
   }
 
+  /* TODO(prasmish): replicate relevant parts of the test case for executeSelect */
   @Test
   public void testStructNamedQueryParameters() throws InterruptedException {
     QueryParameterValue booleanValue = QueryParameterValue.bool(true);
@@ -3413,6 +3433,7 @@ public class ITBigQueryTest {
     assertEquals("test-stringField", record.getRecordValue().get("stringField").getStringValue());
   }
 
+  /* TODO(prasmish): replicate relevant parts of the test case for executeSelect */
   @Test
   public void testNestedStructNamedQueryParameters() throws InterruptedException {
     QueryParameterValue booleanValue = QueryParameterValue.bool(true);
@@ -3456,6 +3477,7 @@ public class ITBigQueryTest {
     }
   }
 
+  /* TODO(prasmish): replicate relevant parts of the test case for executeSelect */
   @Test
   public void testBytesParameter() throws Exception {
     String query = "SELECT BYTE_LENGTH(@p) AS length";
@@ -3745,6 +3767,7 @@ public class ITBigQueryTest {
     assertTrue(remoteTable.delete());
   }
 
+  /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testQueryJob() throws InterruptedException, TimeoutException {
     String tableName = "test_query_job_table";
@@ -3789,6 +3812,7 @@ public class ITBigQueryTest {
     assertNotNull(statistics.getQueryPlan());
   }
 
+  /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testQueryJobWithConnectionProperties() throws InterruptedException {
     String tableName = "test_query_job_table_connection_properties";
@@ -3808,6 +3832,7 @@ public class ITBigQueryTest {
     assertTrue(bigquery.delete(destinationTable));
   }
 
+  /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testQueryJobWithLabels() throws InterruptedException, TimeoutException {
     String tableName = "test_query_job_table";
@@ -3831,6 +3856,7 @@ public class ITBigQueryTest {
     }
   }
 
+  /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testQueryJobWithRangePartitioning() throws InterruptedException {
     String tableName = "test_query_job_table_rangepartitioning";
