@@ -198,7 +198,13 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
           throw new SQLException(String.format("Field %s not found", fieldName));
         }
         Object curVal = curTuple.x().get(fieldName);
-        return curVal == null ? 0 : ((BigDecimal) curVal).intValue();
+        if (curVal == null) {
+          return 0;
+        }
+        if (curVal instanceof Text) { // parse from text to int
+          return Integer.parseInt(((Text) curVal).toString());
+        }
+        return ((BigDecimal) curVal).intValue();
       }
     }
 
