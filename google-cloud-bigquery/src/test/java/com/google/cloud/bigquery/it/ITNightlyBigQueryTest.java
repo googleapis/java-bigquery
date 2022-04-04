@@ -45,12 +45,19 @@ import com.google.cloud.bigquery.TableDefinition;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableInfo;
 import com.google.cloud.bigquery.testing.RemoteBigQueryHelper;
+import com.google.common.io.BaseEncoding;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Time;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -65,16 +72,19 @@ public class ITNightlyBigQueryTest {
   private static final Logger logger = Logger.getLogger(ITNightlyBigQueryTest.class.getName());
   private static final String DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String TABLE = "TEMP_RS_TEST_TABLE";
+  private static final byte[] BYTES = "TestByteValue".getBytes(StandardCharsets.UTF_8);
+  private static final String BYTES_BASE64 = BaseEncoding.base64().encode(BYTES);
   // Script will populate NUM_BATCHES*REC_PER_BATCHES number of records (eg: 100*10000 = 1M)
-  private static final int NUM_BATCHES = 55;
+  private static final int NUM_BATCHES = 35;
   private static final int REC_PER_BATCHES = 10000;
-  private static final int LIMIT_RECS = 500000;
+  private static final int LIMIT_RECS = 300000;
   private static int rowCnt = 0;
   private static BigQuery bigquery;
   private static final String QUERY =
       String.format(
-          "select StringField, GeographyField, BooleanField, BigNumericField, IntegerField, NumericField, BytesField, TimestampField, TimeField, DateField, "
-              + "IntegerArrayField,  RecordField.BooleanField, RecordField.StringField , JSONField, JSONField.hello, JSONField.id from %s.%s order by IntegerField asc LIMIT %s",
+          "select StringField, GeographyField, BooleanField, BigNumericField, IntegerField, NumericField, BytesField,  "
+              + "TimestampField, TimeField, DateField, IntegerArrayField,  RecordField.BooleanField, RecordField.StringField ,"
+              + " JSONField, JSONField.hello, JSONField.id from %s.%s order by IntegerField asc LIMIT %s",
           DATASET, TABLE, LIMIT_RECS);
 
   private static final Schema BQ_SCHEMA =
@@ -137,10 +147,6 @@ public class ITNightlyBigQueryTest {
               .setMode(Field.Mode.NULLABLE)
               .setDescription("DateDescription")
               .build(),
-          Field.newBuilder("DateTimeField", StandardSQLTypeName.DATETIME)
-              .setMode(Field.Mode.NULLABLE)
-              .setDescription("DateTimeDescription")
-              .build(),
           Field.newBuilder("JSONField", StandardSQLTypeName.JSON)
               .setMode(Field.Mode.NULLABLE)
               .setDescription("JSONFieldDescription")
@@ -196,15 +202,13 @@ public class ITNightlyBigQueryTest {
     Connection connection = bigquery.createConnection(connectionSettings);
 
     BigQueryResultSet bigQueryResultSet = connection.executeSelect(QUERY);
-    System.out.println(QUERY);
     logger.log(Level.INFO, "Query used: {0}", QUERY);
     ResultSet rs = bigQueryResultSet.getResultSet();
     int cnt = 0;
 
     int prevIntegerFieldVal = 0;
     while (rs.next()) {
-      ++cnt;
-      if (cnt == 1) { // first row is supposed to be null
+      if (cnt == 0) { // first row is supposed to be null
         assertNull(rs.getString("StringField"));
         assertNull(rs.getString("GeographyField"));
         Object intAryField = rs.getObject("IntegerArrayField");
@@ -247,12 +251,55 @@ public class ITNightlyBigQueryTest {
         assertTrue(prevIntegerFieldVal < rs.getInt("IntegerField"));
         prevIntegerFieldVal = rs.getInt("IntegerField");
 
-        // Testing JSON type
-        assertEquals("\"world\"", rs.getString("hello")); // BQ stores the value as "world"
-        assertEquals(100, rs.getInt("id"));
+        testForAllDataTypeValues(rs, cnt); // asserts the value of each row
       }
+      ++cnt;
     }
-    assertEquals(LIMIT_RECS, cnt);
+    assertEquals(LIMIT_RECS, cnt); // all the records were retrieved
+  }
+
+  // asserts the value of each row
+  private static void testForAllDataTypeValues(ResultSet rs, int cnt) throws SQLException {
+    // Testing JSON type
+    assertEquals("\"world\"", rs.getString("hello")); // BQ stores the value as "world"
+    assertEquals(100, rs.getInt("id"));
+    assertEquals("{\"hello\":\"world\",\"id\":100}", rs.getString("JSONField"));
+
+    // String and Geography types
+    assertEquals(String.format("String Val %s", cnt), rs.getString("StringField"));
+    assertEquals("POINT(1 2)", rs.getString("GeographyField"));
+
+    // Array type tests
+    JsonStringArrayList<BigDecimal> ary = (JsonStringArrayList) rs.getObject("IntegerArrayField");
+    assertEquals(3, ary.size());
+    assertEquals(1, ary.get(0).intValue());
+    assertEquals(2, ary.get(1).intValue());
+    assertEquals(3, ary.get(2).intValue());
+
+    // BigNumeric, int and Numeric
+    assertTrue(10000000L + cnt == rs.getDouble("BigNumericField"));
+    assertEquals(1 + cnt, rs.getInt("IntegerField"));
+    assertEquals(100 + cnt, rs.getLong("NumericField"));
+    // Test Byte field
+    assertEquals("TestByteValue", new String(rs.getBytes("BytesField"), StandardCharsets.UTF_8));
+
+    // Struct Fields
+    assertFalse(rs.getBoolean("BooleanField_1"));
+    assertEquals(String.format("Str Val %s", cnt), rs.getString("StringField_1"));
+
+    // Timestamp, Time, DateTime and Date fields
+    assertEquals(1649064795000L, rs.getTimestamp("TimestampField").getTime());
+    assertEquals(
+        java.sql.Date.valueOf("2022-01-01").toString(), rs.getDate("DateField").toString());
+    // Time is represented independent of a specific date and timezone. For example a 12:11:35 (GMT)
+    // is returned as
+    // 17:11:35 (GMT+5:30) . So we need to adjust the offset
+    int offset =
+        TimeZone.getTimeZone(ZoneId.systemDefault())
+            .getOffset(new java.util.Date().getTime()); // offset in seconds
+    assertEquals(
+        Time.valueOf(LocalTime.of(12, 11, 35)).getTime() + offset,
+        rs.getTime("TimeField").getTime());
   }
 
   private static void populateTestRecords(String datasetName, String tableName) {
@@ -277,17 +324,13 @@ public class ITNightlyBigQueryTest {
       if (response.hasErrors()) {
         // If any of the insertions failed, this lets you inspect the errors
         for (Map.Entry<Long, List<BigQueryError>> entry : response.getInsertErrors().entrySet()) {
-          logger.log(
-              Level.WARNING,
-              "Exception while adding records {0}",
-              entry.getValue()); // gracefully log it, it's okay if a few batches fail during IT
+          logger.log(Level.WARNING, "Exception while adding records {0}", entry.getValue());
         }
+        fail("Response has errors");
       }
     } catch (BigQueryException e) {
-      logger.log(
-          Level.WARNING,
-          "Exception while adding records {0}",
-          e); // gracefully log it, it's okay if a few batches fail during IT
+      logger.log(Level.WARNING, "Exception while adding records {0}", e);
+      fail("Error in addBatchRecords");
     }
   }
 
@@ -337,18 +380,17 @@ public class ITNightlyBigQueryTest {
     structVal.put("StringField", "Str Val " + rowCnt);
     structVal.put("BooleanField", false);
     row.put("RecordField", structVal); // struct
-    row.put("TimestampField", "2022-01-01 01:01:01");
+    row.put("TimestampField", "2022-04-04 15:03:15.000 +05:30");
     row.put("StringField", "String Val " + rowCnt);
     row.put("IntegerArrayField", new int[] {1, 2, 3});
     row.put("BooleanField", true);
-    row.put("BytesField", "DQ4KDQ==");
+    row.put("BytesField", BYTES_BASE64);
     row.put("IntegerField", 1 + rowCnt);
     row.put("GeographyField", "POINT(1 2)");
     row.put("NumericField", 100 + rowCnt);
     row.put("BigNumericField", 10000000L + rowCnt);
     row.put("TimeField", "12:11:35");
     row.put("DateField", "2022-01-01");
-    row.put("DateTimeField", "0001-01-01 00:00:00");
     row.put("JSONField", "{\"hello\":\"world\",\"id\":100}");
     row.put("IntervalField", "10000-0 3660000 87840000:0:0");
     return row;
