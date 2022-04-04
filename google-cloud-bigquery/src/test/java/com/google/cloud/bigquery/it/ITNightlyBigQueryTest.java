@@ -74,8 +74,8 @@ public class ITNightlyBigQueryTest {
   private static final String QUERY =
       String.format(
           "select StringField, GeographyField, BooleanField, BigNumericField, IntegerField, NumericField, BytesField, TimestampField, TimeField, DateField, "
-              + "IntegerArrayField,  RecordField.BooleanField, RecordField.StringField , JSONField from %s order by IntegerField asc LIMIT %s",
-          TABLE, LIMIT_RECS);
+              + "IntegerArrayField,  RecordField.BooleanField, RecordField.StringField , JSONField, JSONField.hello, JSONField.id from %s.%s order by IntegerField asc LIMIT %s",
+          DATASET, TABLE, LIMIT_RECS);
 
   private static final Schema BQ_SCHEMA =
       Schema.of(
@@ -196,6 +196,8 @@ public class ITNightlyBigQueryTest {
     Connection connection = bigquery.createConnection(connectionSettings);
 
     BigQueryResultSet bigQueryResultSet = connection.executeSelect(QUERY);
+    System.out.println(QUERY);
+    logger.log(Level.INFO, "Query used: {0}", QUERY);
     ResultSet rs = bigQueryResultSet.getResultSet();
     int cnt = 0;
 
@@ -222,6 +224,9 @@ public class ITNightlyBigQueryTest {
         assertNull(rs.getString("JSONField"));
         assertFalse(rs.getBoolean("BooleanField_1"));
         assertNull(rs.getString("StringField_1"));
+        assertNull(rs.getString("hello")); // equivalent of testJsonType
+        assertEquals(0, rs.getInt("id"));
+
       } else { // remaining rows are supposed to be non null
         assertNotNull(rs.getString("StringField"));
         assertNotNull(rs.getString("GeographyField"));
@@ -241,6 +246,10 @@ public class ITNightlyBigQueryTest {
         // check the order of the records
         assertTrue(prevIntegerFieldVal < rs.getInt("IntegerField"));
         prevIntegerFieldVal = rs.getInt("IntegerField");
+
+        // Testing JSON type
+        assertEquals("\"world\"", rs.getString("hello")); // BQ stores the value as "world"
+        assertEquals(100, rs.getInt("id"));
       }
     }
     assertEquals(LIMIT_RECS, cnt);
@@ -340,7 +349,7 @@ public class ITNightlyBigQueryTest {
     row.put("TimeField", "12:11:35");
     row.put("DateField", "2022-01-01");
     row.put("DateTimeField", "0001-01-01 00:00:00");
-    row.put("JSONField", "{\"hello\":\"world\"}");
+    row.put("JSONField", "{\"hello\":\"world\",\"id\":100}");
     row.put("IntervalField", "10000-0 3660000 87840000:0:0");
     return row;
   }
