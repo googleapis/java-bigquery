@@ -143,18 +143,22 @@ class ConnectionImpl implements Connection {
   @BetaApi
   @Override
   public BigQueryResultSet executeSelect(String sql) throws BigQuerySQLException {
-    // use jobs.query if all the properties of connectionSettings are supported
-    if (isFastQuerySupported()) {
-      String projectId = bigQueryOptions.getProjectId();
-      QueryRequest queryRequest = createQueryRequest(connectionSettings, sql, null, null);
-      return queryRpc(projectId, queryRequest);
+    try {
+      // use jobs.query if all the properties of connectionSettings are supported
+      if (isFastQuerySupported()) {
+        String projectId = bigQueryOptions.getProjectId();
+        QueryRequest queryRequest = createQueryRequest(connectionSettings, sql, null, null);
+        return queryRpc(projectId, queryRequest);
+      }
+      // use jobs.insert otherwise
+      com.google.api.services.bigquery.model.Job queryJob =
+          createQueryJob(sql, connectionSettings, null, null);
+      JobId jobId = JobId.fromPb(queryJob.getJobReference());
+      GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
+      return getResultSet(firstPage, jobId, sql);
+    } catch (BigQueryException e) {
+      throw new BigQuerySQLException(e.getMessage(), e, e.getErrors());
     }
-    // use jobs.insert otherwise
-    com.google.api.services.bigquery.model.Job queryJob =
-        createQueryJob(sql, connectionSettings, null, null);
-    JobId jobId = JobId.fromPb(queryJob.getJobReference());
-    GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
-    return getResultSet(firstPage, jobId, sql);
   }
 
   @VisibleForTesting
@@ -195,19 +199,23 @@ class ConnectionImpl implements Connection {
   public BigQueryResultSet executeSelect(
       String sql, List<QueryParameter> parameters, Map<String, String> labels)
       throws BigQuerySQLException {
-    // use jobs.query if possible
-    if (isFastQuerySupported()) {
-      final String projectId = bigQueryOptions.getProjectId();
-      final QueryRequest queryRequest =
-          createQueryRequest(connectionSettings, sql, parameters, labels);
-      return queryRpc(projectId, queryRequest);
+    try {
+      // use jobs.query if possible
+      if (isFastQuerySupported()) {
+        final String projectId = bigQueryOptions.getProjectId();
+        final QueryRequest queryRequest =
+            createQueryRequest(connectionSettings, sql, parameters, labels);
+        return queryRpc(projectId, queryRequest);
+      }
+      // use jobs.insert otherwise
+      com.google.api.services.bigquery.model.Job queryJob =
+          createQueryJob(sql, connectionSettings, parameters, labels);
+      JobId jobId = JobId.fromPb(queryJob.getJobReference());
+      GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
+      return getResultSet(firstPage, jobId, sql);
+    } catch (BigQueryException e) {
+      throw new BigQuerySQLException(e.getMessage(), e, e.getErrors());
     }
-    // use jobs.insert otherwise
-    com.google.api.services.bigquery.model.Job queryJob =
-        createQueryJob(sql, connectionSettings, parameters, labels);
-    JobId jobId = JobId.fromPb(queryJob.getJobReference());
-    GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
-    return getResultSet(firstPage, jobId, sql);
   }
 
   static class EndOfFieldValueList
