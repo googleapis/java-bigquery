@@ -27,6 +27,7 @@ import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryError;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryResultSet;
+import com.google.cloud.bigquery.BigQuerySQLException;
 import com.google.cloud.bigquery.Connection;
 import com.google.cloud.bigquery.ConnectionSettings;
 import com.google.cloud.bigquery.Dataset;
@@ -86,6 +87,9 @@ public class ITNightlyBigQueryTest {
               + "TimestampField, TimeField, DateField, IntegerArrayField,  RecordField.BooleanField, RecordField.StringField ,"
               + " JSONField, JSONField.hello, JSONField.id from %s.%s order by IntegerField asc LIMIT %s",
           DATASET, TABLE, LIMIT_RECS);
+  private static final String INVALID_QUERY =
+      String.format(
+          "select into %s.%s order by IntegerField asc LIMIT %s", DATASET, TABLE, LIMIT_RECS);
 
   private static final Schema BQ_SCHEMA =
       Schema.of(
@@ -182,25 +186,22 @@ public class ITNightlyBigQueryTest {
   }
 
   @Test
-  public void testIterateAndOrder() throws SQLException {
-    ReadClientConnectionConfiguration clientConnectionConfiguration =
-        ReadClientConnectionConfiguration.newBuilder()
-            .setTotalToPageRowCountRatio(10L)
-            .setMinResultSize(200000L)
-            .setBufferSize(10000L)
-            .build();
-    ConnectionSettings connectionSettings =
-        ConnectionSettings.newBuilder()
-            .setDefaultDataset(DatasetId.of(DATASET))
-            .setNumBufferedRows(10000L) // page size
-            .setPriority(
-                QueryJobConfiguration.Priority
-                    .INTERACTIVE) // so that isFastQuerySupported returns false
-            .setReadClientConnectionConfiguration(clientConnectionConfiguration)
-            .setUseReadAPI(true)
-            .build();
-    Connection connection = bigquery.createConnection(connectionSettings);
+  public void testInvalidQuery() throws BigQuerySQLException {
+    Connection connection = getConnection();
+    try {
+      BigQueryResultSet bigQueryResultSet = connection.executeSelect(INVALID_QUERY);
+      fail("BigQuerySQLException was expected");
+    } catch (BigQuerySQLException ex) {
+      assertNotNull(ex.getMessage());
+      assertTrue(ex.getMessage().toLowerCase().contains("unexpected keyword into"));
+    } finally {
+      connection.cancel();
+    }
+  }
 
+  @Test
+  public void testIterateAndOrder() throws SQLException {
+    Connection connection = getConnection();
     BigQueryResultSet bigQueryResultSet = connection.executeSelect(QUERY);
     logger.log(Level.INFO, "Query used: {0}", QUERY);
     ResultSet rs = bigQueryResultSet.getResultSet();
@@ -256,6 +257,7 @@ public class ITNightlyBigQueryTest {
       ++cnt;
     }
     assertEquals(LIMIT_RECS, cnt); // all the records were retrieved
+    connection.cancel();
   }
 
   // asserts the value of each row
@@ -371,6 +373,26 @@ public class ITNightlyBigQueryTest {
     } catch (BigQueryException e) {
       fail("Dataset was not deleted. \n" + e);
     }
+  }
+
+  private Connection getConnection() {
+    ReadClientConnectionConfiguration clientConnectionConfiguration =
+        ReadClientConnectionConfiguration.newBuilder()
+            .setTotalToPageRowCountRatio(10L)
+            .setMinResultSize(200000L)
+            .setBufferSize(10000L)
+            .build();
+    ConnectionSettings connectionSettings =
+        ConnectionSettings.newBuilder()
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .setNumBufferedRows(10000L) // page size
+            .setPriority(
+                QueryJobConfiguration.Priority
+                    .INTERACTIVE) // so that isFastQuerySupported returns false
+            .setReadClientConnectionConfiguration(clientConnectionConfiguration)
+            .setUseReadAPI(true)
+            .build();
+    return bigquery.createConnection(connectionSettings);
   }
 
   private static Map<String, Object> getNextRow() {
