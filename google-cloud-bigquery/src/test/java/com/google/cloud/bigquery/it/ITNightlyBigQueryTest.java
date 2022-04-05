@@ -78,15 +78,18 @@ public class ITNightlyBigQueryTest {
   // Script will populate NUM_BATCHES*REC_PER_BATCHES number of records (eg: 100*10000 = 1M)
   private static final int NUM_BATCHES = 35;
   private static final int REC_PER_BATCHES = 10000;
-  private static final int LIMIT_RECS = 300000;
+  private static final int LIMIT_RECS = 300000; // We can plan to read ~ 1M records
+  private static final int MULTI_LIMIT_RECS =
+      300000; // Used for multiquery testcase, a lower limit like 300K should be fine
   private static int rowCnt = 0;
   private static BigQuery bigquery;
-  private static final String QUERY =
-      String.format(
-          "select StringField, GeographyField, BooleanField, BigNumericField, IntegerField, NumericField, BytesField,  "
-              + "TimestampField, TimeField, DateField, IntegerArrayField,  RecordField.BooleanField, RecordField.StringField ,"
-              + " JSONField, JSONField.hello, JSONField.id from %s.%s order by IntegerField asc LIMIT %s",
-          DATASET, TABLE, LIMIT_RECS);
+  private static final String BASE_QUERY =
+      "select StringField, GeographyField, BooleanField, BigNumericField, IntegerField, NumericField, BytesField,  "
+          + "TimestampField, TimeField, DateField, IntegerArrayField,  RecordField.BooleanField, RecordField.StringField ,"
+          + " JSONField, JSONField.hello, JSONField.id from %s.%s order by IntegerField asc LIMIT %s";
+  private static final String QUERY = String.format(BASE_QUERY, DATASET, TABLE, LIMIT_RECS);
+  private static final String MULTI_QUERY =
+      String.format(BASE_QUERY, DATASET, TABLE, MULTI_LIMIT_RECS);
   private static final String INVALID_QUERY =
       String.format(
           "select into %s.%s order by IntegerField asc LIMIT %s", DATASET, TABLE, LIMIT_RECS);
@@ -258,6 +261,96 @@ public class ITNightlyBigQueryTest {
     }
     assertEquals(LIMIT_RECS, cnt); // all the records were retrieved
     connection.cancel();
+  }
+
+  @Test
+  public void testMultipleRuns() throws SQLException {
+
+    Connection connection = getConnection();
+    BigQueryResultSet bigQueryResultSet = connection.executeSelect(MULTI_QUERY);
+    logger.log(Level.INFO, "Query used: {0}", MULTI_QUERY);
+    ResultSet rs = bigQueryResultSet.getResultSet();
+    int cnt = 0;
+    int totalCnt = 0;
+
+    int prevIntegerFieldVal = 0;
+    while (rs.next()) {
+      if (cnt == 0) { // first row is supposed to be null
+        assertNull(rs.getString("StringField"));
+        assertNull(rs.getString("GeographyField"));
+        Object intAryField = rs.getObject("IntegerArrayField");
+        if (intAryField instanceof JsonStringArrayList) {
+          assertEquals(
+              new JsonStringArrayList(),
+              ((JsonStringArrayList) intAryField)); // null array is returned as an empty array
+        }
+        assertFalse(rs.getBoolean("BooleanField"));
+        assertTrue(0.0d == rs.getDouble("BigNumericField"));
+        assertTrue(0 == rs.getInt("IntegerField"));
+        assertTrue(0L == rs.getLong("NumericField"));
+        assertNull(rs.getBytes("BytesField"));
+        assertNull(rs.getTimestamp("TimestampField"));
+        assertNull(rs.getTime("TimeField"));
+        assertNull(rs.getDate("DateField"));
+        assertNull(rs.getString("JSONField"));
+        assertFalse(rs.getBoolean("BooleanField_1"));
+        assertNull(rs.getString("StringField_1"));
+        assertNull(rs.getString("hello")); // equivalent of testJsonType
+        assertEquals(0, rs.getInt("id"));
+
+      } else { // remaining rows are supposed to be non null
+        // check the order of the records
+        assertTrue(prevIntegerFieldVal < rs.getInt("IntegerField"));
+        prevIntegerFieldVal = rs.getInt("IntegerField");
+
+        testForAllDataTypeValues(rs, cnt); // asserts the value of each row
+      }
+      ++cnt;
+    }
+    connection.cancel();
+    totalCnt += cnt;
+    // Repeat the same run
+    connection = getConnection();
+    bigQueryResultSet = connection.executeSelect(MULTI_QUERY);
+    rs = bigQueryResultSet.getResultSet();
+    cnt = 0;
+    prevIntegerFieldVal = 0;
+    while (rs.next()) {
+      if (cnt == 0) { // first row is supposed to be null
+        assertNull(rs.getString("StringField"));
+        assertNull(rs.getString("GeographyField"));
+        Object intAryField = rs.getObject("IntegerArrayField");
+        if (intAryField instanceof JsonStringArrayList) {
+          assertEquals(
+              new JsonStringArrayList(),
+              ((JsonStringArrayList) intAryField)); // null array is returned as an empty array
+        }
+        assertFalse(rs.getBoolean("BooleanField"));
+        assertTrue(0.0d == rs.getDouble("BigNumericField"));
+        assertTrue(0 == rs.getInt("IntegerField"));
+        assertTrue(0L == rs.getLong("NumericField"));
+        assertNull(rs.getBytes("BytesField"));
+        assertNull(rs.getTimestamp("TimestampField"));
+        assertNull(rs.getTime("TimeField"));
+        assertNull(rs.getDate("DateField"));
+        assertNull(rs.getString("JSONField"));
+        assertFalse(rs.getBoolean("BooleanField_1"));
+        assertNull(rs.getString("StringField_1"));
+        assertNull(rs.getString("hello")); // equivalent of testJsonType
+        assertEquals(0, rs.getInt("id"));
+
+      } else { // remaining rows are supposed to be non null
+        // check the order of the records
+        assertTrue(prevIntegerFieldVal < rs.getInt("IntegerField"));
+        prevIntegerFieldVal = rs.getInt("IntegerField");
+
+        testForAllDataTypeValues(rs, cnt); // asserts the value of each row
+      }
+      ++cnt;
+    }
+    connection.cancel();
+    totalCnt += cnt;
+    assertEquals(MULTI_LIMIT_RECS * 2, totalCnt);
   }
 
   // asserts the value of each row
