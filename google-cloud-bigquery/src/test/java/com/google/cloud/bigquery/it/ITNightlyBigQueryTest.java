@@ -92,7 +92,7 @@ public class ITNightlyBigQueryTest {
           + " JSONField, JSONField.hello, JSONField.id from %s.%s order by IntegerField asc LIMIT %s";
   private static final String POSITIONAL_QUERY =
       String.format(
-          "select StringField, GeographyField, BooleanField, DateField from %s.%s where DateField=? and StringField is NOT NULL LIMIT %s",
+          "select StringField, GeographyField, BooleanField, DateField from %s.%s where DateField = ? LIMIT %s",
           DATASET, TABLE, MULTI_LIMIT_RECS);
   private static final String QUERY = String.format(BASE_QUERY, DATASET, TABLE, LIMIT_RECS);
   private static final String MULTI_QUERY =
