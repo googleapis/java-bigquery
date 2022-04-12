@@ -6,7 +6,7 @@
   <parent>
     <artifactId>google-cloud-bigquery-parent</artifactId>
     <groupId>com.google.cloud</groupId>
-    <version>2.10.4-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
+    <version>2.10.8-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
   </parent>
 
   <properties>
@@ -42,7 +42,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.2.4</version>
+        <version>3.3.0</version>
         <executions>
           <execution>
             <phase>package</phase>
