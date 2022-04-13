@@ -23,8 +23,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.google.api.services.bigquery.model.QueryParameter;
-import com.google.api.services.bigquery.model.QueryParameterType;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryError;
 import com.google.cloud.bigquery.BigQueryException;
@@ -57,7 +55,6 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -358,44 +355,6 @@ public class ITNightlyBigQueryTest {
     connection.cancel();
     totalCnt += cnt;
     assertEquals(MULTI_LIMIT_RECS * 2, totalCnt);
-  }
-
-  @Test
-  public void testPositionalParams() throws SQLException {
-    Connection connection = getConnection();
-    List<QueryParameter> parameters = new ArrayList<>();
-    /*   QueryParameter queryParameter = new QueryParameter();
-    queryParameter.set("DateField", "2022-01-01");
-    parameters.add(queryParameter);
-    QueryParameterValue val = QueryParameterValue.string("stringValue");*/
-
-    QueryParameter queryParameterPb = new QueryParameter();
-    queryParameterPb.setName("DateField");
-
-    com.google.api.services.bigquery.model.QueryParameterValue val =
-        new com.google.api.services.bigquery.model.QueryParameterValue();
-    val.set("DateField", "2022-01-01");
-    QueryParameterType queryParameterType =
-        new QueryParameterType().setType(StandardSQLTypeName.DATE.name());
-
-    queryParameterPb.setParameterValue(val);
-    queryParameterPb.setParameterType(queryParameterType);
-    parameters.add(queryParameterPb);
-
-    BigQueryResultSet bigQueryResultSet =
-        connection.executeSelect(POSITIONAL_QUERY, parameters, null);
-    logger.log(Level.INFO, "Query used: {0}", POSITIONAL_QUERY);
-    ResultSet rs = bigQueryResultSet.getResultSet();
-    int cnt = 0;
-    while (rs.next()) {
-      assertNull(rs.getDate("DateField"));
-      assertNull(rs.getString("StringField"));
-      assertNull(rs.getString("GeographyField"));
-      assertFalse(rs.getBoolean("BooleanField"));
-      ++cnt;
-    }
-    connection.cancel();
-    assertEquals(MULTI_LIMIT_RECS, cnt);
   }
 
   // asserts the value of each row

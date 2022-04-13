@@ -148,35 +148,16 @@ class ConnectionImpl implements Connection {
       if (isFastQuerySupported()) {
         String projectId = bigQueryOptions.getProjectId();
         QueryRequest queryRequest = createQueryRequest(connectionSettings, sql, null, null);
-        return queryRpc(projectId, queryRequest);
+        return queryRpc(projectId, queryRequest, false);
       }
       // use jobs.insert otherwise
       com.google.api.services.bigquery.model.Job queryJob =
           createQueryJob(sql, connectionSettings, null, null);
       JobId jobId = JobId.fromPb(queryJob.getJobReference());
       GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
-      return getResultSet(firstPage, jobId, sql);
+      return getResultSet(firstPage, jobId, sql, false);
     } catch (BigQueryException e) {
       throw new BigQuerySQLException(e.getMessage(), e, e.getErrors());
-    }
-  }
-
-  @VisibleForTesting
-  BigQueryResultSet getResultSet(GetQueryResultsResponse firstPage, JobId jobId, String sql) {
-    if (firstPage.getJobComplete()
-        && firstPage.getTotalRows()
-            != null) { // firstPage.getTotalRows() is null if job is not complete
-      return getSubsequentQueryResultsWithJob(
-          firstPage.getTotalRows().longValue(),
-          (long) firstPage.getRows().size(),
-          jobId,
-          firstPage);
-    } else { // job is still running, use dryrun to get Schema
-      com.google.api.services.bigquery.model.Job dryRunJob = createDryRunJob(sql);
-      Schema schema = Schema.fromPb(dryRunJob.getStatistics().getQuery().getSchema());
-      // TODO: check how can we get totalRows and pageRows while the job is still running.
-      // `firstPage.getTotalRows()` returns null
-      return getSubsequentQueryResultsWithJob(null, null, jobId, firstPage, schema);
     }
   }
 
@@ -205,16 +186,38 @@ class ConnectionImpl implements Connection {
         final String projectId = bigQueryOptions.getProjectId();
         final QueryRequest queryRequest =
             createQueryRequest(connectionSettings, sql, parameters, labels);
-        return queryRpc(projectId, queryRequest);
+        return queryRpc(projectId, queryRequest, true);
       }
       // use jobs.insert otherwise
       com.google.api.services.bigquery.model.Job queryJob =
           createQueryJob(sql, connectionSettings, parameters, labels);
       JobId jobId = JobId.fromPb(queryJob.getJobReference());
       GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
-      return getResultSet(firstPage, jobId, sql);
+      return getResultSet(firstPage, jobId, sql, true);
     } catch (BigQueryException e) {
       throw new BigQuerySQLException(e.getMessage(), e, e.getErrors());
+    }
+  }
+
+  @VisibleForTesting
+  BigQueryResultSet getResultSet(
+      GetQueryResultsResponse firstPage, JobId jobId, String sql, Boolean hasQueryParameters) {
+    if (firstPage.getJobComplete()
+        && firstPage.getTotalRows()
+            != null) { // firstPage.getTotalRows() is null if job is not complete
+      return getSubsequentQueryResultsWithJob(
+          firstPage.getTotalRows().longValue(),
+          (long) firstPage.getRows().size(),
+          jobId,
+          firstPage,
+          hasQueryParameters);
+    } else { // job is still running, use dryrun to get Schema
+      com.google.api.services.bigquery.model.Job dryRunJob = createDryRunJob(sql);
+      Schema schema = Schema.fromPb(dryRunJob.getStatistics().getQuery().getSchema());
+      // TODO: check how can we get totalRows and pageRows while the job is still running.
+      // `firstPage.getTotalRows()` returns null
+      return getSubsequentQueryResultsWithJob(
+          null, null, jobId, firstPage, schema, hasQueryParameters);
     }
   }
 
@@ -233,7 +236,8 @@ class ConnectionImpl implements Connection {
     }
   }
 
-  private BigQueryResultSet queryRpc(final String projectId, final QueryRequest queryRequest) {
+  private BigQueryResultSet queryRpc(
+      final String projectId, final QueryRequest queryRequest, Boolean hasQueryParameters) {
     com.google.api.services.bigquery.model.QueryResponse results;
     try {
       results =
@@ -268,7 +272,8 @@ class ConnectionImpl implements Connection {
       long pageRows = results.getRows().size();
       JobId jobId = JobId.fromPb(results.getJobReference());
       GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
-      return getSubsequentQueryResultsWithJob(totalRows, pageRows, jobId, firstPage);
+      return getSubsequentQueryResultsWithJob(
+          totalRows, pageRows, jobId, firstPage, hasQueryParameters);
     }
   }
 
@@ -563,9 +568,13 @@ class ConnectionImpl implements Connection {
   /* Returns query results using either tabledata.list or the high throughput Read API */
   @VisibleForTesting
   BigQueryResultSet getSubsequentQueryResultsWithJob(
-      Long totalRows, Long pageRows, JobId jobId, GetQueryResultsResponse firstPage) {
+      Long totalRows,
+      Long pageRows,
+      JobId jobId,
+      GetQueryResultsResponse firstPage,
+      Boolean hasQueryParameters) {
     TableId destinationTable = getDestinationTable(jobId);
-    return useReadAPI(totalRows, pageRows, Schema.fromPb(firstPage.getSchema()))
+    return useReadAPI(totalRows, pageRows, Schema.fromPb(firstPage.getSchema()), hasQueryParameters)
         ? highThroughPutRead(
             destinationTable,
             firstPage.getTotalRows().longValue(),
@@ -583,15 +592,15 @@ class ConnectionImpl implements Connection {
       Long pageRows,
       JobId jobId,
       GetQueryResultsResponse firstPage,
-      Schema schema) {
+      Schema schema,
+      Boolean hasQueryParameters) {
     TableId destinationTable = getDestinationTable(jobId);
-    return useReadAPI(totalRows, pageRows, schema)
+    return useReadAPI(totalRows, pageRows, schema, hasQueryParameters)
         ? highThroughPutRead(
             destinationTable,
             totalRows == null
                 ? -1L
-                : totalRows
-                    .longValue(), // totalRows is null when the job is still running. TODO: Check if
+                : totalRows, // totalRows is null when the job is still running. TODO: Check if
             // any workaround is possible
             schema,
             getBigQueryResultSetStats(
@@ -902,7 +911,7 @@ class ConnectionImpl implements Connection {
   }
 
   @VisibleForTesting
-  boolean useReadAPI(Long totalRows, Long pageRows, Schema schema) {
+  boolean useReadAPI(Long totalRows, Long pageRows, Schema schema, Boolean hasQueryParameters) {
 
     // TODO(prasmish) get this logic review - totalRows and pageRows are returned null when the job
     // is not complete
@@ -915,10 +924,9 @@ class ConnectionImpl implements Connection {
     }
 
     // Schema schema = Schema.fromPb(tableSchema);
-    if (containsIntervalType(
-        schema)) { // finds out if there's an interval type in the schema. Implementation to be used
-      // until ReadAPI supports Interval
-      logger.log(Level.INFO, "\n Schema has IntervalType, Disabling ReadAPI");
+    // Read API does not yet support Interval Type or QueryParameters
+    if (containsIntervalType(schema) || hasQueryParameters) {
+      logger.log(Level.INFO, "\n Schema has IntervalType, or QueryParameters. Disabling ReadAPI");
       return false;
     }
 
