@@ -85,7 +85,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-datacatalog-bom</artifactId>
-        <version>1.7.2</version>
+        <version>1.7.3</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
