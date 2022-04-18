@@ -17,7 +17,6 @@
 package com.google.cloud.bigquery;
 
 import com.google.api.core.BetaApi;
-import com.google.api.services.bigquery.model.QueryParameter;
 import java.util.List;
 import java.util.Map;
 
@@ -92,6 +91,6 @@ public interface Connection {
    */
   @BetaApi
   BigQueryResultSet executeSelect(
-      String sql, List<QueryParameter> parameters, Map<String, String> labels)
+      String sql, List<Parameter> parameters, Map<String, String> labels)
       throws BigQuerySQLException;
 }

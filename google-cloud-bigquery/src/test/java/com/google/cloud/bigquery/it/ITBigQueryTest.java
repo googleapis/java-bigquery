@@ -87,6 +87,7 @@ import com.google.cloud.bigquery.MaterializedViewDefinition;
 import com.google.cloud.bigquery.Model;
 import com.google.cloud.bigquery.ModelId;
 import com.google.cloud.bigquery.ModelInfo;
+import com.google.cloud.bigquery.Parameter;
 import com.google.cloud.bigquery.ParquetOptions;
 import com.google.cloud.bigquery.PolicyTags;
 import com.google.cloud.bigquery.QueryJobConfiguration;
@@ -3285,7 +3286,6 @@ public class ITBigQueryTest {
     assertNotNull(statistics.getTotalBytesProcessed());
   }
 
-  /* TODO(prasmish): replicate relevant parts of the test case for executeSelect */
   @Test
   public void testPositionalQueryParameters() throws InterruptedException {
     String query =
@@ -3356,7 +3356,29 @@ public class ITBigQueryTest {
     }
   }
 
-  /* TODO(prasmish): replicate relevant parts of the test case for executeSelect */
+  /* TODO(prasmish): expand below test case with all the fields shown in the above test case */
+  @Test
+  public void testExecuteSelectWithPositionalQueryParameters() throws BigQuerySQLException {
+    String query =
+        "SELECT TimestampField, StringField FROM "
+            + TABLE_ID.getTable()
+            + " WHERE StringField = ?"
+            + " AND TimestampField > ?";
+    QueryParameterValue stringParameter = QueryParameterValue.string("stringValue");
+    QueryParameterValue timestampParameter =
+        QueryParameterValue.timestamp("2014-01-01 07:00:00.000000+00:00");
+    Parameter stringParam = Parameter.newBuilder().setQueryParameterValue(stringParameter).build();
+    Parameter timeStampParam =
+        Parameter.newBuilder().setQueryParameterValue(timestampParameter).build();
+
+    ConnectionSettings connectionSettings =
+        ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
+    Connection connection = bigquery.createConnection(connectionSettings);
+    List<Parameter> parameters = ImmutableList.of(stringParam, timeStampParam);
+    BigQueryResultSet rs = connection.executeSelect(query, parameters, null);
+    assertEquals(2, rs.getTotalRows());
+  }
+
   @Test
   public void testNamedQueryParameters() throws InterruptedException {
     String query =
@@ -3377,6 +3399,35 @@ public class ITBigQueryTest {
     TableResult result = bigquery.query(config);
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
     assertEquals(2, Iterables.size(result.getValues()));
+  }
+
+  @Test
+  public void testExecuteSelectWithNamedQueryParameters() throws BigQuerySQLException {
+    String query =
+        "SELECT TimestampField, StringField, BooleanField FROM "
+            + TABLE_ID.getTable()
+            + " WHERE StringField = @stringParam"
+            + " AND IntegerField IN UNNEST(@integerList)";
+    QueryParameterValue stringParameter = QueryParameterValue.string("stringValue");
+    QueryParameterValue intArrayParameter =
+        QueryParameterValue.array(new Integer[] {3, 4}, Integer.class);
+    Parameter stringParam =
+        Parameter.newBuilder()
+            .setName("stringParam")
+            .setQueryParameterValue(stringParameter)
+            .build();
+    Parameter intArrayParam =
+        Parameter.newBuilder()
+            .setName("integerList")
+            .setQueryParameterValue(intArrayParameter)
+            .build();
+
+    ConnectionSettings connectionSettings =
+        ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
+    Connection connection = bigquery.createConnection(connectionSettings);
+    List<Parameter> parameters = ImmutableList.of(stringParam, intArrayParam);
+    BigQueryResultSet rs = connection.executeSelect(query, parameters, null);
+    assertEquals(2, rs.getTotalRows());
   }
 
   /* TODO(prasmish): replicate relevant parts of the test case for executeSelect */

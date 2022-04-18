@@ -42,6 +42,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.util.AbstractList;
@@ -178,7 +179,7 @@ class ConnectionImpl implements Connection {
   @BetaApi
   @Override
   public BigQueryResultSet executeSelect(
-      String sql, List<QueryParameter> parameters, Map<String, String> labels)
+      String sql, List<Parameter> parameters, Map<String, String> labels)
       throws BigQuerySQLException {
     try {
       // use jobs.query if possible
@@ -186,14 +187,14 @@ class ConnectionImpl implements Connection {
         final String projectId = bigQueryOptions.getProjectId();
         final QueryRequest queryRequest =
             createQueryRequest(connectionSettings, sql, parameters, labels);
-        return queryRpc(projectId, queryRequest, true);
+        return queryRpc(projectId, queryRequest, parameters != null);
       }
       // use jobs.insert otherwise
       com.google.api.services.bigquery.model.Job queryJob =
           createQueryJob(sql, connectionSettings, parameters, labels);
       JobId jobId = JobId.fromPb(queryJob.getJobReference());
       GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
-      return getResultSet(firstPage, jobId, sql, true);
+      return getResultSet(firstPage, jobId, sql, parameters != null);
     } catch (BigQueryException e) {
       throw new BigQuerySQLException(e.getMessage(), e, e.getErrors());
     }
@@ -967,7 +968,7 @@ class ConnectionImpl implements Connection {
   QueryRequest createQueryRequest(
       ConnectionSettings connectionSettings,
       String sql,
-      List<QueryParameter> queryParameters,
+      List<Parameter> queryParameters,
       Map<String, String> labels) {
     QueryRequest content = new QueryRequest();
     String requestId = UUID.randomUUID().toString();
@@ -988,7 +989,21 @@ class ConnectionImpl implements Connection {
       content.setMaxResults(connectionSettings.getMaxResults());
     }
     if (queryParameters != null) {
-      content.setQueryParameters(queryParameters);
+      // content.setQueryParameters(queryParameters);
+      if (queryParameters.get(0).getName() == null) {
+        // If query parameter name is unset, then assume mode is positional
+        content.setParameterMode("POSITIONAL");
+        // pass query parameters
+        List<QueryParameter> queryParametersPb =
+            Lists.transform(queryParameters, POSITIONAL_PARAMETER_TO_PB_FUNCTION);
+        content.setQueryParameters(queryParametersPb);
+      } else {
+        content.setParameterMode("NAMED");
+        // pass query parameters
+        List<QueryParameter> queryParametersPb =
+            Lists.transform(queryParameters, NAMED_PARAMETER_TO_PB_FUNCTION);
+        content.setQueryParameters(queryParametersPb);
+      }
     }
     if (connectionSettings.getCreateSession() != null) {
       content.setCreateSession(connectionSettings.getCreateSession());
@@ -1008,18 +1023,26 @@ class ConnectionImpl implements Connection {
   com.google.api.services.bigquery.model.Job createQueryJob(
       String sql,
       ConnectionSettings connectionSettings,
-      List<QueryParameter> queryParameters,
+      List<Parameter> queryParameters,
       Map<String, String> labels) {
     com.google.api.services.bigquery.model.JobConfiguration configurationPb =
         new com.google.api.services.bigquery.model.JobConfiguration();
     JobConfigurationQuery queryConfigurationPb = new JobConfigurationQuery();
     queryConfigurationPb.setQuery(sql);
     if (queryParameters != null) {
-      queryConfigurationPb.setQueryParameters(queryParameters);
       if (queryParameters.get(0).getName() == null) {
+        // If query parameter name is unset, then assume mode is positional
         queryConfigurationPb.setParameterMode("POSITIONAL");
+        // pass query parameters
+        List<QueryParameter> queryParametersPb =
+            Lists.transform(queryParameters, POSITIONAL_PARAMETER_TO_PB_FUNCTION);
+        queryConfigurationPb.setQueryParameters(queryParametersPb);
       } else {
         queryConfigurationPb.setParameterMode("NAMED");
+        // pass query parameters
+        List<QueryParameter> queryParametersPb =
+            Lists.transform(queryParameters, NAMED_PARAMETER_TO_PB_FUNCTION);
+        queryConfigurationPb.setQueryParameters(queryParametersPb);
       }
     }
     if (connectionSettings.getDestinationTable() != null) {
@@ -1155,4 +1178,23 @@ class ConnectionImpl implements Connection {
     }
     return dryRunJob;
   }
+
+  // Convert from Parameter wrapper class to positional QueryParameter generated class
+  private static final Function<Parameter, QueryParameter> POSITIONAL_PARAMETER_TO_PB_FUNCTION =
+      value -> {
+        QueryParameter queryParameterPb = new QueryParameter();
+        queryParameterPb.setParameterValue(value.getQueryParameterValue().toValuePb());
+        queryParameterPb.setParameterType(value.getQueryParameterValue().toTypePb());
+        return queryParameterPb;
+      };
+
+  // Convert from Parameter wrapper class to name QueryParameter generated class
+  private static final Function<Parameter, QueryParameter> NAMED_PARAMETER_TO_PB_FUNCTION =
+      value -> {
+        QueryParameter queryParameterPb = new QueryParameter();
+        queryParameterPb.setName(value.getName());
+        queryParameterPb.setParameterValue(value.getQueryParameterValue().toValuePb());
+        queryParameterPb.setParameterType(value.getQueryParameterValue().toTypePb());
+        return queryParameterPb;
+      };
 }

@@ -465,7 +465,7 @@ public class ConnectionImplTest {
   @Test
   public void testExecuteSelectSlowWithParams() throws BigQuerySQLException {
     ConnectionImpl connectionSpy = Mockito.spy(connection);
-    List<QueryParameter> parameters = new ArrayList<>();
+    List<Parameter> parameters = new ArrayList<>();
     Map<String, String> labels = new HashMap<>();
     doReturn(false).when(connectionSpy).isFastQuerySupported();
     com.google.api.services.bigquery.model.JobStatistics jobStatistics =
