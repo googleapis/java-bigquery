@@ -29,8 +29,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.api.gax.paging.Page;
-import com.google.api.services.bigquery.model.QueryParameter;
-import com.google.api.services.bigquery.model.QueryParameterType;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.Date;
@@ -2495,11 +2493,9 @@ public class ITBigQueryTest {
     assertNotNull(bigQueryDryRunResultSet.getSchema());
     assertEquals(
         BQ_RESULTSET_EXPECTED_SCHEMA, bigQueryDryRunResultSet.getSchema()); // match the schema
-    List<QueryParameter> queryParameters = bigQueryDryRunResultSet.getQueryParameters();
-    List<QueryParameter> expectedQueryParameters =
-        ImmutableList.of(
-            new QueryParameter().setParameterType(new QueryParameterType().setType("STRING")));
-    assertEquals(expectedQueryParameters, queryParameters);
+    List<Parameter> queryParameters = bigQueryDryRunResultSet.getQueryParameters();
+    assertEquals(
+        StandardSQLTypeName.STRING, queryParameters.get(0).getQueryParameterValue().getType());
   }
 
   @Test

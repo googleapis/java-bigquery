@@ -16,7 +16,6 @@
 
 package com.google.cloud.bigquery;
 
-import com.google.api.services.bigquery.model.QueryParameter;
 import java.util.List;
 
 public interface BigQueryDryRunResult {
@@ -25,5 +24,5 @@ public interface BigQueryDryRunResult {
   Schema getSchema() throws BigQuerySQLException;
 
   /** Returns query parameters for standard SQL queries */
-  List<QueryParameter> getQueryParameters() throws BigQuerySQLException;
+  List<Parameter> getQueryParameters() throws BigQuerySQLException;
 }

@@ -16,15 +16,14 @@
 
 package com.google.cloud.bigquery;
 
-import com.google.api.services.bigquery.model.QueryParameter;
 import java.util.List;
 
 public class BigQueryDryRunResultImpl implements BigQueryDryRunResult {
   private Schema schema;
-  private List<QueryParameter> queryParameters;
+  private List<Parameter> queryParameters;
 
   BigQueryDryRunResultImpl(
-      Schema schema, List<QueryParameter> queryParameters) { // Package-Private access
+      Schema schema, List<Parameter> queryParameters) { // Package-Private access
     this.schema = schema;
     this.queryParameters = queryParameters;
   }
@@ -35,7 +34,7 @@ public class BigQueryDryRunResultImpl implements BigQueryDryRunResult {
   }
 
   @Override
-  public List<QueryParameter> getQueryParameters() throws BigQuerySQLException {
+  public List<Parameter> getQueryParameters() throws BigQuerySQLException {
     return queryParameters;
   }
 }

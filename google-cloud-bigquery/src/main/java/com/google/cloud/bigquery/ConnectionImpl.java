@@ -121,7 +121,7 @@ class ConnectionImpl implements Connection {
    * This method runs a dry run query
    *
    * @param sql SQL SELECT statement
-   * @return BigQueryDryRunResult containing List<QueryParameter> and Schema
+   * @return BigQueryDryRunResult containing List<Parameter> and Schema
    * @throws BigQuerySQLException
    */
   @BetaApi
@@ -129,8 +129,10 @@ class ConnectionImpl implements Connection {
   public BigQueryDryRunResult dryRun(String sql) throws BigQuerySQLException {
     com.google.api.services.bigquery.model.Job dryRunJob = createDryRunJob(sql);
     Schema schema = Schema.fromPb(dryRunJob.getStatistics().getQuery().getSchema());
-    List<QueryParameter> queryParameters =
+    List<QueryParameter> queryParametersPb =
         dryRunJob.getStatistics().getQuery().getUndeclaredQueryParameters();
+    List<Parameter> queryParameters =
+        Lists.transform(queryParametersPb, QUERY_PARAMETER_FROM_PB_FUNCTION);
     return new BigQueryDryRunResultImpl(schema, queryParameters);
   }
 
@@ -1197,4 +1199,13 @@ class ConnectionImpl implements Connection {
         queryParameterPb.setParameterType(value.getQueryParameterValue().toTypePb());
         return queryParameterPb;
       };
+
+  // Convert from QueryParameter class to the Parameter wrapper class
+  private static final Function<QueryParameter, Parameter> QUERY_PARAMETER_FROM_PB_FUNCTION =
+      pb ->
+          Parameter.newBuilder()
+              .setName(pb.getName() == null ? "" : pb.getName())
+              .setQueryParameterValue(
+                  QueryParameterValue.fromPb(pb.getParameterValue(), pb.getParameterType()))
+              .build();
 }
