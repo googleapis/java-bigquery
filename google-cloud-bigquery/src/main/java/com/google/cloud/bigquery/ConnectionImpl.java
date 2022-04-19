@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -57,6 +58,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -83,6 +85,7 @@ class ConnectionImpl implements Connection {
       Executors.newFixedThreadPool(MAX_PROCESS_QUERY_THREADS_CNT);
   private final Logger logger = Logger.getLogger(this.getClass().getName());
   private BigQueryReadClient bqReadClient;
+  private static final long EXECUTOR_TIMEOUT_SEC = 30;
 
   ConnectionImpl(
       ConnectionSettings connectionSettings,
@@ -112,9 +115,9 @@ class ConnectionImpl implements Connection {
    */
   @BetaApi
   @Override
-  public synchronized Boolean cancel() throws BigQuerySQLException {
-    queryTaskExecutor.shutdownNow();
-    return queryTaskExecutor.isShutdown();
+  public synchronized Boolean close() throws BigQuerySQLException {
+    return MoreExecutors.shutdownAndAwaitTermination(
+        queryTaskExecutor, EXECUTOR_TIMEOUT_SEC, TimeUnit.SECONDS);
   }
 
   /**
@@ -173,27 +176,33 @@ class ConnectionImpl implements Connection {
    * @param labels the labels associated with this query. You can use these to organize and group
    *     your query jobs. Label keys and values can be no longer than 63 characters, can only
    *     contain lowercase letters, numeric characters, underscores and dashes. International
-   *     characters are allowed. Label values are optional. Label keys must start with a letter and
-   *     each label in the list must have a different key.
+   *     characters are allowed. Label values are optional and Label is a Varargs. You should pass
+   *     all the Labels in a single Map .Label keys must start with a letter and each label in the
+   *     list must have a different key.
    * @return BigQueryResultSet containing the output of the query
    * @throws BigQuerySQLException
    */
   @BetaApi
   @Override
   public BigQueryResultSet executeSelect(
-      String sql, List<Parameter> parameters, Map<String, String> labels)
+      String sql, List<Parameter> parameters, Map<String, String>... labels)
       throws BigQuerySQLException {
+    Map<String, String> labelMap = null;
+    if (labels != null
+        && labels.length == 1) { // We expect label as a key value pair in a single Map
+      labelMap = labels[0];
+    }
     try {
       // use jobs.query if possible
       if (isFastQuerySupported()) {
         final String projectId = bigQueryOptions.getProjectId();
         final QueryRequest queryRequest =
-            createQueryRequest(connectionSettings, sql, parameters, labels);
+            createQueryRequest(connectionSettings, sql, parameters, labelMap);
         return queryRpc(projectId, queryRequest, parameters != null);
       }
       // use jobs.insert otherwise
       com.google.api.services.bigquery.model.Job queryJob =
-          createQueryJob(sql, connectionSettings, parameters, labels);
+          createQueryJob(sql, connectionSettings, parameters, labelMap);
       JobId jobId = JobId.fromPb(queryJob.getJobReference());
       GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
       return getResultSet(firstPage, jobId, sql, parameters != null);
@@ -514,7 +523,10 @@ class ConnectionImpl implements Connection {
           } catch (InterruptedException e) {
             throw new BigQueryException(0, e.getMessage(), e);
           } finally {
-            queryTaskExecutor.shutdownNow(); // Shutdown the thread pool
+            MoreExecutors.shutdownAndAwaitTermination(
+                queryTaskExecutor,
+                EXECUTOR_TIMEOUT_SEC,
+                TimeUnit.SECONDS); // Shutdown the thread pool
           }
         };
 
@@ -757,7 +769,10 @@ class ConnectionImpl implements Connection {
           } finally {
             try {
               buffer.put(Tuple.of(null, false)); // marking end of stream
-              queryTaskExecutor.shutdownNow(); // Shutdown the thread pool
+              MoreExecutors.shutdownAndAwaitTermination(
+                  queryTaskExecutor,
+                  EXECUTOR_TIMEOUT_SEC,
+                  TimeUnit.SECONDS); // Shutdown the thread pool
             } catch (InterruptedException e) {
               logger.log(Level.WARNING, "\n Error occurred ", e);
             }

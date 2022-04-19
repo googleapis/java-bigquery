@@ -2617,7 +2617,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testConnectionCancel() throws SQLException {
+  public void testConnectionClose() throws SQLException {
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable()
@@ -2634,7 +2634,7 @@ public class ITBigQueryTest {
     while (rs.next()) {
       ++cnt;
       if (cnt > 57000) { // breaking at 57K, query reads 300K
-        assertTrue(connection.cancel()); // we should be able to cancel the connection
+        assertTrue(connection.close()); // we should be able to cancel the connection
       }
     }
     assertTrue(
@@ -3371,7 +3371,7 @@ public class ITBigQueryTest {
         ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
     Connection connection = bigquery.createConnection(connectionSettings);
     List<Parameter> parameters = ImmutableList.of(stringParam, timeStampParam);
-    BigQueryResultSet rs = connection.executeSelect(query, parameters, null);
+    BigQueryResultSet rs = connection.executeSelect(query, parameters);
     assertEquals(2, rs.getTotalRows());
   }
 
@@ -3422,7 +3422,7 @@ public class ITBigQueryTest {
         ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
     Connection connection = bigquery.createConnection(connectionSettings);
     List<Parameter> parameters = ImmutableList.of(stringParam, intArrayParam);
-    BigQueryResultSet rs = connection.executeSelect(query, parameters, null);
+    BigQueryResultSet rs = connection.executeSelect(query, parameters);
     assertEquals(2, rs.getTotalRows());
   }
 

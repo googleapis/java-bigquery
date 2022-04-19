@@ -36,7 +36,9 @@ import com.google.cloud.bigquery.DatasetInfo;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.InsertAllRequest;
 import com.google.cloud.bigquery.InsertAllResponse;
+import com.google.cloud.bigquery.Parameter;
 import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.QueryParameterValue;
 import com.google.cloud.bigquery.ReadClientConnectionConfiguration;
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.StandardSQLTypeName;
@@ -46,6 +48,7 @@ import com.google.cloud.bigquery.TableDefinition;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableInfo;
 import com.google.cloud.bigquery.testing.RemoteBigQueryHelper;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -89,7 +92,7 @@ public class ITNightlyBigQueryTest {
           + " JSONField, JSONField.hello, JSONField.id from %s.%s order by IntegerField asc LIMIT %s";
   private static final String POSITIONAL_QUERY =
       String.format(
-          "select StringField, GeographyField, BooleanField, DateField from %s.%s where DateField = ? LIMIT %s",
+          "select RecordField.BooleanField, RecordField.StringField, StringField, BooleanField, BytesField, IntegerField, GeographyField, NumericField, BigNumericField, TimeField, DateField, TimestampField, JSONField from %s.%s where DateField = ? and BooleanField = ? and IntegerField > ? and NumericField > ? LIMIT %s",
           DATASET, TABLE, MULTI_LIMIT_RECS);
   private static final String QUERY = String.format(BASE_QUERY, DATASET, TABLE, LIMIT_RECS);
   private static final String MULTI_QUERY =
@@ -202,7 +205,7 @@ public class ITNightlyBigQueryTest {
       assertNotNull(ex.getMessage());
       assertTrue(ex.getMessage().toLowerCase().contains("unexpected keyword into"));
     } finally {
-      connection.cancel();
+      connection.close();
     }
   }
 
@@ -264,7 +267,7 @@ public class ITNightlyBigQueryTest {
       ++cnt;
     }
     assertEquals(LIMIT_RECS, cnt); // all the records were retrieved
-    connection.cancel();
+    connection.close();
   }
 
   @Test
@@ -311,7 +314,7 @@ public class ITNightlyBigQueryTest {
       }
       ++cnt;
     }
-    connection.cancel();
+    connection.close();
     totalCnt += cnt;
     // Repeat the same run
     connection = getConnection();
@@ -352,9 +355,49 @@ public class ITNightlyBigQueryTest {
       }
       ++cnt;
     }
-    connection.cancel();
+    connection.close();
     totalCnt += cnt;
     assertEquals(MULTI_LIMIT_RECS * 2, totalCnt);
+  }
+
+  @Test
+  public void testPositionalParams()
+      throws SQLException { // Bypasses Read API as it doesnt support Positional Params
+    Connection connection = getConnection();
+    Parameter dateParam =
+        Parameter.newBuilder()
+            .setQueryParameterValue(QueryParameterValue.date("2022-01-01"))
+            .build();
+    Parameter boolParam =
+        Parameter.newBuilder().setQueryParameterValue(QueryParameterValue.bool(true)).build();
+    Parameter intParam =
+        Parameter.newBuilder().setQueryParameterValue(QueryParameterValue.int64(1)).build();
+    Parameter numericParam =
+        Parameter.newBuilder()
+            .setQueryParameterValue(QueryParameterValue.numeric(new BigDecimal(100)))
+            .build();
+    List<Parameter> parameters = ImmutableList.of(dateParam, boolParam, intParam, numericParam);
+
+    BigQueryResultSet bigQueryResultSet = connection.executeSelect(POSITIONAL_QUERY, parameters);
+    logger.log(Level.INFO, "Query used: {0}", POSITIONAL_QUERY);
+    ResultSet rs = bigQueryResultSet.getResultSet();
+    int cnt = 0;
+    while (rs.next()) {
+      assertFalse(rs.getBoolean("BooleanField"));
+      assertTrue(0.0d <= rs.getDouble("BigNumericField"));
+      assertTrue(0 <= rs.getInt("IntegerField"));
+      assertTrue(0L <= rs.getLong("NumericField"));
+      assertNotNull(rs.getBytes("BytesField"));
+      assertNotNull(rs.getTimestamp("TimestampField"));
+      assertNotNull(rs.getTime("TimeField"));
+      assertNotNull(rs.getDate("DateField"));
+      assertNotNull(rs.getString("JSONField"));
+      assertTrue(rs.getBoolean("BooleanField_1"));
+      assertNotNull(rs.getString("StringField_1"));
+      ++cnt;
+    }
+    connection.close();
+    assertEquals(MULTI_LIMIT_RECS, cnt);
   }
 
   // asserts the value of each row

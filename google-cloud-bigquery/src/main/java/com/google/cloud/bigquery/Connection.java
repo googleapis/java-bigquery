@@ -28,7 +28,7 @@ public interface Connection {
 
   /** Sends a query cancel request. This call will return immediately */
   @BetaApi
-  Boolean cancel() throws BigQuerySQLException;
+  Boolean close() throws BigQuerySQLException;
 
   /**
    * Execute a query dry run that does not return any BigQueryResultSet // TODO: explain more about
@@ -75,22 +75,22 @@ public interface Connection {
   BigQueryResultSet executeSelect(String sql) throws BigQuerySQLException;
 
   /**
-   * Execute a SQL statement with query parameters that returns a single ResultSet
+   * This method executes a SQL SELECT query
    *
-   * @param sql typically a static SQL SELECT statement
+   * @param sql SQL SELECT query
    * @param parameters named or positional parameters. The set of query parameters must either be
-   *     all positional or all named parameters. Named parameters are denoted using an @ prefix,
-   *     e.g. @myParam for a parameter named "myParam".
+   *     all positional or all named parameters.
    * @param labels the labels associated with this query. You can use these to organize and group
    *     your query jobs. Label keys and values can be no longer than 63 characters, can only
    *     contain lowercase letters, numeric characters, underscores and dashes. International
-   *     characters are allowed. Label values are optional. Label keys must start with a letter and
-   *     each label in the list must have a different key.
-   * @return a ResultSet that contains the data produced by the query
-   * @exception BigQuerySQLException if a database access error occurs
+   *     characters are allowed. Label values are optional and Label is a Varargs. You should pass
+   *     all the Labels in a single Map .Label keys must start with a letter and each label in the
+   *     list must have a different key.
+   * @return BigQueryResultSet containing the output of the query
+   * @throws BigQuerySQLException
    */
   @BetaApi
   BigQueryResultSet executeSelect(
-      String sql, List<Parameter> parameters, Map<String, String> labels)
+      String sql, List<Parameter> parameters, Map<String, String>... labels)
       throws BigQuerySQLException;
 }
