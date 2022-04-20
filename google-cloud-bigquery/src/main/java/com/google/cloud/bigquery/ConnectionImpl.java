@@ -173,27 +173,33 @@ class ConnectionImpl implements Connection {
    * @param labels the labels associated with this query. You can use these to organize and group
    *     your query jobs. Label keys and values can be no longer than 63 characters, can only
    *     contain lowercase letters, numeric characters, underscores and dashes. International
-   *     characters are allowed. Label values are optional. Label keys must start with a letter and
-   *     each label in the list must have a different key.
+   *     characters are allowed. Label values are optional and Label is a Varargs. You should pass
+   *     all the Labels in a single Map .Label keys must start with a letter and each label in the
+   *     list must have a different key.
    * @return BigQueryResultSet containing the output of the query
    * @throws BigQuerySQLException
    */
   @BetaApi
   @Override
   public BigQueryResultSet executeSelect(
-      String sql, List<Parameter> parameters, Map<String, String> labels)
+      String sql, List<Parameter> parameters, Map<String, String>... labels)
       throws BigQuerySQLException {
+    Map<String, String> labelMap = null;
+    if (labels != null
+        && labels.length == 1) { // We expect label as a key value pair in a single Map
+      labelMap = labels[0];
+    }
     try {
       // use jobs.query if possible
       if (isFastQuerySupported()) {
         final String projectId = bigQueryOptions.getProjectId();
         final QueryRequest queryRequest =
-            createQueryRequest(connectionSettings, sql, parameters, labels);
+            createQueryRequest(connectionSettings, sql, parameters, labelMap);
         return queryRpc(projectId, queryRequest, parameters != null);
       }
       // use jobs.insert otherwise
       com.google.api.services.bigquery.model.Job queryJob =
-          createQueryJob(sql, connectionSettings, parameters, labels);
+          createQueryJob(sql, connectionSettings, parameters, labelMap);
       JobId jobId = JobId.fromPb(queryJob.getJobReference());
       GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
       return getResultSet(firstPage, jobId, sql, parameters != null);
