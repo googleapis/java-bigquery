@@ -3371,7 +3371,7 @@ public class ITBigQueryTest {
         ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
     Connection connection = bigquery.createConnection(connectionSettings);
     List<Parameter> parameters = ImmutableList.of(stringParam, timeStampParam);
-    BigQueryResultSet rs = connection.executeSelect(query, parameters, null);
+    BigQueryResultSet rs = connection.executeSelect(query, parameters);
     assertEquals(2, rs.getTotalRows());
   }
 
@@ -3422,7 +3422,7 @@ public class ITBigQueryTest {
         ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
     Connection connection = bigquery.createConnection(connectionSettings);
     List<Parameter> parameters = ImmutableList.of(stringParam, intArrayParam);
-    BigQueryResultSet rs = connection.executeSelect(query, parameters, null);
+    BigQueryResultSet rs = connection.executeSelect(query, parameters);
     assertEquals(2, rs.getTotalRows());
   }
 
