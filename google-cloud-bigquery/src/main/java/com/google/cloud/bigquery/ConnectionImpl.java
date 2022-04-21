@@ -112,7 +112,7 @@ class ConnectionImpl implements Connection {
    */
   @BetaApi
   @Override
-  public synchronized Boolean cancel() throws BigQuerySQLException {
+  public synchronized Boolean close() throws BigQuerySQLException {
     queryTaskExecutor.shutdownNow();
     return queryTaskExecutor.isShutdown();
   }
