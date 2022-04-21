@@ -172,8 +172,8 @@ public class ConnectionImplTest {
   }
 
   @Test
-  public void testCancel() throws BigQuerySQLException {
-    boolean cancelled = connection.cancel();
+  public void testClose() throws BigQuerySQLException {
+    boolean cancelled = connection.close();
     assertTrue(cancelled);
   }
 
