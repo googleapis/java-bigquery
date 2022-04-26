@@ -761,7 +761,8 @@ public interface BigQuery extends Service<BigQueryOptions> {
   Job create(JobInfo jobInfo, JobOption... options);
 
   /**
-   * Creates a new BigQuery query connection.
+   * Creates a new BigQuery query connection used for executing queries (not the same as BigQuery
+   * connection properties).
    *
    * <p>Example of creating a query connection.
    *

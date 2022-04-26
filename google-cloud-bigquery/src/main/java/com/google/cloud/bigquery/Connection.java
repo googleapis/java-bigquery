@@ -31,7 +31,7 @@ public interface Connection {
   Boolean close() throws BigQuerySQLException;
 
   /**
-   * Execute a query dry run that does not return any BigQueryResultSet // TODO: explain more about
+   * Execute a query dry run that does not return any BigQueryResult // TODO: explain more about
    * what this method does here
    *
    * @param sql typically a static SQL SELECT statement
@@ -56,7 +56,7 @@ public interface Connection {
    *   //         .build();
    *   // Connection connection = bigquery.createConnection(connectionSettings);
    *   String selectQuery = "SELECT corpus FROM `bigquery-public-data.samples.shakespeare` GROUP BY corpus;";
-   *   try (BigQueryResultSet bqResultSet = connection.executeSelect(selectQuery)) {
+   *   try (BigQueryResult bqResultSet = connection.executeSelect(selectQuery)) {
    *       ResultSet rs = bqResultSet.getResultSet();
    *       while (rs.next()) {
    *           System.out.printf("%s,", rs.getString("corpus"));
@@ -72,7 +72,7 @@ public interface Connection {
    * @exception BigQuerySQLException if a database access error occurs
    */
   @BetaApi
-  BigQueryResultSet executeSelect(String sql) throws BigQuerySQLException;
+  BigQueryResult executeSelect(String sql) throws BigQuerySQLException;
 
   /**
    * This method executes a SQL SELECT query
@@ -86,11 +86,11 @@ public interface Connection {
    *     characters are allowed. Label values are optional and Label is a Varargs. You should pass
    *     all the Labels in a single Map .Label keys must start with a letter and each label in the
    *     list must have a different key.
-   * @return BigQueryResultSet containing the output of the query
+   * @return BigQueryResult containing the output of the query
    * @throws BigQuerySQLException
    */
   @BetaApi
-  BigQueryResultSet executeSelect(
+  BigQueryResult executeSelect(
       String sql, List<Parameter> parameters, Map<String, String>... labels)
       throws BigQuerySQLException;
 }

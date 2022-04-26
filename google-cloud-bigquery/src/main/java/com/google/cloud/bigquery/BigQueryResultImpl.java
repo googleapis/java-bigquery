@@ -29,30 +29,30 @@ import java.time.ZoneId;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import org.apache.arrow.vector.util.JsonStringArrayList;
 import org.apache.arrow.vector.util.Text;
 
-// TODO: This implementation deals with the JSON response. We can have respective implementations
-public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
+public class BigQueryResultImpl<T> implements BigQueryResult<T> {
 
   private final Schema schema;
   private final long totalRows;
   private final BlockingQueue<T> buffer;
   private T cursor;
-  private final ResultSetWrapper underlyingResultSet;
-  private final BigQueryResultSetStats bigQueryResultSetStats;
+  private final BigQueryResultSet underlyingResultSet;
+  private final BigQueryResultStats bigQueryResultStats;
   private final FieldList schemaFieldList;
 
-  public BigQueryResultSetImpl(
+  public BigQueryResultImpl(
       Schema schema,
       long totalRows,
       BlockingQueue<T> buffer,
-      BigQueryResultSetStats bigQueryResultSetStats) {
+      BigQueryResultStats bigQueryResultStats) {
     this.schema = schema;
     this.totalRows = totalRows;
     this.buffer = buffer;
-    this.underlyingResultSet = new ResultSetWrapper();
-    this.bigQueryResultSetStats = bigQueryResultSetStats;
+    this.underlyingResultSet = new BigQueryResultSet();
+    this.bigQueryResultStats = bigQueryResultStats;
     this.schemaFieldList = schema.getFields();
   }
 
@@ -71,7 +71,7 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
     return underlyingResultSet;
   }
 
-  private class ResultSetWrapper extends AbstractJdbcResultSet {
+  private class BigQueryResultSet extends AbstractJdbcResultSet {
     @Override
     /*Advances the result set to the next row, returning false if no such row exists. Potentially blocking operation*/
     public boolean next() throws SQLException {
@@ -525,9 +525,9 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
         } else {
           Integer dateInt = (Integer) dateObj;
           long dateInMillis =
-              Long.valueOf(dateInt)
-                  * (24 * 60 * 60
-                      * 1000); // For example int 18993 represents 2022-01-01, converting time to
+              TimeUnit.DAYS.toMillis(
+                  Long.valueOf(
+                      dateInt)); // For example int 18993 represents 2022-01-01, converting time to
           // milli seconds
           return new Date(dateInMillis);
         }
@@ -548,7 +548,7 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
   }
 
   @Override
-  public BigQueryResultSetStats getBigQueryResultSetStats() {
-    return bigQueryResultSetStats;
+  public BigQueryResultStats getBigQueryResultStats() {
+    return bigQueryResultStats;
   }
 }

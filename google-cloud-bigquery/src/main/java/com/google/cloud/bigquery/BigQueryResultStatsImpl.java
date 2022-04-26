@@ -18,11 +18,23 @@ package com.google.cloud.bigquery;
 
 import com.google.cloud.bigquery.JobStatistics.SessionInfo;
 
-public interface BigQueryResultSetStats {
+public class BigQueryResultStatsImpl implements BigQueryResultStats {
 
-  /** Returns detailed statistics for DML statements. */
-  DmlStats getDmlStats();
+  private final DmlStats dmlStats;
+  private final SessionInfo sessionInfo;
 
-  /** Returns SessionInfo contains information about the session if this job is part of one. */
-  SessionInfo getSessionInfo();
+  public BigQueryResultStatsImpl(DmlStats dmlStats, SessionInfo sessionInfo) {
+    this.dmlStats = dmlStats;
+    this.sessionInfo = sessionInfo;
+  }
+
+  @Override
+  public DmlStats getDmlStats() {
+    return dmlStats;
+  }
+
+  @Override
+  public SessionInfo getSessionInfo() {
+    return sessionInfo;
+  }
 }
