@@ -39,7 +39,7 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 @Fork(value = 1)
 @BenchmarkMode(Mode.AverageTime)
-@Warmup(iterations = 0)
+@Warmup(iterations = 1)
 @Measurement(iterations = 3)
 @State(Scope.Benchmark)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -49,8 +49,13 @@ public class ConnImplBenchmark {
 
   private ConnectionSettings connectionSettingsReadAPIEnabled, connectionSettingsReadAPIDisabled;
   private long numBuffRows = 100000L;
-  private final String DATASET = "bigquery_test_dataset";
-  private final String QUERY = "SELECT * FROM tlc_yellow_trips_2017_stephwang LIMIT %s";
+  private final String DATASET = "new_york_taxi_trips";
+  private final String QUERY =
+      "SELECT * FROM bigquery-public-data.new_york_taxi_trips.tlc_yellow_trips_2017 LIMIT %s";
+  public static final long NUM_PAGE_ROW_CNT_RATIO =
+      10; // ratio of [records in the current page :: total rows] to be met to use read API
+  public static final long NUM_MIN_RESULT_SIZE =
+      200000; // min number of records to use to ReadAPI with
 
   @Setup
   public void setUp() throws IOException {
@@ -59,8 +64,8 @@ public class ConnImplBenchmark {
 
     clientConnectionConfiguration =
         ReadClientConnectionConfiguration.newBuilder()
-            .setTotalToPageRowCountRatio(10L)
-            .setMinResultSize(200000L)
+            .setTotalToPageRowCountRatio(NUM_PAGE_ROW_CNT_RATIO)
+            .setMinResultSize(NUM_MIN_RESULT_SIZE)
             .setBufferSize(numBuffRows)
             .build();
 
@@ -101,7 +106,7 @@ public class ConnImplBenchmark {
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
-      connectionReadAPIEnabled.cancel(); // IMP to kill the bg workers
+      connectionReadAPIEnabled.close(); // IMP to kill the bg workers
     }
     blackhole.consume(hash);
   }
@@ -121,7 +126,7 @@ public class ConnImplBenchmark {
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
-      connectionReadAPIDisabled.cancel(); // IMP to kill the bg workers
+      connectionReadAPIDisabled.close(); // IMP to kill the bg workers
     }
     blackhole.consume(hash);
   }
