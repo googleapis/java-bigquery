@@ -29,6 +29,7 @@ import java.time.ZoneId;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import org.apache.arrow.vector.util.JsonStringArrayList;
 import org.apache.arrow.vector.util.Text;
 
@@ -525,9 +526,9 @@ public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
         } else {
           Integer dateInt = (Integer) dateObj;
           long dateInMillis =
-              Long.valueOf(dateInt)
-                  * (24 * 60 * 60
-                      * 1000); // For example int 18993 represents 2022-01-01, converting time to
+              TimeUnit.DAYS.toMillis(
+                  Long.valueOf(
+                      dateInt)); // For example int 18993 represents 2022-01-01, converting time to
           // milli seconds
           return new Date(dateInMillis);
         }
