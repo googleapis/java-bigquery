@@ -36,7 +36,7 @@ public abstract class Parameter {
   public abstract String getName();
 
   /** Returns the value for a query parameter along with its type. */
-  public abstract QueryParameterValue getQueryParameterValue();
+  public abstract QueryParameterValue getValue();
 
   /** Returns a builder pre-populated using the current values of this field. */
   public abstract Builder toBuilder();
@@ -62,7 +62,7 @@ public abstract class Parameter {
      *
      * @param parameter parameter or {@code null} for none
      */
-    public abstract Builder setQueryParameterValue(QueryParameterValue parameter);
+    public abstract Builder setValue(QueryParameterValue parameter);
 
     /** Creates a {@code Parameter} object. */
     public abstract Parameter build();

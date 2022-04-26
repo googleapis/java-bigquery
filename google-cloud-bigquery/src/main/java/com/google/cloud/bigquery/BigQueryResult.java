@@ -18,7 +18,7 @@ package com.google.cloud.bigquery;
 
 import java.sql.ResultSet;
 
-public interface BigQueryResultSet<T> {
+public interface BigQueryResult<T> {
 
   /** Returns the schema of the results. */
   Schema getSchema();
@@ -34,5 +34,5 @@ public interface BigQueryResultSet<T> {
   ResultSet getResultSet();
 
   /* Returns the query statistics associated with this query. */
-  BigQueryResultSetStats getBigQueryResultSetStats();
+  BigQueryResultStats getBigQueryResultStats();
 }

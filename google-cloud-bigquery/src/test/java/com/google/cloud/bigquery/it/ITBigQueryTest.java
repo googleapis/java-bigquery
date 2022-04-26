@@ -52,7 +52,7 @@ import com.google.cloud.bigquery.BigQuery.TableOption;
 import com.google.cloud.bigquery.BigQueryDryRunResult;
 import com.google.cloud.bigquery.BigQueryError;
 import com.google.cloud.bigquery.BigQueryException;
-import com.google.cloud.bigquery.BigQueryResultSet;
+import com.google.cloud.bigquery.BigQueryResult;
 import com.google.cloud.bigquery.BigQuerySQLException;
 import com.google.cloud.bigquery.Clustering;
 import com.google.cloud.bigquery.Connection;
@@ -2494,13 +2494,12 @@ public class ITBigQueryTest {
     assertEquals(
         BQ_RESULTSET_EXPECTED_SCHEMA, bigQueryDryRunResultSet.getSchema()); // match the schema
     List<Parameter> queryParameters = bigQueryDryRunResultSet.getQueryParameters();
-    assertEquals(
-        StandardSQLTypeName.STRING, queryParameters.get(0).getQueryParameterValue().getType());
+    assertEquals(StandardSQLTypeName.STRING, queryParameters.get(0).getValue().getType());
   }
 
   @Test
   // This test case test the order of the records, making sure that the result is not jumbled up due
-  // to the multithreaded BigQueryResultSet implementation
+  // to the multithreaded BigQueryResult implementation
   public void testBQResultSetMultiThreadedOrder() throws SQLException {
     String query =
         "SELECT date FROM "
@@ -2512,8 +2511,8 @@ public class ITBigQueryTest {
             .setNumBufferedRows(10000L) // page size
             .build();
     Connection connection = bigquery.createConnection(connectionSettings);
-    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
-    ResultSet rs = bigQueryResultSet.getResultSet();
+    BigQueryResult bigQueryResult = connection.executeSelect(query);
+    ResultSet rs = bigQueryResult.getResultSet();
     int cnt = 0;
     assertTrue(rs.next());
     ++cnt;
@@ -2542,8 +2541,8 @@ public class ITBigQueryTest {
             // query route gets executed
             .build();
     Connection connection = bigquery.createConnection(connectionSettings);
-    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
-    ResultSet rs = bigQueryResultSet.getResultSet();
+    BigQueryResult bigQueryResult = connection.executeSelect(query);
+    ResultSet rs = bigQueryResult.getResultSet();
     int cnt = 0;
     while (rs.next()) { // pagination starts after approx 120,000 records
       assertNotNull(rs.getDate(0));
@@ -2566,12 +2565,12 @@ public class ITBigQueryTest {
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
     Connection connection = bigquery.createConnection(connectionSettings);
-    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
-    ResultSet rs = bigQueryResultSet.getResultSet();
-    Schema sc = bigQueryResultSet.getSchema();
+    BigQueryResult bigQueryResult = connection.executeSelect(query);
+    ResultSet rs = bigQueryResult.getResultSet();
+    Schema sc = bigQueryResult.getSchema();
 
     assertEquals(BQ_RESULTSET_EXPECTED_SCHEMA, sc); // match the schema
-    assertEquals(2, bigQueryResultSet.getTotalRows()); // Expecting 2 rows
+    assertEquals(2, bigQueryResult.getTotalRows()); // Expecting 2 rows
 
     assertTrue(rs.next()); // first row
     // checking for the null or 0 column values
@@ -2628,8 +2627,8 @@ public class ITBigQueryTest {
             .setNumBufferedRows(10000L) // page size
             .build();
     Connection connection = bigquery.createConnection(connectionSettings);
-    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
-    ResultSet rs = bigQueryResultSet.getResultSet();
+    BigQueryResult bigQueryResult = connection.executeSelect(query);
+    ResultSet rs = bigQueryResult.getResultSet();
     int cnt = 0;
     while (rs.next()) {
       ++cnt;
@@ -2655,8 +2654,8 @@ public class ITBigQueryTest {
             .setNumBufferedRows(10000L) // page size
             .build();
     Connection connection = bigquery.createConnection(connectionSettings);
-    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
-    ResultSet rs = bigQueryResultSet.getResultSet();
+    BigQueryResult bigQueryResult = connection.executeSelect(query);
+    ResultSet rs = bigQueryResult.getResultSet();
     int cnt = 0;
     while (rs.next()) { // pagination starts after approx 120,000 records
       assertNotNull(rs.getDate(0));
@@ -2684,12 +2683,12 @@ public class ITBigQueryTest {
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
     Connection connection = bigquery.createConnection(connectionSettings);
-    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
-    ResultSet rs = bigQueryResultSet.getResultSet();
-    Schema sc = bigQueryResultSet.getSchema();
+    BigQueryResult bigQueryResult = connection.executeSelect(query);
+    ResultSet rs = bigQueryResult.getResultSet();
+    Schema sc = bigQueryResult.getSchema();
 
     assertEquals(BQ_RESULTSET_EXPECTED_SCHEMA, sc); // match the schema
-    assertEquals(2, bigQueryResultSet.getTotalRows()); // Expecting 2 rows
+    assertEquals(2, bigQueryResult.getTotalRows()); // Expecting 2 rows
     while (rs.next()) {
       assertEquals(rs.getString(0), rs.getString("StringField"));
       assertTrue(rs.getDouble(1) == rs.getDouble("BigNumericField"));
@@ -2741,10 +2740,10 @@ public class ITBigQueryTest {
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
     Connection connection = bigquery.createConnection(connectionSettings);
-    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
-    assertEquals(1, bigQueryResultSet.getTotalRows());
+    BigQueryResult bigQueryResult = connection.executeSelect(query);
+    assertEquals(1, bigQueryResult.getTotalRows());
 
-    Schema schema = bigQueryResultSet.getSchema();
+    Schema schema = bigQueryResult.getSchema();
     assertEquals("address", schema.getFields().get(0).getName());
     assertEquals(Field.Mode.NULLABLE, schema.getFields().get(0).getMode());
     // Backend is currently returning LegacySQLTypeName. Tracking bug: b/202977620
@@ -2758,7 +2757,7 @@ public class ITBigQueryTest {
         LegacySQLTypeName.INTEGER, schema.getFields().get(0).getSubFields().get(1).getType());
     assertEquals(Field.Mode.NULLABLE, schema.getFields().get(0).getSubFields().get(1).getMode());
 
-    ResultSet rs = bigQueryResultSet.getResultSet();
+    ResultSet rs = bigQueryResult.getResultSet();
     assertTrue(rs.next());
     FieldValueList addressFieldValue =
         (com.google.cloud.bigquery.FieldValueList) rs.getObject("address");
@@ -2775,10 +2774,10 @@ public class ITBigQueryTest {
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
     Connection connection = bigquery.createConnection(connectionSettings);
-    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
-    assertEquals(1, bigQueryResultSet.getTotalRows());
+    BigQueryResult bigQueryResult = connection.executeSelect(query);
+    assertEquals(1, bigQueryResult.getTotalRows());
 
-    Schema schema = bigQueryResultSet.getSchema();
+    Schema schema = bigQueryResult.getSchema();
     assertEquals("city", schema.getFields().get(0).getName());
     assertEquals(Field.Mode.NULLABLE, schema.getFields().get(0).getMode());
     // Backend is currently returning LegacySQLTypeName. Tracking bug: b/202977620
@@ -2786,7 +2785,7 @@ public class ITBigQueryTest {
     assertNull(
         schema.getFields().get(0).getSubFields()); // this is a String field without any subfields
 
-    ResultSet rs = bigQueryResultSet.getResultSet();
+    ResultSet rs = bigQueryResult.getResultSet();
     assertTrue(rs.next());
     String cityFieldValue = rs.getString("city");
     assertEquals(rs.getString("city"), rs.getObject(0));
@@ -2800,16 +2799,16 @@ public class ITBigQueryTest {
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
     Connection connection = bigquery.createConnection(connectionSettings);
-    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
-    assertEquals(1, bigQueryResultSet.getTotalRows());
+    BigQueryResult bigQueryResult = connection.executeSelect(query);
+    assertEquals(1, bigQueryResult.getTotalRows());
 
-    Schema schema = bigQueryResultSet.getSchema();
+    Schema schema = bigQueryResult.getSchema();
     assertEquals("f0_", schema.getFields().get(0).getName());
     assertEquals(Field.Mode.REPEATED, schema.getFields().get(0).getMode());
     assertEquals(LegacySQLTypeName.INTEGER, schema.getFields().get(0).getType());
     assertNull(schema.getFields().get(0).getSubFields()); // no subfields for Integers
 
-    ResultSet rs = bigQueryResultSet.getResultSet();
+    ResultSet rs = bigQueryResult.getResultSet();
     assertTrue(rs.next());
     FieldValueList arrayFieldValue = (com.google.cloud.bigquery.FieldValueList) rs.getObject(0);
     assertEquals(1, arrayFieldValue.get(0).getLongValue());
@@ -2824,10 +2823,10 @@ public class ITBigQueryTest {
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
     Connection connection = bigquery.createConnection(connectionSettings);
-    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
-    assertEquals(1, bigQueryResultSet.getTotalRows());
+    BigQueryResult bigQueryResult = connection.executeSelect(query);
+    assertEquals(1, bigQueryResult.getTotalRows());
 
-    Schema schema = bigQueryResultSet.getSchema();
+    Schema schema = bigQueryResult.getSchema();
     assertEquals("f0_", schema.getFields().get(0).getName());
     assertEquals(Field.Mode.REPEATED, schema.getFields().get(0).getMode());
     // Backend is currently returning LegacySQLTypeName. Tracking bug: b/202977620
@@ -2842,7 +2841,7 @@ public class ITBigQueryTest {
         LegacySQLTypeName.INTEGER, schema.getFields().get(0).getSubFields().get(1).getType());
     assertEquals(Field.Mode.NULLABLE, schema.getFields().get(0).getSubFields().get(1).getMode());
 
-    ResultSet rs = bigQueryResultSet.getResultSet();
+    ResultSet rs = bigQueryResult.getResultSet();
     assertTrue(rs.next());
     FieldValueList arrayOfStructFieldValue =
         (com.google.cloud.bigquery.FieldValueList) rs.getObject(0);
@@ -3153,9 +3152,8 @@ public class ITBigQueryTest {
             .setCreateSession(true)
             .build();
     Connection connection = bigquery.createConnection(connectionSettings);
-    BigQueryResultSet bigQueryResultSet = connection.executeSelect(query);
-    String sessionId =
-        bigQueryResultSet.getBigQueryResultSetStats().getSessionInfo().getSessionId();
+    BigQueryResult bigQueryResult = connection.executeSelect(query);
+    String sessionId = bigQueryResult.getBigQueryResultStats().getSessionInfo().getSessionId();
     assertNotNull(sessionId);
   }
 
@@ -3363,15 +3361,14 @@ public class ITBigQueryTest {
     QueryParameterValue stringParameter = QueryParameterValue.string("stringValue");
     QueryParameterValue timestampParameter =
         QueryParameterValue.timestamp("2014-01-01 07:00:00.000000+00:00");
-    Parameter stringParam = Parameter.newBuilder().setQueryParameterValue(stringParameter).build();
-    Parameter timeStampParam =
-        Parameter.newBuilder().setQueryParameterValue(timestampParameter).build();
+    Parameter stringParam = Parameter.newBuilder().setValue(stringParameter).build();
+    Parameter timeStampParam = Parameter.newBuilder().setValue(timestampParameter).build();
 
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
     Connection connection = bigquery.createConnection(connectionSettings);
     List<Parameter> parameters = ImmutableList.of(stringParam, timeStampParam);
-    BigQueryResultSet rs = connection.executeSelect(query, parameters);
+    BigQueryResult rs = connection.executeSelect(query, parameters);
     assertEquals(2, rs.getTotalRows());
   }
 
@@ -3408,21 +3405,15 @@ public class ITBigQueryTest {
     QueryParameterValue intArrayParameter =
         QueryParameterValue.array(new Integer[] {3, 4}, Integer.class);
     Parameter stringParam =
-        Parameter.newBuilder()
-            .setName("stringParam")
-            .setQueryParameterValue(stringParameter)
-            .build();
+        Parameter.newBuilder().setName("stringParam").setValue(stringParameter).build();
     Parameter intArrayParam =
-        Parameter.newBuilder()
-            .setName("integerList")
-            .setQueryParameterValue(intArrayParameter)
-            .build();
+        Parameter.newBuilder().setName("integerList").setValue(intArrayParameter).build();
 
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
     Connection connection = bigquery.createConnection(connectionSettings);
     List<Parameter> parameters = ImmutableList.of(stringParam, intArrayParam);
-    BigQueryResultSet rs = connection.executeSelect(query, parameters);
+    BigQueryResult rs = connection.executeSelect(query, parameters);
     assertEquals(2, rs.getTotalRows());
   }
 
