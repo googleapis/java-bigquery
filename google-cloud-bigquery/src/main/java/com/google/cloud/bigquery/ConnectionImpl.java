@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -57,6 +58,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -83,6 +85,7 @@ class ConnectionImpl implements Connection {
       Executors.newFixedThreadPool(MAX_PROCESS_QUERY_THREADS_CNT);
   private final Logger logger = Logger.getLogger(this.getClass().getName());
   private BigQueryReadClient bqReadClient;
+  private static final long EXECUTOR_TIMEOUT_SEC = 30;
 
   ConnectionImpl(
       ConnectionSettings connectionSettings,
@@ -113,8 +116,8 @@ class ConnectionImpl implements Connection {
   @BetaApi
   @Override
   public synchronized Boolean close() throws BigQuerySQLException {
-    queryTaskExecutor.shutdownNow();
-    return queryTaskExecutor.isShutdown();
+    return MoreExecutors.shutdownAndAwaitTermination(
+        queryTaskExecutor, EXECUTOR_TIMEOUT_SEC, TimeUnit.SECONDS);
   }
 
   /**
@@ -520,7 +523,10 @@ class ConnectionImpl implements Connection {
           } catch (InterruptedException e) {
             throw new BigQueryException(0, e.getMessage(), e);
           } finally {
-            queryTaskExecutor.shutdownNow(); // Shutdown the thread pool
+            MoreExecutors.shutdownAndAwaitTermination(
+                queryTaskExecutor,
+                EXECUTOR_TIMEOUT_SEC,
+                TimeUnit.SECONDS); // Shutdown the thread pool
           }
         };
 
@@ -763,7 +769,10 @@ class ConnectionImpl implements Connection {
           } finally {
             try {
               buffer.put(Tuple.of(null, false)); // marking end of stream
-              queryTaskExecutor.shutdownNow(); // Shutdown the thread pool
+              MoreExecutors.shutdownAndAwaitTermination(
+                  queryTaskExecutor,
+                  EXECUTOR_TIMEOUT_SEC,
+                  TimeUnit.SECONDS); // Shutdown the thread pool
             } catch (InterruptedException e) {
               logger.log(Level.WARNING, "\n Error occurred ", e);
             }
