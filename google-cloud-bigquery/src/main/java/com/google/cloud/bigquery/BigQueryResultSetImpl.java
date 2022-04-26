@@ -33,7 +33,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.arrow.vector.util.JsonStringArrayList;
 import org.apache.arrow.vector.util.Text;
 
-// TODO: This implementation deals with the JSON response. We can have respective implementations
 public class BigQueryResultSetImpl<T> implements BigQueryResultSet<T> {
 
   private final Schema schema;
