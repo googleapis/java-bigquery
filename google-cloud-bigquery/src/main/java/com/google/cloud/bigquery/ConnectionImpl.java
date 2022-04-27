@@ -85,7 +85,7 @@ class ConnectionImpl implements Connection {
       Executors.newFixedThreadPool(MAX_PROCESS_QUERY_THREADS_CNT);
   private final Logger logger = Logger.getLogger(this.getClass().getName());
   private BigQueryReadClient bqReadClient;
-  private static final long EXECUTOR_TIMEOUT_SEC = 30;
+  private static final long EXECUTOR_TIMEOUT_SEC = 5;
 
   ConnectionImpl(
       ConnectionSettings connectionSettings,
@@ -116,8 +116,19 @@ class ConnectionImpl implements Connection {
   @BetaApi
   @Override
   public synchronized Boolean close() throws BigQuerySQLException {
-    return MoreExecutors.shutdownAndAwaitTermination(
-        queryTaskExecutor, EXECUTOR_TIMEOUT_SEC, TimeUnit.SECONDS);
+    queryTaskExecutor.shutdownNow();
+    try {
+      queryTaskExecutor.awaitTermination(
+          EXECUTOR_TIMEOUT_SEC, TimeUnit.SECONDS); // wait for the executor shutdown
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+      logger.log(
+          Level.WARNING,
+          "\n" + Thread.currentThread().getName() + " Exception while awaitTermination",
+          e); // Logging InterruptedException instead of throwing the exception back, close method
+      // will return queryTaskExecutor.isShutdown()
+    }
+    return queryTaskExecutor.isShutdown(); // check if the executor has been shutdown
   }
 
   /**
