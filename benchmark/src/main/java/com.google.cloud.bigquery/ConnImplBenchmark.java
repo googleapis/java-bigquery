@@ -49,7 +49,7 @@ public class ConnImplBenchmark {
 
   private ConnectionSettings connectionSettingsReadAPIEnabled, connectionSettingsReadAPIDisabled;
   private long numBuffRows = 100000L;
-  private final String DATASET = "bigquery_test_dataset";
+  private final String DATASET = "new_york_taxi_trips";
   private final String QUERY =
       "SELECT * FROM bigquery-public-data.new_york_taxi_trips.tlc_yellow_trips_2017 LIMIT %s";
   public static final long NUM_PAGE_ROW_CNT_RATIO =
