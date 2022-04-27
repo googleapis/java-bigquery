@@ -102,7 +102,7 @@ public class ConnImplBenchmark {
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
-      connectionReadAPIEnabled.cancel(); // IMP to kill the bg workers
+      connectionReadAPIEnabled.close(); // IMP to kill the bg workers
     }
     blackhole.consume(hash);
   }
@@ -122,7 +122,7 @@ public class ConnImplBenchmark {
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
-      connectionReadAPIDisabled.cancel(); // IMP to kill the bg workers
+      connectionReadAPIDisabled.close(); // IMP to kill the bg workers
     }
     blackhole.consume(hash);
   }
