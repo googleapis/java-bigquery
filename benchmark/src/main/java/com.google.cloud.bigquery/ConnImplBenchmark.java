@@ -52,8 +52,10 @@ public class ConnImplBenchmark {
   private final String DATASET = "bigquery_test_dataset";
   private final String QUERY =
       "SELECT * FROM bigquery-public-data.new_york_taxi_trips.tlc_yellow_trips_2017 LIMIT %s";
-  public static final long NUM_PAGE_ROW_CNT_RATIO = 10;
-  public static final long NUM_MIN_RESULT_SIZE = 200000;
+  public static final long NUM_PAGE_ROW_CNT_RATIO =
+      10; // ratio of [records in the current page :: total rows] to be met to use read API
+  public static final long NUM_MIN_RESULT_SIZE =
+      200000; // min number of records to use to ReadAPI with
 
   @Setup
   public void setUp() throws IOException {
