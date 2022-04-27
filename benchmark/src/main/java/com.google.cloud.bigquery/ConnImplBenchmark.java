@@ -50,7 +50,8 @@ public class ConnImplBenchmark {
   private ConnectionSettings connectionSettingsReadAPIEnabled, connectionSettingsReadAPIDisabled;
   private long numBuffRows = 100000L;
   private final String DATASET = "bigquery_test_dataset";
-  private final String QUERY = "SELECT * FROM tlc_yellow_trips_2017_stephwang LIMIT %s";
+  private final String QUERY =
+      "SELECT * FROM bigquery-public-data.new_york_taxi_trips.tlc_yellow_trips_2017 LIMIT %s";
 
   @Setup
   public void setUp() throws IOException {
