@@ -39,7 +39,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>libraries-bom</artifactId>
-        <version>25.1.0</version>
+        <version>25.2.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -90,11 +90,6 @@
       <id>native</id>
 
       <dependencies>
-        <dependency>
-          <groupId>com.google.cloud</groupId>
-          <artifactId>native-image-support</artifactId>
-          <version>0.13.1</version>
-        </dependency>
         <dependency>
           <groupId>org.junit.vintage</groupId>
           <artifactId>junit-vintage-engine</artifactId>
