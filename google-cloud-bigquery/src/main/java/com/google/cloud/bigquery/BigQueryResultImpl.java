@@ -34,6 +34,9 @@ import org.apache.arrow.vector.util.Text;
 
 public class BigQueryResultImpl<T> implements BigQueryResult<T> {
 
+  private static final String NULL_CURSOR_MSG =
+      "Error occurred while reading the cursor. This could happen if getters are called after we are done reading all the records";
+
   // This class represents a row of records, the columns are represented as a map
   // (columnName:columnValue pair)
   static class Row {
@@ -121,7 +124,8 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
           throw new BigQuerySQLException("Could not process the current row");
         }
       } catch (InterruptedException e) {
-        throw new SQLException("Error occurred while reading buffer");
+        throw new SQLException(
+            "Error occurred while advancing the cursor. This could happen when connection is closed while we call the next method");
       }
 
       return true;
@@ -137,7 +141,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         throw new SQLException("fieldName can't be null");
       }
       if (cursor == null) {
-        return null;
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
         return fieldValue.getValue() == null ? null : fieldValue.getValue();
@@ -168,7 +172,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         throw new SQLException("fieldName can't be null");
       }
       if (cursor == null) {
-        return null;
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
         if (fieldValue.getValue() == null) {
@@ -260,8 +264,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         throw new SQLException("fieldName can't be null");
       }
       if (cursor == null) {
-        return 0L; // the column value; if the value is SQL NULL, the value returned is 0 as per
-        // java.sql.ResultSet definition
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
         return fieldValue.getValue() == null ? 0L : fieldValue.getNumericValue().longValue();
@@ -300,8 +303,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         throw new SQLException("fieldName can't be null");
       }
       if (cursor == null) {
-        return 0d; // the column value; if the value is SQL NULL, the value returned is 0 as per
-        // java.sql.ResultSet definition
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
         return fieldValue.getValue() == null ? 0d : fieldValue.getNumericValue().doubleValue();
@@ -334,9 +336,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         throw new SQLException("fieldName can't be null");
       }
       if (cursor == null) {
-        return null; // the column value (full precision); if the value is SQL NULL, the value
-        // returned is null in the Java programming language. as per
-        // java.sql.ResultSet definition
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
         return fieldValue.getValue() == null
@@ -350,9 +350,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
     @Override
     public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
       if (cursor == null) {
-        return null; // the column value (full precision); if the value is SQL NULL, the value
-        // returned is null in the Java programming language. as per
-        // java.sql.ResultSet definition
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
         return fieldValue.getValue() == null
@@ -369,7 +367,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         throw new SQLException("fieldName can't be null");
       }
       if (cursor == null) {
-        return false; //  if the value is SQL NULL, the value returned is false
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
         return fieldValue.getValue() != null && fieldValue.getBooleanValue();
@@ -386,7 +384,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
     @Override
     public boolean getBoolean(int columnIndex) throws SQLException {
       if (cursor == null) {
-        return false; //  if the value is SQL NULL, the value returned is false
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
         return fieldValue.getValue() != null && fieldValue.getBooleanValue();
@@ -401,7 +399,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         throw new SQLException("fieldName can't be null");
       }
       if (cursor == null) {
-        return null; //  if the value is SQL NULL, the value returned is null
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
         return fieldValue.getValue() == null ? null : fieldValue.getBytesValue();
@@ -430,7 +428,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
     @Override
     public Timestamp getTimestamp(String fieldName) throws SQLException {
       if (fieldName == null) {
-        throw new SQLException("fieldName can't be null");
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       }
       if (cursor == null) {
         return null; //  if the value is SQL NULL, the value returned is null
@@ -457,7 +455,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
     @Override
     public Timestamp getTimestamp(int columnIndex) throws SQLException {
       if (cursor == null) {
-        return null; //  if the value is SQL NULL, the value returned is null
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
         return fieldValue.getValue() == null
@@ -474,7 +472,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
     @Override
     public Time getTime(String fieldName) throws SQLException {
       if (fieldName == null) {
-        throw new SQLException("fieldName can't be null");
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       }
       if (cursor == null) {
         return null; //  if the value is SQL NULL, the value returned is null
@@ -504,7 +502,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
     @Override
     public Time getTime(int columnIndex) throws SQLException {
       if (cursor == null) {
-        return null; //  if the value is SQL NULL, the value returned is null
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
         return getTimeFromFieldVal(fieldValue);
@@ -543,7 +541,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         throw new SQLException("fieldName can't be null");
       }
       if (cursor == null) {
-        return null; //  if the value is SQL NULL, the value returned is null
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
         return fieldValue.getValue() == null ? null : Date.valueOf(fieldValue.getStringValue());
@@ -570,7 +568,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
     @Override
     public Date getDate(int columnIndex) throws SQLException {
       if (cursor == null) {
-        return null; //  if the value is SQL NULL, the value returned is null
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
         return fieldValue.getValue() == null ? null : Date.valueOf(fieldValue.getStringValue());
