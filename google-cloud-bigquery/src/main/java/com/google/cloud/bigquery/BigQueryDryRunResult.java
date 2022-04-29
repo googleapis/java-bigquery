@@ -23,6 +23,10 @@ public interface BigQueryDryRunResult {
   /** Returns the schema of the results. Null if the schema is not supplied. */
   Schema getSchema() throws BigQuerySQLException;
 
-  /** Returns query parameters for standard SQL queries */
+  /**
+   * Returns query parameters for standard SQL queries by extracting undeclare query parameters from
+   * the dry run job. See more information:
+   * https://developers.google.com/resources/api-libraries/documentation/bigquery/v2/java/latest/com/google/api/services/bigquery/model/JobStatistics2.html#getUndeclaredQueryParameters--
+   */
   List<Parameter> getQueryParameters() throws BigQuerySQLException;
 }
