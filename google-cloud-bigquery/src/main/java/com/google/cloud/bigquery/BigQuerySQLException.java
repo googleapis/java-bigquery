@@ -34,6 +34,12 @@ public final class BigQuerySQLException extends SQLException {
     this.errors = null;
   }
 
+  public BigQuerySQLException(
+      String msg) { // overloaded constructor with just message as an argument
+    super(msg);
+    this.errors = null;
+  }
+
   public BigQuerySQLException(List<BigQueryError> errors) {
     this.errors = errors;
   }
