@@ -43,7 +43,7 @@ public abstract class ReadClientConnectionConfiguration implements Serializable 
 
     /**
      * Sets the maximum number of table rows allowed in buffer before streaming them to the
-     * BigQueryResultSet.
+     * BigQueryResult.
      */
     @Nullable
     public abstract Builder setBufferSize(Long bufferSize);

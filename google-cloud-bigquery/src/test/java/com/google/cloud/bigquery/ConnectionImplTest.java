@@ -75,11 +75,11 @@ public class ConnectionImplTest {
               .setMode(Field.Mode.NULLABLE)
               .build());
   private static final TableSchema FAST_QUERY_TABLESCHEMA = QUERY_SCHEMA.toPb();
-  private static final BigQueryResultSet BQ_RS_MOCK_RES =
-      new BigQueryResultSetImpl(QUERY_SCHEMA, 2, null, null);
+  private static final BigQueryResult BQ_RS_MOCK_RES =
+      new BigQueryResultImpl(QUERY_SCHEMA, 2, null, null);
 
-  private static final BigQueryResultSet BQ_RS_MOCK_RES_MULTI_PAGE =
-      new BigQueryResultSetImpl(QUERY_SCHEMA, 4, null, null);
+  private static final BigQueryResult BQ_RS_MOCK_RES_MULTI_PAGE =
+      new BigQueryResultImpl(QUERY_SCHEMA, 4, null, null);
 
   private static final JobId QUERY_JOB = JobId.of(PROJECT, JOB).setLocation(LOCATION);
   private static final GetQueryResultsResponse GET_QUERY_RESULTS_RESPONSE =
@@ -137,7 +137,7 @@ public class ConnectionImplTest {
         .when(connectionSpy)
         .processQueryResponseResults(any(QueryResponse.class));
 
-    BigQueryResultSet res = connectionSpy.executeSelect(SQL_QUERY);
+    BigQueryResult res = connectionSpy.executeSelect(SQL_QUERY);
     assertEquals(res.getTotalRows(), 2);
     assertEquals(QUERY_SCHEMA, res.getSchema());
     verify(connectionSpy, times(1))
@@ -163,7 +163,7 @@ public class ConnectionImplTest {
         .processQueryResponseResults(
             any(com.google.api.services.bigquery.model.QueryResponse.class));
 
-    BigQueryResultSet res = connectionSpy.executeSelect(SQL_QUERY);
+    BigQueryResult res = connectionSpy.executeSelect(SQL_QUERY);
     assertEquals(res.getTotalRows(), 4);
     assertEquals(QUERY_SCHEMA, res.getSchema());
     verify(connectionSpy, times(1))
@@ -345,7 +345,7 @@ public class ConnectionImplTest {
             any(Boolean.class));
     when(bigqueryRpcMock.createJobForQuery(any(com.google.api.services.bigquery.model.Job.class)))
         .thenReturn(jobResponseMock); // RPC call in createQueryJob
-    BigQueryResultSet res = connectionSpy.executeSelect(SQL_QUERY);
+    BigQueryResult res = connectionSpy.executeSelect(SQL_QUERY);
     assertEquals(res.getTotalRows(), 2);
     assertEquals(QUERY_SCHEMA, res.getSchema());
     verify(bigqueryRpcMock, times(1))
@@ -386,7 +386,7 @@ public class ConnectionImplTest {
             .setRows(tableRows);
     when(bigqueryRpcMock.queryRpc(any(String.class), any(QueryRequest.class)))
         .thenReturn(mockQueryRes);
-    BigQueryResultSet res = connectionSpy.executeSelect(SQL_QUERY);
+    BigQueryResult res = connectionSpy.executeSelect(SQL_QUERY);
     assertEquals(res.getTotalRows(), 2);
     assertEquals(QUERY_SCHEMA, res.getSchema());
     verify(bigqueryRpcMock, times(1)).queryRpc(any(String.class), any(QueryRequest.class));
@@ -416,7 +416,7 @@ public class ConnectionImplTest {
             .setStatistics(jobStatistics);
     when(bigqueryRpcMock.createJobForQuery(any(com.google.api.services.bigquery.model.Job.class)))
         .thenReturn(jobResponseMock); // RPC call in createQueryJob
-    BigQueryResultSet res = connectionSpy.executeSelect(SQL_QUERY);
+    BigQueryResult res = connectionSpy.executeSelect(SQL_QUERY);
     assertEquals(res.getTotalRows(), 2);
     assertEquals(QUERY_SCHEMA, res.getSchema());
     verify(bigqueryRpcMock, times(1))
@@ -451,7 +451,7 @@ public class ConnectionImplTest {
             any(JobId.class),
             any(String.class),
             any(Boolean.class));
-    BigQueryResultSet res = connectionSpy.executeSelect(SQL_QUERY);
+    BigQueryResult res = connectionSpy.executeSelect(SQL_QUERY);
     assertEquals(res.getTotalRows(), 2);
     assertEquals(QUERY_SCHEMA, res.getSchema());
     verify(connectionSpy, times(1))
@@ -490,7 +490,7 @@ public class ConnectionImplTest {
             any(JobId.class),
             any(String.class),
             any(Boolean.class));
-    BigQueryResultSet res = connectionSpy.executeSelect(SQL_QUERY, parameters, labels);
+    BigQueryResult res = connectionSpy.executeSelect(SQL_QUERY, parameters, labels);
     assertEquals(res.getTotalRows(), 2);
     assertEquals(QUERY_SCHEMA, res.getSchema());
     verify(connectionSpy, times(1))
@@ -505,21 +505,18 @@ public class ConnectionImplTest {
   public void testGetSubsequentQueryResultsWithJob() {
     ConnectionImpl connectionSpy = Mockito.spy(connection);
     JobId jobId = mock(JobId.class);
-    BigQueryResultSetStats bqRsStats = mock(BigQueryResultSetStats.class);
+    BigQueryResultStats bqRsStats = mock(BigQueryResultStats.class);
     doReturn(true)
         .when(connectionSpy)
         .useReadAPI(any(Long.class), any(Long.class), any(Schema.class), any(Boolean.class));
     doReturn(BQ_RS_MOCK_RES)
         .when(connectionSpy)
         .highThroughPutRead(
-            any(TableId.class),
-            any(Long.class),
-            any(Schema.class),
-            any(BigQueryResultSetStats.class));
+            any(TableId.class), any(Long.class), any(Schema.class), any(BigQueryResultStats.class));
 
     doReturn(TABLE_NAME).when(connectionSpy).getDestinationTable(any(JobId.class));
     doReturn(bqRsStats).when(connectionSpy).getBigQueryResultSetStats(any(JobId.class));
-    BigQueryResultSet res =
+    BigQueryResult res =
         connectionSpy.getSubsequentQueryResultsWithJob(
             10000L, 100L, jobId, GET_QUERY_RESULTS_RESPONSE, false);
     assertEquals(res.getTotalRows(), 2);

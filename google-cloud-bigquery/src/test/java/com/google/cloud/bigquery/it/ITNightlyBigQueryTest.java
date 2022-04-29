@@ -26,7 +26,7 @@ import static org.junit.Assert.fail;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryError;
 import com.google.cloud.bigquery.BigQueryException;
-import com.google.cloud.bigquery.BigQueryResultSet;
+import com.google.cloud.bigquery.BigQueryResult;
 import com.google.cloud.bigquery.BigQuerySQLException;
 import com.google.cloud.bigquery.Connection;
 import com.google.cloud.bigquery.ConnectionSettings;
@@ -199,7 +199,7 @@ public class ITNightlyBigQueryTest {
   public void testInvalidQuery() throws BigQuerySQLException {
     Connection connection = getConnection();
     try {
-      BigQueryResultSet bigQueryResultSet = connection.executeSelect(INVALID_QUERY);
+      BigQueryResult bigQueryResult = connection.executeSelect(INVALID_QUERY);
       fail("BigQuerySQLException was expected");
     } catch (BigQuerySQLException ex) {
       assertNotNull(ex.getMessage());
@@ -212,9 +212,9 @@ public class ITNightlyBigQueryTest {
   @Test
   public void testIterateAndOrder() throws SQLException {
     Connection connection = getConnection();
-    BigQueryResultSet bigQueryResultSet = connection.executeSelect(QUERY);
+    BigQueryResult bigQueryResult = connection.executeSelect(QUERY);
     logger.log(Level.INFO, "Query used: {0}", QUERY);
-    ResultSet rs = bigQueryResultSet.getResultSet();
+    ResultSet rs = bigQueryResult.getResultSet();
     int cnt = 0;
 
     int prevIntegerFieldVal = 0;
@@ -274,9 +274,9 @@ public class ITNightlyBigQueryTest {
   public void testMultipleRuns() throws SQLException {
 
     Connection connection = getConnection();
-    BigQueryResultSet bigQueryResultSet = connection.executeSelect(MULTI_QUERY);
+    BigQueryResult bigQueryResult = connection.executeSelect(MULTI_QUERY);
     logger.log(Level.INFO, "Query used: {0}", MULTI_QUERY);
-    ResultSet rs = bigQueryResultSet.getResultSet();
+    ResultSet rs = bigQueryResult.getResultSet();
     int cnt = 0;
     int totalCnt = 0;
 
@@ -318,8 +318,8 @@ public class ITNightlyBigQueryTest {
     totalCnt += cnt;
     // Repeat the same run
     connection = getConnection();
-    bigQueryResultSet = connection.executeSelect(MULTI_QUERY);
-    rs = bigQueryResultSet.getResultSet();
+    bigQueryResult = connection.executeSelect(MULTI_QUERY);
+    rs = bigQueryResult.getResultSet();
     cnt = 0;
     prevIntegerFieldVal = 0;
     while (rs.next()) {
@@ -365,22 +365,16 @@ public class ITNightlyBigQueryTest {
       throws SQLException { // Bypasses Read API as it doesnt support Positional Params
     Connection connection = getConnection();
     Parameter dateParam =
-        Parameter.newBuilder()
-            .setQueryParameterValue(QueryParameterValue.date("2022-01-01"))
-            .build();
-    Parameter boolParam =
-        Parameter.newBuilder().setQueryParameterValue(QueryParameterValue.bool(true)).build();
-    Parameter intParam =
-        Parameter.newBuilder().setQueryParameterValue(QueryParameterValue.int64(1)).build();
+        Parameter.newBuilder().setValue(QueryParameterValue.date("2022-01-01")).build();
+    Parameter boolParam = Parameter.newBuilder().setValue(QueryParameterValue.bool(true)).build();
+    Parameter intParam = Parameter.newBuilder().setValue(QueryParameterValue.int64(1)).build();
     Parameter numericParam =
-        Parameter.newBuilder()
-            .setQueryParameterValue(QueryParameterValue.numeric(new BigDecimal(100)))
-            .build();
+        Parameter.newBuilder().setValue(QueryParameterValue.numeric(new BigDecimal(100))).build();
     List<Parameter> parameters = ImmutableList.of(dateParam, boolParam, intParam, numericParam);
 
-    BigQueryResultSet bigQueryResultSet = connection.executeSelect(POSITIONAL_QUERY, parameters);
+    BigQueryResult bigQueryResult = connection.executeSelect(POSITIONAL_QUERY, parameters);
     logger.log(Level.INFO, "Query used: {0}", POSITIONAL_QUERY);
-    ResultSet rs = bigQueryResultSet.getResultSet();
+    ResultSet rs = bigQueryResult.getResultSet();
     int cnt = 0;
     while (rs.next()) {
       assertFalse(rs.getBoolean("BooleanField"));

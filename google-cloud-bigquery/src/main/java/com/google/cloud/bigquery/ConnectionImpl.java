@@ -154,12 +154,12 @@ class ConnectionImpl implements Connection {
    * This method executes a SQL SELECT query
    *
    * @param sql SQL SELECT statement
-   * @return BigQueryResultSet containing the output of the query
+   * @return BigQueryResult containing the output of the query
    * @throws BigQuerySQLException
    */
   @BetaApi
   @Override
-  public BigQueryResultSet executeSelect(String sql) throws BigQuerySQLException {
+  public BigQueryResult executeSelect(String sql) throws BigQuerySQLException {
     try {
       // use jobs.query if all the properties of connectionSettings are supported
       if (isFastQuerySupported()) {
@@ -190,12 +190,12 @@ class ConnectionImpl implements Connection {
    *     characters are allowed. Label values are optional and Label is a Varargs. You should pass
    *     all the Labels in a single Map .Label keys must start with a letter and each label in the
    *     list must have a different key.
-   * @return BigQueryResultSet containing the output of the query
+   * @return BigQueryResult containing the output of the query
    * @throws BigQuerySQLException
    */
   @BetaApi
   @Override
-  public BigQueryResultSet executeSelect(
+  public BigQueryResult executeSelect(
       String sql, List<Parameter> parameters, Map<String, String>... labels)
       throws BigQuerySQLException {
     Map<String, String> labelMap = null;
@@ -223,7 +223,7 @@ class ConnectionImpl implements Connection {
   }
 
   @VisibleForTesting
-  BigQueryResultSet getResultSet(
+  BigQueryResult getResultSet(
       GetQueryResultsResponse firstPage, JobId jobId, String sql, Boolean hasQueryParameters) {
     if (firstPage.getJobComplete()
         && firstPage.getTotalRows()
@@ -247,7 +247,7 @@ class ConnectionImpl implements Connection {
   static class EndOfFieldValueList
       extends AbstractList<
           FieldValue> { // A reference of this class is used as a token to inform the thread
-    // consuming `buffer` BigQueryResultSetImpl that we have run out of records
+    // consuming `buffer` BigQueryResultImpl that we have run out of records
     @Override
     public FieldValue get(int index) {
       return null;
@@ -259,7 +259,7 @@ class ConnectionImpl implements Connection {
     }
   }
 
-  private BigQueryResultSet queryRpc(
+  private BigQueryResult queryRpc(
       final String projectId, final QueryRequest queryRequest, Boolean hasQueryParameters) {
     com.google.api.services.bigquery.model.QueryResponse results;
     try {
@@ -301,26 +301,26 @@ class ConnectionImpl implements Connection {
   }
 
   @VisibleForTesting
-  BigQueryResultSetStats getBigQueryResultSetStats(JobId jobId) {
+  BigQueryResultStats getBigQueryResultSetStats(JobId jobId) {
     // Create GetQueryResultsResponse query statistics
     Job queryJob = getQueryJobRpc(jobId);
     JobStatistics.QueryStatistics statistics = queryJob.getStatistics();
     DmlStats dmlStats = statistics.getDmlStats() == null ? null : statistics.getDmlStats();
     JobStatistics.SessionInfo sessionInfo =
         statistics.getSessionInfo() == null ? null : statistics.getSessionInfo();
-    return new BigQueryResultSetStatsImpl(dmlStats, sessionInfo);
+    return new BigQueryResultStatsImpl(dmlStats, sessionInfo);
   }
   /* This method processed the first page of GetQueryResultsResponse and then it uses tabledata.list */
   @VisibleForTesting
-  BigQueryResultSet tableDataList(GetQueryResultsResponse firstPage, JobId jobId) {
+  BigQueryResult tableDataList(GetQueryResultsResponse firstPage, JobId jobId) {
     Schema schema;
     long numRows;
     schema = Schema.fromPb(firstPage.getSchema());
     numRows = firstPage.getTotalRows().longValue();
 
-    BigQueryResultSetStats bigQueryResultSetStats = getBigQueryResultSetStats(jobId);
+    BigQueryResultStats bigQueryResultStats = getBigQueryResultSetStats(jobId);
 
-    // Keeps the deserialized records at the row level, which is consumed by BigQueryResultSet
+    // Keeps the deserialized records at the row level, which is consumed by BigQueryResult
     BlockingQueue<AbstractList<FieldValue>> buffer = new LinkedBlockingDeque<>(bufferSize);
 
     // Keeps the parsed FieldValueLists
@@ -346,12 +346,12 @@ class ConnectionImpl implements Connection {
         rpcResponseQueue, pageCache, buffer); // spawns a thread to populate the buffer
 
     // This will work for pagination as well, as buffer is getting updated asynchronously
-    return new BigQueryResultSetImpl<AbstractList<FieldValue>>(
-        schema, numRows, buffer, bigQueryResultSetStats);
+    return new BigQueryResultImpl<AbstractList<FieldValue>>(
+        schema, numRows, buffer, bigQueryResultStats);
   }
 
   @VisibleForTesting
-  BigQueryResultSet processQueryResponseResults(
+  BigQueryResult processQueryResponseResults(
       com.google.api.services.bigquery.model.QueryResponse results) {
     Schema schema;
     long numRows;
@@ -364,8 +364,7 @@ class ConnectionImpl implements Connection {
         results.getSessionInfo() == null
             ? null
             : JobStatistics.SessionInfo.fromPb(results.getSessionInfo());
-    BigQueryResultSetStats bigQueryResultSetStats =
-        new BigQueryResultSetStatsImpl(dmlStats, sessionInfo);
+    BigQueryResultStats bigQueryResultStats = new BigQueryResultStatsImpl(dmlStats, sessionInfo);
 
     BlockingQueue<AbstractList<FieldValue>> buffer = new LinkedBlockingDeque<>(bufferSize);
     BlockingQueue<Tuple<Iterable<FieldValueList>, Boolean>> pageCache =
@@ -383,8 +382,8 @@ class ConnectionImpl implements Connection {
 
     populateBufferAsync(rpcResponseQueue, pageCache, buffer);
 
-    return new BigQueryResultSetImpl<AbstractList<FieldValue>>(
-        schema, numRows, buffer, bigQueryResultSetStats);
+    return new BigQueryResultImpl<AbstractList<FieldValue>>(
+        schema, numRows, buffer, bigQueryResultStats);
   }
 
   @VisibleForTesting
@@ -593,7 +592,7 @@ class ConnectionImpl implements Connection {
 
   /* Returns query results using either tabledata.list or the high throughput Read API */
   @VisibleForTesting
-  BigQueryResultSet getSubsequentQueryResultsWithJob(
+  BigQueryResult getSubsequentQueryResultsWithJob(
       Long totalRows,
       Long pageRows,
       JobId jobId,
@@ -606,14 +605,14 @@ class ConnectionImpl implements Connection {
             firstPage.getTotalRows().longValue(),
             Schema.fromPb(firstPage.getSchema()),
             getBigQueryResultSetStats(
-                jobId)) // discord first page and stream the entire BigQueryResultSet using
+                jobId)) // discord first page and stream the entire BigQueryResult using
         // the Read API
         : tableDataList(firstPage, jobId);
   }
 
   /* Returns query results using either tabledata.list or the high throughput Read API */
   @VisibleForTesting
-  BigQueryResultSet getSubsequentQueryResultsWithJob(
+  BigQueryResult getSubsequentQueryResultsWithJob(
       Long totalRows,
       Long pageRows,
       JobId jobId,
@@ -630,7 +629,7 @@ class ConnectionImpl implements Connection {
             // any workaround is possible
             schema,
             getBigQueryResultSetStats(
-                jobId)) // discord first page and stream the entire BigQueryResultSet using
+                jobId)) // discord first page and stream the entire BigQueryResult using
         // the Read API
         : tableDataList(firstPage, jobId);
   }
@@ -702,8 +701,8 @@ class ConnectionImpl implements Connection {
   }
 
   @VisibleForTesting
-  BigQueryResultSet highThroughPutRead(
-      TableId destinationTable, long totalRows, Schema schema, BigQueryResultSetStats stats) {
+  BigQueryResult highThroughPutRead(
+      TableId destinationTable, long totalRows, Schema schema, BigQueryResultStats stats) {
 
     try {
       if (bqReadClient == null) { // if the read client isn't already initialized. Not thread safe.
@@ -742,7 +741,7 @@ class ConnectionImpl implements Connection {
           schema);
 
       logger.log(Level.INFO, "\n Using BigQuery Read API");
-      return new BigQueryResultSetImpl<Tuple<Map<String, Object>, Boolean>>(
+      return new BigQueryResultImpl<Tuple<Map<String, Object>, Boolean>>(
           schema, totalRows, buffer, stats);
 
     } catch (IOException e) {
@@ -1211,8 +1210,8 @@ class ConnectionImpl implements Connection {
   private static final Function<Parameter, QueryParameter> POSITIONAL_PARAMETER_TO_PB_FUNCTION =
       value -> {
         QueryParameter queryParameterPb = new QueryParameter();
-        queryParameterPb.setParameterValue(value.getQueryParameterValue().toValuePb());
-        queryParameterPb.setParameterType(value.getQueryParameterValue().toTypePb());
+        queryParameterPb.setParameterValue(value.getValue().toValuePb());
+        queryParameterPb.setParameterType(value.getValue().toTypePb());
         return queryParameterPb;
       };
 
@@ -1221,8 +1220,8 @@ class ConnectionImpl implements Connection {
       value -> {
         QueryParameter queryParameterPb = new QueryParameter();
         queryParameterPb.setName(value.getName());
-        queryParameterPb.setParameterValue(value.getQueryParameterValue().toValuePb());
-        queryParameterPb.setParameterType(value.getQueryParameterValue().toTypePb());
+        queryParameterPb.setParameterValue(value.getValue().toValuePb());
+        queryParameterPb.setParameterType(value.getValue().toTypePb());
         return queryParameterPb;
       };
 
@@ -1231,7 +1230,6 @@ class ConnectionImpl implements Connection {
       pb ->
           Parameter.newBuilder()
               .setName(pb.getName() == null ? "" : pb.getName())
-              .setQueryParameterValue(
-                  QueryParameterValue.fromPb(pb.getParameterValue(), pb.getParameterType()))
+              .setValue(QueryParameterValue.fromPb(pb.getParameterValue(), pb.getParameterType()))
               .build();
 }
