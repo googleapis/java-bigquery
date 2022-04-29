@@ -284,10 +284,8 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         Object curVal = curRow.get(fieldName);
         if (curVal == null) {
           return 0L;
-        } else if (curVal instanceof Long) {
-          return ((Long) curVal).longValue();
-        } else {
-          return ((BigDecimal) curVal).longValue();
+        } else { // value will be Long or BigDecimal, but are Number
+          return ((Number) curVal).longValue();
         }
       }
     }
