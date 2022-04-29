@@ -16,7 +16,6 @@
 
 package com.google.cloud.bigquery;
 
-import com.google.cloud.Tuple;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.ResultSet;
@@ -34,6 +33,41 @@ import org.apache.arrow.vector.util.JsonStringArrayList;
 import org.apache.arrow.vector.util.Text;
 
 public class BigQueryResultImpl<T> implements BigQueryResult<T> {
+
+  private static final String NULL_CURSOR_MSG =
+      "Error occurred while reading the cursor. This could happen if getters are called after we are done reading all the records";
+
+  // This class represents a row of records, the columns are represented as a map
+  // (columnName:columnValue pair)
+  static class Row {
+    private Map<String, Object> value;
+    private boolean isLast;
+
+    public Row(Map<String, Object> value) {
+      this.value = value;
+    }
+
+    public Row(Map<String, Object> value, boolean isLast) {
+      this.value = value;
+      this.isLast = isLast;
+    }
+
+    public Map<String, Object> getValue() {
+      return value;
+    }
+
+    public boolean isLast() {
+      return isLast;
+    }
+
+    public boolean hasField(String fieldName) {
+      return this.value.containsKey(fieldName);
+    }
+
+    public Object get(String fieldName) {
+      return this.value.get(fieldName);
+    }
+  }
 
   private final Schema schema;
   private final long totalRows;
@@ -80,15 +114,18 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         if (isEndOfStream(cursor)) { // check for end of stream
           cursor = null;
           return false;
-        } else if (cursor instanceof Tuple) {
-          Tuple<Map<String, Object>, Boolean> curTup = (Tuple<Map<String, Object>, Boolean>) cursor;
-          if (!curTup.y()) { // last Tuple
+        } else if (cursor instanceof Row) {
+          Row curTup = (Row) cursor;
+          if (curTup.isLast()) { // last Tuple
             cursor = null;
             return false;
           }
+        } else { // this case should never occur as the cursor will either be a Row of EoS
+          throw new BigQuerySQLException("Could not process the current row");
         }
       } catch (InterruptedException e) {
-        throw new SQLException("Error occurred while reading buffer");
+        throw new SQLException(
+            "Error occurred while advancing the cursor. This could happen when connection is closed while we call the next method");
       }
 
       return true;
@@ -104,16 +141,16 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         throw new SQLException("fieldName can't be null");
       }
       if (cursor == null) {
-        return null;
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
-        return fieldValue.getValue() == null ? null : fieldValue.getValue();
+        return (fieldValue == null || fieldValue.getValue() == null) ? null : fieldValue.getValue();
       } else { // Data received from Read API (Arrow)
-        Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
-        if (!curTuple.x().containsKey(fieldName)) {
+        Row curRow = (Row) cursor;
+        if (!curRow.hasField(fieldName)) {
           throw new SQLException(String.format("Field %s not found", fieldName));
         }
-        return curTuple.x().get(fieldName);
+        return curRow.get(fieldName);
       }
     }
 
@@ -123,7 +160,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         return null;
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
-        return fieldValue.getValue() == null ? null : fieldValue.getValue();
+        return (fieldValue == null || fieldValue.getValue() == null) ? null : fieldValue.getValue();
       } else { // Data received from Read API (Arrow)
         return getObject(schemaFieldList.get(columnIndex).getName());
       }
@@ -135,10 +172,10 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         throw new SQLException("fieldName can't be null");
       }
       if (cursor == null) {
-        return null;
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
-        if (fieldValue.getValue() == null) {
+        if ((fieldValue == null || fieldValue.getValue() == null)) {
           return null;
         } else if (fieldValue
             .getAttribute()
@@ -148,11 +185,11 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
           return fieldValue.getStringValue();
         }
       } else { // Data received from Read API (Arrow)
-        Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
-        if (!curTuple.x().containsKey(fieldName)) {
+        Row curRow = (Row) cursor;
+        if (!curRow.hasField(fieldName)) {
           throw new SQLException(String.format("Field %s not found", fieldName));
         }
-        Object currentVal = curTuple.x().get(fieldName);
+        Object currentVal = curRow.get(fieldName);
         if (currentVal == null) {
           return null;
         } else if (currentVal instanceof JsonStringArrayList) { // arrays
@@ -174,7 +211,9 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         return null;
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
-        return fieldValue.getValue() == null ? null : fieldValue.getStringValue();
+        return (fieldValue == null || fieldValue.getValue() == null)
+            ? null
+            : fieldValue.getStringValue();
       } else { // Data received from Read API (Arrow)
         return getString(schemaFieldList.get(columnIndex).getName());
       }
@@ -190,14 +229,16 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         // java.sql.ResultSet definition
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
-        return fieldValue.getValue() == null ? 0 : fieldValue.getNumericValue().intValue();
+        return (fieldValue == null || fieldValue.getValue() == null)
+            ? 0
+            : fieldValue.getNumericValue().intValue();
       } else { // Data received from Read API (Arrow)
 
-        Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
-        if (!curTuple.x().containsKey(fieldName)) {
+        Row curRow = (Row) cursor;
+        if (!curRow.hasField(fieldName)) {
           throw new SQLException(String.format("Field %s not found", fieldName));
         }
-        Object curVal = curTuple.x().get(fieldName);
+        Object curVal = curRow.get(fieldName);
         if (curVal == null) {
           return 0;
         }
@@ -215,7 +256,9 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         // java.sql.ResultSet definition
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
-        return fieldValue.getValue() == null ? 0 : fieldValue.getNumericValue().intValue();
+        return (fieldValue == null || fieldValue.getValue() == null)
+            ? 0
+            : fieldValue.getNumericValue().intValue();
       } else { // Data received from Read API (Arrow)
         return getInt(schemaFieldList.get(columnIndex).getName());
       }
@@ -227,23 +270,22 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         throw new SQLException("fieldName can't be null");
       }
       if (cursor == null) {
-        return 0L; // the column value; if the value is SQL NULL, the value returned is 0 as per
-        // java.sql.ResultSet definition
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
-        return fieldValue.getValue() == null ? 0L : fieldValue.getNumericValue().longValue();
+        return (fieldValue == null || fieldValue.getValue() == null)
+            ? 0L
+            : fieldValue.getNumericValue().longValue();
       } else { // Data received from Read API (Arrow)
-        Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
-        if (!curTuple.x().containsKey(fieldName)) {
+        Row curRow = (Row) cursor;
+        if (!curRow.hasField(fieldName)) {
           throw new SQLException(String.format("Field %s not found", fieldName));
         }
-        Object curVal = curTuple.x().get(fieldName);
+        Object curVal = curRow.get(fieldName);
         if (curVal == null) {
           return 0L;
-        } else if (curVal instanceof Long) {
-          return ((Long) curVal).longValue();
-        } else {
-          return ((BigDecimal) curVal).longValue();
+        } else { // value will be Long or BigDecimal, but are Number
+          return ((Number) curVal).longValue();
         }
       }
     }
@@ -255,7 +297,9 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         // java.sql.ResultSet definition
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
-        return fieldValue.getValue() == null ? 0L : fieldValue.getNumericValue().longValue();
+        return (fieldValue == null || fieldValue.getValue() == null)
+            ? 0L
+            : fieldValue.getNumericValue().longValue();
       } else { // Data received from Read API (Arrow)
         return getInt(schemaFieldList.get(columnIndex).getName());
       }
@@ -267,17 +311,18 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         throw new SQLException("fieldName can't be null");
       }
       if (cursor == null) {
-        return 0d; // the column value; if the value is SQL NULL, the value returned is 0 as per
-        // java.sql.ResultSet definition
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
-        return fieldValue.getValue() == null ? 0d : fieldValue.getNumericValue().doubleValue();
+        return (fieldValue == null || fieldValue.getValue() == null)
+            ? 0d
+            : fieldValue.getNumericValue().doubleValue();
       } else { // Data received from Read API (Arrow)
-        Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
-        if (!curTuple.x().containsKey(fieldName)) {
+        Row curRow = (Row) cursor;
+        if (!curRow.hasField(fieldName)) {
           throw new SQLException(String.format("Field %s not found", fieldName));
         }
-        Object curVal = curTuple.x().get(fieldName);
+        Object curVal = curRow.get(fieldName);
         return curVal == null ? 0.0d : ((BigDecimal) curVal).doubleValue();
       }
     }
@@ -289,7 +334,9 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         // java.sql.ResultSet definition
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
-        return fieldValue.getValue() == null ? 0d : fieldValue.getNumericValue().doubleValue();
+        return (fieldValue == null || fieldValue.getValue() == null)
+            ? 0d
+            : fieldValue.getNumericValue().doubleValue();
       } else { // Data received from Read API (Arrow)
         return getDouble(schemaFieldList.get(columnIndex).getName());
       }
@@ -301,12 +348,10 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         throw new SQLException("fieldName can't be null");
       }
       if (cursor == null) {
-        return null; // the column value (full precision); if the value is SQL NULL, the value
-        // returned is null in the Java programming language. as per
-        // java.sql.ResultSet definition
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
-        return fieldValue.getValue() == null
+        return (fieldValue == null || fieldValue.getValue() == null)
             ? null
             : BigDecimal.valueOf(fieldValue.getNumericValue().doubleValue());
       } else { // Data received from Read API (Arrow)
@@ -317,12 +362,10 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
     @Override
     public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
       if (cursor == null) {
-        return null; // the column value (full precision); if the value is SQL NULL, the value
-        // returned is null in the Java programming language. as per
-        // java.sql.ResultSet definition
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
-        return fieldValue.getValue() == null
+        return (fieldValue == null || fieldValue.getValue() == null)
             ? null
             : BigDecimal.valueOf(fieldValue.getNumericValue().doubleValue());
       } else { // Data received from Read API (Arrow)
@@ -336,16 +379,16 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         throw new SQLException("fieldName can't be null");
       }
       if (cursor == null) {
-        return false; //  if the value is SQL NULL, the value returned is false
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
         return fieldValue.getValue() != null && fieldValue.getBooleanValue();
       } else { // Data received from Read API (Arrow)
-        Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
-        if (!curTuple.x().containsKey(fieldName)) {
+        Row curRow = (Row) cursor;
+        if (!curRow.hasField(fieldName)) {
           throw new SQLException(String.format("Field %s not found", fieldName));
         }
-        Object curVal = curTuple.x().get(fieldName);
+        Object curVal = curRow.get(fieldName);
         return curVal != null && (Boolean) curVal;
       }
     }
@@ -353,7 +396,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
     @Override
     public boolean getBoolean(int columnIndex) throws SQLException {
       if (cursor == null) {
-        return false; //  if the value is SQL NULL, the value returned is false
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
         return fieldValue.getValue() != null && fieldValue.getBooleanValue();
@@ -368,16 +411,18 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         throw new SQLException("fieldName can't be null");
       }
       if (cursor == null) {
-        return null; //  if the value is SQL NULL, the value returned is null
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
-        return fieldValue.getValue() == null ? null : fieldValue.getBytesValue();
+        return (fieldValue == null || fieldValue.getValue() == null)
+            ? null
+            : fieldValue.getBytesValue();
       } else { // Data received from Read API (Arrow)
-        Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
-        if (!curTuple.x().containsKey(fieldName)) {
+        Row curRow = (Row) cursor;
+        if (!curRow.hasField(fieldName)) {
           throw new SQLException(String.format("Field %s not found", fieldName));
         }
-        Object curVal = curTuple.x().get(fieldName);
+        Object curVal = curRow.get(fieldName);
         return curVal == null ? null : (byte[]) curVal;
       }
     }
@@ -388,7 +433,9 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         return null; //  if the value is SQL NULL, the value returned is null
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
-        return fieldValue.getValue() == null ? null : fieldValue.getBytesValue();
+        return (fieldValue == null || fieldValue.getValue() == null)
+            ? null
+            : fieldValue.getBytesValue();
       } else { // Data received from Read API (Arrow)
         return getBytes(schemaFieldList.get(columnIndex).getName());
       }
@@ -397,24 +444,24 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
     @Override
     public Timestamp getTimestamp(String fieldName) throws SQLException {
       if (fieldName == null) {
-        throw new SQLException("fieldName can't be null");
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       }
       if (cursor == null) {
         return null; //  if the value is SQL NULL, the value returned is null
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
-        return fieldValue.getValue() == null
+        return (fieldValue == null || fieldValue.getValue() == null)
             ? null
             : new Timestamp(
                 fieldValue.getTimestampValue()
                     / 1000); // getTimestampValue returns time in microseconds, and TimeStamp
         // expects it in millis
       } else {
-        Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
-        if (!curTuple.x().containsKey(fieldName)) {
+        Row curRow = (Row) cursor;
+        if (!curRow.hasField(fieldName)) {
           throw new SQLException(String.format("Field %s not found", fieldName));
         }
-        Object timeStampVal = curTuple.x().get(fieldName);
+        Object timeStampVal = curRow.get(fieldName);
         return timeStampVal == null
             ? null
             : new Timestamp((Long) timeStampVal / 1000); // Timestamp is represented as a Long
@@ -424,10 +471,10 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
     @Override
     public Timestamp getTimestamp(int columnIndex) throws SQLException {
       if (cursor == null) {
-        return null; //  if the value is SQL NULL, the value returned is null
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
-        return fieldValue.getValue() == null
+        return (fieldValue == null || fieldValue.getValue() == null)
             ? null
             : new Timestamp(
                 fieldValue.getTimestampValue()
@@ -441,7 +488,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
     @Override
     public Time getTime(String fieldName) throws SQLException {
       if (fieldName == null) {
-        throw new SQLException("fieldName can't be null");
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       }
       if (cursor == null) {
         return null; //  if the value is SQL NULL, the value returned is null
@@ -449,11 +496,11 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
         return getTimeFromFieldVal(fieldValue);
       } else { // Data received from Read API (Arrow)
-        Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
-        if (!curTuple.x().containsKey(fieldName)) {
+        Row curRow = (Row) cursor;
+        if (!curRow.hasField(fieldName)) {
           throw new SQLException(String.format("Field %s not found", fieldName));
         }
-        Object timeStampObj = curTuple.x().get(fieldName);
+        Object timeStampObj = curRow.get(fieldName);
         return timeStampObj == null
             ? null
             : new Time(
@@ -471,7 +518,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
     @Override
     public Time getTime(int columnIndex) throws SQLException {
       if (cursor == null) {
-        return null; //  if the value is SQL NULL, the value returned is null
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
         return getTimeFromFieldVal(fieldValue);
@@ -510,16 +557,18 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         throw new SQLException("fieldName can't be null");
       }
       if (cursor == null) {
-        return null; //  if the value is SQL NULL, the value returned is null
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(fieldName);
-        return fieldValue.getValue() == null ? null : Date.valueOf(fieldValue.getStringValue());
+        return (fieldValue == null || fieldValue.getValue() == null)
+            ? null
+            : Date.valueOf(fieldValue.getStringValue());
       } else { // Data received from Read API (Arrow)
-        Tuple<Map<String, Object>, Boolean> curTuple = (Tuple<Map<String, Object>, Boolean>) cursor;
-        if (!curTuple.x().containsKey(fieldName)) {
+        Row curRow = (Row) cursor;
+        if (!curRow.hasField(fieldName)) {
           throw new SQLException(String.format("Field %s not found", fieldName));
         }
-        Object dateObj = curTuple.x().get(fieldName);
+        Object dateObj = curRow.get(fieldName);
         if (dateObj == null) {
           return null;
         } else {
@@ -537,10 +586,12 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
     @Override
     public Date getDate(int columnIndex) throws SQLException {
       if (cursor == null) {
-        return null; //  if the value is SQL NULL, the value returned is null
+        throw new BigQuerySQLException(NULL_CURSOR_MSG);
       } else if (cursor instanceof FieldValueList) {
         FieldValue fieldValue = ((FieldValueList) cursor).get(columnIndex);
-        return fieldValue.getValue() == null ? null : Date.valueOf(fieldValue.getStringValue());
+        return (fieldValue == null || fieldValue.getValue() == null)
+            ? null
+            : Date.valueOf(fieldValue.getStringValue());
       } else { // Data received from Read API (Arrow)
         return getDate(schemaFieldList.get(columnIndex).getName());
       }

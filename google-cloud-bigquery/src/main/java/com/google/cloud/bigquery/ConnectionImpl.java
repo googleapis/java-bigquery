@@ -44,7 +44,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -115,7 +114,7 @@ class ConnectionImpl implements Connection {
    */
   @BetaApi
   @Override
-  public synchronized Boolean close() throws BigQuerySQLException {
+  public synchronized boolean close() throws BigQuerySQLException {
     queryTaskExecutor.shutdownNow();
     try {
       queryTaskExecutor.awaitTermination(
@@ -533,10 +532,7 @@ class ConnectionImpl implements Connection {
           } catch (InterruptedException e) {
             throw new BigQueryException(0, e.getMessage(), e);
           } finally {
-            MoreExecutors.shutdownAndAwaitTermination(
-                queryTaskExecutor,
-                EXECUTOR_TIMEOUT_SEC,
-                TimeUnit.SECONDS); // Shutdown the thread pool
+            queryTaskExecutor.shutdownNow(); // Shutdown the thread pool
           }
         };
 
@@ -730,8 +726,7 @@ class ConnectionImpl implements Connection {
           ;
 
       ReadSession readSession = bqReadClient.createReadSession(builder.build());
-      BlockingQueue<Tuple<Map<String, Object>, Boolean>> buffer =
-          new LinkedBlockingDeque<>(bufferSize);
+      BlockingQueue<BigQueryResultImpl.Row> buffer = new LinkedBlockingDeque<>(bufferSize);
       Map<String, Integer> arrowNameToIndex = new HashMap<>();
       // deserialize and populate the buffer async, so that the client isn't blocked
       processArrowStreamAsync(
@@ -741,8 +736,7 @@ class ConnectionImpl implements Connection {
           schema);
 
       logger.log(Level.INFO, "\n Using BigQuery Read API");
-      return new BigQueryResultImpl<Tuple<Map<String, Object>, Boolean>>(
-          schema, totalRows, buffer, stats);
+      return new BigQueryResultImpl<BigQueryResultImpl.Row>(schema, totalRows, buffer, stats);
 
     } catch (IOException e) {
       throw BigQueryException.translateAndThrow(e);
@@ -751,7 +745,7 @@ class ConnectionImpl implements Connection {
 
   private void processArrowStreamAsync(
       ReadSession readSession,
-      BlockingQueue<Tuple<Map<String, Object>, Boolean>> buffer,
+      BlockingQueue<BigQueryResultImpl.Row> buffer,
       ArrowRowReader reader,
       Schema schema) {
 
@@ -778,11 +772,8 @@ class ConnectionImpl implements Connection {
             throw BigQueryException.translateAndThrow(e);
           } finally {
             try {
-              buffer.put(Tuple.of(null, false)); // marking end of stream
-              MoreExecutors.shutdownAndAwaitTermination(
-                  queryTaskExecutor,
-                  EXECUTOR_TIMEOUT_SEC,
-                  TimeUnit.SECONDS); // Shutdown the thread pool
+              buffer.put(new BigQueryResultImpl.Row(null, true)); // marking end of stream
+              queryTaskExecutor.shutdownNow(); // Shutdown the thread pool
             } catch (InterruptedException e) {
               logger.log(Level.WARNING, "\n Error occurred ", e);
             }
@@ -822,9 +813,7 @@ class ConnectionImpl implements Connection {
 
     /** @param batch object returned from the ReadRowsResponse. */
     private void processRows(
-        ArrowRecordBatch batch,
-        BlockingQueue<Tuple<Map<String, Object>, Boolean>> buffer,
-        Schema schema)
+        ArrowRecordBatch batch, BlockingQueue<BigQueryResultImpl.Row> buffer, Schema schema)
         throws IOException { // deserialize the values and consume the hash of the values
       try {
         org.apache.arrow.vector.ipc.message.ArrowRecordBatch deserializedBatch =
@@ -859,7 +848,7 @@ class ConnectionImpl implements Connection {
                     field.getName()); // can be accessed using the index or Vector/column name
             curRow.put(field.getName(), curFieldVec.getObject(rowNum)); // Added the raw value
           }
-          buffer.put(Tuple.of(curRow, true));
+          buffer.put(new BigQueryResultImpl.Row(curRow));
         }
         root.clear(); // TODO: make sure to clear the root while implementing the thread
         // interruption logic (Connection.close method)

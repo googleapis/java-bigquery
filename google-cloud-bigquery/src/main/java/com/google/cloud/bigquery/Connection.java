@@ -28,7 +28,7 @@ public interface Connection {
 
   /** Sends a query cancel request. This call will return immediately */
   @BetaApi
-  Boolean close() throws BigQuerySQLException;
+  boolean close() throws BigQuerySQLException;
 
   /**
    * Execute a query dry run that does not return any BigQueryResult // TODO: explain more about
