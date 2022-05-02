@@ -120,6 +120,9 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
             cursor = null;
             return false;
           }
+          return true;
+        } else if (cursor instanceof FieldValueList) { // cursor is advanced, we can return true now
+          return true;
         } else { // this case should never occur as the cursor will either be a Row of EoS
           throw new BigQuerySQLException("Could not process the current row");
         }
@@ -127,8 +130,6 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         throw new SQLException(
             "Error occurred while advancing the cursor. This could happen when connection is closed while we call the next method");
       }
-
-      return true;
     }
 
     private boolean isEndOfStream(T cursor) {
