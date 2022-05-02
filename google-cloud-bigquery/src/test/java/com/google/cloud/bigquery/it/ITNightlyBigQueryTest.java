@@ -209,6 +209,9 @@ public class ITNightlyBigQueryTest {
     }
   }
 
+  /*
+  This tests for the order of the records as well as the value of the records using testForAllDataTypeValues
+   */
   @Test
   public void testIterateAndOrder() throws SQLException {
     Connection connection = getConnection();
