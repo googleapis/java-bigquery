@@ -245,6 +245,10 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
         }
         if (curVal instanceof Text) { // parse from text to int
           return Integer.parseInt(((Text) curVal).toString());
+        } else if (curVal
+            instanceof
+            Long) { // incase getInt is called for a Long value. Loss of precision might occur
+          return ((Long) curVal).intValue();
         }
         return ((BigDecimal) curVal).intValue();
       }
