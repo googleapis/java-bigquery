@@ -91,6 +91,7 @@ import com.google.cloud.bigquery.PolicyTags;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.QueryParameterValue;
 import com.google.cloud.bigquery.RangePartitioning;
+import com.google.cloud.bigquery.ReadClientConnectionConfiguration;
 import com.google.cloud.bigquery.Routine;
 import com.google.cloud.bigquery.RoutineArgument;
 import com.google.cloud.bigquery.RoutineId;
@@ -2663,6 +2664,50 @@ public class ITBigQueryTest {
       assertNotNull(rs.getString(2));
       assertTrue(rs.getInt(3) >= 0);
       assertTrue(rs.getInt(4) >= 0);
+      ++cnt;
+    }
+    assertEquals(300000, cnt); // total 300000 rows should be read
+  }
+
+  @Test
+  public void testReadAPIIterationAndOrder()
+      throws SQLException { // use read API to read 300K records and check the order
+    String query =
+        "SELECT date, county, state_name, confirmed_cases, deaths FROM "
+            + TABLE_ID_LARGE.getTable()
+            + " where date is not null and county is not null and state_name is not null order by confirmed_cases asc limit 300000";
+
+    ReadClientConnectionConfiguration clientConnectionConfiguration =
+        ReadClientConnectionConfiguration.newBuilder()
+            .setTotalToPageRowCountRatio(2L)
+            .setMinResultSize(100000L)
+            .setBufferSize(10000L)
+            .build();
+    ConnectionSettings connectionSettings =
+        ConnectionSettings.newBuilder()
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .setNumBufferedRows(10000L) // page size
+            .setPriority(
+                QueryJobConfiguration.Priority
+                    .INTERACTIVE) // so that isFastQuerySupported returns false
+            .setReadClientConnectionConfiguration(clientConnectionConfiguration)
+            .setUseReadAPI(true)
+            .build();
+    Connection connection = bigquery.createConnection(connectionSettings);
+    BigQueryResult bigQueryResult = connection.executeSelect(query);
+    ResultSet rs = bigQueryResult.getResultSet();
+    int cnt = 0;
+    int lasConfirmedCases = Integer.MIN_VALUE;
+    while (rs.next()) { // pagination starts after approx 120,000 records
+      assertNotNull(rs.getDate(0));
+      assertNotNull(rs.getString(1));
+      assertNotNull(rs.getString(2));
+      assertTrue(rs.getInt(3) >= 0);
+      assertTrue(rs.getInt(4) >= 0);
+
+      // check if the records are sorted
+      assertTrue(rs.getInt(3) >= lasConfirmedCases);
+      lasConfirmedCases = rs.getInt(3);
       ++cnt;
     }
     assertEquals(300000, cnt); // total 300000 rows should be read
