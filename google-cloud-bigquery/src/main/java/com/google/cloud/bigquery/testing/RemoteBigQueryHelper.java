@@ -40,6 +40,10 @@ import org.threeten.bp.Duration;
  */
 public class RemoteBigQueryHelper {
 
+  static {
+    System.out.println("REMOTE BIGQUERY HELPER");
+  }
+
   private static final Logger log = Logger.getLogger(RemoteBigQueryHelper.class.getName());
   private static final String DATASET_NAME_PREFIX = "gcloud_test_dataset_temp_";
   private static final String MODEL_NAME_PREFIX = "model_";
