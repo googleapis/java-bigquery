@@ -22,23 +22,16 @@ import static java.lang.System.currentTimeMillis;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.api.gax.paging.Page;
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.Date;
-import com.google.cloud.Identity;
-import com.google.cloud.Policy;
 import com.google.cloud.RetryOption;
-import com.google.cloud.Role;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.bigquery.Acl;
-import com.google.cloud.bigquery.Acl.DatasetAclEntity;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQuery.DatasetDeleteOption;
 import com.google.cloud.bigquery.BigQuery.DatasetField;
@@ -1386,7 +1379,8 @@ public class ITBigQueryTest {
     //             "gs://" + BUCKET + "/" + JSON_LOAD_FILE, FormatOptions.json())
     //         .setSchema(TABLE_SCHEMA)
     //         .setConnectionId(
-    //             "projects/java-docs-samples-testing/locations/us/connections/DEVREL_TEST_CONNECTION")
+    //
+    // "projects/java-docs-samples-testing/locations/us/connections/DEVREL_TEST_CONNECTION")
     //         .build();
     // TableInfo tableInfo = TableInfo.of(tableId, externalTableDefinition);
     // Table createdTable = bigquery.create(tableInfo);
@@ -2251,7 +2245,8 @@ public class ITBigQueryTest {
     // Dataset sharedDataset = bigquery.create(datasetInfo);
     // assertNotNull(sharedDataset);
     // assertEquals(sharedDataset.getDescription(), "shared Dataset");
-    // // Get the current metadata for the dataset you want to share by calling the datasets.get method
+    // // Get the current metadata for the dataset you want to share by calling the datasets.get
+    // method
     // List<Acl> sharedDatasetAcl = new ArrayList<>(sharedDataset.getAcl());
     //
     // // Create a new dataset to be authorized
