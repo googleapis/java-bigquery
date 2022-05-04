@@ -290,8 +290,8 @@ class ConnectionImpl implements Connection {
       // Query is long-running (> 10s) and hasn't completed yet, or query completed but didn't
       // return the schema, fallback to jobs.insert path. Some operations don't return the schema
       // and can be optimized here, but this is left as future work.
-      long totalRows = results.getTotalRows().longValue();
-      long pageRows = results.getRows().size();
+      Long totalRows = results.getTotalRows() == null ? null : results.getTotalRows().longValue();
+      Long pageRows = results.getRows() == null ? null : (long) (results.getRows().size());
       JobId jobId = JobId.fromPb(results.getJobReference());
       GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
       return getSubsequentQueryResultsWithJob(
@@ -557,7 +557,7 @@ class ConnectionImpl implements Connection {
 
   /* Helper method that determines the optimal number of caches pages to improve read performance */
   @VisibleForTesting
-  int getPageCacheSize(Long numBufferedRows, long numRows, Schema schema) {
+  int getPageCacheSize(Integer numBufferedRows, long numRows, Schema schema) {
     final int MIN_CACHE_SIZE = 3; // Min number of pages in the page size
     final int MAX_CACHE_SIZE = 20; // //Min number of pages in the page size
     int columnsRead = schema.getFields().size();
@@ -684,7 +684,7 @@ class ConnectionImpl implements Connection {
                           completeTableId.getProject(),
                           completeTableId.getDataset(),
                           completeTableId.getTable(),
-                          connectionSettings.getNumBufferedRows(),
+                          connectionSettings.getMaxResultPerPage(),
                           pageToken),
               bigQueryOptions.getRetrySettings(),
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
@@ -888,7 +888,7 @@ class ConnectionImpl implements Connection {
                       completeJobId.getProject(),
                       completeJobId.getJob(),
                       completeJobId.getLocation(),
-                      connectionSettings.getNumBufferedRows()),
+                      connectionSettings.getMaxResultPerPage()),
               bigQueryOptions.getRetrySettings(),
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               bigQueryOptions.getClock(),
@@ -948,15 +948,9 @@ class ConnectionImpl implements Connection {
     }
 
     long resultRatio = totalRows / pageRows;
-    if (Boolean.TRUE.equals(connectionSettings.getUseReadAPI())
-        && connectionSettings.getReadClientConnectionConfiguration()
-            != null) { // Adding a null check to avoid NPE
-      return resultRatio
-              > connectionSettings
-                  .getReadClientConnectionConfiguration()
-                  .getTotalToPageRowCountRatio()
-          && totalRows
-              > connectionSettings.getReadClientConnectionConfiguration().getMinResultSize();
+    if (Boolean.TRUE.equals(connectionSettings.getUseReadAPI())) {
+      return resultRatio >= connectionSettings.getTotalToPageRowCountRatio()
+          && totalRows > connectionSettings.getMinResultSize();
     } else {
       return false;
     }
