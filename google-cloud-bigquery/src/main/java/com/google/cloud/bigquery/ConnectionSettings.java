@@ -60,7 +60,16 @@ public abstract class ConnectionSettings {
 
   /** Returns the number of rows of data to pre-fetch */
   @Nullable
-  public abstract Long getNumBufferedRows();
+  public abstract Integer getNumBufferedRows();
+
+  @Nullable
+  public abstract Integer getTotalToPageRowCountRatio();
+
+  @Nullable
+  public abstract Integer getMinResultSize();
+
+  @Nullable
+  public abstract Integer getMaxResultPerPage();
 
   /** Returns whether to look for the result in the query cache */
   @Nullable
@@ -75,9 +84,10 @@ public abstract class ConnectionSettings {
   @Nullable
   public abstract Boolean getFlattenResults();
 
-  /** Returns the BigQuery Storage read API configuration */
-  @Nullable
-  public abstract ReadClientConnectionConfiguration getReadClientConnectionConfiguration();
+  /**
+   * Returns the BigQuery Storage read API configuration @Nullable public abstract
+   * ReadClientConnectionConfiguration getReadClientConnectionConfiguration();
+   */
 
   /**
    * Below properties are only supported by jobs.insert API and not yet supported by jobs.query API
@@ -104,7 +114,7 @@ public abstract class ConnectionSettings {
 
   /**
    * Returns the table where to put query results. If not provided a new table is created. This
-   * value is required if {@link #allowLargeResults()} is {@code true}.
+   * value is required if {@link # allowLargeResults()} is {@code true}.
    */
   @Nullable
   public abstract TableId getDestinationTable();
@@ -190,11 +200,20 @@ public abstract class ConnectionSettings {
 
   /** Returns a builder for a {@code ConnectionSettings} object. */
   public static Builder newBuilder() {
-    return new AutoValue_ConnectionSettings.Builder();
+    return new AutoValue_ConnectionSettings.Builder().withDefaultValues();
   }
 
   @AutoValue.Builder
   public abstract static class Builder {
+
+    Builder withDefaultValues() {
+      return setUseReadAPI(true) // Read API is enabled by default
+          .setNumBufferedRows(10000) // 10K records will be kept in the buffer (Blocking Queue)
+          .setMinResultSize(
+              200000) // Read API will be enabled when there will be atleast 100K records
+          .setTotalToPageRowCountRatio(3) // there should be atleast 3 pages  of records
+          .setMaxResultPerPage(100000); // page size for pagination
+    }
 
     /**
      * Sets useReadAPI flag, enabled by default. Read API will be used if the underlying conditions
@@ -253,7 +272,30 @@ public abstract class ConnectionSettings {
      *
      * @param numBufferedRows prefetchedRowLimit or {@code null} for none
      */
-    public abstract Builder setNumBufferedRows(Long numBufferedRows);
+    public abstract Builder setNumBufferedRows(Integer numBufferedRows);
+
+    /**
+     * Sets a ratio of the total number of records and the records returned in the current page.
+     * This value is checked before calling the Read API
+     *
+     * @param totalToPageRowCountRatio totalToPageRowCountRatio
+     */
+    public abstract Builder setTotalToPageRowCountRatio(Integer totalToPageRowCountRatio);
+
+    /**
+     * Sets the minimum result size for which the Read API will be enabled
+     *
+     * @param minResultSize minResultSize
+     */
+    public abstract Builder setMinResultSize(Integer minResultSize);
+
+    /**
+     * Sets the maximum records per page to be used for pagination. This is used as an input for the
+     * tabledata.list
+     *
+     * @param maxResultPerPage
+     */
+    public abstract Builder setMaxResultPerPage(Integer maxResultPerPage);
 
     /**
      * Sets whether to look for the result in the query cache. The query cache is a best-effort
@@ -274,6 +316,8 @@ public abstract class ConnectionSettings {
      */
     public abstract Builder setFlattenResults(Boolean flattenResults);
 
+    /*    */
+    /**/
     /**
      * Sets the values necessary to determine whether table result will be read using the BigQuery
      * Storage client Read API. The BigQuery Storage client Read API will be used to read the query
@@ -286,8 +330,9 @@ public abstract class ConnectionSettings {
      *
      * @param readClientConnectionConfiguration or {@code null} for none
      */
+    /*
     public abstract Builder setReadClientConnectionConfiguration(
-        ReadClientConnectionConfiguration readClientConnectionConfiguration);
+        ReadClientConnectionConfiguration readClientConnectionConfiguration);*/
 
     /** Sets the clustering specification for the destination table. */
     public abstract Builder setClustering(Clustering clustering);
