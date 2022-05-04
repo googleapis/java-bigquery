@@ -259,7 +259,7 @@ public interface BigQueryRpc extends ServiceRpc {
    * @throws BigQueryException upon failure
    */
   TableDataList listTableDataWithRowLimit(
-      String projectId, String datasetId, String tableId, Long rowLimit, String pageToken);
+      String projectId, String datasetId, String tableId, Integer rowLimit, String pageToken);
 
   /**
    * Returns the requested job or {@code null} if not found.
@@ -315,7 +315,7 @@ public interface BigQueryRpc extends ServiceRpc {
    * @throws BigQueryException upon failure
    */
   GetQueryResultsResponse getQueryResultsWithRowLimit(
-      String projectId, String jobId, String location, Long preFetchedRowLimit);
+      String projectId, String jobId, String location, Integer preFetchedRowLimit);
 
   /**
    * Runs a BigQuery SQL query synchronously and returns query results if the query completes within
