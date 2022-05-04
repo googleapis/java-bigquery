@@ -33,14 +33,8 @@ public class ConnectionSettingsTest {
   private static final DatasetId DATASET_ID = DatasetId.of("dataset");
   private static final TableId TABLE_ID = TableId.of("dataset", "table");
   private static final Long REQUEST_TIMEOUT = 10l;
-  private static final Long NUM_BUFFERED_ROWS = 100l;
+  private static final Integer NUM_BUFFERED_ROWS = 100;
   private static final Long MAX_RESULTS = 1000l;
-  private static final ReadClientConnectionConfiguration READ_CLIENT_CONNECTION_CONFIGURATION =
-      ReadClientConnectionConfiguration.newBuilder()
-          .setTotalToPageRowCountRatio(3l)
-          .setMinResultSize(100l)
-          .setBufferSize(100l)
-          .build();
   private static final List<String> SOURCE_URIS = ImmutableList.of("uri1", "uri2");
   private static final String KEY = "time_zone";
   private static final String VALUE = "US/Eastern";
@@ -100,7 +94,6 @@ public class ConnectionSettingsTest {
           .setRequestTimeout(REQUEST_TIMEOUT)
           .setNumBufferedRows(NUM_BUFFERED_ROWS)
           .setMaxResults(MAX_RESULTS)
-          .setReadClientConnectionConfiguration(READ_CLIENT_CONNECTION_CONFIGURATION)
           .setUseQueryCache(USE_QUERY_CACHE)
           .setTableDefinitions(TABLE_DEFINITIONS)
           .setAllowLargeResults(ALLOW_LARGE_RESULTS)
@@ -139,9 +132,6 @@ public class ConnectionSettingsTest {
     assertEquals(REQUEST_TIMEOUT, CONNECTION_SETTINGS.getRequestTimeout());
     assertEquals(NUM_BUFFERED_ROWS, CONNECTION_SETTINGS.getNumBufferedRows());
     assertEquals(MAX_RESULTS, CONNECTION_SETTINGS.getMaxResults());
-    assertEquals(
-        READ_CLIENT_CONNECTION_CONFIGURATION,
-        CONNECTION_SETTINGS.getReadClientConnectionConfiguration());
   }
 
   private void compareConnectionSettings(ConnectionSettings expected, ConnectionSettings value) {
@@ -151,9 +141,6 @@ public class ConnectionSettingsTest {
     assertEquals(expected.getRequestTimeout(), value.getRequestTimeout());
     assertEquals(expected.getNumBufferedRows(), value.getNumBufferedRows());
     assertEquals(expected.getMaxResults(), value.getMaxResults());
-    assertEquals(
-        expected.getReadClientConnectionConfiguration(),
-        value.getReadClientConnectionConfiguration());
     assertEquals(expected.getAllowLargeResults(), value.getAllowLargeResults());
     assertEquals(expected.getCreateDisposition(), value.getCreateDisposition());
     assertEquals(expected.getDefaultDataset(), value.getDefaultDataset());
