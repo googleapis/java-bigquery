@@ -91,7 +91,6 @@ import com.google.cloud.bigquery.PolicyTags;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.QueryParameterValue;
 import com.google.cloud.bigquery.RangePartitioning;
-import com.google.cloud.bigquery.ReadClientConnectionConfiguration;
 import com.google.cloud.bigquery.Routine;
 import com.google.cloud.bigquery.RoutineArgument;
 import com.google.cloud.bigquery.RoutineId;
@@ -2509,7 +2508,7 @@ public class ITBigQueryTest {
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder()
             .setDefaultDataset(DatasetId.of(DATASET))
-            .setNumBufferedRows(10000L) // page size
+            .setNumBufferedRows(10000) // page size
             .build();
     Connection connection = bigquery.createConnection(connectionSettings);
     BigQueryResult bigQueryResult = connection.executeSelect(query);
@@ -2536,7 +2535,7 @@ public class ITBigQueryTest {
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder()
             .setDefaultDataset(DatasetId.of(DATASET))
-            .setNumBufferedRows(10000L) // page size
+            .setNumBufferedRows(10000) // page size
             .setJobTimeoutMs(
                 15000L) // So that ConnectionImpl.isFastQuerySupported returns false, and the slow
             // query route gets executed
@@ -2625,7 +2624,7 @@ public class ITBigQueryTest {
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder()
             .setDefaultDataset(DatasetId.of(DATASET))
-            .setNumBufferedRows(10000L) // page size
+            .setNumBufferedRows(10000) // page size
             .build();
     Connection connection = bigquery.createConnection(connectionSettings);
     BigQueryResult bigQueryResult = connection.executeSelect(query);
@@ -2652,7 +2651,7 @@ public class ITBigQueryTest {
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder()
             .setDefaultDataset(DatasetId.of(DATASET))
-            .setNumBufferedRows(10000L) // page size
+            .setNumBufferedRows(10000) // page size
             .build();
     Connection connection = bigquery.createConnection(connectionSettings);
     BigQueryResult bigQueryResult = connection.executeSelect(query);
@@ -2677,21 +2676,13 @@ public class ITBigQueryTest {
             + TABLE_ID_LARGE.getTable()
             + " where date is not null and county is not null and state_name is not null order by confirmed_cases asc limit 300000";
 
-    ReadClientConnectionConfiguration clientConnectionConfiguration =
-        ReadClientConnectionConfiguration.newBuilder()
-            .setTotalToPageRowCountRatio(2L)
-            .setMinResultSize(100000L)
-            .setBufferSize(10000L)
-            .build();
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder()
             .setDefaultDataset(DatasetId.of(DATASET))
-            .setNumBufferedRows(10000L) // page size
             .setPriority(
                 QueryJobConfiguration.Priority
-                    .INTERACTIVE) // so that isFastQuerySupported returns false
-            .setReadClientConnectionConfiguration(clientConnectionConfiguration)
-            .setUseReadAPI(true)
+                    .INTERACTIVE) // required for this integration test so that isFastQuerySupported
+            // returns false
             .build();
     Connection connection = bigquery.createConnection(connectionSettings);
     BigQueryResult bigQueryResult = connection.executeSelect(query);
@@ -2711,6 +2702,43 @@ public class ITBigQueryTest {
       ++cnt;
     }
     assertEquals(300000, cnt); // total 300000 rows should be read
+    connection.close();
+  }
+
+  @Test
+  public void testReadAPIConnectionMultiClose()
+      throws
+          SQLException { // use read API to read 300K records, then closes the connection. This test
+                         // repeats it multiple times and assets if the connection was closed
+    String query =
+        "SELECT date, county, state_name, confirmed_cases, deaths FROM "
+            + TABLE_ID_LARGE.getTable()
+            + " where date is not null and county is not null and state_name is not null order by confirmed_cases asc limit 300000";
+
+    ConnectionSettings connectionSettings =
+        ConnectionSettings.newBuilder()
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .setPriority(
+                QueryJobConfiguration.Priority
+                    .INTERACTIVE) // required for this integration test so that isFastQuerySupported
+            // returns false
+            .build();
+    int closeCnt = 0, runCnt = 3;
+    for (int run = 0; run < runCnt; run++) {
+      Connection connection = bigquery.createConnection(connectionSettings);
+      BigQueryResult bigQueryResult = connection.executeSelect(query);
+      ResultSet rs = bigQueryResult.getResultSet();
+      int cnt = 0;
+      while (rs.next()) { // pagination starts after approx 120,000 records
+        assertNotNull(rs.getDate(0));
+        ++cnt;
+      }
+      assertEquals(300000, cnt); // total 300000 rows should be read
+      assertTrue(connection.close()); // check if connection closed
+      closeCnt++;
+    }
+    assertEquals(
+        closeCnt, runCnt); // check if the connection closed for the required number of times
   }
 
   @Test
