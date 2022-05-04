@@ -31,8 +31,8 @@ public interface Connection {
   boolean close() throws BigQuerySQLException;
 
   /**
-   * Execute a query dry run that does not return any BigQueryResult // TODO: explain more about
-   * what this method does here
+   * Execute a query dry run that returns information on the schema and query parameters of the
+   * query results.
    *
    * @param sql typically a static SQL SELECT statement
    * @exception BigQuerySQLException if a database access error occurs
@@ -41,30 +41,26 @@ public interface Connection {
   BigQueryDryRunResult dryRun(String sql) throws BigQuerySQLException;
 
   /**
-   * Execute a SQL statement that returns a single ResultSet
+   * Execute a SQL statement that returns a single ResultSet.
    *
    * <p>Example of running a query.
    *
    * <pre>
    * {
    *   &#64;code
-   *   // ConnectionSettings connectionSettings =
-   *   //     ConnectionSettings.newBuilder()
-   *   //         .setRequestTimeout(10L)
-   *   //         .setMaxResults(100L)
-   *   //         .setUseQueryCache(true)
-   *   //         .build();
-   *   // Connection connection = bigquery.createConnection(connectionSettings);
+   *   ConnectionSettings connectionSettings =
+   *        ConnectionSettings.newBuilder()
+   *            .setRequestTimeout(10L)
+   *            .setMaxResults(100L)
+   *            .setUseQueryCache(true)
+   *            .build();
+   *   Connection connection = bigquery.createConnection(connectionSettings);
    *   String selectQuery = "SELECT corpus FROM `bigquery-public-data.samples.shakespeare` GROUP BY corpus;";
-   *   try (BigQueryResult bqResultSet = connection.executeSelect(selectQuery)) {
-   *       ResultSet rs = bqResultSet.getResultSet();
-   *       while (rs.next()) {
-   *           System.out.printf("%s,", rs.getString("corpus"));
-   *       }
-   *   } catch (BigQuerySQLException ex) {
-   *       // handle exception
+   *   BigQueryResult bqResultSet = connection.executeSelect(selectQuery)
+   *   ResultSet rs = bqResultSet.getResultSet();
+   *   while (rs.next()) {
+   *       System.out.printf("%s,", rs.getString("corpus"));
    *   }
-   * }
    * </pre>
    *
    * @param sql a static SQL SELECT statement
@@ -80,9 +76,9 @@ public interface Connection {
    * @param sql SQL SELECT query
    * @param parameters named or positional parameters. The set of query parameters must either be
    *     all positional or all named parameters.
-   * @param labels the labels associated with this query. You can use these to organize and group
-   *     your query jobs. Label keys and values can be no longer than 63 characters, can only
-   *     contain lowercase letters, numeric characters, underscores and dashes. International
+   * @param labels (optional) the labels associated with this query. You can use these to organize
+   *     and group your query jobs. Label keys and values can be no longer than 63 characters, can
+   *     only contain lowercase letters, numeric characters, underscores and dashes. International
    *     characters are allowed. Label values are optional and Label is a Varargs. You should pass
    *     all the Labels in a single Map .Label keys must start with a letter and each label in the
    *     list must have a different key.

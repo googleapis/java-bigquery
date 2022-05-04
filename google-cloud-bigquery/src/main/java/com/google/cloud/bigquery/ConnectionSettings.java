@@ -48,6 +48,7 @@ public abstract class ConnectionSettings {
   public abstract List<ConnectionProperty> getConnectionProperties();
 
   /** Returns the default dataset */
+  @Nullable
   public abstract DatasetId getDefaultDataset();
 
   /** Returns the limits the bytes billed for this job */
@@ -268,9 +269,10 @@ public abstract class ConnectionSettings {
     public abstract Builder setMaxResults(Long maxResults);
 
     /**
-     * Sets the number of rows of data to pre-fetch during query execution.
+     * Sets the number of rows in the buffer (a blocking queue) that query results are consumed
+     * from.
      *
-     * @param numBufferedRows prefetchedRowLimit or {@code null} for none
+     * @param numBufferedRows numBufferedRows or {@code null} for none
      */
     public abstract Builder setNumBufferedRows(Integer numBufferedRows);
 
@@ -291,7 +293,7 @@ public abstract class ConnectionSettings {
 
     /**
      * Sets the maximum records per page to be used for pagination. This is used as an input for the
-     * tabledata.list
+     * tabledata.list and jobs.getQueryResults RPC calls
      *
      * @param maxResultPerPage
      */

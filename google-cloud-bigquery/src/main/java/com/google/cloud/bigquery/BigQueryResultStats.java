@@ -16,13 +16,16 @@
 
 package com.google.cloud.bigquery;
 
+import com.google.api.core.BetaApi;
 import com.google.cloud.bigquery.JobStatistics.SessionInfo;
 
 public interface BigQueryResultStats {
 
   /** Returns detailed statistics for DML statements. */
+  @BetaApi
   DmlStats getDmlStats();
 
   /** Returns SessionInfo contains information about the session if this job is part of one. */
+  @BetaApi
   SessionInfo getSessionInfo();
 }

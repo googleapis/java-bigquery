@@ -16,11 +16,13 @@
 
 package com.google.cloud.bigquery;
 
+import com.google.api.core.BetaApi;
 import java.util.List;
 
 public interface BigQueryDryRunResult {
 
   /** Returns the schema of the results. Null if the schema is not supplied. */
+  @BetaApi
   Schema getSchema() throws BigQuerySQLException;
 
   /**
@@ -28,5 +30,6 @@ public interface BigQueryDryRunResult {
    * the dry run job. See more information:
    * https://developers.google.com/resources/api-libraries/documentation/bigquery/v2/java/latest/com/google/api/services/bigquery/model/JobStatistics2.html#getUndeclaredQueryParameters--
    */
+  @BetaApi
   List<Parameter> getQueryParameters() throws BigQuerySQLException;
 }

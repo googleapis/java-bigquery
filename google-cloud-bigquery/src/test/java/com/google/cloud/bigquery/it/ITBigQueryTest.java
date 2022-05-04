@@ -2345,6 +2345,20 @@ public class ITBigQueryTest {
     assertNotNull(statistics.getQueryPlan());
   }
 
+  // TODO: Uncomment below test case when connectionSettings becomes optional
+  // @Test
+  // public void testExecuteSelect() throws SQLException {
+  //   // Use default connection settings
+  //   Connection connection = bigquery.createConnection();
+  //   String query = "SELECT corpus FROM `bigquery-public-data.samples.shakespeare` GROUP BY
+  // corpus;";
+  //   BigQueryResult bigQueryResult = connection.executeSelect(query);
+  //   ResultSet rs = bigQueryResult.getResultSet();
+  //   while(rs.next()) {
+  //     System.out.println(rs.getString("corpus"));
+  //   }
+  // }
+
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testQueryTimeStamp() throws InterruptedException {

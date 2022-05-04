@@ -95,12 +95,13 @@ class ConnectionImpl implements Connection {
     this.bigQueryOptions = bigQueryOptions;
     this.bigQueryRpc = bigQueryRpc;
     this.retryConfig = retryConfig;
+    // Sets a reasonable buffer size (a blocking queue) if user input is suboptimal
     this.bufferSize =
-        (int)
-            (connectionSettings.getNumBufferedRows() == null
-                    || connectionSettings.getNumBufferedRows() < 10000
-                ? 20000
-                : Math.min(connectionSettings.getNumBufferedRows() * 2, 100000));
+        (connectionSettings == null
+                || connectionSettings.getNumBufferedRows() == null
+                || connectionSettings.getNumBufferedRows() < 10000
+            ? 20000
+            : Math.min(connectionSettings.getNumBufferedRows() * 2, 100000));
   }
 
   /**
@@ -325,12 +326,12 @@ class ConnectionImpl implements Connection {
     // Keeps the parsed FieldValueLists
     BlockingQueue<Tuple<Iterable<FieldValueList>, Boolean>> pageCache =
         new LinkedBlockingDeque<>(
-            getPageCacheSize(connectionSettings.getNumBufferedRows(), numRows, schema));
+            getPageCacheSize(connectionSettings.getNumBufferedRows(), schema));
 
     // Keeps the raw RPC responses
     BlockingQueue<Tuple<TableDataList, Boolean>> rpcResponseQueue =
         new LinkedBlockingDeque<>(
-            getPageCacheSize(connectionSettings.getNumBufferedRows(), numRows, schema));
+            getPageCacheSize(connectionSettings.getNumBufferedRows(), schema));
 
     runNextPageTaskAsync(firstPage.getPageToken(), getDestinationTable(jobId), rpcResponseQueue);
 
@@ -368,17 +369,20 @@ class ConnectionImpl implements Connection {
     BlockingQueue<AbstractList<FieldValue>> buffer = new LinkedBlockingDeque<>(bufferSize);
     BlockingQueue<Tuple<Iterable<FieldValueList>, Boolean>> pageCache =
         new LinkedBlockingDeque<>(
-            getPageCacheSize(connectionSettings.getNumBufferedRows(), numRows, schema));
+            getPageCacheSize(connectionSettings.getNumBufferedRows(), schema));
     BlockingQueue<Tuple<TableDataList, Boolean>> rpcResponseQueue =
         new LinkedBlockingDeque<>(
-            getPageCacheSize(connectionSettings.getNumBufferedRows(), numRows, schema));
+            getPageCacheSize(connectionSettings.getNumBufferedRows(), schema));
 
     JobId jobId = JobId.fromPb(results.getJobReference());
 
+    // Thread to make rpc calls to fetch data from the server
     runNextPageTaskAsync(results.getPageToken(), getDestinationTable(jobId), rpcResponseQueue);
 
+    // Thread to parse data received from the server to client library objects
     parseRpcDataAsync(results.getRows(), schema, pageCache, rpcResponseQueue);
 
+    // Thread to populate the buffer (a blocking queue) shared with the consumer
     populateBufferAsync(rpcResponseQueue, pageCache, buffer);
 
     return new BigQueryResultImpl<AbstractList<FieldValue>>(
@@ -557,24 +561,24 @@ class ConnectionImpl implements Connection {
 
   /* Helper method that determines the optimal number of caches pages to improve read performance */
   @VisibleForTesting
-  int getPageCacheSize(Integer numBufferedRows, long numRows, Schema schema) {
-    final int MIN_CACHE_SIZE = 3; // Min number of pages in the page size
-    final int MAX_CACHE_SIZE = 20; // //Min number of pages in the page size
-    int columnsRead = schema.getFields().size();
+  int getPageCacheSize(Integer numBufferedRows, Schema schema) {
+    final int MIN_CACHE_SIZE = 3; // Min number of pages to cache
+    final int MAX_CACHE_SIZE = 20; // //Min number of pages to cache
+    int numColumns = schema.getFields().size();
     int numCachedPages;
     long numCachedRows = numBufferedRows == null ? 0 : numBufferedRows.longValue();
 
-    // TODO: Further enhance this logic
+    // TODO: Further enhance this logic depending on customer feedback on memory consumption
     if (numCachedRows > 10000) {
       numCachedPages =
           2; // the size of numBufferedRows is quite large and as per our tests we should be able to
       // do enough even with low
-    } else if (columnsRead > 15
+    } else if (numColumns > 15
         && numCachedRows
             > 5000) { // too many fields are being read, setting the page size on the lower end
       numCachedPages = 3;
     } else if (numCachedRows < 2000
-        && columnsRead < 15) { // low pagesize with fewer number of columns, we can cache more pages
+        && numColumns < 15) { // low pagesize with fewer number of columns, we can cache more pages
       numCachedPages = 20;
     } else { // default - under 10K numCachedRows with any number of columns
       numCachedPages = 5;
@@ -983,43 +987,45 @@ class ConnectionImpl implements Connection {
     QueryRequest content = new QueryRequest();
     String requestId = UUID.randomUUID().toString();
 
-    if (connectionSettings.getConnectionProperties() != null) {
-      content.setConnectionProperties(
-          connectionSettings.getConnectionProperties().stream()
-              .map(ConnectionProperty.TO_PB_FUNCTION)
-              .collect(Collectors.toList()));
-    }
-    if (connectionSettings.getDefaultDataset() != null) {
-      content.setDefaultDataset(connectionSettings.getDefaultDataset().toPb());
-    }
-    if (connectionSettings.getMaximumBytesBilled() != null) {
-      content.setMaximumBytesBilled(connectionSettings.getMaximumBytesBilled());
-    }
-    if (connectionSettings.getMaxResults() != null) {
-      content.setMaxResults(connectionSettings.getMaxResults());
-    }
-    if (queryParameters != null) {
-      // content.setQueryParameters(queryParameters);
-      if (queryParameters.get(0).getName() == null) {
-        // If query parameter name is unset, then assume mode is positional
-        content.setParameterMode("POSITIONAL");
-        // pass query parameters
-        List<QueryParameter> queryParametersPb =
-            Lists.transform(queryParameters, POSITIONAL_PARAMETER_TO_PB_FUNCTION);
-        content.setQueryParameters(queryParametersPb);
-      } else {
-        content.setParameterMode("NAMED");
-        // pass query parameters
-        List<QueryParameter> queryParametersPb =
-            Lists.transform(queryParameters, NAMED_PARAMETER_TO_PB_FUNCTION);
-        content.setQueryParameters(queryParametersPb);
+    if (connectionSettings != null) {
+      if (connectionSettings.getConnectionProperties() != null) {
+        content.setConnectionProperties(
+            connectionSettings.getConnectionProperties().stream()
+                .map(ConnectionProperty.TO_PB_FUNCTION)
+                .collect(Collectors.toList()));
       }
-    }
-    if (connectionSettings.getCreateSession() != null) {
-      content.setCreateSession(connectionSettings.getCreateSession());
-    }
-    if (labels != null) {
-      content.setLabels(labels);
+      if (connectionSettings.getDefaultDataset() != null) {
+        content.setDefaultDataset(connectionSettings.getDefaultDataset().toPb());
+      }
+      if (connectionSettings.getMaximumBytesBilled() != null) {
+        content.setMaximumBytesBilled(connectionSettings.getMaximumBytesBilled());
+      }
+      if (connectionSettings.getMaxResults() != null) {
+        content.setMaxResults(connectionSettings.getMaxResults());
+      }
+      if (queryParameters != null) {
+        // content.setQueryParameters(queryParameters);
+        if (queryParameters.get(0).getName() == null) {
+          // If query parameter name is unset, then assume mode is positional
+          content.setParameterMode("POSITIONAL");
+          // pass query parameters
+          List<QueryParameter> queryParametersPb =
+              Lists.transform(queryParameters, POSITIONAL_PARAMETER_TO_PB_FUNCTION);
+          content.setQueryParameters(queryParametersPb);
+        } else {
+          content.setParameterMode("NAMED");
+          // pass query parameters
+          List<QueryParameter> queryParametersPb =
+              Lists.transform(queryParameters, NAMED_PARAMETER_TO_PB_FUNCTION);
+          content.setQueryParameters(queryParametersPb);
+        }
+      }
+      if (connectionSettings.getCreateSession() != null) {
+        content.setCreateSession(connectionSettings.getCreateSession());
+      }
+      if (labels != null) {
+        content.setLabels(labels);
+      }
     }
     content.setQuery(sql);
     content.setRequestId(requestId);

@@ -529,9 +529,8 @@ public class ConnectionImplTest {
   public void testGetPageCacheSize() {
     ConnectionImpl connectionSpy = Mockito.spy(connection);
     // number of cached pages should be within a range
-    assertTrue(connectionSpy.getPageCacheSize(10000, 100, QUERY_SCHEMA) >= 3);
-    assertTrue(connectionSpy.getPageCacheSize(100000000, 100, QUERY_SCHEMA) <= 20);
-    verify(connectionSpy, times(2))
-        .getPageCacheSize(any(Integer.class), any(Long.class), any(Schema.class));
+    assertTrue(connectionSpy.getPageCacheSize(10000, QUERY_SCHEMA) >= 3);
+    assertTrue(connectionSpy.getPageCacheSize(100000000, QUERY_SCHEMA) <= 20);
+    verify(connectionSpy, times(2)).getPageCacheSize(any(Integer.class), any(Schema.class));
   }
 }

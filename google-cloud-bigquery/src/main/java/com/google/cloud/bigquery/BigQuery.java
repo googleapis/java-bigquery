@@ -762,7 +762,8 @@ public interface BigQuery extends Service<BigQueryOptions> {
 
   /**
    * Creates a new BigQuery query connection used for executing queries (not the same as BigQuery
-   * connection properties).
+   * connection properties). It uses the BigQuery Storage Read API for high throughput queries by
+   * default.
    *
    * <p>Example of creating a query connection.
    *
@@ -780,6 +781,7 @@ public interface BigQuery extends Service<BigQueryOptions> {
    * </pre>
    *
    * @throws BigQueryException upon failure
+   * @param connectionSettings or null for default settings
    */
   Connection createConnection(ConnectionSettings connectionSettings);
 
