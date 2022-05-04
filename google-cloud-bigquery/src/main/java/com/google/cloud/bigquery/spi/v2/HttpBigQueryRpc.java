@@ -533,14 +533,14 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       String projectId,
       String datasetId,
       String tableId,
-      Long preFetchedRowLimit,
+      Integer preFetchedRowLimit,
       String pageToken) {
     try {
       return bigquery
           .tabledata()
           .list(projectId, datasetId, tableId)
           .setPrettyPrint(false)
-          .setMaxResults(preFetchedRowLimit)
+          .setMaxResults(Long.valueOf(preFetchedRowLimit))
           .setPageToken(pageToken)
           .execute();
     } catch (IOException ex) {
@@ -697,14 +697,14 @@ public class HttpBigQueryRpc implements BigQueryRpc {
 
   @Override
   public GetQueryResultsResponse getQueryResultsWithRowLimit(
-      String projectId, String jobId, String location, Long preFetchedRowLimit) {
+      String projectId, String jobId, String location, Integer preFetchedRowLimit) {
     try {
       return bigquery
           .jobs()
           .getQueryResults(projectId, jobId)
           .setPrettyPrint(false)
           .setLocation(location)
-          .setMaxResults(preFetchedRowLimit)
+          .setMaxResults(Long.valueOf(preFetchedRowLimit))
           .execute();
     } catch (IOException ex) {
       throw translate(ex);
