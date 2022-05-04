@@ -64,7 +64,7 @@ public class ConnectionImplTest {
       "SELECT  county, state_name FROM bigquery_test_dataset.large_data_testing_table limit 2";
   private static final String DRY_RUN_SQL =
       "SELECT  county, state_name FROM bigquery_test_dataset.large_data_testing_table where country = ?";
-  private static final long DEFAULT_PAGE_SIZE = 10000L;
+  private static final int DEFAULT_PAGE_SIZE = 10000;
   private ConnectionSettings connectionSettings;
   private static final Schema QUERY_SCHEMA =
       Schema.of(
@@ -310,14 +310,14 @@ public class ConnectionImplTest {
   @Test
   public void testGetQueryResultsFirstPage() {
     when(bigqueryRpcMock.getQueryResultsWithRowLimit(
-            any(String.class), any(String.class), any(String.class), any(Long.class)))
+            any(String.class), any(String.class), any(String.class), any(Integer.class)))
         .thenReturn(GET_QUERY_RESULTS_RESPONSE);
     GetQueryResultsResponse response = connection.getQueryResultsFirstPage(QUERY_JOB);
     assertNotNull(response);
     assertEquals(GET_QUERY_RESULTS_RESPONSE, response);
     verify(bigqueryRpcMock, times(1))
         .getQueryResultsWithRowLimit(
-            any(String.class), any(String.class), any(String.class), any(Long.class));
+            any(String.class), any(String.class), any(String.class), any(Integer.class));
   }
 
   // calls executeSelect with a nonFast query and exercises createQueryJob
@@ -529,9 +529,9 @@ public class ConnectionImplTest {
   public void testGetPageCacheSize() {
     ConnectionImpl connectionSpy = Mockito.spy(connection);
     // number of cached pages should be within a range
-    assertTrue(connectionSpy.getPageCacheSize(10000L, 100, QUERY_SCHEMA) >= 3);
-    assertTrue(connectionSpy.getPageCacheSize(100000000L, 100, QUERY_SCHEMA) <= 20);
+    assertTrue(connectionSpy.getPageCacheSize(10000, 100, QUERY_SCHEMA) >= 3);
+    assertTrue(connectionSpy.getPageCacheSize(100000000, 100, QUERY_SCHEMA) <= 20);
     verify(connectionSpy, times(2))
-        .getPageCacheSize(any(Long.class), any(Long.class), any(Schema.class));
+        .getPageCacheSize(any(Integer.class), any(Long.class), any(Schema.class));
   }
 }
