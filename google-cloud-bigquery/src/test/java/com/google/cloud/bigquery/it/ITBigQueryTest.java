@@ -2709,7 +2709,7 @@ public class ITBigQueryTest {
   public void testReadAPIConnectionMultiClose()
       throws
           SQLException { // use read API to read 300K records, then closes the connection. This test
-                         // repeats it multiple times and assets if the connection was closed
+    // repeats it multiple times and assets if the connection was closed
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable()
