@@ -78,7 +78,7 @@ public abstract class ConnectionSettings {
 
   /**
    * Returns whether nested and repeated fields should be flattened. If set to {@code false} {@link
-   * QueryJobConfiguration.Builder#setAllowLargeResults(Boolean)} must be {@code true}.
+   * ConnectionSettings.Builder#setAllowLargeResults(Boolean)} must be {@code true}.
    *
    * @see <a href="https://cloud.google.com/bigquery/docs/data#flatten">Flatten</a>
    */
@@ -302,8 +302,8 @@ public abstract class ConnectionSettings {
     /**
      * Sets whether to look for the result in the query cache. The query cache is a best-effort
      * cache that will be flushed whenever tables in the query are modified. Moreover, the query
-     * cache is only available when {@link
-     * QueryJobConfiguration.Builder#setDestinationTable(TableId)} is not set.
+     * cache is only available when {@link ConnectionSettings.Builder#setDestinationTable(TableId)}
+     * is not set.
      *
      * @see <a href="https://cloud.google.com/bigquery/querying-data#querycaching">Query Caching</a>
      */
@@ -311,7 +311,7 @@ public abstract class ConnectionSettings {
 
     /**
      * Sets whether nested and repeated fields should be flattened. If set to {@code false} {@link
-     * QueryJobConfiguration.Builder#setAllowLargeResults(Boolean)} must be {@code true}. By default
+     * ConnectionSettings.Builder#setAllowLargeResults(Boolean)} must be {@code true}. By default
      * results are flattened.
      *
      * @see <a href="https://cloud.google.com/bigquery/docs/data#flatten">Flatten</a>
@@ -359,7 +359,7 @@ public abstract class ConnectionSettings {
 
     /**
      * Sets the table where to put query results. If not provided a new table is created. This value
-     * is required if {@link QueryJobConfiguration.Builder#setAllowLargeResults(Boolean)} is set to
+     * is required if {@link ConnectionSettings.Builder#setAllowLargeResults(Boolean)} is set to
      * {@code true}.
      */
     public abstract Builder setDestinationTable(TableId destinationTable);
