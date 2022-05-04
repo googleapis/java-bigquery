@@ -37,9 +37,7 @@ import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.InsertAllRequest;
 import com.google.cloud.bigquery.InsertAllResponse;
 import com.google.cloud.bigquery.Parameter;
-import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.QueryParameterValue;
-import com.google.cloud.bigquery.ReadClientConnectionConfiguration;
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.StandardSQLTypeName;
 import com.google.cloud.bigquery.StandardTableDefinition;
@@ -79,9 +77,9 @@ public class ITNightlyBigQueryTest {
   private static final byte[] BYTES = "TestByteValue".getBytes(StandardCharsets.UTF_8);
   private static final String BYTES_BASE64 = BaseEncoding.base64().encode(BYTES);
   // Script will populate NUM_BATCHES*REC_PER_BATCHES number of records (eg: 100*10000 = 1M)
-  private static final int NUM_BATCHES = 35;
+  private static final int NUM_BATCHES = 55;
   private static final int REC_PER_BATCHES = 10000;
-  private static final int LIMIT_RECS = 300000; // We can plan to read ~ 1M records
+  private static final int LIMIT_RECS = 500000; // We can plan to read ~ 500K / 1M records
   private static final int MULTI_LIMIT_RECS =
       300000; // Used for multiquery testcase, a lower limit like 300K should be fine
   private static int rowCnt = 0;
@@ -513,22 +511,11 @@ public class ITNightlyBigQueryTest {
   }
 
   private Connection getConnection() {
-    ReadClientConnectionConfiguration clientConnectionConfiguration =
-        ReadClientConnectionConfiguration.newBuilder()
-            .setTotalToPageRowCountRatio(10L)
-            .setMinResultSize(200000L)
-            .setBufferSize(10000L)
-            .build();
+
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder()
             .setDefaultDataset(DatasetId.of(DATASET))
-            .setNumBufferedRows(10000L) // page size
-            .setPriority(
-                QueryJobConfiguration.Priority
-                    .INTERACTIVE) // so that isFastQuerySupported returns false
-            .setReadClientConnectionConfiguration(clientConnectionConfiguration)
-            .setUseReadAPI(true)
-            .build();
+            .build(); // Read API is enabled by default
     return bigquery.createConnection(connectionSettings);
   }
 
