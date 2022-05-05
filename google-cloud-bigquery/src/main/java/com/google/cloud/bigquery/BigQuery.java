@@ -33,6 +33,7 @@ import com.google.common.collect.Lists;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * An interface for Google Cloud BigQuery.
@@ -782,10 +783,29 @@ public interface BigQuery extends Service<BigQueryOptions> {
    * </pre>
    *
    * @throws BigQueryException upon failure
-   * @param connectionSettings or null for default settings
+   * @param connectionSettings
    */
   @BetaApi
-  Connection createConnection(ConnectionSettings connectionSettings);
+  Connection createConnection(@NonNull ConnectionSettings connectionSettings);
+
+  /**
+   * Creates a new BigQuery query connection used for executing queries (not the same as BigQuery
+   * connection properties). It uses the BigQuery Storage Read API for high throughput queries by
+   * default. This overloaded method creates a default ConnectionSettings.
+   *
+   * <p>Example of creating a query connection.
+   *
+   * <pre>
+   * {
+   *   &#64;code
+   *       Connection connection = bigquery.createConnection();
+   * }
+   * </pre>
+   *
+   * @throws BigQueryException upon failure
+   */
+  @BetaApi
+  Connection createConnection();
 
   /**
    * Returns the requested dataset or {@code null} if not found.
