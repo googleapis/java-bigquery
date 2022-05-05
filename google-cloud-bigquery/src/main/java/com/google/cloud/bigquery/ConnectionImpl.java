@@ -987,45 +987,43 @@ class ConnectionImpl implements Connection {
     QueryRequest content = new QueryRequest();
     String requestId = UUID.randomUUID().toString();
 
-    if (connectionSettings != null) {
-      if (connectionSettings.getConnectionProperties() != null) {
-        content.setConnectionProperties(
-            connectionSettings.getConnectionProperties().stream()
-                .map(ConnectionProperty.TO_PB_FUNCTION)
-                .collect(Collectors.toList()));
+    if (connectionSettings.getConnectionProperties() != null) {
+      content.setConnectionProperties(
+          connectionSettings.getConnectionProperties().stream()
+              .map(ConnectionProperty.TO_PB_FUNCTION)
+              .collect(Collectors.toList()));
+    }
+    if (connectionSettings.getDefaultDataset() != null) {
+      content.setDefaultDataset(connectionSettings.getDefaultDataset().toPb());
+    }
+    if (connectionSettings.getMaximumBytesBilled() != null) {
+      content.setMaximumBytesBilled(connectionSettings.getMaximumBytesBilled());
+    }
+    if (connectionSettings.getMaxResults() != null) {
+      content.setMaxResults(connectionSettings.getMaxResults());
+    }
+    if (queryParameters != null) {
+      // content.setQueryParameters(queryParameters);
+      if (queryParameters.get(0).getName() == null) {
+        // If query parameter name is unset, then assume mode is positional
+        content.setParameterMode("POSITIONAL");
+        // pass query parameters
+        List<QueryParameter> queryParametersPb =
+            Lists.transform(queryParameters, POSITIONAL_PARAMETER_TO_PB_FUNCTION);
+        content.setQueryParameters(queryParametersPb);
+      } else {
+        content.setParameterMode("NAMED");
+        // pass query parameters
+        List<QueryParameter> queryParametersPb =
+            Lists.transform(queryParameters, NAMED_PARAMETER_TO_PB_FUNCTION);
+        content.setQueryParameters(queryParametersPb);
       }
-      if (connectionSettings.getDefaultDataset() != null) {
-        content.setDefaultDataset(connectionSettings.getDefaultDataset().toPb());
-      }
-      if (connectionSettings.getMaximumBytesBilled() != null) {
-        content.setMaximumBytesBilled(connectionSettings.getMaximumBytesBilled());
-      }
-      if (connectionSettings.getMaxResults() != null) {
-        content.setMaxResults(connectionSettings.getMaxResults());
-      }
-      if (queryParameters != null) {
-        // content.setQueryParameters(queryParameters);
-        if (queryParameters.get(0).getName() == null) {
-          // If query parameter name is unset, then assume mode is positional
-          content.setParameterMode("POSITIONAL");
-          // pass query parameters
-          List<QueryParameter> queryParametersPb =
-              Lists.transform(queryParameters, POSITIONAL_PARAMETER_TO_PB_FUNCTION);
-          content.setQueryParameters(queryParametersPb);
-        } else {
-          content.setParameterMode("NAMED");
-          // pass query parameters
-          List<QueryParameter> queryParametersPb =
-              Lists.transform(queryParameters, NAMED_PARAMETER_TO_PB_FUNCTION);
-          content.setQueryParameters(queryParametersPb);
-        }
-      }
-      if (connectionSettings.getCreateSession() != null) {
-        content.setCreateSession(connectionSettings.getCreateSession());
-      }
-      if (labels != null) {
-        content.setLabels(labels);
-      }
+    }
+    if (connectionSettings.getCreateSession() != null) {
+      content.setCreateSession(connectionSettings.getCreateSession());
+    }
+    if (labels != null) {
+      content.setLabels(labels);
     }
     content.setQuery(sql);
     content.setRequestId(requestId);

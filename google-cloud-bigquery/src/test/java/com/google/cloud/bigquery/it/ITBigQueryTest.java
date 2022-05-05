@@ -2345,19 +2345,14 @@ public class ITBigQueryTest {
     assertNotNull(statistics.getQueryPlan());
   }
 
-  // TODO: Uncomment below test case when connectionSettings becomes optional
-  // @Test
-  // public void testExecuteSelect() throws SQLException {
-  //   // Use default connection settings
-  //   Connection connection = bigquery.createConnection();
-  //   String query = "SELECT corpus FROM `bigquery-public-data.samples.shakespeare` GROUP BY
-  // corpus;";
-  //   BigQueryResult bigQueryResult = connection.executeSelect(query);
-  //   ResultSet rs = bigQueryResult.getResultSet();
-  //   while(rs.next()) {
-  //     System.out.println(rs.getString("corpus"));
-  //   }
-  // }
+  @Test
+  public void testExecuteSelectDefaultConnectionSettings() throws SQLException {
+    // Use the default connection settings
+    Connection connection = bigquery.createConnection();
+    String query = "SELECT corpus FROM `bigquery-public-data.samples.shakespeare` GROUP BY corpus;";
+    BigQueryResult bigQueryResult = connection.executeSelect(query);
+    assertEquals(42, bigQueryResult.getTotalRows());
+  }
 
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
@@ -3450,7 +3445,6 @@ public class ITBigQueryTest {
         QueryParameterValue.timestamp("2014-01-01 07:00:00.000000+00:00");
     Parameter stringParam = Parameter.newBuilder().setValue(stringParameter).build();
     Parameter timeStampParam = Parameter.newBuilder().setValue(timestampParameter).build();
-
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
     Connection connection = bigquery.createConnection(connectionSettings);

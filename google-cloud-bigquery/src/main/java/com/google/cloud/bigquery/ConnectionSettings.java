@@ -210,9 +210,8 @@ public abstract class ConnectionSettings {
     Builder withDefaultValues() {
       return setUseReadAPI(true) // Read API is enabled by default
           .setNumBufferedRows(10000) // 10K records will be kept in the buffer (Blocking Queue)
-          .setMinResultSize(
-              200000) // Read API will be enabled when there will be atleast 100K records
-          .setTotalToPageRowCountRatio(3) // there should be atleast 3 pages  of records
+          .setMinResultSize(200000) // Read API will be enabled when there are at least 100K records
+          .setTotalToPageRowCountRatio(3) // there should be at least 3 pages of records
           .setMaxResultPerPage(100000); // page size for pagination
     }
 

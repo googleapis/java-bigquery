@@ -791,7 +791,9 @@ public interface BigQuery extends Service<BigQueryOptions> {
   /**
    * Creates a new BigQuery query connection used for executing queries (not the same as BigQuery
    * connection properties). It uses the BigQuery Storage Read API for high throughput queries by
-   * default. This overloaded method creates a default ConnectionSettings.
+   * default. This overloaded method creates a Connection with default ConnectionSettings for query
+   * execution where default values are set for numBufferedRows (20000), useReadApi (true),
+   * useLegacySql (false).
    *
    * <p>Example of creating a query connection.
    *
