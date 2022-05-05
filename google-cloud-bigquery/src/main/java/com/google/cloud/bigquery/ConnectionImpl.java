@@ -227,6 +227,8 @@ class ConnectionImpl implements Connection {
     if (firstPage.getJobComplete()
         && firstPage.getTotalRows()
             != null) { // firstPage.getTotalRows() is null if job is not complete
+      // System.out.println("********** COLLECTION IMPL: TOTAL ROWS");
+      // System.out.println(firstPage.getTotalRows());
       return getSubsequentQueryResultsWithJob(
           firstPage.getTotalRows().longValue(),
           (long) firstPage.getRows().size(),
@@ -702,6 +704,8 @@ class ConnectionImpl implements Connection {
 
     try {
       if (bqReadClient == null) { // if the read client isn't already initialized. Not thread safe.
+        System.out.println("*****CONNECTIONIMPL: ");
+        System.out.println(bqReadClient);
         bqReadClient = BigQueryReadClient.create();
       }
       String parent = String.format("projects/%s", destinationTable.getProject());

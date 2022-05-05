@@ -83,6 +83,8 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
       BlockingQueue<T> buffer,
       BigQueryResultStats bigQueryResultStats) {
     this.schema = schema;
+    // System.out.println("*****BIGQUERYRESULTIMPL*****");
+    // System.out.println(totalRows);
     this.totalRows = totalRows;
     this.buffer = buffer;
     this.underlyingResultSet = new BigQueryResultSet();

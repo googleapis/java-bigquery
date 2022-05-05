@@ -2696,8 +2696,13 @@ public class ITBigQueryTest {
     Connection connection = bigquery.createConnection(connectionSettings);
     BigQueryResult bigQueryResult = connection.executeSelect(query);
     ResultSet rs = bigQueryResult.getResultSet();
+    System.out.println("************* ITBIGQUERYTEST *****");
+    System.out.println(bigQueryResult.getTotalRows());
+    System.out.println("***********GETRESULTSET********");
+    System.out.println(rs);
     int cnt = 0;
     int lasConfirmedCases = Integer.MIN_VALUE;
+    // System.out.println(rs.next());
     while (rs.next()) { // pagination starts after approx 120,000 records
       // assertNotNull(rs.getDate(0));
       // assertNotNull(rs.getString(1));

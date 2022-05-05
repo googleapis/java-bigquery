@@ -1437,5 +1437,53 @@
       "allDeclaredFields":true,
       "queryAllDeclaredMethods":true,
       "queryAllDeclaredConstructors":true
-    }
+    },
+  {
+    "name":"java.math.BigInteger",
+    "allDeclaredFields":true,
+    "queryAllDeclaredMethods":true,
+    "queryAllDeclaredConstructors":true
+  },
+  {
+    "name":"com.google.cloud.bigquery.BigQueryResultImpl",
+    "allDeclaredFields":true,
+    "queryAllDeclaredMethods":true,
+    "queryAllDeclaredConstructors":true
+  },
+  {
+    "name":"com.google.cloud.bigquery.BigQueryResultImpl$Row",
+    "allDeclaredFields":true,
+    "queryAllDeclaredMethods":true,
+    "queryAllDeclaredConstructors":true
+  },
+  {
+    "name":"com.google.cloud.bigquery.BigQueryResultImpl$BigQueryResultSet",
+    "allDeclaredFields":true,
+    "queryAllDeclaredMethods":true,
+    "queryAllDeclaredConstructors":true
+  },
+  {
+    "name":"com.google.cloud.bigquery.ReadClientConnectionConfiguration",
+    "allDeclaredFields":true,
+    "queryAllDeclaredMethods":true,
+    "queryAllDeclaredConstructors":true
+  },
+  {
+    "name":"com.google.cloud.bigquery.ReadClientConnectionConfiguration$Builder",
+    "allDeclaredFields":true,
+    "queryAllDeclaredMethods":true,
+    "queryAllDeclaredConstructors":true
+  },
+  {
+    "name":"com.google.cloud.bigquery.ConnectionSettings",
+    "allDeclaredFields":true,
+    "queryAllDeclaredMethods":true,
+    "queryAllDeclaredConstructors":true
+  },
+  {
+    "name":"com.google.cloud.bigquery.ConnectionSettings$Builder",
+    "allDeclaredFields":true,
+    "queryAllDeclaredMethods":true,
+    "queryAllDeclaredConstructors":true
+  }
 ]
