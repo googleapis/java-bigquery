@@ -407,11 +407,13 @@ public class ITNightlyBigQueryTest {
     assertEquals("POINT(1 2)", rs.getString("GeographyField"));
 
     // Array type tests
-    JsonStringArrayList<BigDecimal> ary = (JsonStringArrayList) rs.getObject("IntegerArrayField");
-    assertEquals(3, ary.size());
-    assertEquals(1, ary.get(0).intValue());
-    assertEquals(2, ary.get(1).intValue());
-    assertEquals(3, ary.get(2).intValue());
+    if (rs.getObject("IntegerArrayField") instanceof JsonStringArrayList) {
+      JsonStringArrayList<BigDecimal> ary = (JsonStringArrayList) rs.getObject("IntegerArrayField");
+      assertEquals(3, ary.size());
+      assertEquals(1, ary.get(0).intValue());
+      assertEquals(2, ary.get(1).intValue());
+      assertEquals(3, ary.get(2).intValue());
+    }
 
     // BigNumeric, int and Numeric
     assertTrue(10000000L + cnt == rs.getDouble("BigNumericField"));
