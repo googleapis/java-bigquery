@@ -9,6 +9,11 @@
   </difference>
   <difference>
     <differenceType>7012</differenceType>
+    <className>com/google/cloud/bigquery/BigQuery</className>
+    <method>com.google.cloud.bigquery.Connection createConnection()</method>
+  </difference>
+  <difference>
+    <differenceType>7012</differenceType>
     <className>com/google/cloud/bigquery/spi/v2/BigQueryRpc</className>
     <method>com.google.api.services.bigquery.model.Job createJobForQuery(com.google.api.services.bigquery.model.Job)</method>
   </difference>
