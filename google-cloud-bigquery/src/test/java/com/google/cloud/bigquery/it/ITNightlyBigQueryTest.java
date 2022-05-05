@@ -271,6 +271,70 @@ public class ITNightlyBigQueryTest {
     connection.close();
   }
 
+  /*
+  This tests for the order of the records using default connection settings as well as the value of the records using testForAllDataTypeValues
+   */
+  @Test
+  public void testIterateAndOrderDefaultConnSettings() throws SQLException {
+    Connection connection = bigquery.createConnection();
+    BigQueryResult bigQueryResult = connection.executeSelect(QUERY);
+    logger.log(Level.INFO, "Query used: {0}", QUERY);
+    ResultSet rs = bigQueryResult.getResultSet();
+    int cnt = 0;
+
+    int prevIntegerFieldVal = 0;
+    while (rs.next()) {
+      if (cnt == 0) { // first row is supposed to be null
+        assertNull(rs.getString("StringField"));
+        assertNull(rs.getString("GeographyField"));
+        Object intAryField = rs.getObject("IntegerArrayField");
+        if (intAryField instanceof JsonStringArrayList) {
+          assertEquals(
+              new JsonStringArrayList(),
+              ((JsonStringArrayList) intAryField)); // null array is returned as an empty array
+        }
+        assertFalse(rs.getBoolean("BooleanField"));
+        assertTrue(0.0d == rs.getDouble("BigNumericField"));
+        assertTrue(0 == rs.getInt("IntegerField"));
+        assertTrue(0L == rs.getLong("NumericField"));
+        assertNull(rs.getBytes("BytesField"));
+        assertNull(rs.getTimestamp("TimestampField"));
+        assertNull(rs.getTime("TimeField"));
+        assertNull(rs.getDate("DateField"));
+        assertNull(rs.getString("JSONField"));
+        assertFalse(rs.getBoolean("BooleanField_1"));
+        assertNull(rs.getString("StringField_1"));
+        assertNull(rs.getString("hello")); // equivalent of testJsonType
+        assertEquals(0, rs.getInt("id"));
+
+      } else { // remaining rows are supposed to be non null
+        assertNotNull(rs.getString("StringField"));
+        assertNotNull(rs.getString("GeographyField"));
+        assertNotNull(rs.getObject("IntegerArrayField"));
+        assertTrue(rs.getBoolean("BooleanField"));
+        assertTrue(0.0d < rs.getDouble("BigNumericField"));
+        assertTrue(0 < rs.getInt("IntegerField"));
+        assertTrue(0L < rs.getLong("NumericField"));
+        assertNotNull(rs.getBytes("BytesField"));
+        assertNotNull(rs.getTimestamp("TimestampField"));
+        assertNotNull(rs.getTime("TimeField"));
+        assertNotNull(rs.getDate("DateField"));
+        assertNotNull(rs.getString("JSONField"));
+        assertFalse(rs.getBoolean("BooleanField_1"));
+        assertNotNull(rs.getString("StringField_1"));
+
+        // check the order of the records
+        assertTrue(prevIntegerFieldVal < rs.getInt("IntegerField"));
+        prevIntegerFieldVal = rs.getInt("IntegerField");
+
+        testForAllDataTypeValues(rs, cnt); // asserts the value of each row
+      }
+      ++cnt;
+    }
+    assertEquals(LIMIT_RECS, cnt); // all the records were retrieved
+    connection.close();
+  }
+
   @Test
   public void testMultipleRuns() throws SQLException {
 
