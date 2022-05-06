@@ -191,16 +191,22 @@ public class ConnectionImplTest {
             .setCreationTime(1234L)
             .setStartTime(5678L)
             .setQuery(queryMock);
+    com.google.api.services.bigquery.model.JobConfigurationQuery jobConfigurationQuery =
+        new com.google.api.services.bigquery.model.JobConfigurationQuery();
+    com.google.api.services.bigquery.model.JobConfiguration jobConfig =
+        new com.google.api.services.bigquery.model.JobConfiguration()
+            .setQuery(jobConfigurationQuery);
     com.google.api.services.bigquery.model.Job mockDryRunJob =
-        new com.google.api.services.bigquery.model.Job().setStatistics(jobStatsMock);
-    // TODO: figure out why this test is breaking below
-    // when(bigqueryRpcMock.createJobForQuery(any(com.google.api.services.bigquery.model.Job.class)))
-    //     .thenReturn(mockDryRunJob);
-    // BigQueryDryRunResult dryRunResult = connection.dryRun(DRY_RUN_SQL);
-    // assertEquals(1, dryRunResult.getQueryParameters().size());
-    // assertEquals(QUERY_SCHEMA, dryRunResult.getSchema());
-    // verify(bigqueryRpcMock, times(1))
-    //     .createJobForQuery(any(com.google.api.services.bigquery.model.Job.class));
+        new com.google.api.services.bigquery.model.Job()
+            .setStatistics(jobStatsMock)
+            .setConfiguration(jobConfig);
+    when(bigqueryRpcMock.createJobForQuery(any(com.google.api.services.bigquery.model.Job.class)))
+        .thenReturn(mockDryRunJob);
+    BigQueryDryRunResult dryRunResult = connection.dryRun(DRY_RUN_SQL);
+    assertEquals(1, dryRunResult.getQueryParameters().size());
+    assertEquals(QUERY_SCHEMA, dryRunResult.getSchema());
+    verify(bigqueryRpcMock, times(1))
+        .createJobForQuery(any(com.google.api.services.bigquery.model.Job.class));
   }
 
   @Test
