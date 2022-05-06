@@ -28,6 +28,8 @@ import com.google.api.services.bigquery.model.TableDataList;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.RetryHelper;
 import com.google.cloud.Tuple;
+import com.google.cloud.bigquery.JobStatistics.QueryStatistics;
+import com.google.cloud.bigquery.JobStatistics.SessionInfo;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
 import com.google.cloud.bigquery.storage.v1.ArrowRecordBatch;
 import com.google.cloud.bigquery.storage.v1.ArrowSchema;
@@ -147,7 +149,12 @@ class ConnectionImpl implements Connection {
         dryRunJob.getStatistics().getQuery().getUndeclaredQueryParameters();
     List<Parameter> queryParameters =
         Lists.transform(queryParametersPb, QUERY_PARAMETER_FROM_PB_FUNCTION);
-    return new BigQueryDryRunResultImpl(schema, queryParameters);
+    QueryStatistics queryStatistics = JobStatistics.fromPb(dryRunJob);
+    SessionInfo sessionInfo =
+        queryStatistics.getSessionInfo() == null ? null : queryStatistics.getSessionInfo();
+    BigQueryResultStats bigQueryResultStats =
+        new BigQueryResultStatsImpl(queryStatistics, sessionInfo);
+    return new BigQueryDryRunResultImpl(schema, queryParameters, bigQueryResultStats);
   }
 
   /**
@@ -304,11 +311,10 @@ class ConnectionImpl implements Connection {
   BigQueryResultStats getBigQueryResultSetStats(JobId jobId) {
     // Create GetQueryResultsResponse query statistics
     Job queryJob = getQueryJobRpc(jobId);
-    JobStatistics.QueryStatistics statistics = queryJob.getStatistics();
-    DmlStats dmlStats = statistics.getDmlStats() == null ? null : statistics.getDmlStats();
-    JobStatistics.SessionInfo sessionInfo =
-        statistics.getSessionInfo() == null ? null : statistics.getSessionInfo();
-    return new BigQueryResultStatsImpl(dmlStats, sessionInfo);
+    QueryStatistics queryStatistics = queryJob.getStatistics();
+    SessionInfo sessionInfo =
+        queryStatistics.getSessionInfo() == null ? null : queryStatistics.getSessionInfo();
+    return new BigQueryResultStatsImpl(queryStatistics, sessionInfo);
   }
   /* This method processed the first page of GetQueryResultsResponse and then it uses tabledata.list */
   @VisibleForTesting
@@ -356,15 +362,24 @@ class ConnectionImpl implements Connection {
     Schema schema;
     long numRows;
     schema = Schema.fromPb(results.getSchema());
-    numRows = results.getTotalRows().longValue();
-    // Create QueryResponse query statistics
+    numRows =
+        results.getTotalRows() == null
+            ? 0
+            : results.getTotalRows().longValue(); // in case of DML or DDL
+    // QueryResponse only provides cache hits, dmlStats, and sessionInfo as query processing
+    // statistics
     DmlStats dmlStats =
         results.getDmlStats() == null ? null : DmlStats.fromPb(results.getDmlStats());
-    JobStatistics.SessionInfo sessionInfo =
+    Boolean cacheHit = results.getCacheHit();
+    QueryStatistics queryStatistics =
+        QueryStatistics.newBuilder().setDmlStats(dmlStats).setCacheHit(cacheHit).build();
+    // We cannot directly set sessionInfo in QueryStatistics
+    SessionInfo sessionInfo =
         results.getSessionInfo() == null
             ? null
             : JobStatistics.SessionInfo.fromPb(results.getSessionInfo());
-    BigQueryResultStats bigQueryResultStats = new BigQueryResultStatsImpl(dmlStats, sessionInfo);
+    BigQueryResultStats bigQueryResultStats =
+        new BigQueryResultStatsImpl(queryStatistics, sessionInfo);
 
     BlockingQueue<AbstractList<FieldValue>> buffer = new LinkedBlockingDeque<>(bufferSize);
     BlockingQueue<Tuple<Iterable<FieldValueList>, Boolean>> pageCache =
@@ -1172,6 +1187,9 @@ class ConnectionImpl implements Connection {
     queryConfigurationPb.setUseLegacySql(false);
     if (connectionSettings.getDefaultDataset() != null) {
       queryConfigurationPb.setDefaultDataset(connectionSettings.getDefaultDataset().toPb());
+    }
+    if (connectionSettings.getCreateSession() != null) {
+      queryConfigurationPb.setCreateSession(connectionSettings.getCreateSession());
     }
     configurationPb.setQuery(queryConfigurationPb);
 

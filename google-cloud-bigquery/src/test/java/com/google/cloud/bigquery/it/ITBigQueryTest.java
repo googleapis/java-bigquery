@@ -78,6 +78,9 @@ import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.JobStatistics;
 import com.google.cloud.bigquery.JobStatistics.LoadStatistics;
+import com.google.cloud.bigquery.JobStatistics.QueryStatistics;
+import com.google.cloud.bigquery.JobStatistics.QueryStatistics.StatementType;
+import com.google.cloud.bigquery.JobStatistics.SessionInfo;
 import com.google.cloud.bigquery.JobStatistics.TransactionInfo;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.LoadJobConfiguration;
@@ -2496,7 +2499,10 @@ public class ITBigQueryTest {
             "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, FloatField, NumericField, TimeField, DateField,  DateTimeField , GeographyField, RecordField.BytesField, RecordField.BooleanField, IntegerArrayField from %s where StringField = ? order by TimestampField",
             TABLE_ID_FASTQUERY_BQ_RESULTSET.getTable());
     ConnectionSettings connectionSettings =
-        ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
+        ConnectionSettings.newBuilder()
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .setCreateSession(true)
+            .build();
     Connection connection = bigquery.createConnection(connectionSettings);
     BigQueryDryRunResult bigQueryDryRunResultSet = connection.dryRun(query);
     assertNotNull(bigQueryDryRunResultSet.getSchema());
@@ -2504,6 +2510,11 @@ public class ITBigQueryTest {
         BQ_RESULTSET_EXPECTED_SCHEMA, bigQueryDryRunResultSet.getSchema()); // match the schema
     List<Parameter> queryParameters = bigQueryDryRunResultSet.getQueryParameters();
     assertEquals(StandardSQLTypeName.STRING, queryParameters.get(0).getValue().getType());
+    QueryStatistics queryStatistics = bigQueryDryRunResultSet.getStatistics().getQueryStatistics();
+    assertNotNull(queryStatistics);
+    SessionInfo sessionInfo = bigQueryDryRunResultSet.getStatistics().getSessionInfo();
+    assertNotNull(sessionInfo.getSessionId());
+    assertEquals(StatementType.SELECT, queryStatistics.getStatementType());
   }
 
   @Test
@@ -3220,12 +3231,23 @@ public class ITBigQueryTest {
     remoteJobWithSession = remoteJobWithSession.waitFor();
     assertNull(remoteJobWithSession.getStatus().getError());
     Job queryJobWithSession = bigquery.getJob(remoteJobWithSession.getJobId());
-    JobStatistics.QueryStatistics statisticsWithSession = queryJobWithSession.getStatistics();
+    QueryStatistics statisticsWithSession = queryJobWithSession.getStatistics();
     assertEquals(sessionId, statisticsWithSession.getSessionInfo().getSessionId());
   }
 
+  // TODO: uncomment this testcase when executeUpdate is implemented
+  // @Test
+  // public void testExecuteSelectWithSession() throws BigQuerySQLException {
+  //   String query = "CREATE TEMPORARY TABLE temptable AS SELECT 17 as foo";
+  //   ConnectionSettings connectionSettings =
+  // ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).setCreateSession(true).build();
+  //   Connection connection = bigquery.createConnection(connectionSettings);
+  //   BigQueryResult bigQueryResult = connection.execute(query);
+  //   BigQueryResultStats stats = bigQueryResult.getBigQueryResultStats();
+  //   assertNotNull(stats.getSessionInfo().getSessionId());
+  // }
+
   @Test
-  // TODO: update this testcase when executeUpdate is implemented
   public void testExecuteSelectSessionSupport() throws BigQuerySQLException {
     String query = "SELECT 17 as foo";
     ConnectionSettings connectionSettings =
@@ -4081,6 +4103,7 @@ public class ITBigQueryTest {
             .build();
     Job remoteJob = bigquery.create(JobInfo.of(configuration));
     assertNull(remoteJob.getJobId().getJob());
+    remoteJob.getStatistics();
     assertEquals(DONE, remoteJob.getStatus().getState());
     assertNotNull(remoteJob.getConfiguration());
   }

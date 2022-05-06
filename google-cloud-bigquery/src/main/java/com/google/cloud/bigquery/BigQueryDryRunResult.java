@@ -32,4 +32,8 @@ public interface BigQueryDryRunResult {
    */
   @BetaApi
   List<Parameter> getQueryParameters() throws BigQuerySQLException;
+
+  /** Returns some processing statistics */
+  @BetaApi
+  BigQueryResultStats getStatistics() throws BigQuerySQLException;
 }

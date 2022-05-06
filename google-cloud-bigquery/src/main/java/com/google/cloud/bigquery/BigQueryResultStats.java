@@ -17,15 +17,20 @@
 package com.google.cloud.bigquery;
 
 import com.google.api.core.BetaApi;
+import com.google.cloud.bigquery.JobStatistics.QueryStatistics;
 import com.google.cloud.bigquery.JobStatistics.SessionInfo;
 
 public interface BigQueryResultStats {
 
-  /** Returns detailed statistics for DML statements. */
+  /** Returns query statistics of a query job */
   @BetaApi
-  DmlStats getDmlStats();
+  QueryStatistics getQueryStatistics();
 
-  /** Returns SessionInfo contains information about the session if this job is part of one. */
+  /**
+   * Returns SessionInfo contains information about the session if this job is part of one.
+   * JobStatistics2 model class does not allow setSessionInfo so this cannot be set as part of
+   * QueryStatistics when we use jobs.query API.
+   */
   @BetaApi
   SessionInfo getSessionInfo();
 }

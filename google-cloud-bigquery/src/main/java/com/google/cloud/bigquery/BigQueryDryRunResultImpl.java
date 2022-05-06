@@ -21,11 +21,15 @@ import java.util.List;
 public class BigQueryDryRunResultImpl implements BigQueryDryRunResult {
   private Schema schema;
   private List<Parameter> queryParameters;
+  private BigQueryResultStats stats;
 
   BigQueryDryRunResultImpl(
-      Schema schema, List<Parameter> queryParameters) { // Package-Private access
+      Schema schema,
+      List<Parameter> queryParameters,
+      BigQueryResultStats stats) { // Package-Private access
     this.schema = schema;
     this.queryParameters = queryParameters;
+    this.stats = stats;
   }
 
   @Override
@@ -36,5 +40,10 @@ public class BigQueryDryRunResultImpl implements BigQueryDryRunResult {
   @Override
   public List<Parameter> getQueryParameters() throws BigQuerySQLException {
     return queryParameters;
+  }
+
+  @Override
+  public BigQueryResultStats getStatistics() throws BigQuerySQLException {
+    return stats;
   }
 }

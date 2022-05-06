@@ -16,21 +16,22 @@
 
 package com.google.cloud.bigquery;
 
+import com.google.cloud.bigquery.JobStatistics.QueryStatistics;
 import com.google.cloud.bigquery.JobStatistics.SessionInfo;
 
 public class BigQueryResultStatsImpl implements BigQueryResultStats {
 
-  private final DmlStats dmlStats;
+  private final QueryStatistics queryStatistics;
   private final SessionInfo sessionInfo;
 
-  public BigQueryResultStatsImpl(DmlStats dmlStats, SessionInfo sessionInfo) {
-    this.dmlStats = dmlStats;
+  public BigQueryResultStatsImpl(QueryStatistics queryStatistics, SessionInfo sessionInfo) {
+    this.queryStatistics = queryStatistics;
     this.sessionInfo = sessionInfo;
   }
 
   @Override
-  public DmlStats getDmlStats() {
-    return dmlStats;
+  public QueryStatistics getQueryStatistics() {
+    return queryStatistics;
   }
 
   @Override
