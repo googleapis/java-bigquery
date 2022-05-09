@@ -3880,6 +3880,53 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testDestExpTimeTableCopyJob() throws InterruptedException {
+    String sourceTableName = "test_copy_job_base_table";
+    String ddlTableName = TABLE_ID_DDL.getTable();
+    String destTableName = String.format("test_dest_table");
+    // Create source table with some data in it
+    String ddlQuery =
+        String.format(
+            "CREATE OR REPLACE TABLE %s ("
+                + "TimestampField TIMESTAMP OPTIONS(description='TimestampDescription'), "
+                + "StringField STRING OPTIONS(description='StringDescription'), "
+                + "BooleanField BOOLEAN OPTIONS(description='BooleanDescription') "
+                + ") AS SELECT * FROM %s",
+            sourceTableName, ddlTableName);
+    QueryJobConfiguration ddlConfig =
+        QueryJobConfiguration.newBuilder(ddlQuery).setDefaultDataset(DatasetId.of(DATASET)).build();
+    TableId sourceTableId = TableId.of(DATASET, sourceTableName);
+    TableResult result = bigquery.query(ddlConfig);
+    assertEquals(DDL_TABLE_SCHEMA, result.getSchema());
+    Table remoteTable = bigquery.getTable(DATASET, sourceTableName);
+    assertNotNull(remoteTable);
+
+    TableId snapshotTableId = TableId.of(DATASET, destTableName);
+    CopyJobConfiguration snapshotConfiguration =
+        CopyJobConfiguration.newBuilder(snapshotTableId, sourceTableId)
+            .setDestinationExpirationTime("8888-12-31T23:59:59.999999999Z")
+            .build();
+    Job createdJob = bigquery.create(JobInfo.of(snapshotConfiguration));
+
+    CopyJobConfiguration createdConfiguration = createdJob.getConfiguration();
+    // TODO(prasmish): Check why getDestinationExpirationTime is null
+    // assertNotNull(createdConfiguration.getDestinationExpirationTime());
+
+    Job completedJob = createdJob.waitFor();
+    CopyJobConfiguration createdConfigurationJobComplete = completedJob.getConfiguration();
+    assertNull(completedJob.getStatus().getError());
+    Table destTable = bigquery.getTable(DATASET, destTableName);
+    assertNotNull(destTable);
+
+    // TODO(prasmish): Check why getDestinationExpirationTime is null
+    // assertNotNull(createdConfigurationJobComplete.getDestinationExpirationTime());
+
+    // Clean up
+    assertTrue(remoteTable.delete());
+    assertTrue(destTable.delete());
+  }
+
+  @Test
   public void testCopyJobWithLabels() throws InterruptedException {
     String sourceTableName = "test_copy_job_source_table_label";
     String destinationTableName = "test_copy_job_destination_table_label";
