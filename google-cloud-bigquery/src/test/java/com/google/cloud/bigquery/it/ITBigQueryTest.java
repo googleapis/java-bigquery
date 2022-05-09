@@ -3901,12 +3901,12 @@ public class ITBigQueryTest {
     Table remoteTable = bigquery.getTable(DATASET, sourceTableName);
     assertNotNull(remoteTable);
 
-    TableId snapshotTableId = TableId.of(DATASET, destTableName);
-    CopyJobConfiguration snapshotConfiguration =
-        CopyJobConfiguration.newBuilder(snapshotTableId, sourceTableId)
-            .setDestinationExpirationTime("8888-12-31T23:59:59.999999999Z")
+    TableId destTableId = TableId.of(DATASET, destTableName);
+    CopyJobConfiguration destTabConfiguration =
+        CopyJobConfiguration.newBuilder(destTableId, sourceTableId)
+            .setDestinationExpirationTime("2022-12-31T23:59:59.999999999Z")
             .build();
-    Job createdJob = bigquery.create(JobInfo.of(snapshotConfiguration));
+    Job createdJob = bigquery.create(JobInfo.of(destTabConfiguration));
 
     CopyJobConfiguration createdConfiguration = createdJob.getConfiguration();
     // TODO(prasmish): Check why getDestinationExpirationTime is null
