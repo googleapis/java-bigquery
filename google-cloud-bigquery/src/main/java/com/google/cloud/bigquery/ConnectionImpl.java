@@ -87,7 +87,7 @@ class ConnectionImpl implements Connection {
       Executors.newFixedThreadPool(MAX_PROCESS_QUERY_THREADS_CNT);
   private final Logger logger = Logger.getLogger(this.getClass().getName());
   private BigQueryReadClient bqReadClient;
-  private static final long EXECUTOR_TIMEOUT_SEC = 5;
+  private static final long EXECUTOR_TIMEOUT_SEC = 30;
 
   ConnectionImpl(
       ConnectionSettings connectionSettings,
@@ -121,12 +121,13 @@ class ConnectionImpl implements Connection {
   public synchronized boolean close() throws BigQuerySQLException {
     queryTaskExecutor.shutdownNow();
     try {
-      queryTaskExecutor.awaitTermination(
-          EXECUTOR_TIMEOUT_SEC, TimeUnit.SECONDS); // wait for the executor shutdown
+      if (queryTaskExecutor.awaitTermination(EXECUTOR_TIMEOUT_SEC, TimeUnit.SECONDS)) {
+        return true;
+      } // else queryTaskExecutor.isShutdown() will be returned outside this try block
     } catch (InterruptedException e) {
       e.printStackTrace();
       logger.log(
-          Level.WARNING,
+          Level.FINE,
           "\n" + Thread.currentThread().getName() + " Exception while awaitTermination",
           e); // Logging InterruptedException instead of throwing the exception back, close method
       // will return queryTaskExecutor.isShutdown()
@@ -418,6 +419,11 @@ class ConnectionImpl implements Connection {
             while (pageToken != null) { // paginate for non null token
               if (Thread.currentThread().isInterrupted()
                   || queryTaskExecutor.isShutdown()) { // do not process further pages and shutdown
+                logger.log(
+                    Level.FINE,
+                    "\n"
+                        + Thread.currentThread().getName()
+                        + " Interrupted @ runNextPageTaskAsync");
                 break;
               }
               TableDataList tabledataList = tableDataListRpc(destinationTable, pageToken);
@@ -431,10 +437,12 @@ class ConnectionImpl implements Connection {
             rpcResponseQueue.put(
                 Tuple.of(
                     null,
-                    false)); // this will stop the parseDataTask as well in case of interrupt or
-            // when the pagination completes
+                    false)); // this will stop the parseDataTask as well when the pagination
+                             // completes
           } catch (Exception e) {
             throw new BigQueryException(0, e.getMessage(), e);
+          } finally {
+            queryTaskExecutor.shutdownNow(); // for graceful shutdown scenarios
           }
         };
     queryTaskExecutor.execute(nextPageTask);
@@ -479,8 +487,8 @@ class ConnectionImpl implements Connection {
             }
           } catch (InterruptedException e) {
             logger.log(
-                Level.WARNING,
-                "\n" + Thread.currentThread().getName() + " Interrupted",
+                Level.FINE,
+                "\n" + Thread.currentThread().getName() + " Interrupted @ parseRpcDataAsync",
                 e); // Thread might get interrupted while calling the Cancel method, which is
             // expected, so logging this instead of throwing the exception back
           }
@@ -488,10 +496,12 @@ class ConnectionImpl implements Connection {
             pageCache.put(Tuple.of(null, false)); // no further pages
           } catch (InterruptedException e) {
             logger.log(
-                Level.WARNING,
-                "\n" + Thread.currentThread().getName() + " Interrupted",
+                Level.FINE,
+                "\n" + Thread.currentThread().getName() + " Interrupted @ parseRpcDataAsync",
                 e); // Thread might get interrupted while calling the Cancel method, which is
             // expected, so logging this instead of throwing the exception back
+          } finally {
+            queryTaskExecutor.shutdownNow(); // for graceful shutdown scenarios
           }
         };
     queryTaskExecutor.execute(parseDataTask);
@@ -508,7 +518,7 @@ class ConnectionImpl implements Connection {
     try {
       buffer.put(new EndOfFieldValueList()); // All the pages has been processed, put this marker
     } catch (InterruptedException e) {
-      logger.log(Level.WARNING, "\n" + Thread.currentThread().getName() + " Interrupted", e);
+      logger.log(Level.FINE, "\n" + Thread.currentThread().getName() + " Interrupted", e);
     }
   }
 
@@ -525,7 +535,7 @@ class ConnectionImpl implements Connection {
           new BigQueryResultImpl.Row(
               null, true)); // All the pages has been processed, put this marker
     } catch (InterruptedException e) {
-      logger.log(Level.WARNING, "\n" + Thread.currentThread().getName() + " Interrupted", e);
+      logger.log(Level.FINE, "\n" + Thread.currentThread().getName() + " Interrupted", e);
     }
   }
 
@@ -545,7 +555,7 @@ class ConnectionImpl implements Connection {
               fieldValueLists = nextPageTuple.x();
             } catch (InterruptedException e) {
               logger.log(
-                  Level.WARNING,
+                  Level.FINE,
                   "\n" + Thread.currentThread().getName() + " Interrupted",
                   e); // Thread might get interrupted while calling the Cancel method, which is
               // expected, so logging this instead of throwing the exception back
@@ -584,6 +594,8 @@ class ConnectionImpl implements Connection {
                   .clear(); // IMP - so that if it's full then it unblocks and the interrupt logic
               // could trigger
               buffer.clear();
+              markEoS(buffer); // Thread has been interrupted, communicate to ResultSet by adding
+              // EoS
             }
             markEoS(buffer); // All the pages has been processed, put this marker
           } finally {
