@@ -2652,7 +2652,7 @@ public class ITBigQueryTest {
     int cnt = 0;
     while (rs.next()) {
       ++cnt;
-      if (cnt > 57000) { // breaking at 57K, query reads 300K
+      if (cnt == 57000) { // breaking at 57000th record, query reads 300K
         assertTrue(connection.close()); // we should be able to cancel the connection
       }
     }
