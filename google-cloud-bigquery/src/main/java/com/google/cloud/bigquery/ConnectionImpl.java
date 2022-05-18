@@ -237,7 +237,7 @@ class ConnectionImpl implements Connection {
         && firstPage.getTotalRows() != null
         && firstPage.getSchema()
             != null) { // firstPage.getTotalRows() is null if job is not complete. We need to make
-                       // sure that the schema is not null, as it is required for the ResultSet
+      // sure that the schema is not null, as it is required for the ResultSet
       return getSubsequentQueryResultsWithJob(
           firstPage.getTotalRows().longValue(),
           (long) firstPage.getRows().size(),
