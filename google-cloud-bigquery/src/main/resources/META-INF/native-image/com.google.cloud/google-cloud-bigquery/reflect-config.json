@@ -4,6 +4,16 @@
     "queryAllDeclaredMethods":true
   },
   {
+    "name":"io.netty.buffer.PooledByteBufAllocator",
+    "fields":[{"name":"directArenas"}]
+  },
+  {
+    "name":"io.netty.util.internal.shaded.org.jctools.queues.MpscChunkedArrayQueue",
+    "queryAllDeclaredMethods":true,
+    "allDeclaredFields":true,
+    "queryAllDeclaredConstructors":true
+  },
+  {
     "name":"io.netty.util.internal.shaded.org.jctools.queues.MpscArrayQueueConsumerIndexField",
     "fields":[{"name":"consumerIndex"}]
   },
@@ -39,5 +49,21 @@
     "name":"org.apache.arrow.vector.types.pojo.ArrowType$PrimitiveType",
     "allDeclaredFields":true,
     "queryAllDeclaredMethods":true
+  },
+  {
+    "name":"io.netty.buffer.AbstractReferenceCountedByteBuf",
+    "fields":[{"name":"refCnt"}]
+  },
+  {
+    "name":"io.netty.util.internal.shaded.org.jctools.queues.BaseMpscLinkedArrayQueueColdProducerFields",
+    "fields":[{"name":"producerLimit"}]
+  },
+  {
+    "name":"io.netty.util.internal.shaded.org.jctools.queues.BaseMpscLinkedArrayQueueConsumerFields",
+    "fields":[{"name":"consumerIndex"}]
+  },
+  {
+    "name":"io.netty.util.internal.shaded.org.jctools.queues.BaseMpscLinkedArrayQueueProducerFields",
+    "fields":[{"name":"producerIndex"}]
   }
 ]
