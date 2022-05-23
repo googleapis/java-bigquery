@@ -3441,7 +3441,6 @@ public class ITBigQueryTest {
       // https://github.com/googleapis/java-bigquery/issues/2056. String comparison of values, eg
       // 1.40845209522E9 vs 1408452095.22 seems to be failing, so comparing the values as epoc
       // (Long) instead
-      // Double.parseDouble("1.40845209522E9").
       assertEquals(
           (long) Double.parseDouble("1.40845209522E9"),
           (long) Double.parseDouble(values.get(0).getValue().toString()));
