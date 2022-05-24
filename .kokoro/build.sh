@@ -61,23 +61,12 @@ javadoc)
 integration)
     mvn -B ${INTEGRATION_TEST_ARGS} \
       -ntp \
-      -Dtest=ITBigQueryTest \
+      -Penable-integration-tests \
       -DtrimStackTrace=false \
       -Dclirr.skip=true \
       -Denforcer.skip=true \
       -fae \
       verify
-    RETURN_CODE=$?
-    ;;
-nightly-it)
-    mvn -B ${INTEGRATION_TEST_ARGS} \
-          -ntp \
-          -Dtest=ITNightlyBigQueryTest \
-          -DtrimStackTrace=false \
-          -Dclirr.skip=true \
-          -Denforcer.skip=true \
-          -fae \
-          verify
     RETURN_CODE=$?
     ;;
 graalvm)
