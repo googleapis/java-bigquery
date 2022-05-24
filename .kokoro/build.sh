@@ -69,6 +69,17 @@ integration)
       verify
     RETURN_CODE=$?
     ;;
+nightly-it)
+    mvn -B ${INTEGRATION_TEST_ARGS} \
+          -ntp \
+          -Dtest=ITNightlyBigQueryTest \
+          -DtrimStackTrace=false \
+          -Dclirr.skip=true \
+          -Denforcer.skip=true \
+          -fae \
+          verify
+    RETURN_CODE=$?
+    ;;
 graalvm)
     # Run Unit and Integration Tests with Native Image
     mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Penable-integration-tests test
