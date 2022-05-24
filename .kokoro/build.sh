@@ -71,13 +71,13 @@ integration)
     ;;
 nightly-it)
     mvn -B ${INTEGRATION_TEST_ARGS} \
-      -ntp \
-      -Dtest=ITNightlyBigQueryTest \
-      -DtrimStackTrace=false \
-      -Dclirr.skip=true \
-      -Denforcer.skip=true \
-      -fae \
-      verify
+          -ntp \
+          -Dtest=ITNightlyBigQueryTest \
+          -DtrimStackTrace=false \
+          -Dclirr.skip=true \
+          -Denforcer.skip=true \
+          -fae \
+          verify
     RETURN_CODE=$?
     ;;
 graalvm)
