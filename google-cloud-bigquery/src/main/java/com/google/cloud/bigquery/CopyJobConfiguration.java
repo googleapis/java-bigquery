@@ -83,6 +83,10 @@ public final class CopyJobConfiguration extends JobConfiguration {
       if (copyConfigurationPb.getOperationType() != null) {
         this.operationType = copyConfigurationPb.getOperationType();
       }
+      if (copyConfigurationPb.getDestinationExpirationTime() != null) {
+        this.destinationExpirationTime =
+            copyConfigurationPb.getDestinationExpirationTime().toString();
+      }
       if (copyConfigurationPb.getSourceTables() != null) {
         this.sourceTables =
             Lists.transform(copyConfigurationPb.getSourceTables(), TableId.FROM_PB_FUNCTION);
