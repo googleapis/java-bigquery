@@ -3881,6 +3881,7 @@ public class ITBigQueryTest {
 
   @Test
   public void testCopyJobWithLabelsAndExpTime() throws InterruptedException {
+    String destExpiryTime = "2025-12-31T23:59:59.999999999Z";
     String sourceTableName = "test_copy_job_source_table_label";
     String destinationTableName = "test_copy_job_destination_table_label";
     Map<String, String> labels = ImmutableMap.of("test_job_name", "test_copy_job");
@@ -3893,16 +3894,15 @@ public class ITBigQueryTest {
     CopyJobConfiguration configuration =
         CopyJobConfiguration.newBuilder(destinationTable, sourceTable)
             .setLabels(labels)
-            .setDestinationExpirationTime("2025-12-31T23:59:59.999999999Z")
+            .setDestinationExpirationTime(destExpiryTime)
             .build();
     Job remoteJob = bigquery.create(JobInfo.of(configuration));
     remoteJob = remoteJob.waitFor();
     assertNull(remoteJob.getStatus().getError());
     CopyJobConfiguration copyJobConfiguration = remoteJob.getConfiguration();
     assertEquals(labels, copyJobConfiguration.getLabels());
-    // TODO - getDestinationExpirationTime is returning null, uncomment it after b/232035252 is
-    // fixed
-    //  assertNotNull(copyJobConfiguration.getDestinationExpirationTime());
+    assertNotNull(copyJobConfiguration.getDestinationExpirationTime());
+    assertEquals(destExpiryTime, copyJobConfiguration.getDestinationExpirationTime());
     Table remoteTable = bigquery.getTable(DATASET, destinationTableName);
     assertNotNull(remoteTable);
     assertTrue(createdTable.delete());
