@@ -156,7 +156,6 @@ public class ConnImplBenchmark {
 
       if (++cnt % 100000 == 0) { // just to indicate the progress while long running benchmarks
         System.out.print(".");
-        System.out.print("cnt: " + cnt);
       }
     }
     System.out.println(cnt + " records processed using bigquery.query");
