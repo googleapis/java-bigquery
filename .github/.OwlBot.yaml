@@ -14,3 +14,5 @@
 
 docker:
   image: "gcr.io/cloud-devrel-public-resources/owlbot-java:latest"
+- source: "/google/cloud/bigquery/(v.*)/.*-java/samples/snippets/generated"
+  dest: "/owl-bot-staging/$1/samples/snippets/generated"
