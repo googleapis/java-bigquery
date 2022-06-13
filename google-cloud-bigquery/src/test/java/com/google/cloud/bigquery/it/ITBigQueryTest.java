@@ -2546,7 +2546,7 @@ public class ITBigQueryTest {
     assertEquals(300000, cnt); // total 300000 rows should be read
   }
 
-  @Test
+  // @Test
   public void testBQResultSetPaginationSlowQuery() throws SQLException {
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
