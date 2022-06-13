@@ -2348,7 +2348,7 @@ public class ITBigQueryTest {
     assertNotNull(statistics.getQueryPlan());
   }
 
-  @Test
+  // @Test
   public void testExecuteSelectDefaultConnectionSettings() throws SQLException {
     // Use the default connection settings
     Connection connection = bigquery.createConnection();
@@ -2517,7 +2517,7 @@ public class ITBigQueryTest {
     assertEquals(StatementType.SELECT, queryStatistics.getStatementType());
   }
 
-  @Test
+  // @Test
   // This test case test the order of the records, making sure that the result is not jumbled up due
   // to the multithreaded BigQueryResult implementation
   public void testBQResultSetMultiThreadedOrder() throws SQLException {
@@ -2575,7 +2575,7 @@ public class ITBigQueryTest {
     assertEquals(300000, cnt); // total 300000 rows should be read
   }
 
-  @Test
+  // @Test
   public void testExecuteSelectSinglePageTableRow() throws SQLException {
     String query =
         "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, FloatField, "
@@ -2661,7 +2661,7 @@ public class ITBigQueryTest {
     // buffer and pageCache are cleared
   }
 
-  @Test
+  // @Test
   public void testBQResultSetPagination() throws SQLException {
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
@@ -2770,7 +2770,7 @@ public class ITBigQueryTest {
         closeCnt, runCnt); // check if the connection closed for the required number of times
   }
 
-  @Test
+  // @Test
   public void testExecuteSelectSinglePageTableRowColInd() throws SQLException {
     String query =
         "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, FloatField, "
@@ -2836,7 +2836,7 @@ public class ITBigQueryTest {
     }
   }
 
-  @Test
+  // @Test
   public void testExecuteSelectStruct() throws SQLException {
     String query = "select (STRUCT(\"Vancouver\" as city, 5 as years)) as address";
     ConnectionSettings connectionSettings =
@@ -2869,7 +2869,7 @@ public class ITBigQueryTest {
     assertFalse(rs.next()); // only 1 row of data
   }
 
-  @Test
+  // @Test
   public void testExecuteSelectStructSubField() throws SQLException {
     String query =
         "select address.city from (select (STRUCT(\"Vancouver\" as city, 5 as years)) as address)";
@@ -2895,7 +2895,7 @@ public class ITBigQueryTest {
     assertFalse(rs.next()); // only 1 row of data
   }
 
-  @Test
+  // @Test
   public void testExecuteSelectArray() throws SQLException {
     String query = "SELECT [1,2,3]";
     ConnectionSettings connectionSettings =
@@ -2918,7 +2918,7 @@ public class ITBigQueryTest {
     assertEquals(3, arrayFieldValue.get(2).getLongValue());
   }
 
-  @Test
+  // @Test
   public void testExecuteSelectArrayOfStruct() throws SQLException {
     String query =
         "SELECT [STRUCT(\"Vancouver\" as city, 5 as years), STRUCT(\"Boston\" as city, 10 as years)]";
@@ -3256,7 +3256,7 @@ public class ITBigQueryTest {
   //   assertNotNull(stats.getSessionInfo().getSessionId());
   // }
 
-  @Test
+  // @Test
   public void testExecuteSelectSessionSupport() throws BigQuerySQLException {
     String query = "SELECT 17 as foo";
     ConnectionSettings connectionSettings =
@@ -3469,7 +3469,7 @@ public class ITBigQueryTest {
   }
 
   /* TODO(prasmish): expand below test case with all the fields shown in the above test case */
-  @Test
+  // @Test
   public void testExecuteSelectWithPositionalQueryParameters() throws BigQuerySQLException {
     String query =
         "SELECT TimestampField, StringField FROM "
@@ -3511,7 +3511,7 @@ public class ITBigQueryTest {
     assertEquals(2, Iterables.size(result.getValues()));
   }
 
-  @Test
+  // @Test
   public void testExecuteSelectWithNamedQueryParameters() throws BigQuerySQLException {
     String query =
         "SELECT TimestampField, StringField, BooleanField FROM "
