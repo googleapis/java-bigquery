@@ -2635,7 +2635,7 @@ public class ITBigQueryTest {
     assertFalse(rs.next()); // no 3rd row in the table
   }
 
-  // @Test -- Temporarily disabling
+  @Test
   public void testConnectionClose() throws SQLException {
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
@@ -2653,7 +2653,7 @@ public class ITBigQueryTest {
     while (rs.next()) {
       ++cnt;
       if (cnt == 57000) { // breaking at 57000th record, query reads 300K
-        //  assertTrue(connection.close()); // we should be able to cancel the connection
+        assertTrue(connection.close()); // we should be able to cancel the connection
       }
     }
     assertTrue(cnt < 100000); // Extra records are still read even after canceling, as
@@ -2721,7 +2721,7 @@ public class ITBigQueryTest {
       ++cnt;
     }
     assertEquals(300000, cnt); // total 300000 rows should be read
-    // connection.close(); -- No need to close the connection if all the records are read
+    connection.close();
   }
 
   // Ref: https://github.com/googleapis/java-bigquery/issues/2070. Adding a pre-submit test to see
@@ -2762,8 +2762,7 @@ public class ITBigQueryTest {
         ++cnt;
       }
       assertEquals(300000, cnt); // total 300000 rows should be read
-      // assertTrue(connection.close()); // check if connection closed -- No need to close the
-      // connection if all the records are read
+      assertTrue(connection.close()); // check if connection closed
       closeCnt++;
     }
     assertEquals(
