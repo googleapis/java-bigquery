@@ -2688,7 +2688,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testReadAPIIterationAndOrder()
+  public void testReadAPIIterationAndOrderOfRecords()
       throws SQLException { // use read API to read 300K records and check the order
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
