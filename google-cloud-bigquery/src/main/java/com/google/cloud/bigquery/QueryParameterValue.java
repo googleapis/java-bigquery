@@ -374,6 +374,8 @@ public abstract class QueryParameterValue implements Serializable {
       return StandardSQLTypeName.BOOL;
     } else if (String.class.isAssignableFrom(type)) {
       return StandardSQLTypeName.STRING;
+    } else if (String.class.isAssignableFrom(type)) {
+      return StandardSQLTypeName.GEOGRAPHY;
     } else if (Integer.class.isAssignableFrom(type)) {
       return StandardSQLTypeName.INT64;
     } else if (Long.class.isAssignableFrom(type)) {
@@ -426,6 +428,8 @@ public abstract class QueryParameterValue implements Serializable {
         }
         break;
       case STRING:
+        return value.toString();
+      case GEOGRAPHY:
         return value.toString();
       case JSON:
         if (value instanceof String || value instanceof JsonObject) return value.toString();
