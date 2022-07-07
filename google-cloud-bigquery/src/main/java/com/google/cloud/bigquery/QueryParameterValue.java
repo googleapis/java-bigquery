@@ -258,10 +258,10 @@ public abstract class QueryParameterValue implements Serializable {
     return of(value, StandardSQLTypeName.STRING);
   }
 
-    /** Creates a {@code QueryParameterValue} object with a type of GEOGRAPHY. */
-    public static QueryParameterValue geography(String value) {
-      return of(value, StandardSQLTypeName.GEOGRAPHY);
-    }
+  /** Creates a {@code QueryParameterValue} object with a type of GEOGRAPHY. */
+  public static QueryParameterValue geography(String value) {
+    return of(value, StandardSQLTypeName.GEOGRAPHY);
+  }
 
   /**
    * Creates a {@code QueryParameterValue} object with a type of JSON. Currently, this is only
