@@ -1,5 +1,62 @@
 # Changelog
 
+## [2.13.8](https://github.com/googleapis/java-bigquery/compare/v2.13.7...v2.13.8) (2022-07-01)
+
+
+### Dependencies
+
+* update dependency com.google.cloud:google-cloud-storage to v2.9.0 ([#2149](https://github.com/googleapis/java-bigquery/issues/2149)) ([a07c714](https://github.com/googleapis/java-bigquery/commit/a07c714cb90c7ff62a43f7500abe8d54a5cd0936))
+
+## [2.13.7](https://github.com/googleapis/java-bigquery/compare/v2.13.6...v2.13.7) (2022-06-29)
+
+
+### Dependencies
+
+* update dependency com.google.cloud:google-cloud-datacatalog-bom to v1.8.4 ([#2140](https://github.com/googleapis/java-bigquery/issues/2140)) ([c7ef597](https://github.com/googleapis/java-bigquery/commit/c7ef597832505e6c05adb38ac1db5dd15e32d024))
+
+## [2.13.6](https://github.com/googleapis/java-bigquery/compare/v2.13.5...v2.13.6) (2022-06-24)
+
+
+### Dependencies
+
+* update dependency com.google.apis:google-api-services-bigquery to v2-rev20220611-1.32.1 ([#2132](https://github.com/googleapis/java-bigquery/issues/2132)) ([bddefcf](https://github.com/googleapis/java-bigquery/commit/bddefcf647d50ee12fffea80c04613b38b8d02d0))
+* update dependency com.google.cloud:google-cloud-datacatalog-bom to v1.8.3 ([#2135](https://github.com/googleapis/java-bigquery/issues/2135)) ([0bd5ddc](https://github.com/googleapis/java-bigquery/commit/0bd5ddc0df0a978692252e50c37c94f41a3c4e1d))
+
+## [2.13.5](https://github.com/googleapis/java-bigquery/compare/v2.13.4...v2.13.5) (2022-06-23)
+
+
+### Dependencies
+
+* update dependency com.google.cloud:google-cloud-shared-dependencies to v2.13.0 ([#2128](https://github.com/googleapis/java-bigquery/issues/2128)) ([3043533](https://github.com/googleapis/java-bigquery/commit/3043533608c5659be0313f1942d20314d2157fd4))
+
+## [2.13.4](https://github.com/googleapis/java-bigquery/compare/v2.13.3...v2.13.4) (2022-06-22)
+
+
+### Dependencies
+
+* update dependency org.graalvm.buildtools:junit-platform-native to v0.9.12 ([#2124](https://github.com/googleapis/java-bigquery/issues/2124)) ([4542ce9](https://github.com/googleapis/java-bigquery/commit/4542ce9a51d9756a8a06d0e33cf3a40d1e321ade))
+* update dependency org.graalvm.buildtools:native-maven-plugin to v0.9.12 ([#2125](https://github.com/googleapis/java-bigquery/issues/2125)) ([6da965f](https://github.com/googleapis/java-bigquery/commit/6da965f540a2cdb2eaf845301cfbfbf34b9a6866))
+
+## [2.13.3](https://github.com/googleapis/java-bigquery/compare/v2.13.2...v2.13.3) (2022-06-16)
+
+
+### Bug Fixes
+
+* Assertj-core cleanup ([#2102](https://github.com/googleapis/java-bigquery/issues/2102)) ([4630c50](https://github.com/googleapis/java-bigquery/commit/4630c50db7428d888b726297408b7a223b39b28a))
+
+
+### Documentation
+
+* **sample:** clean up native image sample README ([#2120](https://github.com/googleapis/java-bigquery/issues/2120)) ([de7b45a](https://github.com/googleapis/java-bigquery/commit/de7b45a52259cec16970e074dd4f526685aa4d09))
+
+
+### Dependencies
+
+* update cloud client dependencies ([#2110](https://github.com/googleapis/java-bigquery/issues/2110)) ([30a88f4](https://github.com/googleapis/java-bigquery/commit/30a88f43aea6269e3fbe82544eb2112f25830761))
+* update dependency com.google.cloud:google-cloud-datacatalog-bom to v1.8.2 ([#2101](https://github.com/googleapis/java-bigquery/issues/2101)) ([bdbd3da](https://github.com/googleapis/java-bigquery/commit/bdbd3da4c6c8bb7f2363711691edb31c7711d811))
+* update dependency com.google.oauth-client:google-oauth-client-java6 to v1.34.1 ([#2111](https://github.com/googleapis/java-bigquery/issues/2111)) ([1a0235f](https://github.com/googleapis/java-bigquery/commit/1a0235f9cdea0ae37b2e8b1047ca66395b1af3b0))
+* update dependency com.google.oauth-client:google-oauth-client-jetty to v1.34.1 ([#2112](https://github.com/googleapis/java-bigquery/issues/2112)) ([e52739f](https://github.com/googleapis/java-bigquery/commit/e52739ffcaeb9ca9dc362f07f117f37ecff220c7))
+
 ## [2.13.2](https://github.com/googleapis/java-bigquery/compare/v2.13.1...v2.13.2) (2022-06-05)
 
 
