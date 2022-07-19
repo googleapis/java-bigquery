@@ -88,7 +88,7 @@ graalvm)
       -Denforcer.skip=true \
       -fae \
       -ntp -Pnative -Penable-integration-tests test \
-      "-Dtest=!com.google.cloud.bigquery.it.ITBigQueryTest#testBQResultSetPaginationSlowQuery+testReadAPIConnectionMultiClose+testReadAPIIterationAndOrder, !com.google.cloud.bigquery.it.ITNightlyBigQueryTest, *ClientTest"
+      "-Dtest=!com.google.cloud.bigquery.it.ITBigQueryTest#testBQResultSetPaginationSlowQuery+testReadAPIConnectionMultiClose+testReadAPIIterationAndOrder, !com.google.cloud.bigquery.it.ITNightlyBigQueryTest*, *ClientTest"
     RETURN_CODE=$?
     ;;
 graalvm17)
@@ -100,7 +100,7 @@ graalvm17)
       -Denforcer.skip=true \
       -fae \
       -ntp -Pnative -Penable-integration-tests test \
-      "-Dtest=!com.google.cloud.bigquery.it.ITBigQueryTest#testBQResultSetPaginationSlowQuery+testReadAPIConnectionMultiClose+testReadAPIIterationAndOrder, !com.google.cloud.bigquery.it.ITNightlyBigQueryTest, *ClientTest"
+      "-Dtest=!com.google.cloud.bigquery.it.ITBigQueryTest#testBQResultSetPaginationSlowQuery+testReadAPIConnectionMultiClose+testReadAPIIterationAndOrder, !com.google.cloud.bigquery.it.ITNightlyBigQueryTest*, *ClientTest"
       RETURN_CODE=$?
     ;;
 samples)
