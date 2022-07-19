@@ -325,12 +325,24 @@ class ConnectionImpl implements Connection {
       // and can be optimized here, but this is left as future work.
       Long totalRows = results.getTotalRows() == null ? null : results.getTotalRows().longValue();
       Long pageRows = results.getRows() == null ? null : (long) (results.getRows().size());
+      logger.log(
+          Level.WARNING,
+          "\n"
+              + String.format(
+                  "results.getJobComplete(): %s, isSchemaNull: %s , totalRows: %s, pageRows: %s",
+                  results.getJobComplete(), results.getSchema() == null, totalRows, pageRows));
       JobId jobId = JobId.fromPb(results.getJobReference());
       GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
       // We might get null schema from the backend occasionally. Ref:
       // https://github.com/googleapis/java-bigquery/issues/2103/. Using queryDryRun in such cases
       // to get the schema
       if (firstPage.getSchema() == null) { // get schema using dry run
+        // Log the status if the job was complete complete
+        logger.log(
+            Level.WARNING,
+            "\n"
+                + "Received null schema, Using dryRun the get the Schema. jobComplete:"
+                + firstPage.getJobComplete());
         com.google.api.services.bigquery.model.Job dryRunJob = createDryRunJob(sql);
         Schema schema = Schema.fromPb(dryRunJob.getStatistics().getQuery().getSchema());
         return getSubsequentQueryResultsWithJob(
