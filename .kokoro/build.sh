@@ -81,8 +81,8 @@ nightly-it)
     RETURN_CODE=$?
     ;;
 graalvm)
-    # Run Unit and Integration Tests with Native Image
-    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Penable-integration-tests test
+    # Run Unit and Integration Tests with Native Image. Skip Arrow tests until https://github.com/googleapis/java-bigquery/issues/2060 is fixed.
+    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Penable-integration-tests test "-Dtest=!com.google.cloud.bigquery.it.ITBigQueryTest#testBQResultSetPaginationSlowQuery+testReadAPIConnectionMultiClose+testReadAPIIterationAndOrder, !com.google.cloud.bigquery.it.ITNightlyBigQueryTest#testIterateAndOrder+testMultipleRuns+testIterateAndOrderDefaultConnSettings+testConnectionClose, IT*, *ClientTest"
     RETURN_CODE=$?
     ;;
 graalvm17)
