@@ -3656,6 +3656,28 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testGeographyParameter() throws Exception {
+    // Issues a simple ST_DISTANCE using two geopoints, one being a named geography parameter.
+    String query =
+        "SELECT ST_DISTANCE(ST_GEOGFROMTEXT(\"POINT(-122.335503 47.625536)\"), @geo) < 3000 as within3k";
+    QueryParameterValue geoParameterValue =
+        QueryParameterValue.geography("POINT(-122.3509153 47.6495389)");
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query)
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .setUseLegacySql(false)
+            .addNamedParameter("geo", geoParameterValue)
+            .build();
+    TableResult result = bigquery.query(config);
+    int rowCount = 0;
+    for (FieldValueList row : result.getValues()) {
+      rowCount++;
+      assertEquals(true, row.get(0).getBooleanValue());
+    }
+    assertEquals(1, rowCount);
+  }
+
+  @Test
   public void testListJobs() {
     Page<Job> jobs = bigquery.listJobs();
     for (Job job : jobs.getValues()) {
@@ -4349,6 +4371,32 @@ public class ITBigQueryTest {
     assertEquals(TABLE_SCHEMA, jobConfiguration.getSchema());
     assertEquals(LABELS, jobConfiguration.getLabels());
     assertNull(job.getStatus().getError());
+    assertTrue(bigquery.delete(tableId));
+  }
+
+  @Test
+  public void testInsertWithDecimalTargetTypes()
+      throws InterruptedException, IOException, TimeoutException {
+    String destinationTableName = "test_insert_from_file_table_with_decimal_target_type";
+    TableId tableId = TableId.of(DATASET, destinationTableName);
+    WriteChannelConfiguration configuration =
+        WriteChannelConfiguration.newBuilder(tableId)
+            .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
+            .setAutodetect(true)
+            .setDecimalTargetTypes(ImmutableList.of("STRING", "NUMERIC", "BIGNUMERIC"))
+            .build();
+    TableDataWriteChannel channel = bigquery.writer(configuration);
+    try {
+      channel.write(ByteBuffer.wrap("foo".getBytes(StandardCharsets.UTF_8)));
+    } finally {
+      channel.close();
+    }
+    Job job = channel.getJob().waitFor();
+    LoadJobConfiguration jobConfiguration = job.getConfiguration();
+    assertNull(job.getStatus().getError());
+    assertEquals(
+        ImmutableList.of("STRING", "NUMERIC", "BIGNUMERIC"),
+        jobConfiguration.getDecimalTargetTypes());
     assertTrue(bigquery.delete(tableId));
   }
 
