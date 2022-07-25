@@ -95,7 +95,7 @@ nightly-graalvm)
     RETURN_CODE=$?
     ;;
 nightly-graalvm17)
-    mvn -B ${INTEGRATION_TEST_ARGS} -ntp --Dtest=ITNightlyBigQueryTest -Pnative -Penable-integration-tests test
+    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Dtest=ITNightlyBigQueryTest -Pnative -Penable-integration-tests test
     RETURN_CODE=$?
     ;;
 samples)
