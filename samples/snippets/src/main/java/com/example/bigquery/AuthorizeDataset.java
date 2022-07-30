@@ -58,12 +58,12 @@ public class AuthorizeDataset {
           new Acl.DatasetAclEntity(userDatasetId, targetTypes);
       sourceDatasetAcl.add(Acl.of(userDatasetAclEntity));
 
-      // update the user dataset with source dataset's ACL
-      Dataset updatedUserDataset =
-          userDataset.toBuilder().setAcl(sourceDatasetAcl).build().update();
+      // update the source dataset with user dataset's ACL
+      Dataset updatedSourceDataset =
+          sourceDataset.toBuilder().setAcl(sourceDatasetAcl).build().update();
 
       System.out.printf(
-          "Dataset %s updated with the added authorization\n", updatedUserDataset.getDatasetId());
+          "Dataset %s updated with the added authorization\n", updatedSourceDataset.getDatasetId());
 
     } catch (BigQueryException e) {
       System.out.println("Dataset Authorization failed due to error: \n" + e);
