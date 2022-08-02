@@ -138,14 +138,14 @@
       <dependency>
         <groupId>org.threeten</groupId>
         <artifactId>threeten-extra</artifactId>
-        <version>1.7.0</version>
+        <version>1.7.1</version>
       </dependency>
 
       <!-- Used for Interval and Range types -->
       <dependency>
         <groupId>org.threeten</groupId>
         <artifactId>threeten-extra</artifactId>
-        <version>1.7.0</version>
+        <version>1.7.1</version>
       </dependency>
 
       <!-- Test dependencies -->
