@@ -38,7 +38,7 @@ public class AuthorizeDataset {
         DatasetId.of(projectId, sourceDatasetName), DatasetId.of(projectId, userDatasetName));
   }
 
-  // This method will update userDataset's ACL with sourceDataset's ACL
+  // This method will update sourceDataset's ACL with userDataset's ACL
   public static void authorizeDataset(DatasetId sourceDatasetId, DatasetId userDatasetId) {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
