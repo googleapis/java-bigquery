@@ -4,7 +4,7 @@
   <groupId>com.google.cloud</groupId>
   <artifactId>google-cloud-bigquery-parent</artifactId>
   <packaging>pom</packaging>
-  <version>2.14.2-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
+  <version>2.14.6</version><!-- {x-version-update:google-cloud-bigquery:current} -->
   <name>BigQuery Parent</name>
   <url>https://github.com/googleapis/java-bigquery</url>
   <description>
@@ -14,7 +14,7 @@
   <parent>
     <groupId>com.google.cloud</groupId>
     <artifactId>google-cloud-shared-config</artifactId>
-    <version>1.5.2</version>
+    <version>1.5.3</version>
   </parent>
 
   <developers>
@@ -53,9 +53,9 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <github.global.server>github</github.global.server>
     <site.installationModule>google-cloud-bigquery-parent</site.installationModule>
-    <google-api-services-bigquery.version>v2-rev20220611-1.32.1</google-api-services-bigquery.version>
-    <google.cloud.shared-dependencies.version>2.13.0</google.cloud.shared-dependencies.version>
-    <arrow.version>8.0.0</arrow.version>
+    <google-api-services-bigquery.version>v2-rev20220806-2.0.0</google-api-services-bigquery.version>
+    <google.cloud.shared-dependencies.version>3.0.1</google.cloud.shared-dependencies.version>
+    <arrow.version>9.0.0</arrow.version>
   </properties>
 
   <dependencyManagement>
@@ -72,7 +72,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-bigquerystorage-bom</artifactId>
-        <version>2.14.2</version>
+        <version>2.19.1</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -96,7 +96,7 @@
       <dependency>
          <groupId>com.google.cloud</groupId>
          <artifactId>google-cloud-datacatalog-bom</artifactId>
-         <version>1.8.4</version>
+         <version>1.9.2</version>
          <type>pom</type>
          <scope>import</scope>
        </dependency>
@@ -104,7 +104,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-datacatalog-bom</artifactId>
-        <version>1.8.4</version>
+        <version>1.9.2</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -118,7 +118,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-bigquery</artifactId>
-        <version>2.14.2-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
+        <version>2.14.6</version><!-- {x-version-update:google-cloud-bigquery:current} -->
       </dependency>
 
       <dependency>
@@ -131,21 +131,21 @@
       <dependency>
         <groupId>com.google.code.gson</groupId>
         <artifactId>gson</artifactId>
-        <version>2.9.0</version>
+        <version>2.9.1</version>
       </dependency>
 
       <!-- Used for Interval and Range types -->
       <dependency>
         <groupId>org.threeten</groupId>
         <artifactId>threeten-extra</artifactId>
-        <version>1.7.0</version>
+        <version>1.7.1</version>
       </dependency>
 
       <!-- Used for Interval and Range types -->
       <dependency>
         <groupId>org.threeten</groupId>
         <artifactId>threeten-extra</artifactId>
-        <version>1.7.0</version>
+        <version>1.7.1</version>
       </dependency>
 
       <!-- Test dependencies -->
@@ -176,7 +176,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-storage</artifactId>
-        <version>2.9.0</version>
+        <version>2.11.3</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
