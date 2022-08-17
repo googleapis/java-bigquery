@@ -308,7 +308,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     }
   }
 
-  private void handleExternalTableSchema(final com.google.api.services.bigquery.model.Table tablePb) {
+  private void handleExternalTableSchema(
+      final com.google.api.services.bigquery.model.Table tablePb) {
     // Set schema on the Table for permanent external table
     if (tablePb.getExternalDataConfiguration() != null) {
       tablePb.setSchema(tablePb.getExternalDataConfiguration().getSchema());
