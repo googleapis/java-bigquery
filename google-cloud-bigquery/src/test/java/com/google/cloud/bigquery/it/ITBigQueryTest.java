@@ -2009,9 +2009,6 @@ public class ITBigQueryTest {
     assertEquals(300_000L, totalRows);
   }
 
-  // BQML recently changed the validation behaviour of model update.
-  // Ignoring this test until a fix for the same is applied to BQ library.
-  @Ignore
   @Test
   public void testModelLifecycle() throws InterruptedException {
 

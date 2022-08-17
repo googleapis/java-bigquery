@@ -30,9 +30,6 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-// BQML recently changed the validation behaviour of model update.
-// Ignoring this test until a fix for the same is applied to BQ library.
-@Ignore
 public class UpdateModelDescriptionIT {
 
   private final Logger log = Logger.getLogger(this.getClass().getName());
