@@ -76,5 +76,4 @@ public class SetUserAgentTest {
     SetUserAgent.setUserAgent(PROJECT_ID, CUSTOM_USER_AGENT);
     assertThat(bout.toString()).contains("CUSTOM_USER_AGENT_");
   }
-
 }

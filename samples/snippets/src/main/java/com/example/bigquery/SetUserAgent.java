@@ -36,7 +36,8 @@ public class SetUserAgent {
     setUserAgent(PROJECT_ID, CUSTOM_USER_AGENT_VALUE);
   }
 
-  public static void setUserAgent(String projectId, String customUserAgentValue ) throws IOException {
+  public static void setUserAgent(String projectId, String customUserAgentValue)
+      throws IOException {
     GoogleCredentials googleCredentials = GoogleCredentials.getApplicationDefault();
 
     HeaderProvider headerProvider =
@@ -52,6 +53,5 @@ public class SetUserAgent {
 
     System.out.println(bigQuery.getOptions().getUserAgent());
   }
-
 }
 // [END bigquery_set_user_agent]
