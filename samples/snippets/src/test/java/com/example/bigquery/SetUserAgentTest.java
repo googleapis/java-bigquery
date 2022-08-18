@@ -33,7 +33,7 @@ import org.junit.Test;
 public class SetUserAgentTest {
 
   private final Logger log = Logger.getLogger(this.getClass().getName());
-  private String CUSTOM_USER_AGENT;
+  private String customUserAgentValue;
   private ByteArrayOutputStream bout;
   private PrintStream out;
   private PrintStream originalPrintStream;
@@ -55,7 +55,7 @@ public class SetUserAgentTest {
 
   @Before
   public void setUp() {
-    CUSTOM_USER_AGENT = "CUSTOM_USER_AGENT_" + UUID.randomUUID().toString().substring(0, 8);
+    customUserAgentValue = "CUSTOM_USER_AGENT_" + UUID.randomUUID().toString().substring(0, 8);
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
     originalPrintStream = System.out;
@@ -73,7 +73,7 @@ public class SetUserAgentTest {
 
   @Test
   public void setUserAgentTest() throws IOException {
-    SetUserAgent.setUserAgent(PROJECT_ID, CUSTOM_USER_AGENT);
+    SetUserAgent.setUserAgent(PROJECT_ID, customUserAgentValue);
     assertThat(bout.toString()).contains("CUSTOM_USER_AGENT_");
   }
 }

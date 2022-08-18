@@ -31,18 +31,22 @@ public class SetUserAgent {
 
   public static void main(String[] args) throws IOException {
     // TODO(developer): Replace these variables before running the sample.
-    String PROJECT_ID = "my-project-id";
-    String CUSTOM_USER_AGENT_VALUE = "my-custom-user-agent-value";
-    setUserAgent(PROJECT_ID, CUSTOM_USER_AGENT_VALUE);
+    String projectId = "my-project-id";
+    String customUserAgentValue = "my-custom-user-agent-value";
+    setUserAgent(projectId, customUserAgentValue);
   }
 
   public static void setUserAgent(String projectId, String customUserAgentValue)
       throws IOException {
+    // Setup the credentials
     GoogleCredentials googleCredentials = GoogleCredentials.getApplicationDefault();
 
+    // Initialize the HeaderProvider object with custom user agent value
     HeaderProvider headerProvider =
         FixedHeaderProvider.create(ImmutableMap.of(USER_AGENT_HEADER, customUserAgentValue));
 
+    // Initialize client that will be used to send requests. This client only needs to be created
+    // once, and can be reused for multiple requests.
     BigQuery bigQuery =
         BigQueryOptions.newBuilder()
             .setProjectId(projectId)
