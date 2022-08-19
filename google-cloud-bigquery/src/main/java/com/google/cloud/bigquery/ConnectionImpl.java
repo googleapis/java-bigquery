@@ -95,14 +95,6 @@ class ConnectionImpl implements Connection {
   private BlockingQueue<BigQueryResultImpl.Row>
       bufferRow; // initialized lazily iff we end up using Read API
 
-  // retry config to retry on table not found errors. Ref: b/241134681
-  private static final BigQueryRetryConfig TABLE_NOT_FOUND_RETRY_CONFIG =
-      BigQueryRetryConfig.newBuilder()
-          .retryOnMessage("Not found")
-          .retryOnMessage("NOT_FOUND")
-          .retryOnRegEx(".*not.*found.*table.*")
-          .build();
-
   // retry setting to retry on table not found errors. Settings uses a max timeout of 20 mins which
   // could be useful for really long running jobs. Ref: b/241134681
   private static RetrySettings getTableNotFoundRetrySettings() {
@@ -865,16 +857,7 @@ class ConnectionImpl implements Connection {
               .setMaxStreamCount(1) // Currently just one stream is allowed
           // DO a regex check using order by and use multiple streams
           ;
-      // Using exponential-back-off to create read session to avoid table-not-found error. Ref:
-      // b/241134681 . This approach is a short term approach and should later be replaced with a
-      // job status poll based solution to make it more deterministic.
-      ReadSession readSession =
-          BigQueryRetryHelper.runWithRetries(
-              () -> bqReadClient.createReadSession(builder.build()),
-              getTableNotFoundRetrySettings(),
-              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
-              bigQueryOptions.getClock(),
-              TABLE_NOT_FOUND_RETRY_CONFIG);
+      ReadSession readSession = bqReadClient.createReadSession(builder.build());
 
       bufferRow = new LinkedBlockingDeque<>(getBufferSize());
       Map<String, Integer> arrowNameToIndex = new HashMap<>();
@@ -1034,33 +1017,63 @@ class ConnectionImpl implements Connection {
                 jobId.getLocation() == null && bigQueryOptions.getLocation() != null
                     ? bigQueryOptions.getLocation()
                     : jobId.getLocation());
-    try {
-      GetQueryResultsResponse results =
-          BigQueryRetryHelper.runWithRetries(
-              () ->
-                  bigQueryRpc.getQueryResultsWithRowLimit(
-                      completeJobId.getProject(),
-                      completeJobId.getJob(),
-                      completeJobId.getLocation(),
-                      connectionSettings.getMaxResultPerPage()),
-              bigQueryOptions.getRetrySettings(),
-              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
-              bigQueryOptions.getClock(),
-              retryConfig);
 
-      if (results.getErrors() != null) {
-        List<BigQueryError> bigQueryErrors =
-            results.getErrors().stream()
-                .map(BigQueryError.FROM_PB_FUNCTION)
-                .collect(Collectors.toList());
-        // Throwing BigQueryException since there may be no JobId and we want to stay consistent
-        // with the case where there there is a HTTP error
-        throw new BigQueryException(bigQueryErrors);
+    // Implementing logic to poll the Job's status using getQueryResults as
+    // we do not get rows, rows count and schema unless the job is complete
+    // Ref: b/241134681
+    // This logic will wait for approx (poolingIntervalMs + 10 seconds which is the default timeout
+    // for getQueryResults) per iteration of the loop
+    long startTimeMs = System.currentTimeMillis();
+    long totalTimeOutMs = 18 * 60 * 60 * 1000; // 18 hours, which is the max timeout for the job
+    long poolingIntervalMs = 60000; // 1 min
+    GetQueryResultsResponse results = null;
+
+    while ((System.currentTimeMillis() - startTimeMs) <= totalTimeOutMs) {
+      try {
+        results =
+            BigQueryRetryHelper.runWithRetries(
+                () ->
+                    bigQueryRpc.getQueryResultsWithRowLimit(
+                        completeJobId.getProject(),
+                        completeJobId.getJob(),
+                        completeJobId.getLocation(),
+                        connectionSettings.getMaxResultPerPage()),
+                bigQueryOptions.getRetrySettings(),
+                BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
+                bigQueryOptions.getClock(),
+                retryConfig);
+
+        if (results.getErrors() != null) {
+          List<BigQueryError> bigQueryErrors =
+              results.getErrors().stream()
+                  .map(BigQueryError.FROM_PB_FUNCTION)
+                  .collect(Collectors.toList());
+          // Throwing BigQueryException since there may be no JobId and we want to stay consistent
+          // with the case where there  is a HTTP error
+          throw new BigQueryException(bigQueryErrors);
+        }
+      } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
+        throw BigQueryException.translateAndThrow(e);
       }
-      return results;
-    } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
-      throw BigQueryException.translateAndThrow(e);
+
+      if (results.getJobComplete()) {
+        break; // The job is complete
+
+      } else { // wait for the defined poolingIntervalMs and the loop will retry
+        try {
+          Thread.sleep(poolingIntervalMs);
+          logger.log(Level.FINE, "Pooling getQueryResults");
+        } catch (InterruptedException e) {
+          logger.log(
+              Level.FINE,
+              String.format(
+                  "\n Interrupted while waiting @ getQueryResultsFirstPage with error %s",
+                  e.getMessage()));
+        }
+      }
     }
+
+    return results;
   }
 
   @VisibleForTesting
