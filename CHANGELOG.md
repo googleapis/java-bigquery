@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.14.6](https://github.com/googleapis/java-bigquery/compare/v2.14.5...v2.14.6) (2022-08-12)
+
+
+### Dependencies
+
+* update dependency com.google.cloud:google-cloud-datacatalog-bom to v1.9.2 ([#2221](https://github.com/googleapis/java-bigquery/issues/2221)) ([3292cdd](https://github.com/googleapis/java-bigquery/commit/3292cddeec7c83fa198a96d80a35c13b003a26c8))
+
+## [2.14.5](https://github.com/googleapis/java-bigquery/compare/v2.14.4...v2.14.5) (2022-08-12)
+
+
+### Dependencies
+
+* update dependency com.google.apis:google-api-services-bigquery to v2-rev20220806-2.0.0 ([#2223](https://github.com/googleapis/java-bigquery/issues/2223)) ([05d1de1](https://github.com/googleapis/java-bigquery/commit/05d1de19488c45ceb202824d9ce2ae0fd290d930))
+
 ## [2.14.4](https://github.com/googleapis/java-bigquery/compare/v2.14.3...v2.14.4) (2022-08-08)
 
 
