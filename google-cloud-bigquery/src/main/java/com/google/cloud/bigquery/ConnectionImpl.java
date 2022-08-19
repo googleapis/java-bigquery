@@ -21,7 +21,6 @@ import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
 import com.google.api.core.BetaApi;
 import com.google.api.core.InternalApi;
-import com.google.api.gax.retrying.RetrySettings;
 import com.google.api.services.bigquery.model.GetQueryResultsResponse;
 import com.google.api.services.bigquery.model.JobConfigurationQuery;
 import com.google.api.services.bigquery.model.QueryParameter;
@@ -74,7 +73,6 @@ import org.apache.arrow.vector.ipc.ReadChannel;
 import org.apache.arrow.vector.ipc.message.MessageSerializer;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.util.ByteArrayReadableSeekableByteChannel;
-import org.threeten.bp.Duration;
 
 /** Implementation for {@link Connection}, the generic BigQuery connection API (not JDBC). */
 class ConnectionImpl implements Connection {
@@ -94,26 +92,6 @@ class ConnectionImpl implements Connection {
       bufferFvl; // initialized lazily iff we end up using the tabledata.list end point
   private BlockingQueue<BigQueryResultImpl.Row>
       bufferRow; // initialized lazily iff we end up using Read API
-
-  // retry setting to retry on table not found errors. Settings uses a max timeout of 20 mins which
-  // could be useful for really long running jobs. Ref: b/241134681
-  private static RetrySettings getTableNotFoundRetrySettings() {
-    double retryDelayMultiplier = 2.0;
-    int maxAttempts = 45;
-    long initialRetryDelay = 5000L;
-    long maxRetryDelay = 30000L; // 30secs
-    long totalTimeOut = 1200000L; // 20min
-    return RetrySettings.newBuilder()
-        .setMaxAttempts(maxAttempts)
-        .setMaxRetryDelay(Duration.ofMillis(maxRetryDelay))
-        .setTotalTimeout(Duration.ofMillis(totalTimeOut))
-        .setInitialRetryDelay(Duration.ofMillis(initialRetryDelay))
-        .setRetryDelayMultiplier(retryDelayMultiplier)
-        .setInitialRpcTimeout(Duration.ofMillis(totalTimeOut))
-        .setRpcTimeoutMultiplier(retryDelayMultiplier)
-        .setMaxRpcTimeout(Duration.ofMillis(totalTimeOut))
-        .build();
-  }
 
   ConnectionImpl(
       ConnectionSettings connectionSettings,
