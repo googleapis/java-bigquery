@@ -488,10 +488,11 @@ public class ITNightlyBigQueryTest {
   }
 
   @Test
-  // This testcase reads 500k rows for a public table to make sure we do not get
-  // table-not-found exception. Ref: b/241134681
+  // This testcase reads rows in bulk for a public table to make sure we do not get
+  // table-not-found exception. Ref: b/241134681 . This exception has been seen while reading data
+  // in bulk
   public void testForTableNotFound() throws SQLException {
-    int recordCnt = 500000; // 500k
+    int recordCnt = 50000000; // 5Mil
     String query =
         String.format(
             "SELECT * FROM `bigquery-samples.wikipedia_benchmark.Wiki10B` LIMIT %s", recordCnt);
