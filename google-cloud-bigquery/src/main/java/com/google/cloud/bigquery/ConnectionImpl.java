@@ -999,14 +999,14 @@ class ConnectionImpl implements Connection {
     // Implementing logic to poll the Job's status using getQueryResults as
     // we do not get rows, rows count and schema unless the job is complete
     // Ref: b/241134681
-    // This logic will wait for approx (poolingIntervalMs + 10 seconds which is the default timeout
-    // for getQueryResults) per iteration of the loop
-    long startTimeMs = System.currentTimeMillis();
-    long totalTimeOutMs = 18 * 60 * 60 * 1000; // 18 hours, which is the max timeout for the job
-    long poolingIntervalMs = 60000; // 1 min
+    // This logic relies on backend for poll and wait.BigQuery guarantees that jobs make forward
+    // progress (a job won't get stuck in pending forever).
+    boolean jobComplete = false;
     GetQueryResultsResponse results = null;
+    long timeoutMs =
+        60000; // defaulting to 60seconds. TODO(prashant): It should be made user configurable
 
-    while ((System.currentTimeMillis() - startTimeMs) <= totalTimeOutMs) {
+    while (!jobComplete) {
       try {
         results =
             BigQueryRetryHelper.runWithRetries(
@@ -1015,7 +1015,8 @@ class ConnectionImpl implements Connection {
                         completeJobId.getProject(),
                         completeJobId.getJob(),
                         completeJobId.getLocation(),
-                        connectionSettings.getMaxResultPerPage()),
+                        connectionSettings.getMaxResultPerPage(),
+                        timeoutMs),
                 bigQueryOptions.getRetrySettings(),
                 BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
                 bigQueryOptions.getClock(),
@@ -1026,29 +1027,22 @@ class ConnectionImpl implements Connection {
               results.getErrors().stream()
                   .map(BigQueryError.FROM_PB_FUNCTION)
                   .collect(Collectors.toList());
-          // Throwing BigQueryException since there may be no JobId and we want to stay consistent
+          // Throwing BigQueryException since there may be no JobId, and we want to stay consistent
           // with the case where there  is a HTTP error
           throw new BigQueryException(bigQueryErrors);
         }
       } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
         throw BigQueryException.translateAndThrow(e);
       }
+      jobComplete = results.getJobComplete();
 
-      if (results.getJobComplete()) {
-        break; // The job is complete
-
-      } else { // wait for the defined poolingIntervalMs and the loop will retry
-        try {
-          Thread.sleep(poolingIntervalMs);
-          logger.log(Level.FINE, "Pooling getQueryResults");
-        } catch (InterruptedException e) {
-          logger.log(
-              Level.FINE,
-              String.format(
-                  "\n Interrupted while waiting @ getQueryResultsFirstPage with error %s",
-                  e.getMessage()));
-        }
-      }
+      // This log msg at Level.FINE might indicate that the job is still running and not stuck for
+      // very long running jobs.
+      logger.log(
+          Level.FINE,
+          String.format(
+              "jobComplete: %s , Polling getQueryResults with timeoutMs: %s",
+              jobComplete, timeoutMs));
     }
 
     return results;
