@@ -18,7 +18,6 @@ package com.google.cloud.bigquery;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.cloud.bigquery.Field.Mode;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -40,7 +39,8 @@ public class FieldTest {
   private static final String FIELD_DESCRIPTION1 = "FieldDescription1";
   private static final String FIELD_DESCRIPTION2 = "FieldDescription2";
   private static final String FIELD_DESCRIPTION3 = "FieldDescription3";
-  private static final String FIELD_DEFAULT_VALUE_EXPRESSION1 = "This is default value for this field";
+  private static final String FIELD_DEFAULT_VALUE_EXPRESSION1 =
+      "This is default value for this field";
   private static final Field FIELD_SCHEMA1 =
       Field.newBuilder(FIELD_NAME1, FIELD_TYPE1)
           .setMode(FIELD_MODE1)

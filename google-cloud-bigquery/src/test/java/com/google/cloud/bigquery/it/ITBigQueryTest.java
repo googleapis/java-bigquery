@@ -37,7 +37,6 @@ import com.google.cloud.Policy;
 import com.google.cloud.RetryOption;
 import com.google.cloud.Role;
 import com.google.cloud.ServiceOptions;
-import com.google.cloud.Timestamp;
 import com.google.cloud.bigquery.Acl;
 import com.google.cloud.bigquery.Acl.DatasetAclEntity;
 import com.google.cloud.bigquery.BigQuery;
@@ -778,7 +777,7 @@ public class ITBigQueryTest {
   @AfterClass
   public static void afterClass() throws ExecutionException, InterruptedException {
     if (bigquery != null) {
-     // RemoteBigQueryHelper.forceDelete(bigquery, DATASET);
+      // RemoteBigQueryHelper.forceDelete(bigquery, DATASET);
       RemoteBigQueryHelper.forceDelete(bigquery, MODEL_DATASET);
       RemoteBigQueryHelper.forceDelete(bigquery, ROUTINE_DATASET);
     }
@@ -1179,7 +1178,6 @@ public class ITBigQueryTest {
     bigquery.delete(tableId);
   }
 
-
   @Test
   public void testCreateTableWithDefaultValueExpression() {
     String tableName = "test_create_table_with_default_value_expression";
@@ -1198,10 +1196,7 @@ public class ITBigQueryTest {
             .setDefaultValueExpression("CURRENT_TIMESTAMP")
             .build();
     Schema schema =
-        Schema.of(
-            stringFieldWithDefaultValueExpression,
-            timestampFieldWithDefaultValueExpression
-            );
+        Schema.of(stringFieldWithDefaultValueExpression, timestampFieldWithDefaultValueExpression);
     StandardTableDefinition tableDefinition =
         StandardTableDefinition.newBuilder().setSchema(schema).build();
 
@@ -1215,11 +1210,11 @@ public class ITBigQueryTest {
     Schema remoteSchema = remoteTable.<StandardTableDefinition>getDefinition().getSchema();
     assertEquals(schema, remoteSchema);
     FieldList fieldList = remoteSchema.getFields();
-    for(Field field : fieldList){
-      if(field.getName().equals("timestampFieldWithDefaultValueExpression")){
+    for (Field field : fieldList) {
+      if (field.getName().equals("timestampFieldWithDefaultValueExpression")) {
         assertEquals("CURRENT_TIMESTAMP", field.getDefaultValueExpression());
       }
-      if(field.getName().equals("stringFieldWithDefaultValueExpression")){
+      if (field.getName().equals("stringFieldWithDefaultValueExpression")) {
         assertEquals("'FOO'", field.getDefaultValueExpression());
       }
     }
@@ -1236,7 +1231,6 @@ public class ITBigQueryTest {
     rows.add(RowToInsert.of(rowId1, row1));
     rows.add(RowToInsert.of(rowId2, row2));
     InsertAllResponse response1 = remoteTable.insert(rows);
-
 
     TableResult tableData = bigquery.listTableData(DATASET, tableName, schema);
     String insertedField = "stringFieldWithDefaultValueExpression";

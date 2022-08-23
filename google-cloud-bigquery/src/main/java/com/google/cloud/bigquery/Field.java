@@ -249,26 +249,18 @@ public final class Field implements Serializable {
     }
 
     /**
-     * DefaultValueExpression is used to specify the default value of a field
-     * using a SQL expression.  It can only be set for top level fields (columns).
+     * DefaultValueExpression is used to specify the default value of a field using a SQL
+     * expression. It can only be set for top level fields (columns).
      *
-     * You can use struct or array expression to specify default value for the
-     * entire struct or array. The valid SQL expressions are:
+     * <p>You can use struct or array expression to specify default value for the entire struct or
+     * array. The valid SQL expressions are:
      *
-     * - Literals for all data types, including STRUCT and ARRAY.
-     * - The following functions:
-     * - CURRENT_TIMESTAMP
-     * - CURRENT_TIME
-     * - CURRENT_DATE
-     * - CURRENT_DATETIME
-     * - GENERATE_UUID
-     * - RAND
-     * - SESSION_USER
-     * - ST_GEOGPOINT
-     * - Struct or array composed with the above allowed functions, for example:
-     *     [CURRENT_DATE(), DATE '2020-01-01']"
+     * <p>- Literals for all data types, including STRUCT and ARRAY. - The following functions: -
+     * CURRENT_TIMESTAMP - CURRENT_TIME - CURRENT_DATE - CURRENT_DATETIME - GENERATE_UUID - RAND -
+     * SESSION_USER - ST_GEOGPOINT - Struct or array composed with the above allowed functions, for
+     * example: [CURRENT_DATE(), DATE '2020-01-01']"
      */
-    public Builder setDefaultValueExpression(String defaultValueExpression){
+    public Builder setDefaultValueExpression(String defaultValueExpression) {
       this.defaultValueExpression = defaultValueExpression;
       return this;
     }
@@ -341,7 +333,9 @@ public final class Field implements Serializable {
   }
 
   /** Return the default value of the field. */
-  public String getDefaultValueExpression(){ return defaultValueExpression; }
+  public String getDefaultValueExpression() {
+    return defaultValueExpression;
+  }
 
   /**
    * Returns the list of sub-fields if {@link #getType()} is a {@link LegacySQLTypeName#RECORD}.
