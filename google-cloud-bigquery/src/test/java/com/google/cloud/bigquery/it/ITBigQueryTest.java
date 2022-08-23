@@ -777,7 +777,7 @@ public class ITBigQueryTest {
   @AfterClass
   public static void afterClass() throws ExecutionException, InterruptedException {
     if (bigquery != null) {
-      // RemoteBigQueryHelper.forceDelete(bigquery, DATASET);
+      RemoteBigQueryHelper.forceDelete(bigquery, DATASET);
       RemoteBigQueryHelper.forceDelete(bigquery, MODEL_DATASET);
       RemoteBigQueryHelper.forceDelete(bigquery, ROUTINE_DATASET);
     }
