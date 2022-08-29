@@ -134,7 +134,7 @@ public final class CsvOptions extends FormatOptions {
     }
 
     /**
-     * Sets whether BigQuery should allow ascii control characters in a CSV file. By default ascii
+     * Sets whether BigQuery should allow ASCII control characters in a CSV file. By default ASCII
      * control characters are not allowed.
      */
     public Builder setPreserveAsciiControlCharacters(boolean preserveAsciiControlCharacters) {
