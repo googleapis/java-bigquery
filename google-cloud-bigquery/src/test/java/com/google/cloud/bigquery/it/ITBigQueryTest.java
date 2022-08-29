@@ -4451,15 +4451,17 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testPreserveAsciiControlCharacters() throws InterruptedException, IOException, TimeoutException {
+  public void testPreserveAsciiControlCharacters()
+      throws InterruptedException, IOException, TimeoutException {
     String destinationTableName = "test_preserve_ascii_control_characters";
     TableId tableId = TableId.of(DATASET, destinationTableName);
     WriteChannelConfiguration configuration =
-            WriteChannelConfiguration.newBuilder(tableId)
-                    .setFormatOptions(FormatOptions.csv().toBuilder().setPreserveAsciiControlCharacters(true).build())
-                    .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
-                    .setSchema(SIMPLE_SCHEMA)
-                    .build();
+        WriteChannelConfiguration.newBuilder(tableId)
+            .setFormatOptions(
+                FormatOptions.csv().toBuilder().setPreserveAsciiControlCharacters(true).build())
+            .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
+            .setSchema(SIMPLE_SCHEMA)
+            .build();
     TableDataWriteChannel channel = bigquery.writer(configuration);
     try {
       channel.write(ByteBuffer.wrap("\u0000".getBytes(StandardCharsets.UTF_8)));
