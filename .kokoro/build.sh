@@ -81,13 +81,21 @@ nightly-it)
     RETURN_CODE=$?
     ;;
 graalvm)
-    # Run Unit and Integration Tests with Native Image
-    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Penable-integration-tests test
+    # Run Integration Tests with Native Image. Skip running nightly tests in presubmits.
+    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Dtest=ITBigQueryTest -Pnative -Penable-integration-tests test
     RETURN_CODE=$?
     ;;
 graalvm17)
-    # Run Unit and Integration Tests with Native Image. Skip Arrow tests until https://github.com/googleapis/java-bigquery/issues/2060 is fixed.
-    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Penable-integration-tests test "-Dtest=!com.google.cloud.bigquery.it.ITBigQueryTest#testBQResultSetPaginationSlowQuery+testReadAPIConnectionMultiClose+testReadAPIIterationAndOrder, !com.google.cloud.bigquery.it.ITNightlyBigQueryTest#testIterateAndOrder+testMultipleRuns+testIterateAndOrderDefaultConnSettings, IT*, *ClientTest"
+    # Run Integration Tests with Native Image. Skip running nightly tests in presubmits.
+    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Dtest=ITBigQueryTest -Pnative -Penable-integration-tests test
+    RETURN_CODE=$?
+    ;;
+nightly-graalvm)
+    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Dtest=ITNightlyBigQueryTest -Pnative -Penable-integration-tests test
+    RETURN_CODE=$?
+    ;;
+nightly-graalvm17)
+    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Dtest=ITNightlyBigQueryTest -Pnative -Penable-integration-tests test
     RETURN_CODE=$?
     ;;
 samples)

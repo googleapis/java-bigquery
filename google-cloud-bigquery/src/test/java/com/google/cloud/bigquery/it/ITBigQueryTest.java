@@ -72,6 +72,7 @@ import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.FormatOptions;
 import com.google.cloud.bigquery.HivePartitioningOptions;
 import com.google.cloud.bigquery.InsertAllRequest;
+import com.google.cloud.bigquery.InsertAllRequest.RowToInsert;
 import com.google.cloud.bigquery.InsertAllResponse;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.JobId;
@@ -1173,6 +1174,68 @@ public class ITBigQueryTest {
     assertNotNull(createdTable);
     Table remoteTable = bigquery.getTable(DATASET, tableName);
     assertEquals(schema, remoteTable.<StandardTableDefinition>getDefinition().getSchema());
+    bigquery.delete(tableId);
+  }
+
+  @Test
+  public void testCreateTableWithDefaultValueExpression() {
+    String tableName = "test_create_table_with_default_value_expression";
+    TableId tableId = TableId.of(DATASET, tableName);
+    Field stringFieldWithDefaultValueExpression =
+        Field.newBuilder("stringFieldWithDefaultValueExpression", StandardSQLTypeName.STRING)
+            .setMode(Field.Mode.NULLABLE)
+            .setDescription("String field with default value expression")
+            .setDefaultValueExpression("'FOO'")
+            .setMaxLength(150L)
+            .build();
+    Field timestampFieldWithDefaultValueExpression =
+        Field.newBuilder("timestampFieldWithDefaultValueExpression", StandardSQLTypeName.TIMESTAMP)
+            .setMode(Field.Mode.NULLABLE)
+            .setDescription("Timestamp field with default value expression")
+            .setDefaultValueExpression("CURRENT_TIMESTAMP")
+            .build();
+    Schema schema =
+        Schema.of(stringFieldWithDefaultValueExpression, timestampFieldWithDefaultValueExpression);
+    StandardTableDefinition tableDefinition =
+        StandardTableDefinition.newBuilder().setSchema(schema).build();
+
+    // Create table with fields that have default value expression
+    Table createdTable = bigquery.create(TableInfo.of(tableId, tableDefinition));
+    assertNotNull(createdTable);
+
+    // Fetch the created table and its metadata
+    // to verify default value expression is assigned to fields
+    Table remoteTable = bigquery.getTable(DATASET, tableName);
+    Schema remoteSchema = remoteTable.<StandardTableDefinition>getDefinition().getSchema();
+    assertEquals(schema, remoteSchema);
+    FieldList fieldList = remoteSchema.getFields();
+    for (Field field : fieldList) {
+      if (field.getName().equals("timestampFieldWithDefaultValueExpression")) {
+        assertEquals("CURRENT_TIMESTAMP", field.getDefaultValueExpression());
+      }
+      if (field.getName().equals("stringFieldWithDefaultValueExpression")) {
+        assertEquals("'FOO'", field.getDefaultValueExpression());
+      }
+    }
+
+    // Insert value into the created table
+    // to verify default values are inserted when value is missing
+    String rowId1 = "rowId1";
+    String rowId2 = "rowId2";
+    List<RowToInsert> rows = new ArrayList<>();
+    Map<String, Object> row1 = new HashMap<>();
+    row1.put("timestampFieldWithDefaultValueExpression", "2022-08-22 00:45:12 UTC");
+    Map<String, Object> row2 = new HashMap<>();
+    row2.put("timestampFieldWithDefaultValueExpression", "2022-08-23 00:44:33 UTC");
+    rows.add(RowToInsert.of(rowId1, row1));
+    rows.add(RowToInsert.of(rowId2, row2));
+    InsertAllResponse response1 = remoteTable.insert(rows);
+
+    TableResult tableData = bigquery.listTableData(DATASET, tableName, schema);
+    String insertedField = "stringFieldWithDefaultValueExpression";
+    for (FieldValueList row : tableData.iterateAll()) {
+      assertEquals("FOO", row.get(insertedField).getValue());
+    }
     bigquery.delete(tableId);
   }
 
@@ -3656,6 +3719,28 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testGeographyParameter() throws Exception {
+    // Issues a simple ST_DISTANCE using two geopoints, one being a named geography parameter.
+    String query =
+        "SELECT ST_DISTANCE(ST_GEOGFROMTEXT(\"POINT(-122.335503 47.625536)\"), @geo) < 3000 as within3k";
+    QueryParameterValue geoParameterValue =
+        QueryParameterValue.geography("POINT(-122.3509153 47.6495389)");
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query)
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .setUseLegacySql(false)
+            .addNamedParameter("geo", geoParameterValue)
+            .build();
+    TableResult result = bigquery.query(config);
+    int rowCount = 0;
+    for (FieldValueList row : result.getValues()) {
+      rowCount++;
+      assertEquals(true, row.get(0).getBooleanValue());
+    }
+    assertEquals(1, rowCount);
+  }
+
+  @Test
   public void testListJobs() {
     Page<Job> jobs = bigquery.listJobs();
     for (Job job : jobs.getValues()) {
@@ -4349,6 +4434,32 @@ public class ITBigQueryTest {
     assertEquals(TABLE_SCHEMA, jobConfiguration.getSchema());
     assertEquals(LABELS, jobConfiguration.getLabels());
     assertNull(job.getStatus().getError());
+    assertTrue(bigquery.delete(tableId));
+  }
+
+  @Test
+  public void testInsertWithDecimalTargetTypes()
+      throws InterruptedException, IOException, TimeoutException {
+    String destinationTableName = "test_insert_from_file_table_with_decimal_target_type";
+    TableId tableId = TableId.of(DATASET, destinationTableName);
+    WriteChannelConfiguration configuration =
+        WriteChannelConfiguration.newBuilder(tableId)
+            .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
+            .setAutodetect(true)
+            .setDecimalTargetTypes(ImmutableList.of("STRING", "NUMERIC", "BIGNUMERIC"))
+            .build();
+    TableDataWriteChannel channel = bigquery.writer(configuration);
+    try {
+      channel.write(ByteBuffer.wrap("foo".getBytes(StandardCharsets.UTF_8)));
+    } finally {
+      channel.close();
+    }
+    Job job = channel.getJob().waitFor();
+    LoadJobConfiguration jobConfiguration = job.getConfiguration();
+    assertNull(job.getStatus().getError());
+    assertEquals(
+        ImmutableList.of("STRING", "NUMERIC", "BIGNUMERIC"),
+        jobConfiguration.getDecimalTargetTypes());
     assertTrue(bigquery.delete(tableId));
   }
 

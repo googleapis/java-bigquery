@@ -11,7 +11,7 @@ Java idiomatic client for [Cloud BigQuery][product-docs].
 
 ## Quickstart
 
-If you are using Maven with [BOM][libraries-bom], add this to your pom.xml file
+If you are using Maven with [BOM][libraries-bom], add this to your pom.xml file:
 
 ```xml
 <!--  Using libraries-bom to manage versions.
@@ -21,7 +21,7 @@ See https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>libraries-bom</artifactId>
-      <version>25.4.0</version>
+      <version>26.1.0</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>
@@ -44,25 +44,25 @@ If you are using Maven without BOM, add this to your dependencies:
 <dependency>
   <groupId>com.google.cloud</groupId>
   <artifactId>google-cloud-bigquery</artifactId>
-  <version>2.13.3</version>
+  <version>2.15.0</version>
 </dependency>
 
 ```
 
-If you are using Gradle 5.x or later, add this to your dependencies
+If you are using Gradle 5.x or later, add this to your dependencies:
 
 ```Groovy
 implementation platform('com.google.cloud:libraries-bom:26.1.0')
 
 implementation 'com.google.cloud:google-cloud-bigquery'
 ```
-If you are using Gradle without BOM, add this to your dependencies
+If you are using Gradle without BOM, add this to your dependencies:
 
 ```Groovy
 implementation 'com.google.cloud:google-cloud-bigquery:2.15.0'
 ```
 
-If you are using SBT, add this to your dependencies
+If you are using SBT, add this to your dependencies:
 
 ```Scala
 libraryDependencies += "com.google.cloud" % "google-cloud-bigquery" % "2.15.0"
@@ -225,6 +225,7 @@ Samples are in the [`samples/`](https://github.com/googleapis/java-bigquery/tree
 | Resource Clean Up | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/ResourceCleanUp.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/ResourceCleanUp.java) |
 | Run Legacy Query | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/RunLegacyQuery.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/RunLegacyQuery.java) |
 | Save Query To Table | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/SaveQueryToTable.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/SaveQueryToTable.java) |
+| Set User Agent | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/SetUserAgent.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/SetUserAgent.java) |
 | Simple App | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/SimpleApp.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/SimpleApp.java) |
 | Simple Query | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/SimpleQuery.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/SimpleQuery.java) |
 | Table Exists | [source code](https://github.com/googleapis/java-bigquery/blob/main/samples/snippets/src/main/java/com/example/bigquery/TableExists.java) | [![Open in Cloud Shell][shell_img]](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/googleapis/java-bigquery&page=editor&open_in_editor=samples/snippets/src/main/java/com/example/bigquery/TableExists.java) |

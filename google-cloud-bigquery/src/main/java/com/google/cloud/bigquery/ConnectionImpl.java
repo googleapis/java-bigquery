@@ -192,7 +192,7 @@ class ConnectionImpl implements Connection {
       if (isFastQuerySupported()) {
         String projectId = bigQueryOptions.getProjectId();
         QueryRequest queryRequest = createQueryRequest(connectionSettings, sql, null, null);
-        return queryRpc(projectId, queryRequest, false);
+        return queryRpc(projectId, queryRequest, sql, false);
       }
       // use jobs.insert otherwise
       com.google.api.services.bigquery.model.Job queryJob =
@@ -236,7 +236,7 @@ class ConnectionImpl implements Connection {
         final String projectId = bigQueryOptions.getProjectId();
         final QueryRequest queryRequest =
             createQueryRequest(connectionSettings, sql, parameters, labelMap);
-        return queryRpc(projectId, queryRequest, parameters != null);
+        return queryRpc(projectId, queryRequest, sql, parameters != null);
       }
       // use jobs.insert otherwise
       com.google.api.services.bigquery.model.Job queryJob =
@@ -289,7 +289,10 @@ class ConnectionImpl implements Connection {
   }
 
   private BigQueryResult queryRpc(
-      final String projectId, final QueryRequest queryRequest, Boolean hasQueryParameters) {
+      final String projectId,
+      final QueryRequest queryRequest,
+      String sql,
+      Boolean hasQueryParameters) {
     com.google.api.services.bigquery.model.QueryResponse results;
     try {
       results =
@@ -322,8 +325,29 @@ class ConnectionImpl implements Connection {
       // and can be optimized here, but this is left as future work.
       Long totalRows = results.getTotalRows() == null ? null : results.getTotalRows().longValue();
       Long pageRows = results.getRows() == null ? null : (long) (results.getRows().size());
+      logger.log(
+          Level.WARNING,
+          "\n"
+              + String.format(
+                  "results.getJobComplete(): %s, isSchemaNull: %s , totalRows: %s, pageRows: %s",
+                  results.getJobComplete(), results.getSchema() == null, totalRows, pageRows));
       JobId jobId = JobId.fromPb(results.getJobReference());
       GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
+      // We might get null schema from the backend occasionally. Ref:
+      // https://github.com/googleapis/java-bigquery/issues/2103/. Using queryDryRun in such cases
+      // to get the schema
+      if (firstPage.getSchema() == null) { // get schema using dry run
+        // Log the status if the job was complete complete
+        logger.log(
+            Level.WARNING,
+            "\n"
+                + "Received null schema, Using dryRun the get the Schema. jobComplete:"
+                + firstPage.getJobComplete());
+        com.google.api.services.bigquery.model.Job dryRunJob = createDryRunJob(sql);
+        Schema schema = Schema.fromPb(dryRunJob.getStatistics().getQuery().getSchema());
+        return getSubsequentQueryResultsWithJob(
+            totalRows, pageRows, jobId, firstPage, schema, hasQueryParameters);
+      }
       return getSubsequentQueryResultsWithJob(
           totalRows, pageRows, jobId, firstPage, hasQueryParameters);
     }
@@ -811,8 +835,8 @@ class ConnectionImpl implements Connection {
               .setMaxStreamCount(1) // Currently just one stream is allowed
           // DO a regex check using order by and use multiple streams
           ;
-
       ReadSession readSession = bqReadClient.createReadSession(builder.build());
+
       bufferRow = new LinkedBlockingDeque<>(getBufferSize());
       Map<String, Integer> arrowNameToIndex = new HashMap<>();
       // deserialize and populate the buffer async, so that the client isn't blocked
@@ -971,33 +995,57 @@ class ConnectionImpl implements Connection {
                 jobId.getLocation() == null && bigQueryOptions.getLocation() != null
                     ? bigQueryOptions.getLocation()
                     : jobId.getLocation());
-    try {
-      GetQueryResultsResponse results =
-          BigQueryRetryHelper.runWithRetries(
-              () ->
-                  bigQueryRpc.getQueryResultsWithRowLimit(
-                      completeJobId.getProject(),
-                      completeJobId.getJob(),
-                      completeJobId.getLocation(),
-                      connectionSettings.getMaxResultPerPage()),
-              bigQueryOptions.getRetrySettings(),
-              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
-              bigQueryOptions.getClock(),
-              retryConfig);
 
-      if (results.getErrors() != null) {
-        List<BigQueryError> bigQueryErrors =
-            results.getErrors().stream()
-                .map(BigQueryError.FROM_PB_FUNCTION)
-                .collect(Collectors.toList());
-        // Throwing BigQueryException since there may be no JobId and we want to stay consistent
-        // with the case where there there is a HTTP error
-        throw new BigQueryException(bigQueryErrors);
+    // Implementing logic to poll the Job's status using getQueryResults as
+    // we do not get rows, rows count and schema unless the job is complete
+    // Ref: b/241134681
+    // This logic relies on backend for poll and wait.BigQuery guarantees that jobs make forward
+    // progress (a job won't get stuck in pending forever).
+    boolean jobComplete = false;
+    GetQueryResultsResponse results = null;
+    long timeoutMs =
+        60000; // defaulting to 60seconds. TODO(prashant): It should be made user configurable
+
+    while (!jobComplete) {
+      try {
+        results =
+            BigQueryRetryHelper.runWithRetries(
+                () ->
+                    bigQueryRpc.getQueryResultsWithRowLimit(
+                        completeJobId.getProject(),
+                        completeJobId.getJob(),
+                        completeJobId.getLocation(),
+                        connectionSettings.getMaxResultPerPage(),
+                        timeoutMs),
+                bigQueryOptions.getRetrySettings(),
+                BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
+                bigQueryOptions.getClock(),
+                retryConfig);
+
+        if (results.getErrors() != null) {
+          List<BigQueryError> bigQueryErrors =
+              results.getErrors().stream()
+                  .map(BigQueryError.FROM_PB_FUNCTION)
+                  .collect(Collectors.toList());
+          // Throwing BigQueryException since there may be no JobId, and we want to stay consistent
+          // with the case where there  is a HTTP error
+          throw new BigQueryException(bigQueryErrors);
+        }
+      } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
+        throw BigQueryException.translateAndThrow(e);
       }
-      return results;
-    } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
-      throw BigQueryException.translateAndThrow(e);
+      jobComplete = results.getJobComplete();
+
+      // This log msg at Level.FINE might indicate that the job is still running and not stuck for
+      // very long running jobs.
+      logger.log(
+          Level.FINE,
+          String.format(
+              "jobComplete: %s , Polling getQueryResults with timeoutMs: %s",
+              jobComplete, timeoutMs));
     }
+
+    return results;
   }
 
   @VisibleForTesting
@@ -1243,7 +1291,8 @@ class ConnectionImpl implements Connection {
   }
 
   // Used by dryRun
-  private com.google.api.services.bigquery.model.Job createDryRunJob(String sql) {
+  @VisibleForTesting
+  com.google.api.services.bigquery.model.Job createDryRunJob(String sql) {
     com.google.api.services.bigquery.model.JobConfiguration configurationPb =
         new com.google.api.services.bigquery.model.JobConfiguration();
     configurationPb.setDryRun(true);

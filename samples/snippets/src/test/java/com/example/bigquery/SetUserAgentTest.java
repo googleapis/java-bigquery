@@ -19,10 +19,10 @@ package com.example.bigquery;
 import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertNotNull;
 
-import com.google.cloud.bigquery.DatasetId;
-import com.google.cloud.bigquery.testing.RemoteBigQueryHelper;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.After;
@@ -30,21 +30,22 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class AuthorizeDatasetIT {
+public class SetUserAgentTest {
+
   private final Logger log = Logger.getLogger(this.getClass().getName());
-  private String userDatasetName;
-  private String srcDatasetName;
+  private String customUserAgentValue;
   private ByteArrayOutputStream bout;
   private PrintStream out;
   private PrintStream originalPrintStream;
-  private static final String GOOGLE_CLOUD_PROJECT = System.getenv("GOOGLE_CLOUD_PROJECT");
-  private DatasetId sourceDatasetId;
-  private DatasetId userDatasetId;
 
-  private static void requireEnvVar(String varName) {
+  private static final String PROJECT_ID = requireEnvVar("GOOGLE_CLOUD_PROJECT");
+
+  private static String requireEnvVar(String varName) {
+    String value = System.getenv(varName);
     assertNotNull(
         "Environment variable " + varName + " is required to perform these tests.",
         System.getenv(varName));
+    return value;
   }
 
   @BeforeClass
@@ -54,23 +55,16 @@ public class AuthorizeDatasetIT {
 
   @Before
   public void setUp() {
-    userDatasetName = RemoteBigQueryHelper.generateDatasetName();
-    srcDatasetName = RemoteBigQueryHelper.generateDatasetName();
+    customUserAgentValue = "CUSTOM_USER_AGENT_" + UUID.randomUUID().toString().substring(0, 8);
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
     originalPrintStream = System.out;
     System.setOut(out);
-    CreateDataset.createDataset(userDatasetName);
-    CreateDataset.createDataset(srcDatasetName);
-    userDatasetId = DatasetId.of(GOOGLE_CLOUD_PROJECT, userDatasetName);
-    sourceDatasetId = DatasetId.of(GOOGLE_CLOUD_PROJECT, srcDatasetName);
   }
 
   @After
   public void tearDown() {
     // Clean up
-    DeleteDataset.deleteDataset(GOOGLE_CLOUD_PROJECT, userDatasetName);
-    DeleteDataset.deleteDataset(GOOGLE_CLOUD_PROJECT, srcDatasetName);
     // restores print statements in the original method
     System.out.flush();
     System.setOut(originalPrintStream);
@@ -78,8 +72,8 @@ public class AuthorizeDatasetIT {
   }
 
   @Test
-  public void testCreateDataset() {
-    AuthorizeDataset.authorizeDataset(sourceDatasetId, userDatasetId);
-    assertThat(bout.toString()).contains(sourceDatasetId + " updated with the added authorization");
+  public void setUserAgentTest() throws IOException {
+    SetUserAgent.setUserAgent(PROJECT_ID, customUserAgentValue);
+    assertThat(bout.toString()).contains("CUSTOM_USER_AGENT_");
   }
 }
