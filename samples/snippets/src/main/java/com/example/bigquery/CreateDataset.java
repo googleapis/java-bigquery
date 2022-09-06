@@ -28,16 +28,17 @@ public class CreateDataset {
   public static void main(String[] args) {
     // TODO(developer): Replace these variables before running the sample.
     String datasetName = "MY_DATASET_NAME";
-    createDataset(datasetName);
+    String location = "US";
+    createDataset(datasetName, location);
   }
 
-  public static void createDataset(String datasetName) {
+  public static void createDataset(String datasetName, String location) {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
-      DatasetInfo datasetInfo = DatasetInfo.newBuilder(datasetName).build();
+      DatasetInfo datasetInfo = DatasetInfo.newBuilder(datasetName).setLocation(location).build();
 
       Dataset newDataset = bigquery.create(datasetInfo);
       String newDatasetName = newDataset.getDatasetId().getDataset();
