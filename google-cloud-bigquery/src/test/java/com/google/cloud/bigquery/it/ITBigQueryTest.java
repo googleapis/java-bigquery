@@ -65,6 +65,7 @@ import com.google.cloud.bigquery.DatasetInfo;
 import com.google.cloud.bigquery.ExternalTableDefinition;
 import com.google.cloud.bigquery.ExtractJobConfiguration;
 import com.google.cloud.bigquery.Field;
+import com.google.cloud.bigquery.Field.Mode;
 import com.google.cloud.bigquery.FieldList;
 import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.FieldValue.Attribute;
@@ -4592,6 +4593,11 @@ public class ITBigQueryTest {
     try {
       String destinationTableName = "test_reference_file_schema_avro";
       TableId tableId = TableId.of(DATASET, destinationTableName);
+      Schema expectedSchema = Schema.of(
+          Field.newBuilder("username", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
+          Field.newBuilder("tweet", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
+          Field.newBuilder("timestamp", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
+          Field.newBuilder("likes", StandardSQLTypeName.INT64).setMode(Mode.NULLABLE).build());
 
       // By default, the table should have c-twitter schema because it is lexicographically last.
       // a-twitter schema (username, tweet, timestamp, likes)
@@ -4630,6 +4636,11 @@ public class ITBigQueryTest {
             "BigQuery job was unable to load into the table due to an error:"
                 + job.getStatus().getError());
       }
+
+      LoadJobConfiguration actualLoadJobConfiguration = job.getConfiguration();
+      Table generatedTable = bigquery.getTable(actualLoadJobConfiguration.getDestinationTable());
+
+      assertEquals(expectedSchema, generatedTable.getDefinition().getSchema());
     } catch (BigQueryException | InterruptedException e) {
       System.out.println("Column not added during load append \n" + e.toString());
     }
@@ -4640,6 +4651,11 @@ public class ITBigQueryTest {
     try {
       String destinationTableName = "test_reference_file_schema_parquet";
       TableId tableId = TableId.of(DATASET, destinationTableName);
+      Schema expectedSchema = Schema.of(
+          Field.newBuilder("username", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
+          Field.newBuilder("tweet", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
+          Field.newBuilder("timestamp", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
+          Field.newBuilder("likes", StandardSQLTypeName.INT64).setMode(Mode.NULLABLE).build());
 
       // By default, the table should have c-twitter schema because it is lexicographically last.
       // a-twitter schema (username, tweet, timestamp, likes)
@@ -4658,7 +4674,9 @@ public class ITBigQueryTest {
                   + "/bigquery/federated-formats-reference-file-schema/c-twitter.parquet");
 
       // Because referenceFileSchemaUri is set as a-twitter, the table will have a-twitter schema
-      String referenceFileSchema = "gs://avro-test-bucket/a-twitter.parquet";
+      String referenceFileSchema = "gs://"
+          + CLOUD_SAMPLES_DATA
+          + "/bigquery/federated-formats-reference-file-schema/a-twitter.parquet";
 
       LoadJobConfiguration loadJobConfiguration =
           LoadJobConfiguration.newBuilder(tableId, SOURCE_URIS, FormatOptions.parquet())
@@ -4675,6 +4693,10 @@ public class ITBigQueryTest {
             "BigQuery job was unable to load into the table due to an error:"
                 + job.getStatus().getError());
       }
+      LoadJobConfiguration actualLoadJobConfiguration = job.getConfiguration();
+      Table generatedTable = bigquery.getTable(actualLoadJobConfiguration.getDestinationTable());
+
+      assertEquals(expectedSchema, generatedTable.getDefinition().getSchema());
     } catch (BigQueryException | InterruptedException e) {
       System.out.println("Column not added during load append \n" + e.toString());
     }
