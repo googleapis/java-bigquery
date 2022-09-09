@@ -4593,11 +4593,16 @@ public class ITBigQueryTest {
     try {
       String destinationTableName = "test_reference_file_schema_avro";
       TableId tableId = TableId.of(DATASET, destinationTableName);
-      Schema expectedSchema = Schema.of(
-          Field.newBuilder("username", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
-          Field.newBuilder("tweet", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
-          Field.newBuilder("timestamp", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
-          Field.newBuilder("likes", StandardSQLTypeName.INT64).setMode(Mode.NULLABLE).build());
+      Schema expectedSchema =
+          Schema.of(
+              Field.newBuilder("username", StandardSQLTypeName.STRING)
+                  .setMode(Mode.NULLABLE)
+                  .build(),
+              Field.newBuilder("tweet", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
+              Field.newBuilder("timestamp", StandardSQLTypeName.STRING)
+                  .setMode(Mode.NULLABLE)
+                  .build(),
+              Field.newBuilder("likes", StandardSQLTypeName.INT64).setMode(Mode.NULLABLE).build());
 
       // By default, the table should have c-twitter schema because it is lexicographically last.
       // a-twitter schema (username, tweet, timestamp, likes)
@@ -4651,11 +4656,16 @@ public class ITBigQueryTest {
     try {
       String destinationTableName = "test_reference_file_schema_parquet";
       TableId tableId = TableId.of(DATASET, destinationTableName);
-      Schema expectedSchema = Schema.of(
-          Field.newBuilder("username", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
-          Field.newBuilder("tweet", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
-          Field.newBuilder("timestamp", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
-          Field.newBuilder("likes", StandardSQLTypeName.INT64).setMode(Mode.NULLABLE).build());
+      Schema expectedSchema =
+          Schema.of(
+              Field.newBuilder("username", StandardSQLTypeName.STRING)
+                  .setMode(Mode.NULLABLE)
+                  .build(),
+              Field.newBuilder("tweet", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
+              Field.newBuilder("timestamp", StandardSQLTypeName.STRING)
+                  .setMode(Mode.NULLABLE)
+                  .build(),
+              Field.newBuilder("likes", StandardSQLTypeName.INT64).setMode(Mode.NULLABLE).build());
 
       // By default, the table should have c-twitter schema because it is lexicographically last.
       // a-twitter schema (username, tweet, timestamp, likes)
@@ -4674,9 +4684,10 @@ public class ITBigQueryTest {
                   + "/bigquery/federated-formats-reference-file-schema/c-twitter.parquet");
 
       // Because referenceFileSchemaUri is set as a-twitter, the table will have a-twitter schema
-      String referenceFileSchema = "gs://"
-          + CLOUD_SAMPLES_DATA
-          + "/bigquery/federated-formats-reference-file-schema/a-twitter.parquet";
+      String referenceFileSchema =
+          "gs://"
+              + CLOUD_SAMPLES_DATA
+              + "/bigquery/federated-formats-reference-file-schema/a-twitter.parquet";
 
       LoadJobConfiguration loadJobConfiguration =
           LoadJobConfiguration.newBuilder(tableId, SOURCE_URIS, FormatOptions.parquet())
