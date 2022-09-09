@@ -4586,4 +4586,83 @@ public class ITBigQueryTest {
     assertEquals("\u0000", row.get(0).getStringValue());
     assertTrue(bigquery.delete(tableId));
   }
-}
+
+  @Test
+  public void testReferenceFileSchemaUriForAvro() {
+    try {
+      String destinationTableName = "test_reference_file_schema_avro";
+      TableId tableId = TableId.of(DATASET, destinationTableName);
+
+      // By default, the table should have c-twitter schema because it is lexicographically last.
+      // a-twitter schema (username, tweet, timestamp, likes)
+      // b-twitter schema (username, tweet, timestamp)
+      // c-twitter schema (username, tweet)
+      List<String> SOURCE_URIS = ImmutableList.of(
+          "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/federated-formats-reference-file-schema/a-twitter.avro",
+          "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/federated-formats-reference-file-schema/b-twitter.avro",
+          "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/federated-formats-reference-file-schema/c-twitter.avro");
+
+      // Because referenceFileSchemaUri is set as a-twitter, the table will have a-twitter schema
+      String referenceFileSchema = "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/federated-formats-reference-file-schema/a-twitter.avro";
+
+
+      LoadJobConfiguration loadJobConfiguration =
+          LoadJobConfiguration.newBuilder(tableId, SOURCE_URIS, FormatOptions.avro())
+              .setReferenceFileSchemaUri(referenceFileSchema).build();
+
+      Job job = bigquery.create(JobInfo.of(loadJobConfiguration));
+      // Blocks until this load table job completes its execution, either failing or succeeding.
+      job = job.waitFor();
+      if (job.isDone()) {
+        System.out.println("Avro data from GCS successfully loaded in a table");
+      } else {
+        System.out.println(
+            "BigQuery job was unable to load into the table due to an error:"
+                + job.getStatus().getError());
+      }
+    } catch (BigQueryException | InterruptedException e) {
+      System.out.println("Column not added during load append \n" + e.toString());
+    }
+
+  }
+
+  @Test
+  public void testReferenceFileSchemaUriForParquet() {
+    try {
+      String destinationTableName = "test_reference_file_schema_parquet";
+      TableId tableId = TableId.of(DATASET, destinationTableName);
+
+      // By default, the table should have c-twitter schema because it is lexicographically last.
+      // a-twitter schema (username, tweet, timestamp, likes)
+      // b-twitter schema (username, tweet, timestamp)
+      // c-twitter schema (username, tweet)
+      List<String> SOURCE_URIS = ImmutableList.of(
+          "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/federated-formats-reference-file-schema/a-twitter.parquet",
+          "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/federated-formats-reference-file-schema/b-twitter.parquet",
+          "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/federated-formats-reference-file-schema/c-twitter.parquet");
+
+      // Because referenceFileSchemaUri is set as a-twitter, the table will have a-twitter schema
+      String referenceFileSchema = "gs://avro-test-bucket/a-twitter.parquet";
+
+
+      LoadJobConfiguration loadJobConfiguration =
+          LoadJobConfiguration.newBuilder(tableId, SOURCE_URIS, FormatOptions.parquet())
+              .setReferenceFileSchemaUri(referenceFileSchema).build();
+
+      Job job = bigquery.create(JobInfo.of(loadJobConfiguration));
+      // Blocks until this load table job completes its execution, either failing or succeeding.
+      job = job.waitFor();
+      if (job.isDone()) {
+        System.out.println("Parquet data from GCS successfully loaded in a table");
+      } else {
+        System.out.println(
+            "BigQuery job was unable to load into the table due to an error:"
+                + job.getStatus().getError());
+      }
+    } catch (BigQueryException | InterruptedException e) {
+      System.out.println("Column not added during load append \n" + e.toString());
+    }
+
+  }
+
+  }

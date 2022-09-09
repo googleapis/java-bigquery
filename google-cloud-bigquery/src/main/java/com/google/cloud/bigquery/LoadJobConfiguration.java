@@ -56,6 +56,7 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
   private final Long jobTimeoutMs;
   private final RangePartitioning rangePartitioning;
   private final HivePartitioningOptions hivePartitioningOptions;
+  private final String referenceFileSchemaUri;
 
   public static final class Builder extends JobConfiguration.Builder<LoadJobConfiguration, Builder>
       implements LoadConfiguration.Builder {
@@ -81,6 +82,7 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
     private Long jobTimeoutMs;
     private RangePartitioning rangePartitioning;
     private HivePartitioningOptions hivePartitioningOptions;
+    private String referenceFileSchemaUri;
 
     private Builder() {
       super(Type.LOAD);
@@ -109,6 +111,7 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
       this.jobTimeoutMs = loadConfiguration.jobTimeoutMs;
       this.rangePartitioning = loadConfiguration.rangePartitioning;
       this.hivePartitioningOptions = loadConfiguration.hivePartitioningOptions;
+      this.referenceFileSchemaUri = loadConfiguration.referenceFileSchemaUri;
     }
 
     private Builder(com.google.api.services.bigquery.model.JobConfiguration configurationPb) {
@@ -199,6 +202,16 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
         this.hivePartitioningOptions =
             HivePartitioningOptions.fromPb(loadConfigurationPb.getHivePartitioningOptions());
       }
+      if(FormatOptions.AVRO.equals(loadConfigurationPb.getSourceFormat()) ||
+          FormatOptions.PARQUET.equals(loadConfigurationPb.getSourceFormat()) ||
+          FormatOptions.ORC.equals(loadConfigurationPb.getSourceFormat())) {
+
+        if (loadConfigurationPb.getReferenceFileSchemaUri() != null) {
+          this.referenceFileSchemaUri = loadConfigurationPb.getReferenceFileSchemaUri();
+
+        }
+      }
+
     }
 
     @Override
@@ -351,6 +364,17 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
       return this;
     }
 
+    /**
+     * When creating an external table, the user can provide a reference file
+     * with the table schema. This is enabled for the following formats: AVRO,
+     * PARQUET, ORC.
+     * @param referenceFileSchemaUri  or {@code null} for none
+     */
+    public Builder setReferenceFileSchemaUri(String referenceFileSchemaUri) {
+      this.referenceFileSchemaUri = referenceFileSchemaUri;
+      return this;
+    }
+
     @Override
     public LoadJobConfiguration build() {
       return new LoadJobConfiguration(this);
@@ -379,6 +403,7 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
     this.jobTimeoutMs = builder.jobTimeoutMs;
     this.rangePartitioning = builder.rangePartitioning;
     this.hivePartitioningOptions = builder.hivePartitioningOptions;
+    this.referenceFileSchemaUri = builder.referenceFileSchemaUri;
   }
 
   @Override
@@ -498,6 +523,10 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
     return hivePartitioningOptions;
   }
 
+  public String getReferenceFileSchemaUri() {
+    return referenceFileSchemaUri;
+  }
+
   @Override
   public Builder toBuilder() {
     return new Builder(this);
@@ -525,7 +554,8 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
         .add("labels", labels)
         .add("jobTimeoutMs", jobTimeoutMs)
         .add("rangePartitioning", rangePartitioning)
-        .add("hivePartitioningOptions", hivePartitioningOptions);
+        .add("hivePartitioningOptions", hivePartitioningOptions)
+        .add("referenceFileSchemaUri", referenceFileSchemaUri);
   }
 
   @Override
@@ -628,6 +658,14 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
     if (hivePartitioningOptions != null) {
       loadConfigurationPb.setHivePartitioningOptions(hivePartitioningOptions.toPb());
     }
+    if(FormatOptions.AVRO.equals(loadConfigurationPb.getSourceFormat()) ||
+        FormatOptions.PARQUET.equals(loadConfigurationPb.getSourceFormat()) ||
+        FormatOptions.ORC.equals(loadConfigurationPb.getSourceFormat())) {
+      if (referenceFileSchemaUri != null) {
+        loadConfigurationPb.setReferenceFileSchemaUri(referenceFileSchemaUri);
+      }
+    }
+
     jobConfiguration.setLoad(loadConfigurationPb);
     return jobConfiguration;
   }
