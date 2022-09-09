@@ -4714,21 +4714,25 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateExternalTableWithReferenceFileSchemaAvro(){
+  public void testCreateExternalTableWithReferenceFileSchemaAvro() {
     String destinationTableName = "test_create_external_table_reference_file_schema_avro";
     TableId tableId = TableId.of(DATASET, destinationTableName);
-    Schema expectedSchema = Schema.of(
-        Field.newBuilder("username", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
-        Field.newBuilder("tweet", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
-        Field.newBuilder("timestamp", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
-        Field.newBuilder("likes", StandardSQLTypeName.INT64).setMode(Mode.NULLABLE).build());
+    Schema expectedSchema =
+        Schema.of(
+            Field.newBuilder("username", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
+            Field.newBuilder("tweet", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
+            Field.newBuilder("timestamp", StandardSQLTypeName.STRING)
+                .setMode(Mode.NULLABLE)
+                .build(),
+            Field.newBuilder("likes", StandardSQLTypeName.INT64).setMode(Mode.NULLABLE).build());
     String CLOUD_SAMPLES_DATA = "cloud-samples-data";
 
     // By default, the table should have c-twitter schema because it is lexicographically last.
     // a-twitter schema (username, tweet, timestamp, likes)
     // b-twitter schema (username, tweet, timestamp)
     // c-twitter schema (username, tweet)
-    String SOURCE_URI = "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/federated-formats-reference-file-schema/*.avro";
+    String SOURCE_URI =
+        "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/federated-formats-reference-file-schema/*.avro";
 
     // Because referenceFileSchemaUri is set as a-twitter, the table will have a-twitter schema
     String referenceFileSchema =
@@ -4737,7 +4741,9 @@ public class ITBigQueryTest {
             + "/bigquery/federated-formats-reference-file-schema/a-twitter.avro";
 
     ExternalTableDefinition externalTableDefinition =
-        ExternalTableDefinition.newBuilder(SOURCE_URI, FormatOptions.avro()).setReferenceFileSchemaUri(referenceFileSchema).build();
+        ExternalTableDefinition.newBuilder(SOURCE_URI, FormatOptions.avro())
+            .setReferenceFileSchemaUri(referenceFileSchema)
+            .build();
     TableInfo tableInfo = TableInfo.of(tableId, externalTableDefinition);
     Table createdTable = bigquery.create(tableInfo);
     Table generatedTable = bigquery.getTable(createdTable.getTableId());
@@ -4745,21 +4751,27 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateExternalTableWithReferenceFileSchemaParquet(){
+  public void testCreateExternalTableWithReferenceFileSchemaParquet() {
     String destinationTableName = "test_create_external_table_reference_file_schema_parquet";
     TableId tableId = TableId.of(DATASET, destinationTableName);
-    Schema expectedSchema = Schema.of(
-        Field.newBuilder("username", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
-        Field.newBuilder("tweet", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
-        Field.newBuilder("timestamp", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
-        Field.newBuilder("likes", StandardSQLTypeName.INT64).setMode(Mode.NULLABLE).build());
+    Schema expectedSchema =
+        Schema.of(
+            Field.newBuilder("username", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
+            Field.newBuilder("tweet", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
+            Field.newBuilder("timestamp", StandardSQLTypeName.STRING)
+                .setMode(Mode.NULLABLE)
+                .build(),
+            Field.newBuilder("likes", StandardSQLTypeName.INT64).setMode(Mode.NULLABLE).build());
     String CLOUD_SAMPLES_DATA = "cloud-samples-data";
 
     // By default, the table should have c-twitter schema because it is lexicographically last.
     // a-twitter schema (username, tweet, timestamp, likes)
     // b-twitter schema (username, tweet, timestamp)
     // c-twitter schema (username, tweet)
-    String SOURCE_URI = "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/federated-formats-reference-file-schema/*.parquet";
+    String SOURCE_URI =
+        "gs://"
+            + CLOUD_SAMPLES_DATA
+            + "/bigquery/federated-formats-reference-file-schema/*.parquet";
 
     // Because referenceFileSchemaUri is set as a-twitter, the table will have a-twitter schema
     String referenceFileSchema =
@@ -4768,7 +4780,9 @@ public class ITBigQueryTest {
             + "/bigquery/federated-formats-reference-file-schema/a-twitter.parquet";
 
     ExternalTableDefinition externalTableDefinition =
-        ExternalTableDefinition.newBuilder(SOURCE_URI, FormatOptions.parquet()).setReferenceFileSchemaUri(referenceFileSchema).build();
+        ExternalTableDefinition.newBuilder(SOURCE_URI, FormatOptions.parquet())
+            .setReferenceFileSchemaUri(referenceFileSchema)
+            .build();
     TableInfo tableInfo = TableInfo.of(tableId, externalTableDefinition);
     Table createdTable = bigquery.create(tableInfo);
     Table generatedTable = bigquery.getTable(createdTable.getTableId());
