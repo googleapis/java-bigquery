@@ -202,16 +202,14 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
         this.hivePartitioningOptions =
             HivePartitioningOptions.fromPb(loadConfigurationPb.getHivePartitioningOptions());
       }
-      if(FormatOptions.AVRO.equals(loadConfigurationPb.getSourceFormat()) ||
-          FormatOptions.PARQUET.equals(loadConfigurationPb.getSourceFormat()) ||
-          FormatOptions.ORC.equals(loadConfigurationPb.getSourceFormat())) {
+      if (FormatOptions.AVRO.equals(loadConfigurationPb.getSourceFormat())
+          || FormatOptions.PARQUET.equals(loadConfigurationPb.getSourceFormat())
+          || FormatOptions.ORC.equals(loadConfigurationPb.getSourceFormat())) {
 
         if (loadConfigurationPb.getReferenceFileSchemaUri() != null) {
           this.referenceFileSchemaUri = loadConfigurationPb.getReferenceFileSchemaUri();
-
         }
       }
-
     }
 
     @Override
@@ -365,10 +363,10 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
     }
 
     /**
-     * When creating an external table, the user can provide a reference file
-     * with the table schema. This is enabled for the following formats: AVRO,
-     * PARQUET, ORC.
-     * @param referenceFileSchemaUri  or {@code null} for none
+     * When creating an external table, the user can provide a reference file with the table schema.
+     * This is enabled for the following formats: AVRO, PARQUET, ORC.
+     *
+     * @param referenceFileSchemaUri or {@code null} for none
      */
     public Builder setReferenceFileSchemaUri(String referenceFileSchemaUri) {
       this.referenceFileSchemaUri = referenceFileSchemaUri;
@@ -658,9 +656,9 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
     if (hivePartitioningOptions != null) {
       loadConfigurationPb.setHivePartitioningOptions(hivePartitioningOptions.toPb());
     }
-    if(FormatOptions.AVRO.equals(loadConfigurationPb.getSourceFormat()) ||
-        FormatOptions.PARQUET.equals(loadConfigurationPb.getSourceFormat()) ||
-        FormatOptions.ORC.equals(loadConfigurationPb.getSourceFormat())) {
+    if (FormatOptions.AVRO.equals(loadConfigurationPb.getSourceFormat())
+        || FormatOptions.PARQUET.equals(loadConfigurationPb.getSourceFormat())
+        || FormatOptions.ORC.equals(loadConfigurationPb.getSourceFormat())) {
       if (referenceFileSchemaUri != null) {
         loadConfigurationPb.setReferenceFileSchemaUri(referenceFileSchemaUri);
       }

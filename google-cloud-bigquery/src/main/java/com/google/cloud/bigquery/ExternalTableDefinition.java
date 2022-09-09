@@ -158,10 +158,10 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     };
 
     /**
-     * When creating an external table, the user can provide a reference file
-     * with the table schema. This is enabled for the following formats: AVRO,
-     * PARQUET, ORC.
-     * @param referenceFileSchemaUri  or {@code null} for none
+     * When creating an external table, the user can provide a reference file with the table schema.
+     * This is enabled for the following formats: AVRO, PARQUET, ORC.
+     *
+     * @param referenceFileSchemaUri or {@code null} for none
      */
     public abstract Builder setReferenceFileSchemaUri(String referenceFileSchemaUri);
 
@@ -328,13 +328,12 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     if (getAutodetect() != null) {
       externalConfigurationPb.setAutodetect(getAutodetect());
     }
-    if(FormatOptions.AVRO.equals(getFormatOptions().getType()) ||
-        FormatOptions.PARQUET.equals(getFormatOptions().getType()) ||
-        FormatOptions.ORC.equals(getFormatOptions().getType())) {
+    if (FormatOptions.AVRO.equals(getFormatOptions().getType())
+        || FormatOptions.PARQUET.equals(getFormatOptions().getType())
+        || FormatOptions.ORC.equals(getFormatOptions().getType())) {
 
       if (getReferenceFileSchemaUri() != null) {
         externalConfigurationPb.setReferenceFileSchemaUri(getReferenceFileSchemaUri());
-
       }
     }
 
@@ -507,14 +506,13 @@ public abstract class ExternalTableDefinition extends TableDefinition {
         builder.setHivePartitioningOptions(
             HivePartitioningOptions.fromPb(externalDataConfiguration.getHivePartitioningOptions()));
       }
-      if(FormatOptions.AVRO.equals(externalDataConfiguration.getSourceFormat()) ||
-          FormatOptions.PARQUET.equals(externalDataConfiguration.getSourceFormat()) ||
-          FormatOptions.ORC.equals(externalDataConfiguration.getSourceFormat())) {
-        if (externalDataConfiguration.getReferenceFileSchemaUri() != null){
+      if (FormatOptions.AVRO.equals(externalDataConfiguration.getSourceFormat())
+          || FormatOptions.PARQUET.equals(externalDataConfiguration.getSourceFormat())
+          || FormatOptions.ORC.equals(externalDataConfiguration.getSourceFormat())) {
+        if (externalDataConfiguration.getReferenceFileSchemaUri() != null) {
           builder.setReferenceFileSchemaUri(externalDataConfiguration.getReferenceFileSchemaUri());
         }
       }
-
     }
     return builder.build();
   }
@@ -567,9 +565,9 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     if (externalDataConfiguration.getAutodetect() != null) {
       builder.setAutodetect(externalDataConfiguration.getAutodetect());
     }
-    if(FormatOptions.AVRO.equals(externalDataConfiguration.getSourceFormat()) ||
-        FormatOptions.PARQUET.equals(externalDataConfiguration.getSourceFormat()) ||
-        FormatOptions.ORC.equals(externalDataConfiguration.getSourceFormat())) {
+    if (FormatOptions.AVRO.equals(externalDataConfiguration.getSourceFormat())
+        || FormatOptions.PARQUET.equals(externalDataConfiguration.getSourceFormat())
+        || FormatOptions.ORC.equals(externalDataConfiguration.getSourceFormat())) {
       if (externalDataConfiguration.getReferenceFileSchemaUri() != null) {
         builder.setReferenceFileSchemaUri(externalDataConfiguration.getReferenceFileSchemaUri());
       }

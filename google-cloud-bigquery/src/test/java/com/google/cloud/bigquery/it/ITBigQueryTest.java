@@ -4597,18 +4597,28 @@ public class ITBigQueryTest {
       // a-twitter schema (username, tweet, timestamp, likes)
       // b-twitter schema (username, tweet, timestamp)
       // c-twitter schema (username, tweet)
-      List<String> SOURCE_URIS = ImmutableList.of(
-          "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/federated-formats-reference-file-schema/a-twitter.avro",
-          "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/federated-formats-reference-file-schema/b-twitter.avro",
-          "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/federated-formats-reference-file-schema/c-twitter.avro");
+      List<String> SOURCE_URIS =
+          ImmutableList.of(
+              "gs://"
+                  + CLOUD_SAMPLES_DATA
+                  + "/bigquery/federated-formats-reference-file-schema/a-twitter.avro",
+              "gs://"
+                  + CLOUD_SAMPLES_DATA
+                  + "/bigquery/federated-formats-reference-file-schema/b-twitter.avro",
+              "gs://"
+                  + CLOUD_SAMPLES_DATA
+                  + "/bigquery/federated-formats-reference-file-schema/c-twitter.avro");
 
       // Because referenceFileSchemaUri is set as a-twitter, the table will have a-twitter schema
-      String referenceFileSchema = "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/federated-formats-reference-file-schema/a-twitter.avro";
-
+      String referenceFileSchema =
+          "gs://"
+              + CLOUD_SAMPLES_DATA
+              + "/bigquery/federated-formats-reference-file-schema/a-twitter.avro";
 
       LoadJobConfiguration loadJobConfiguration =
           LoadJobConfiguration.newBuilder(tableId, SOURCE_URIS, FormatOptions.avro())
-              .setReferenceFileSchemaUri(referenceFileSchema).build();
+              .setReferenceFileSchemaUri(referenceFileSchema)
+              .build();
 
       Job job = bigquery.create(JobInfo.of(loadJobConfiguration));
       // Blocks until this load table job completes its execution, either failing or succeeding.
@@ -4623,7 +4633,6 @@ public class ITBigQueryTest {
     } catch (BigQueryException | InterruptedException e) {
       System.out.println("Column not added during load append \n" + e.toString());
     }
-
   }
 
   @Test
@@ -4636,18 +4645,25 @@ public class ITBigQueryTest {
       // a-twitter schema (username, tweet, timestamp, likes)
       // b-twitter schema (username, tweet, timestamp)
       // c-twitter schema (username, tweet)
-      List<String> SOURCE_URIS = ImmutableList.of(
-          "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/federated-formats-reference-file-schema/a-twitter.parquet",
-          "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/federated-formats-reference-file-schema/b-twitter.parquet",
-          "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/federated-formats-reference-file-schema/c-twitter.parquet");
+      List<String> SOURCE_URIS =
+          ImmutableList.of(
+              "gs://"
+                  + CLOUD_SAMPLES_DATA
+                  + "/bigquery/federated-formats-reference-file-schema/a-twitter.parquet",
+              "gs://"
+                  + CLOUD_SAMPLES_DATA
+                  + "/bigquery/federated-formats-reference-file-schema/b-twitter.parquet",
+              "gs://"
+                  + CLOUD_SAMPLES_DATA
+                  + "/bigquery/federated-formats-reference-file-schema/c-twitter.parquet");
 
       // Because referenceFileSchemaUri is set as a-twitter, the table will have a-twitter schema
       String referenceFileSchema = "gs://avro-test-bucket/a-twitter.parquet";
 
-
       LoadJobConfiguration loadJobConfiguration =
           LoadJobConfiguration.newBuilder(tableId, SOURCE_URIS, FormatOptions.parquet())
-              .setReferenceFileSchemaUri(referenceFileSchema).build();
+              .setReferenceFileSchemaUri(referenceFileSchema)
+              .build();
 
       Job job = bigquery.create(JobInfo.of(loadJobConfiguration));
       // Blocks until this load table job completes its execution, either failing or succeeding.
@@ -4662,7 +4678,5 @@ public class ITBigQueryTest {
     } catch (BigQueryException | InterruptedException e) {
       System.out.println("Column not added during load append \n" + e.toString());
     }
-
   }
-
-  }
+}
