@@ -202,13 +202,8 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
         this.hivePartitioningOptions =
             HivePartitioningOptions.fromPb(loadConfigurationPb.getHivePartitioningOptions());
       }
-      if (FormatOptions.AVRO.equals(loadConfigurationPb.getSourceFormat())
-          || FormatOptions.PARQUET.equals(loadConfigurationPb.getSourceFormat())
-          || FormatOptions.ORC.equals(loadConfigurationPb.getSourceFormat())) {
-
         if (loadConfigurationPb.getReferenceFileSchemaUri() != null) {
           this.referenceFileSchemaUri = loadConfigurationPb.getReferenceFileSchemaUri();
-        }
       }
     }
 
@@ -656,12 +651,8 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
     if (hivePartitioningOptions != null) {
       loadConfigurationPb.setHivePartitioningOptions(hivePartitioningOptions.toPb());
     }
-    if (FormatOptions.AVRO.equals(loadConfigurationPb.getSourceFormat())
-        || FormatOptions.PARQUET.equals(loadConfigurationPb.getSourceFormat())
-        || FormatOptions.ORC.equals(loadConfigurationPb.getSourceFormat())) {
       if (referenceFileSchemaUri != null) {
         loadConfigurationPb.setReferenceFileSchemaUri(referenceFileSchemaUri);
-      }
     }
 
     jobConfiguration.setLoad(loadConfigurationPb);

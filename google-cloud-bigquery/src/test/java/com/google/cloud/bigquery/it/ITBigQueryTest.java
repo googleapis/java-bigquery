@@ -4634,13 +4634,7 @@ public class ITBigQueryTest {
       Job job = bigquery.create(JobInfo.of(loadJobConfiguration));
       // Blocks until this load table job completes its execution, either failing or succeeding.
       job = job.waitFor();
-      if (job.isDone()) {
-        System.out.println("Avro data from GCS successfully loaded in a table");
-      } else {
-        System.out.println(
-            "BigQuery job was unable to load into the table due to an error:"
-                + job.getStatus().getError());
-      }
+      assertEquals(true, job.isDone());
 
       LoadJobConfiguration actualLoadJobConfiguration = job.getConfiguration();
       Table generatedTable = bigquery.getTable(actualLoadJobConfiguration.getDestinationTable());
@@ -4700,13 +4694,7 @@ public class ITBigQueryTest {
       Job job = bigquery.create(JobInfo.of(loadJobConfiguration));
       // Blocks until this load table job completes its execution, either failing or succeeding.
       job = job.waitFor();
-      if (job.isDone()) {
-        System.out.println("Parquet data from GCS successfully loaded in a table");
-      } else {
-        System.out.println(
-            "BigQuery job was unable to load into the table due to an error:"
-                + job.getStatus().getError());
-      }
+      assertEquals(true, job.isDone());
       LoadJobConfiguration actualLoadJobConfiguration = job.getConfiguration();
       Table generatedTable = bigquery.getTable(actualLoadJobConfiguration.getDestinationTable());
 
