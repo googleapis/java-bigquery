@@ -328,9 +328,9 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     if (getAutodetect() != null) {
       externalConfigurationPb.setAutodetect(getAutodetect());
     }
-      if (getReferenceFileSchemaUri() != null) {
-        externalConfigurationPb.setReferenceFileSchemaUri(getReferenceFileSchemaUri());
-      }
+    if (getReferenceFileSchemaUri() != null) {
+      externalConfigurationPb.setReferenceFileSchemaUri(getReferenceFileSchemaUri());
+    }
 
     if (getHivePartitioningOptions() != null) {
       externalConfigurationPb.setHivePartitioningOptions(getHivePartitioningOptions().toPb());
@@ -501,9 +501,9 @@ public abstract class ExternalTableDefinition extends TableDefinition {
         builder.setHivePartitioningOptions(
             HivePartitioningOptions.fromPb(externalDataConfiguration.getHivePartitioningOptions()));
       }
-        if (externalDataConfiguration.getReferenceFileSchemaUri() != null) {
-          builder.setReferenceFileSchemaUri(externalDataConfiguration.getReferenceFileSchemaUri());
-        }
+      if (externalDataConfiguration.getReferenceFileSchemaUri() != null) {
+        builder.setReferenceFileSchemaUri(externalDataConfiguration.getReferenceFileSchemaUri());
+      }
     }
     return builder.build();
   }
