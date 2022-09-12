@@ -4646,6 +4646,9 @@ public class ITBigQueryTest {
       Table generatedTable = bigquery.getTable(actualLoadJobConfiguration.getDestinationTable());
 
       assertEquals(expectedSchema, generatedTable.getDefinition().getSchema());
+      // clean up after test to avoid conflict with other tests
+      boolean success = bigquery.delete(tableId);
+      assertEquals(true, success);
     } catch (BigQueryException | InterruptedException e) {
       System.out.println("Column not added during load append \n" + e.toString());
     }
@@ -4708,6 +4711,9 @@ public class ITBigQueryTest {
       Table generatedTable = bigquery.getTable(actualLoadJobConfiguration.getDestinationTable());
 
       assertEquals(expectedSchema, generatedTable.getDefinition().getSchema());
+      // clean up after test to avoid conflict with other tests
+      boolean success = bigquery.delete(tableId);
+      assertEquals(true, success);
     } catch (BigQueryException | InterruptedException e) {
       System.out.println("Column not added during load append \n" + e.toString());
     }
@@ -4748,6 +4754,9 @@ public class ITBigQueryTest {
     Table createdTable = bigquery.create(tableInfo);
     Table generatedTable = bigquery.getTable(createdTable.getTableId());
     assertEquals(expectedSchema, generatedTable.getDefinition().getSchema());
+    // clean up after test to avoid conflict with other tests
+    boolean success = bigquery.delete(tableId);
+    assertEquals(true, success);
   }
 
   @Test
