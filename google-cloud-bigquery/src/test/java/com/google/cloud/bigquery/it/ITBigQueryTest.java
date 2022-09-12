@@ -4787,5 +4787,7 @@ public class ITBigQueryTest {
     Table createdTable = bigquery.create(tableInfo);
     Table generatedTable = bigquery.getTable(createdTable.getTableId());
     assertEquals(expectedSchema, generatedTable.getDefinition().getSchema());
+    boolean success = bigquery.delete(tableId);
+    assertEquals(true, success);
   }
 }
