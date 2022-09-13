@@ -43,7 +43,6 @@ import com.google.api.services.bigquery.model.TableDataInsertAllRequest;
 import com.google.api.services.bigquery.model.TableDataInsertAllResponse;
 import com.google.api.services.bigquery.model.TableDataList;
 import com.google.api.services.bigquery.model.TableRow;
-import com.google.api.services.bigquery.model.TableSchema;
 import com.google.cloud.Policy;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.Tuple;
@@ -816,9 +815,11 @@ public class BigQueryImplTest {
   @Test
   public void tesCreateExternalTable() {
     TableInfo createTableInfo =
-        TableInfo.of(TABLE_ID, ExternalTableDefinition.newBuilder().setSchema(TABLE_SCHEMA).build()).setProjectId(OTHER_PROJECT);
+        TableInfo.of(TABLE_ID, ExternalTableDefinition.newBuilder().setSchema(TABLE_SCHEMA).build())
+            .setProjectId(OTHER_PROJECT);
 
-    com.google.api.services.bigquery.model.Table expectedCreateInput = createTableInfo.toPb().setSchema(TABLE_SCHEMA.toPb());
+    com.google.api.services.bigquery.model.Table expectedCreateInput =
+        createTableInfo.toPb().setSchema(TABLE_SCHEMA.toPb());
     expectedCreateInput.getExternalDataConfiguration().setSchema(null);
     when(bigqueryRpcMock.create(expectedCreateInput, EMPTY_RPC_OPTIONS))
         .thenReturn(createTableInfo.toPb());
@@ -1210,9 +1211,11 @@ public class BigQueryImplTest {
   @Test
   public void testUpdateExternalTableWithNewSchema() {
     TableInfo updatedTableInfo =
-        TableInfo.of(TABLE_ID, ExternalTableDefinition.newBuilder().setSchema(TABLE_SCHEMA).build()).setProjectId(OTHER_PROJECT);
+        TableInfo.of(TABLE_ID, ExternalTableDefinition.newBuilder().setSchema(TABLE_SCHEMA).build())
+            .setProjectId(OTHER_PROJECT);
 
-    com.google.api.services.bigquery.model.Table expectedPatchInput = updatedTableInfo.toPb().setSchema(TABLE_SCHEMA.toPb());
+    com.google.api.services.bigquery.model.Table expectedPatchInput =
+        updatedTableInfo.toPb().setSchema(TABLE_SCHEMA.toPb());
     expectedPatchInput.getExternalDataConfiguration().setSchema(null);
     when(bigqueryRpcMock.patch(expectedPatchInput, EMPTY_RPC_OPTIONS))
         .thenReturn(updatedTableInfo.toPb());
