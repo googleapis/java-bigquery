@@ -4,7 +4,7 @@
   <groupId>com.google.cloud</groupId>
   <artifactId>google-cloud-bigquery-parent</artifactId>
   <packaging>pom</packaging>
-  <version>2.16.1-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
+  <version>2.16.2-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
   <name>BigQuery Parent</name>
   <url>https://github.com/googleapis/java-bigquery</url>
   <description>
@@ -54,7 +54,7 @@
     <github.global.server>github</github.global.server>
     <site.installationModule>google-cloud-bigquery-parent</site.installationModule>
     <google-api-services-bigquery.version>v2-rev20220827-2.0.0</google-api-services-bigquery.version>
-    <google.cloud.shared-dependencies.version>3.0.2</google.cloud.shared-dependencies.version>
+    <google.cloud.shared-dependencies.version>3.0.3</google.cloud.shared-dependencies.version>
     <arrow.version>9.0.0</arrow.version>
   </properties>
 
@@ -118,7 +118,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-bigquery</artifactId>
-        <version>2.16.1-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
+        <version>2.16.2-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
       </dependency>
 
       <dependency>
