@@ -221,8 +221,9 @@ public class RoutineInfo implements Serializable {
         this.importedLibrariesList = routinePb.getImportedLibraries();
       }
       this.body = routinePb.getDefinitionBody();
-      if (routinePb.getRemoteFunctionOptions() != null){
-        this.remoteFunctionOptions = RemoteFunctionOptions.fromPb(routinePb.getRemoteFunctionOptions());
+      if (routinePb.getRemoteFunctionOptions() != null) {
+        this.remoteFunctionOptions =
+            RemoteFunctionOptions.fromPb(routinePb.getRemoteFunctionOptions());
       }
     }
 
@@ -406,7 +407,9 @@ public class RoutineInfo implements Serializable {
   }
 
   /** Returns the Remote function specific options. */
-  public RemoteFunctionOptions getRemoteFunctionOptions() { return remoteFunctionOptions; };
+  public RemoteFunctionOptions getRemoteFunctionOptions() {
+    return remoteFunctionOptions;
+  };
 
   /** Returns a builder pre-populated using the current values of this routine. */
   public Builder toBuilder() {
@@ -500,7 +503,7 @@ public class RoutineInfo implements Serializable {
     if (getReturnTableType() != null) {
       routinePb.setReturnTableType(getReturnTableType().toPb());
     }
-    if(getRemoteFunctionOptions() != null){
+    if (getRemoteFunctionOptions() != null) {
       routinePb.setRemoteFunctionOptions(getRemoteFunctionOptions().toPb());
     }
     return routinePb;

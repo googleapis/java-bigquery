@@ -16,7 +16,6 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,11 +23,15 @@ import org.junit.Test;
 
 public class RemoteFunctionOptionsTest {
   private static final String endpoint = "https://aaabbbccc-uc.a.run.app";
-  private static final String connection = "projects/{projectId}/locations/{locationId}/connections/{connectionId}";
-  private static final Map<String, String> userDefinedContext = new HashMap<String, String>() {{
-    put("key1", "value1");
-    put("key2", "value2");
-  }};
+  private static final String connection =
+      "projects/{projectId}/locations/{locationId}/connections/{connectionId}";
+  private static final Map<String, String> userDefinedContext =
+      new HashMap<String, String>() {
+        {
+          put("key1", "value1");
+          put("key2", "value2");
+        }
+      };
   private static final Long maxBatchingRows = 20L;
 
   private static final RemoteFunctionOptions REMOTE_FUNCTION_OPTIONS =
@@ -38,9 +41,11 @@ public class RemoteFunctionOptionsTest {
           .setUserDefinedContext(userDefinedContext)
           .setMaxBatchingRows(maxBatchingRows)
           .build();
+
   @Test
   public void testToBuilder() {
-    compareRemoteFunctionOptions(REMOTE_FUNCTION_OPTIONS, REMOTE_FUNCTION_OPTIONS.toBuilder().build());
+    compareRemoteFunctionOptions(
+        REMOTE_FUNCTION_OPTIONS, REMOTE_FUNCTION_OPTIONS.toBuilder().build());
   }
 
   @Test
@@ -53,10 +58,12 @@ public class RemoteFunctionOptionsTest {
 
   @Test
   public void testToAndFromPb() {
-    compareRemoteFunctionOptions(REMOTE_FUNCTION_OPTIONS, RemoteFunctionOptions.fromPb(REMOTE_FUNCTION_OPTIONS.toPb()));
+    compareRemoteFunctionOptions(
+        REMOTE_FUNCTION_OPTIONS, RemoteFunctionOptions.fromPb(REMOTE_FUNCTION_OPTIONS.toPb()));
   }
 
-  public void compareRemoteFunctionOptions(RemoteFunctionOptions expected, RemoteFunctionOptions actual){
+  public void compareRemoteFunctionOptions(
+      RemoteFunctionOptions expected, RemoteFunctionOptions actual) {
     assertEquals(expected, actual);
     assertEquals(expected.getEndpoint(), actual.getEndpoint());
     assertEquals(expected.getConnection(), actual.getConnection());

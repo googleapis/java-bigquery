@@ -130,8 +130,7 @@ public class Routine extends RoutineInfo {
     }
 
     @Override
-    public Builder setRemoteFunctionOptions(
-        RemoteFunctionOptions remoteFunctionOptions) {
+    public Builder setRemoteFunctionOptions(RemoteFunctionOptions remoteFunctionOptions) {
       infoBuilder.setRemoteFunctionOptions(remoteFunctionOptions);
       return this;
     }

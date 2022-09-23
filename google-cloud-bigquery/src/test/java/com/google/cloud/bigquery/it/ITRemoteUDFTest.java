@@ -92,17 +92,21 @@ public class ITRemoteUDFTest {
   public void testRoutineRemoteUDF() {
     String routineName = RemoteBigQueryHelper.generateRoutineName();
     RoutineId routineId = RoutineId.of(ROUTINE_DATASET, routineName);
-    Map<String, String> userDefinedContext = new HashMap<String, String>() {{
-      put("key1", "value1");
-      put("key2", "value2");
-    }};
+    Map<String, String> userDefinedContext =
+        new HashMap<String, String>() {
+          {
+            put("key1", "value1");
+            put("key2", "value2");
+          }
+        };
 
-    RemoteFunctionOptions remoteFunctionOptions = RemoteFunctionOptions.newBuilder()
-        .setEndpoint(REMOTE_ENDPOINT)
-        .setConnection(connection.getName())
-        .setMaxBatchingRows(Long.valueOf(30))
-        .setUserDefinedContext(userDefinedContext)
-        .build();
+    RemoteFunctionOptions remoteFunctionOptions =
+        RemoteFunctionOptions.newBuilder()
+            .setEndpoint(REMOTE_ENDPOINT)
+            .setConnection(connection.getName())
+            .setMaxBatchingRows(Long.valueOf(30))
+            .setUserDefinedContext(userDefinedContext)
+            .build();
     RoutineInfo routineInfo =
         RoutineInfo.newBuilder(routineId)
             .setRoutineType("SCALAR_FUNCTION")
@@ -124,5 +128,4 @@ public class ITRemoteUDFTest {
     assertEquals(REMOTE_ENDPOINT, routine.getRemoteFunctionOptions().getEndpoint());
     assertEquals(connection.getName(), routine.getRemoteFunctionOptions().getConnection());
   }
-
 }
