@@ -138,7 +138,7 @@
     </dependency>
     <dependency>
       <groupId>com.google.api.grpc</groupId>
-      <artifactId>proto-google-cloud-datacatalog-v1</artifactId>
+      <artifactId>proto-google-cloud-bigqueryconnection-v1</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

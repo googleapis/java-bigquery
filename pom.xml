@@ -185,6 +185,12 @@
         <version>2.4.0</version>
         <scope>test</scope>
       </dependency>
+      <dependency>
+        <groupId>com.google.api.grpc</groupId>
+        <artifactId>proto-google-cloud-bigqueryconnection-v1</artifactId>
+        <version>2.4.0</version>
+        <scope>test</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
