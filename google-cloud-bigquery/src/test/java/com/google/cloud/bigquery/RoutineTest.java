@@ -76,10 +76,13 @@ public class RoutineTest {
       ImmutableList.of("gs://foo", "gs://bar", "gs://baz");
 
   private static final String BODY = "body";
-  private static final Map<String, String> userDefinedContext = new HashMap<String, String>() {{
-    put("key1", "value1");
-    put("key2", "value2");
-  }};
+  private static final Map<String, String> userDefinedContext =
+      new HashMap<String, String>() {
+        {
+          put("key1", "value1");
+          put("key2", "value2");
+        }
+      };
   private static final RemoteFunctionOptions REMOTE_FUNCTION_OPTIONS =
       RemoteFunctionOptions.newBuilder()
           .setEndpoint("endpoint")

@@ -20,9 +20,7 @@ import java.io.Serializable;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-/**
- * Represents Remote Function Options. Options for a remote user-defined function.
- **/
+/** Represents Remote Function Options. Options for a remote user-defined function. */
 @AutoValue
 public abstract class RemoteFunctionOptions implements Serializable {
 
@@ -39,7 +37,8 @@ public abstract class RemoteFunctionOptions implements Serializable {
 
     /**
      * Fully qualified name of the user-provided connection object which holds the authentication
-     * information to send requests to the remote service. Format: ```\"projects/{projectId}/locations/{locationId}/connections/{connectionId}\"```
+     * information to send requests to the remote service. Format:
+     * ```\"projects/{projectId}/locations/{locationId}/connections/{connectionId}\"```
      */
     public abstract Builder setConnection(String connection);
 
@@ -56,12 +55,9 @@ public abstract class RemoteFunctionOptions implements Serializable {
      */
     public abstract Builder setMaxBatchingRows(Long maxBatchingRows);
 
-    /**
-     * Creates a {@code RemoteFunctionOptions} object.
-     */
+    /** Creates a {@code RemoteFunctionOptions} object. */
     public abstract RemoteFunctionOptions build();
   }
-
 
   /**
    * Returns the endpoint of the user-provided service.
@@ -96,14 +92,11 @@ public abstract class RemoteFunctionOptions implements Serializable {
   public abstract Long getMaxBatchingRows();
 
   /**
-   * Returns a builder pre-populated using the current values of this {@code
-   * RemoteFunctionOptions}.
+   * Returns a builder pre-populated using the current values of this {@code RemoteFunctionOptions}.
    */
   public abstract RemoteFunctionOptions.Builder toBuilder();
 
-  /**
-   * Returns a builder for a {@Code RemoteFunctionOptions} object.
-   */
+  /** Returns a builder for a {@Code RemoteFunctionOptions} object. */
   public static RemoteFunctionOptions.Builder newBuilder() {
     return new AutoValue_RemoteFunctionOptions.Builder();
   }
