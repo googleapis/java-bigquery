@@ -110,8 +110,6 @@ public class ITRemoteUDFTest {
     RoutineInfo routineInfo =
         RoutineInfo.newBuilder(routineId)
             .setRoutineType("SCALAR_FUNCTION")
-            .setBody("x * 3")
-            .setLanguage("SQL")
             .setArguments(
                 ImmutableList.of(
                     RoutineArgument.newBuilder()
