@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -251,6 +252,73 @@ class ConnectionImpl implements Connection {
     } catch (BigQueryException e) {
       throw new BigQuerySQLException(e.getMessage(), e, e.getErrors());
     }
+  }
+
+  /**
+   * Execute a SQL statement that returns a single ResultSet and returns a ListenableFuture to
+   * process the response asynchronously.
+   *
+   * <p>Example of running a query.
+   *
+   * <pre>
+   * {
+   *   &#64;code
+   *   ConnectionSettings connectionSettings =
+   *        ConnectionSettings.newBuilder()
+   *            .setRequestTimeout(10L)
+   *            .setMaxResults(100L)
+   *            .setUseQueryCache(true)
+   *            .build();
+   *   Connection connection = bigquery.createConnection(connectionSettings);
+   *   String selectQuery = "SELECT corpus FROM `bigquery-public-data.samples.shakespeare` GROUP BY corpus;";
+   * ListenableFuture<ExecuteSelectResponse> executeSelectFuture = connection.executeSelectAsync(selectQuery);
+   * ExecuteSelectResponse executeSelectRes = executeSelectFuture.get();
+   *
+   *  if(!executeSelectRes.isSuccessful()){
+   * throw executeSelectRes.getBigQuerySQLException();
+   * }
+   *
+   *  BigQueryResult bigQueryResult = executeSelectRes.getBigQueryResult();
+   * ResultSet rs = bigQueryResult.getResultSet();
+   * while (rs.next()) {
+   * System.out.println(rs.getString(1));
+   * }
+   *
+   * </pre>
+   *
+   * @param sql a static SQL SELECT statement
+   * @return a ListenableFuture that is used to get the data produced by the query
+   * @exception BigQuerySQLException if a database access error occurs
+   */
+  @BetaApi
+  @Override
+  public ListenableFuture<ExecuteSelectResponse> executeSelectAsync(String sql)
+      throws BigQuerySQLException {
+    return null;
+  }
+
+  /**
+   * Execute a SQL statement that returns a single ResultSet and returns a ListenableFuture to
+   * process the response asynchronously.
+   *
+   * @param sql SQL SELECT query
+   * @param parameters named or positional parameters. The set of query parameters must either be
+   *     all positional or all named parameters.
+   * @param labels (optional) the labels associated with this query. You can use these to organize
+   *     and group your query jobs. Label keys and values can be no longer than 63 characters, can
+   *     only contain lowercase letters, numeric characters, underscores and dashes. International
+   *     characters are allowed. Label values are optional and Label is a Varargs. You should pass
+   *     all the Labels in a single Map .Label keys must start with a letter and each label in the
+   *     list must have a different key.
+   * @return a ListenableFuture that is used to get the data produced by the query
+   * @throws BigQuerySQLException
+   */
+  @BetaApi
+  @Override
+  public ListenableFuture<ExecuteSelectResponse> executeSelectAsync(
+      String sql, List<Parameter> parameters, Map<String, String>... labels)
+      throws BigQuerySQLException {
+    return null;
   }
 
   @VisibleForTesting
