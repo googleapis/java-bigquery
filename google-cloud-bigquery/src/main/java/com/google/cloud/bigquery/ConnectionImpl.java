@@ -370,25 +370,12 @@ class ConnectionImpl implements Connection {
   @VisibleForTesting
   BigQueryResult getResultSet(
       GetQueryResultsResponse firstPage, JobId jobId, String sql, Boolean hasQueryParameters) {
-    if (firstPage.getJobComplete()
-        && firstPage.getTotalRows() != null
-        && firstPage.getSchema()
-            != null) { // firstPage.getTotalRows() is null if job is not complete. We need to make
-      // sure that the schema is not null, as it is required for the ResultSet
-      return getSubsequentQueryResultsWithJob(
-          firstPage.getTotalRows().longValue(),
-          (long) firstPage.getRows().size(),
-          jobId,
-          firstPage,
-          hasQueryParameters);
-    } else { // job is still running, use dryrun to get Schema
-      com.google.api.services.bigquery.model.Job dryRunJob = createDryRunJob(sql);
-      Schema schema = Schema.fromPb(dryRunJob.getStatistics().getQuery().getSchema());
-      // TODO: check how can we get totalRows and pageRows while the job is still running.
-      // `firstPage.getTotalRows()` returns null
-      return getSubsequentQueryResultsWithJob(
-          null, null, jobId, firstPage, schema, hasQueryParameters);
-    }
+    return getSubsequentQueryResultsWithJob(
+        firstPage.getTotalRows().longValue(),
+        (long) firstPage.getRows().size(),
+        jobId,
+        firstPage,
+        hasQueryParameters);
   }
 
   static class EndOfFieldValueList
@@ -451,21 +438,6 @@ class ConnectionImpl implements Connection {
                   results.getJobComplete(), results.getSchema() == null, totalRows, pageRows));
       JobId jobId = JobId.fromPb(results.getJobReference());
       GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
-      // We might get null schema from the backend occasionally. Ref:
-      // https://github.com/googleapis/java-bigquery/issues/2103/. Using queryDryRun in such cases
-      // to get the schema
-      if (firstPage.getSchema() == null) { // get schema using dry run
-        // Log the status if the job was complete complete
-        logger.log(
-            Level.WARNING,
-            "\n"
-                + "Received null schema, Using dryRun the get the Schema. jobComplete:"
-                + firstPage.getJobComplete());
-        com.google.api.services.bigquery.model.Job dryRunJob = createDryRunJob(sql);
-        Schema schema = Schema.fromPb(dryRunJob.getStatistics().getQuery().getSchema());
-        return getSubsequentQueryResultsWithJob(
-            totalRows, pageRows, jobId, firstPage, schema, hasQueryParameters);
-      }
       return getSubsequentQueryResultsWithJob(
           totalRows, pageRows, jobId, firstPage, hasQueryParameters);
     }
