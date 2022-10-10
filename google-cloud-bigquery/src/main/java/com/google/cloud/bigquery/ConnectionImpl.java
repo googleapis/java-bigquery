@@ -294,7 +294,7 @@ class ConnectionImpl implements Connection {
       String sql, List<Parameter> parameters, Map<String, String>... labels) {
     ExecutorService execService =
         Executors.newFixedThreadPool(
-            2); // two threads. One for the async operation and the other for processing the
+            2); // two fixed threads. One for the async operation and the other for processing the
     // callback
     ListeningExecutorService lExecService = MoreExecutors.listeningDecorator(execService);
     ListenableFuture<ExecuteSelectResponse> executeSelectFuture =
