@@ -16,4 +16,25 @@
 
 package com.google.cloud.bigquery;
 
-public class ExecuteSelectResponse {}
+import com.google.auto.value.AutoValue;
+import java.io.Serializable;
+
+@AutoValue
+public abstract class ExecuteSelectResponse implements Serializable {
+  public abstract BigQueryResult getResultSet();
+
+  public abstract boolean getIsSuccessful();
+
+  public static Builder newBuilder() {
+    return new AutoValue_ExecuteSelectResponse.Builder();
+  }
+
+  @AutoValue.Builder
+  public abstract static class Builder {
+    public abstract ExecuteSelectResponse build();
+
+    public abstract Builder setResultSet(BigQueryResult bigQueryResult);
+
+    public abstract Builder setIsSuccessful(boolean isSuccessful);
+  }
+}
