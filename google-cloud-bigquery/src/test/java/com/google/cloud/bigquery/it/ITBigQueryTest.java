@@ -2881,6 +2881,39 @@ public class ITBigQueryTest {
   }
 
   @Test
+  // Timeouts the future and check if the operations got cancelled.
+  // TODO(prasmish): Remove this test case if it turns out to be flaky, as expecting the process to
+  // be uncompleted in 1000ms is nondeterministic! Though very likely it won't be complete in the
+  // specified amount of time
+  public void testExecuteSelectAsyncTimeout()
+      throws SQLException, ExecutionException,
+          InterruptedException { // use read API to read 300K records and check the order
+    String query =
+        "SELECT date, county, state_name, confirmed_cases, deaths FROM "
+            + TABLE_ID_LARGE.getTable()
+            + " where date is not null and county is not null and state_name is not null order by confirmed_cases asc limit 300000";
+
+    ConnectionSettings connectionSettings =
+        ConnectionSettings.newBuilder()
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .setPriority(
+                QueryJobConfiguration.Priority
+                    .INTERACTIVE) // required for this integration test so that isFastQuerySupported
+            // returns false
+            .build();
+    Connection connection = bigquery.createConnection(connectionSettings);
+
+    ListenableFuture<ExecuteSelectResponse> executeSelectFut = connection.executeSelectAsync(query);
+
+    try {
+      executeSelectFut.get(1000, TimeUnit.MILLISECONDS);
+      fail(); // this line should not be reached
+    } catch (CancellationException | TimeoutException e) {
+      assertNotNull(e);
+    }
+  }
+
+  @Test
   public void testExecuteSelectWithNamedQueryParametersAsync()
       throws BigQuerySQLException, ExecutionException, InterruptedException {
     String query =
