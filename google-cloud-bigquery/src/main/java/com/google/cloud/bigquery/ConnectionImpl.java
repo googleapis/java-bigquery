@@ -47,7 +47,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -274,7 +278,7 @@ class ConnectionImpl implements Connection {
    * ListenableFuture<ExecuteSelectResponse> executeSelectFuture = connection.executeSelectAsync(selectQuery);
    * ExecuteSelectResponse executeSelectRes = executeSelectFuture.get();
    *
-   *  if(!executeSelectRes.isSuccessful()){
+   *  if(!executeSelectRes.getIsSuccessful()){
    * throw executeSelectRes.getBigQuerySQLException();
    * }
    *
@@ -294,7 +298,62 @@ class ConnectionImpl implements Connection {
   @Override
   public ListenableFuture<ExecuteSelectResponse> executeSelectAsync(String sql)
       throws BigQuerySQLException {
-    return null;
+    return getExecuteSelectFuture(sql, null);
+  }
+
+  /** This method calls the overloaded executeSelect(...) methods and returns a Future */
+  @VisibleForTesting
+  ListenableFuture<ExecuteSelectResponse> getExecuteSelectFuture(
+      String sql, List<Parameter> parameters, Map<String, String>... labels) {
+    ExecutorService execService =
+        Executors.newFixedThreadPool(
+            2); // two threads. One for the async operation and the other for processing the
+    // callback
+    ListeningExecutorService lExecService = MoreExecutors.listeningDecorator(execService);
+    ListenableFuture<ExecuteSelectResponse> executeSelectFuture =
+        lExecService.submit(
+            () -> {
+              if (parameters == null) {
+                return ExecuteSelectResponse.newBuilder()
+                    .setResultSet(this.executeSelect(sql))
+                    .setIsSuccessful(true)
+                    .build();
+              } else {
+                return ExecuteSelectResponse.newBuilder()
+                    .setResultSet(this.executeSelect(sql, parameters, labels))
+                    .setIsSuccessful(true)
+                    .build();
+              }
+            });
+
+    Futures.addCallback(
+        executeSelectFuture,
+        new FutureCallback<ExecuteSelectResponse>() {
+          public void onSuccess(ExecuteSelectResponse result) {
+            execService.shutdownNow(); // shutdown the executor service as we do not need it
+          }
+
+          public void onFailure(Throwable t) {
+            logger.log(
+                Level.WARNING,
+                "\n"
+                    + String.format(
+                        "Async task failed or cancelled with error %s", t.getMessage()));
+            try {
+              close(); // attempt to stop the execution as the developer might have called
+              // Future.cancel()
+            } catch (BigQuerySQLException e) {
+              logger.log(
+                  Level.WARNING,
+                  "\n"
+                      + String.format("Exception while closing the connection %s", e.getMessage()));
+            }
+            execService.shutdownNow(); // shutdown the executor service as we do not need it
+          }
+        },
+        execService);
+
+    return executeSelectFuture;
   }
 
   /**
@@ -318,7 +377,7 @@ class ConnectionImpl implements Connection {
   public ListenableFuture<ExecuteSelectResponse> executeSelectAsync(
       String sql, List<Parameter> parameters, Map<String, String>... labels)
       throws BigQuerySQLException {
-    return null;
+    return getExecuteSelectFuture(sql, parameters, labels);
   }
 
   @VisibleForTesting
