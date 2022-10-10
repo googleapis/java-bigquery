@@ -290,8 +290,7 @@ class ConnectionImpl implements Connection {
   }
 
   /** This method calls the overloaded executeSelect(...) methods and returns a Future */
-  @VisibleForTesting
-  ListenableFuture<ExecuteSelectResponse> getExecuteSelectFuture(
+  private ListenableFuture<ExecuteSelectResponse> getExecuteSelectFuture(
       String sql, List<Parameter> parameters, Map<String, String>... labels) {
     ExecutorService execService =
         Executors.newFixedThreadPool(
