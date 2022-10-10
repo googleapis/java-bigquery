@@ -192,24 +192,7 @@ class ConnectionImpl implements Connection {
   @BetaApi
   @Override
   public BigQueryResult executeSelect(String sql) throws BigQuerySQLException {
-    try {
-      // use jobs.query if all the properties of connectionSettings are supported
-      if (isFastQuerySupported()) {
-        logger.log(Level.INFO, "\n Using Fast Query Path");
-        String projectId = bigQueryOptions.getProjectId();
-        QueryRequest queryRequest = createQueryRequest(connectionSettings, sql, null, null);
-        return queryRpc(projectId, queryRequest, sql, false);
-      }
-      // use jobs.insert otherwise
-      logger.log(Level.INFO, "\n Not Using Fast Query Path, using jobs.insert");
-      com.google.api.services.bigquery.model.Job queryJob =
-          createQueryJob(sql, connectionSettings, null, null);
-      JobId jobId = JobId.fromPb(queryJob.getJobReference());
-      GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
-      return getResultSet(firstPage, jobId, sql, false);
-    } catch (BigQueryException e) {
-      throw new BigQuerySQLException(e.getMessage(), e, e.getErrors());
-    }
+    return getExecuteSelectResponse(sql, null, null);
   }
 
   /**
@@ -230,6 +213,12 @@ class ConnectionImpl implements Connection {
   @BetaApi
   @Override
   public BigQueryResult executeSelect(
+      String sql, List<Parameter> parameters, Map<String, String>... labels)
+      throws BigQuerySQLException {
+    return getExecuteSelectResponse(sql, parameters, labels);
+  }
+
+  private BigQueryResult getExecuteSelectResponse(
       String sql, List<Parameter> parameters, Map<String, String>... labels)
       throws BigQuerySQLException {
     Map<String, String> labelMap = null;
@@ -257,7 +246,6 @@ class ConnectionImpl implements Connection {
       throw new BigQuerySQLException(e.getMessage(), e, e.getErrors());
     }
   }
-
   /**
    * Execute a SQL statement that returns a single ResultSet and returns a ListenableFuture to
    * process the response asynchronously.
