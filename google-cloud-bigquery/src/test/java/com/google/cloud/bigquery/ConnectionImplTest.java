@@ -367,59 +367,6 @@ public class ConnectionImplTest {
         .createJobForQuery(any(com.google.api.services.bigquery.model.Job.class));
   }
 
-  // calls executeSelect with a Fast query and emulates that no schema is returned with the first
-  // page
-  @Test
-  public void testFastQueryNullSchema() throws BigQuerySQLException {
-    ConnectionImpl connectionSpy = Mockito.spy(connection);
-    QueryRequest queryReqMock = new QueryRequest();
-    com.google.api.services.bigquery.model.JobStatistics stats =
-        new com.google.api.services.bigquery.model.JobStatistics()
-            .setQuery(new JobStatistics2().setSchema(FAST_QUERY_TABLESCHEMA));
-    com.google.api.services.bigquery.model.Job jobResponseMock =
-        new com.google.api.services.bigquery.model.Job()
-            // .setConfiguration(QUERY_JOB.g)
-            .setJobReference(QUERY_JOB.toPb())
-            .setId(JOB)
-            .setStatus(new com.google.api.services.bigquery.model.JobStatus().setState("DONE"))
-            .setStatistics(stats);
-    // emulating a legacy query
-    doReturn(true).when(connectionSpy).isFastQuerySupported();
-    com.google.api.services.bigquery.model.QueryResponse mockQueryRes =
-        new QueryResponse()
-            .setSchema(FAST_QUERY_TABLESCHEMA)
-            .setJobComplete(false) // so that it goes to the else part in queryRpc
-            .setTotalRows(new BigInteger(String.valueOf(4L)))
-            .setJobReference(QUERY_JOB.toPb())
-            .setRows(TABLE_ROWS);
-    when(bigqueryRpcMock.queryRpc(any(String.class), any(QueryRequest.class)))
-        .thenReturn(mockQueryRes);
-    doReturn(GET_QUERY_RESULTS_RESPONSE_NULL_SCHEMA) // wiring the null schema for the test case
-        .when(connectionSpy)
-        .getQueryResultsFirstPage(any(JobId.class));
-    doReturn(BQ_RS_MOCK_RES)
-        .when(connectionSpy)
-        .getSubsequentQueryResultsWithJob(
-            any(Long.class),
-            any(Long.class),
-            any(JobId.class),
-            any(GetQueryResultsResponse.class),
-            any(Schema.class),
-            any(Boolean.class));
-    doReturn(jobResponseMock).when(connectionSpy).createDryRunJob(any(String.class));
-    BigQueryResult res = connectionSpy.executeSelect(SQL_QUERY);
-    assertEquals(res.getTotalRows(), 2);
-    assertEquals(QUERY_SCHEMA, res.getSchema());
-    verify(connectionSpy, times(1))
-        .getSubsequentQueryResultsWithJob(
-            any(Long.class),
-            any(Long.class),
-            any(JobId.class),
-            any(GetQueryResultsResponse.class),
-            any(Schema.class),
-            any(Boolean.class));
-  }
-
   // exercises getSubsequentQueryResultsWithJob for fast running queries
   @Test
   public void testFastQueryLongRunning() throws SQLException {
