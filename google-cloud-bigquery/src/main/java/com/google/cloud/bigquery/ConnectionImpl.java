@@ -306,7 +306,7 @@ class ConnectionImpl implements Connection {
                             sql,
                             parameters,
                             labels)) // calling the overloaded executeSelect method, it takes care
-                                     // of null parameters and labels
+                    // of null parameters and labels
                     .setIsSuccessful(true)
                     .build());
 
