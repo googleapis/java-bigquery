@@ -299,19 +299,16 @@ class ConnectionImpl implements Connection {
     ListeningExecutorService lExecService = MoreExecutors.listeningDecorator(execService);
     ListenableFuture<ExecuteSelectResponse> executeSelectFuture =
         lExecService.submit(
-            () -> {
-              if (parameters == null) {
-                return ExecuteSelectResponse.newBuilder()
-                    .setResultSet(this.executeSelect(sql))
+            () ->
+                ExecuteSelectResponse.newBuilder()
+                    .setResultSet(
+                        this.executeSelect(
+                            sql,
+                            parameters,
+                            labels)) // calling the overloaded executeSelect method, it takes care
+                                     // of null parameters and labels
                     .setIsSuccessful(true)
-                    .build();
-              } else {
-                return ExecuteSelectResponse.newBuilder()
-                    .setResultSet(this.executeSelect(sql, parameters, labels))
-                    .setIsSuccessful(true)
-                    .build();
-              }
-            });
+                    .build());
 
     Futures.addCallback(
         executeSelectFuture,
