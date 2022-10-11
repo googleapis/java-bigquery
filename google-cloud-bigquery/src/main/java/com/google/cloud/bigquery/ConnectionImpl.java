@@ -299,16 +299,14 @@ class ConnectionImpl implements Connection {
     ListenableFuture<ExecuteSelectResponse> executeSelectFuture =
         lExecService.submit(
             () -> {
-              BigQueryResult result = null;
               try {
-                result =
-                    this.executeSelect(
-                        sql,
-                        parameters,
-                        labels); // calling the overloaded executeSelect method, it takes care
-                // of null parameters and labels
                 return ExecuteSelectResponse.newBuilder()
-                    .setResultSet(result)
+                    .setResultSet(
+                        this.executeSelect(
+                            sql,
+                            parameters,
+                            labels)) // calling the overloaded executeSelect method, it takes care
+                    // of null parameters and labels
                     .setIsSuccessful(true)
                     .build();
               } catch (BigQuerySQLException ex) {
