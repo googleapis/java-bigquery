@@ -314,7 +314,6 @@ class ConnectionImpl implements Connection {
               } catch (BigQuerySQLException ex) {
                 return ExecuteSelectResponse
                     .newBuilder() // passing back the null result with isSuccessful set to false
-                    .setResultSet(result)
                     .setIsSuccessful(false)
                     .setBigQuerySQLException(ex)
                     .build();
