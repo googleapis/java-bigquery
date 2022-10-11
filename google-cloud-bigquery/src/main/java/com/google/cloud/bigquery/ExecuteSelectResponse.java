@@ -18,13 +18,16 @@ package com.google.cloud.bigquery;
 
 import com.google.auto.value.AutoValue;
 import java.io.Serializable;
+import javax.annotation.Nullable;
 
 @AutoValue
 public abstract class ExecuteSelectResponse implements Serializable {
+  @Nullable
   public abstract BigQueryResult getResultSet();
 
   public abstract boolean getIsSuccessful();
 
+  @Nullable
   public abstract BigQuerySQLException getBigQuerySQLException();
 
   public static Builder newBuilder() {
