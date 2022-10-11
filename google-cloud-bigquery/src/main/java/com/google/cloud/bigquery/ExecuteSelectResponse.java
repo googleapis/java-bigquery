@@ -25,6 +25,8 @@ public abstract class ExecuteSelectResponse implements Serializable {
 
   public abstract boolean getIsSuccessful();
 
+  public abstract BigQuerySQLException getBigQuerySQLException();
+
   public static Builder newBuilder() {
     return new AutoValue_ExecuteSelectResponse.Builder();
   }
@@ -36,5 +38,7 @@ public abstract class ExecuteSelectResponse implements Serializable {
     public abstract Builder setResultSet(BigQueryResult bigQueryResult);
 
     public abstract Builder setIsSuccessful(boolean isSuccessful);
+
+    public abstract Builder setBigQuerySQLException(BigQuerySQLException bigQuerySQLException);
   }
 }
