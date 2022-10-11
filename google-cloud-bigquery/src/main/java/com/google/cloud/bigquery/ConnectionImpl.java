@@ -255,11 +255,9 @@ class ConnectionImpl implements Connection {
    * <pre>
    * {
    *   &#64;code
-   *   ConnectionSettings connectionSettings =
+   *  ConnectionSettings connectionSettings =
    *        ConnectionSettings.newBuilder()
-   *            .setRequestTimeout(10L)
-   *            .setMaxResults(100L)
-   *            .setUseQueryCache(true)
+   *            .setUseReadAPI(true)
    *            .build();
    *   Connection connection = bigquery.createConnection(connectionSettings);
    *   String selectQuery = "SELECT corpus FROM `bigquery-public-data.samples.shakespeare` GROUP BY corpus;";
@@ -280,7 +278,7 @@ class ConnectionImpl implements Connection {
    *
    * @param sql a static SQL SELECT statement
    * @return a ListenableFuture that is used to get the data produced by the query
-   * @exception BigQuerySQLException if a database access error occurs
+   * @throws BigQuerySQLException upon failure
    */
   @BetaApi
   @Override
@@ -291,7 +289,8 @@ class ConnectionImpl implements Connection {
 
   /** This method calls the overloaded executeSelect(...) methods and returns a Future */
   private ListenableFuture<ExecuteSelectResponse> getExecuteSelectFuture(
-      String sql, List<Parameter> parameters, Map<String, String>... labels) {
+      String sql, List<Parameter> parameters, Map<String, String>... labels)
+      throws BigQuerySQLException {
     ExecutorService execService =
         Executors.newFixedThreadPool(
             2); // two fixed threads. One for the async operation and the other for processing the
@@ -299,16 +298,28 @@ class ConnectionImpl implements Connection {
     ListeningExecutorService lExecService = MoreExecutors.listeningDecorator(execService);
     ListenableFuture<ExecuteSelectResponse> executeSelectFuture =
         lExecService.submit(
-            () ->
-                ExecuteSelectResponse.newBuilder()
-                    .setResultSet(
-                        this.executeSelect(
-                            sql,
-                            parameters,
-                            labels)) // calling the overloaded executeSelect method, it takes care
-                    // of null parameters and labels
+            () -> {
+              BigQueryResult result = null;
+              try {
+                result =
+                    this.executeSelect(
+                        sql,
+                        parameters,
+                        labels); // calling the overloaded executeSelect method, it takes care
+                // of null parameters and labels
+                return ExecuteSelectResponse.newBuilder()
+                    .setResultSet(result)
                     .setIsSuccessful(true)
-                    .build());
+                    .build();
+              } catch (BigQuerySQLException ex) {
+                return ExecuteSelectResponse
+                    .newBuilder() // passing back the null result with isSuccessful set to false
+                    .setResultSet(result)
+                    .setIsSuccessful(false)
+                    .setBigQuerySQLException(ex)
+                    .build();
+              }
+            });
 
     Futures.addCallback(
         executeSelectFuture,
@@ -344,6 +355,46 @@ class ConnectionImpl implements Connection {
    * Execute a SQL statement that returns a single ResultSet and returns a ListenableFuture to
    * process the response asynchronously.
    *
+   * <p>Example of running a query.
+   *
+   * <pre>
+   * {
+   *   &#64;code
+   *  ConnectionSettings connectionSettings =
+   *        ConnectionSettings.newBuilder()
+   *            ..setUseReadAPI(true)
+   *            .build();
+   *   Connection connection = bigquery.createConnection(connectionSettings);
+   *     String selectQuery =
+   *         "SELECT TimestampField, StringField, BooleanField FROM "
+   *             + MY_TABLE
+   *             + " WHERE StringField = @stringParam"
+   *             + " AND IntegerField IN UNNEST(@integerList)";
+   *     QueryParameterValue stringParameter = QueryParameterValue.string("stringValue");
+   *     QueryParameterValue intArrayParameter =
+   *         QueryParameterValue.array(new Integer[] {3, 4}, Integer.class);
+   *     Parameter stringParam =
+   *         Parameter.newBuilder().setName("stringParam").setValue(stringParameter).build();
+   *     Parameter intArrayParam =
+   *         Parameter.newBuilder().setName("integerList").setValue(intArrayParameter).build();
+   *     List<Parameter> parameters = ImmutableList.of(stringParam, intArrayParam);
+   *
+   *     ListenableFuture<ExecuteSelectResponse> executeSelectFut =
+   *         connection.executeSelectAsync(selectQuery, parameters);
+   * ExecuteSelectResponse executeSelectRes = executeSelectFuture.get();
+   *
+   *  if(!executeSelectRes.getIsSuccessful()){
+   * throw executeSelectRes.getBigQuerySQLException();
+   * }
+   *
+   *  BigQueryResult bigQueryResult = executeSelectRes.getBigQueryResult();
+   * ResultSet rs = bigQueryResult.getResultSet();
+   * while (rs.next()) {
+   * System.out.println(rs.getString(1));
+   * }
+   *
+   * </pre>
+   *
    * @param sql SQL SELECT query
    * @param parameters named or positional parameters. The set of query parameters must either be
    *     all positional or all named parameters.
@@ -354,7 +405,7 @@ class ConnectionImpl implements Connection {
    *     all the Labels in a single Map .Label keys must start with a letter and each label in the
    *     list must have a different key.
    * @return a ListenableFuture that is used to get the data produced by the query
-   * @throws BigQuerySQLException
+   * @throws BigQuerySQLException upon failure
    */
   @BetaApi
   @Override
