@@ -72,7 +72,7 @@ final class QueryRequestInfo {
         && config.getUserDefinedFunctions() == null
         && config.getWriteDisposition() == null
         && jobId.getJob() == null
-        && jobId.getLocation() !=null ;
+        && jobId.getLocation() != null;
   }
 
   QueryRequest toPb() {
