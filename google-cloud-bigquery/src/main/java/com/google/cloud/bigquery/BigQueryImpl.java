@@ -1294,7 +1294,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     // If all parameters passed in configuration are supported by the query() method on the backend,
     // put on fast path
     QueryRequestInfo requestInfo = new QueryRequestInfo(configuration);
-    if (requestInfo.isFastQuerySupported()) {
+    if (requestInfo.isFastQuerySupported(null)) {
       String projectId = getOptions().getProjectId();
       QueryRequest content = requestInfo.toPb();
       return queryRpc(projectId, content, options);
@@ -1379,6 +1379,14 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   public TableResult query(QueryJobConfiguration configuration, JobId jobId, JobOption... options)
       throws InterruptedException, JobException {
     Job.checkNotDryRun(configuration, "query");
+    // If all parameters passed in configuration are supported by the query() method on the backend,
+    // put on fast path
+    QueryRequestInfo requestInfo = new QueryRequestInfo(configuration);
+    if (requestInfo.isFastQuerySupported(jobId)) {
+      String projectId = getOptions().getProjectId();
+      QueryRequest content = requestInfo.toPb();
+      return queryRpc(projectId, content, options);
+    }
     return create(JobInfo.of(jobId, configuration), options).getQueryResults();
   }
 

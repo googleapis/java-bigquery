@@ -57,7 +57,7 @@ final class QueryRequestInfo {
     this.useQueryCache = config.useQueryCache();
   }
 
-  boolean isFastQuerySupported() {
+  boolean isFastQuerySupported(JobId jobId) {
     return config.getClustering() == null
         && config.getCreateDisposition() == null
         && config.getDestinationEncryptionConfiguration() == null
@@ -70,7 +70,9 @@ final class QueryRequestInfo {
         && config.getTableDefinitions() == null
         && config.getTimePartitioning() == null
         && config.getUserDefinedFunctions() == null
-        && config.getWriteDisposition() == null;
+        && config.getWriteDisposition() == null
+        && jobId.getJob() == null
+        && jobId.getLocation() !=null ;
   }
 
   QueryRequest toPb() {
