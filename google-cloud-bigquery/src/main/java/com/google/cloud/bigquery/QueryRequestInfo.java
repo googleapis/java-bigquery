@@ -40,6 +40,7 @@ final class QueryRequestInfo {
   private final Boolean createSession;
   private final Boolean useQueryCache;
   private final Boolean useLegacySql;
+  private final String location;
 
   QueryRequestInfo(QueryJobConfiguration config) {
     this.config = config;
@@ -55,6 +56,7 @@ final class QueryRequestInfo {
     this.createSession = config.createSession();
     this.useLegacySql = config.useLegacySql();
     this.useQueryCache = config.useQueryCache();
+    this.location = config.getLocation();
   }
 
   boolean isFastQuerySupported() {
@@ -108,6 +110,9 @@ final class QueryRequestInfo {
     if (useQueryCache != null) {
       request.setUseQueryCache(useQueryCache);
     }
+    if (location != null) {
+      request.setLocation(location);
+    }
     return request;
   }
 
@@ -126,6 +131,7 @@ final class QueryRequestInfo {
         .add("createSession", createSession)
         .add("useQueryCache", useQueryCache)
         .add("useLegacySql", useLegacySql)
+        .add("location", location)
         .toString();
   }
 
@@ -143,7 +149,8 @@ final class QueryRequestInfo {
         requestId,
         createSession,
         useQueryCache,
-        useLegacySql);
+        useLegacySql,
+        location);
   }
 
   @Override

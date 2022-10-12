@@ -73,6 +73,7 @@ public final class QueryJobConfiguration extends JobConfiguration {
   private final List<ConnectionProperty> connectionProperties;
   // maxResults is only used for fast query path
   private final Long maxResults;
+  private final String location;
 
   /**
    * Priority levels for a query. If not specified the priority is assumed to be {@link
@@ -125,6 +126,7 @@ public final class QueryJobConfiguration extends JobConfiguration {
     private RangePartitioning rangePartitioning;
     private List<ConnectionProperty> connectionProperties;
     private Long maxResults;
+    private String location;
 
     private Builder() {
       super(Type.QUERY);
@@ -160,6 +162,7 @@ public final class QueryJobConfiguration extends JobConfiguration {
       this.rangePartitioning = jobConfiguration.rangePartitioning;
       this.connectionProperties = jobConfiguration.connectionProperties;
       this.maxResults = jobConfiguration.maxResults;
+      this.location = jobConfiguration.location;
     }
 
     private Builder(com.google.api.services.bigquery.model.JobConfiguration configurationPb) {
@@ -655,6 +658,11 @@ public final class QueryJobConfiguration extends JobConfiguration {
       return this;
     }
 
+    public Builder setLocation(String location) {
+      this.location = location;
+      return this;
+    }
+
     public QueryJobConfiguration build() {
       return new QueryJobConfiguration(this);
     }
@@ -699,6 +707,7 @@ public final class QueryJobConfiguration extends JobConfiguration {
     this.rangePartitioning = builder.rangePartitioning;
     this.connectionProperties = builder.connectionProperties;
     this.maxResults = builder.maxResults;
+    this.location = builder.location;
   }
 
   /**
@@ -909,6 +918,7 @@ public final class QueryJobConfiguration extends JobConfiguration {
   public Long getMaxResults() {
     return maxResults;
   }
+  public String getLocation() { return location; }
 
   @Override
   public Builder toBuilder() {
