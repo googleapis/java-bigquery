@@ -918,7 +918,10 @@ public final class QueryJobConfiguration extends JobConfiguration {
   public Long getMaxResults() {
     return maxResults;
   }
-  public String getLocation() { return location; }
+
+  public String getLocation() {
+    return location;
+  }
 
   @Override
   public Builder toBuilder() {
