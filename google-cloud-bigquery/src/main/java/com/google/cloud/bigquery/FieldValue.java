@@ -206,8 +206,8 @@ public class FieldValue implements Serializable {
   @SuppressWarnings("unchecked")
   public String getReadableTimestampValue() {
     checkNotNull(value);
-  Instant instant = Instant.EPOCH.plus(getTimestampValue(), ChronoUnit.MICROS);
-    return  instant.toString();
+    Instant instant = Instant.EPOCH.plus(getTimestampValue(), ChronoUnit.MICROS);
+    return instant.toString();
   }
 
   /**
