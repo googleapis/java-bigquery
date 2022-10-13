@@ -60,7 +60,7 @@ final class QueryRequestInfo {
   boolean isFastQuerySupported(JobId jobId) {
     boolean isJobId;
     // Fast query path is not possible if jobId is specified
-    if( jobId != null) {
+    if (jobId != null) {
       isJobId = jobId.getJob() == null;
     } else {
       isJobId = true;
