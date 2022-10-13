@@ -29,6 +29,8 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.threeten.bp.Instant;
+import org.threeten.bp.temporal.ChronoUnit;
 
 /**
  * Google BigQuery Table Field Value class. Objects of this class represent values of a BigQuery
@@ -189,6 +191,23 @@ public class FieldValue implements Serializable {
     // https://github.com/googleapis/java-bigquery/issues/1644
     BigDecimal scaled = secondsWithMicro.scaleByPowerOfTen(6).setScale(0, RoundingMode.HALF_UP);
     return scaled.longValue();
+  }
+
+  /**
+   * Returns this field's value as a {@code String}, representing a timestamp as a readable string.
+   * This method should only be used if the corresponding field has {@link
+   * LegacySQLTypeName#TIMESTAMP} type.
+   *
+   * @throws ClassCastException if the field is not a primitive type
+   * @throws NumberFormatException if the field's value could not be converted to {@link Long}
+   * @throws NullPointerException if {@link #isNull()} returns {@code true}
+   * @return
+   */
+  @SuppressWarnings("unchecked")
+  public String getReadableTimestampValue() {
+    checkNotNull(value);
+  Instant instant = Instant.EPOCH.plus(getTimestampValue(), ChronoUnit.MICROS);
+    return  instant.toString();
   }
 
   /**
