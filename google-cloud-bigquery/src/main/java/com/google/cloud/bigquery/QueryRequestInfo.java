@@ -58,6 +58,13 @@ final class QueryRequestInfo {
   }
 
   boolean isFastQuerySupported(JobId jobId) {
+    boolean isJobId;
+    // Fast query path is not possible if jobId is specified
+    if( jobId != null) {
+      isJobId = jobId.getJob() == null;
+    } else {
+      isJobId = true;
+    }
     return config.getClustering() == null
         && config.getCreateDisposition() == null
         && config.getDestinationEncryptionConfiguration() == null
@@ -71,8 +78,7 @@ final class QueryRequestInfo {
         && config.getTimePartitioning() == null
         && config.getUserDefinedFunctions() == null
         && config.getWriteDisposition() == null
-        && jobId.getJob() == null
-        && jobId.getLocation() != null;
+        && isJobId;
   }
 
   QueryRequest toPb() {
