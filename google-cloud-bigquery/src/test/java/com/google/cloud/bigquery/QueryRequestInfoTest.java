@@ -150,7 +150,7 @@ public class QueryRequestInfoTest {
 
   @Test
   public void testIsFastQuerySupported() {
-    JobId jobIdSupported = JobId.newBuilder().setLocation("US").build();
+    JobId jobIdSupported = JobId.newBuilder().build();
     JobId jobIdNotSupported = JobId.newBuilder().setJob("random-job-id").build();
     assertEquals(false, REQUEST_INFO.isFastQuerySupported(jobIdSupported));
     assertEquals(true, REQUEST_INFO_SUPPORTED.isFastQuerySupported(jobIdSupported));
