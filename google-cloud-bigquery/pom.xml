@@ -214,7 +214,7 @@
     <profile>
       <id>java17</id>
       <activation>
-        <jdk>[17,)</jdk>
+        <activeByDefault>true</activeByDefault>
       </activation>
       <build>
         <plugins>
@@ -227,7 +227,6 @@
           </plugin>
         </plugins>
       </build>
-
     </profile>
   </profiles>
 </project>
