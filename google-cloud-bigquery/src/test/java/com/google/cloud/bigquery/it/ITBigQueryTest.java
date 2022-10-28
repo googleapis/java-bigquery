@@ -2394,8 +2394,8 @@ public class ITBigQueryTest {
                 .build());
     for (FieldValueList row : resultInteractive.getValues()) {
       FieldValue timeStampCell = row.get(0);
-      String timestampStringValueActual = timeStampCell.getReadableTimestampValue();
-      assertEquals(timestampStringValueExpected, timestampStringValueActual);
+      Instant timestampStringValueActual = timeStampCell.getReadableTimestampValue();
+      assertEquals(timestampStringValueExpected, timestampStringValueActual.toString());
     }
   }
 

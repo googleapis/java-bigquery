@@ -18,6 +18,7 @@ package com.google.cloud.bigquery;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.time.temporal.ChronoUnit.MICROS;
 
 import com.google.api.client.util.Data;
 import com.google.api.core.BetaApi;
@@ -26,11 +27,10 @@ import com.google.common.io.BaseEncoding;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import org.threeten.bp.Instant;
-import org.threeten.bp.temporal.ChronoUnit;
 
 /**
  * Google BigQuery Table Field Value class. Objects of this class represent values of a BigQuery
@@ -38,13 +38,16 @@ import org.threeten.bp.temporal.ChronoUnit;
  * query or when listing table data.
  */
 public class FieldValue implements Serializable {
+
   private static final int MICROSECONDS = 1000000;
   private static final long serialVersionUID = 469098630191710061L;
 
   private final Attribute attribute;
   private final Object value;
 
-  /** The field value's attribute, giving information on the field's content type. */
+  /**
+   * The field value's attribute, giving information on the field's content type.
+   */
   public enum Attribute {
     /**
      * A primitive field value. A {@code FieldValue} is primitive when the corresponding field has
@@ -56,10 +59,14 @@ public class FieldValue implements Serializable {
      */
     PRIMITIVE,
 
-    /** A {@code FieldValue} for a field with {@link Field.Mode#REPEATED} mode. */
+    /**
+     * A {@code FieldValue} for a field with {@link Field.Mode#REPEATED} mode.
+     */
     REPEATED,
 
-    /** A {@code FieldValue} for a field of type {@link LegacySQLTypeName#RECORD}. */
+    /**
+     * A {@code FieldValue} for a field of type {@link LegacySQLTypeName#RECORD}.
+     */
     RECORD
   }
 
@@ -72,19 +79,21 @@ public class FieldValue implements Serializable {
    * Returns the attribute of this Field Value.
    *
    * @return {@link Attribute#PRIMITIVE} if the field is a primitive type ({@link
-   *     LegacySQLTypeName#BYTES}, {@link LegacySQLTypeName#BOOLEAN}, {@link
-   *     LegacySQLTypeName#STRING}, {@link LegacySQLTypeName#FLOAT}, {@link
-   *     LegacySQLTypeName#INTEGER}, {@link LegacySQLTypeName#NUMERIC}, {@link
-   *     LegacySQLTypeName#TIMESTAMP}, {@link LegacySQLTypeName#GEOGRAPHY}) or is {@code null}.
-   *     <p>Returns {@link Attribute#REPEATED} if the corresponding field has ({@link
-   *     Field.Mode#REPEATED}) mode. Returns {@link Attribute#RECORD} if the corresponding field is
-   *     a {@link LegacySQLTypeName#RECORD} type.
+   * LegacySQLTypeName#BYTES}, {@link LegacySQLTypeName#BOOLEAN}, {@link LegacySQLTypeName#STRING},
+   * {@link LegacySQLTypeName#FLOAT}, {@link LegacySQLTypeName#INTEGER}, {@link
+   * LegacySQLTypeName#NUMERIC}, {@link LegacySQLTypeName#TIMESTAMP}, {@link
+   * LegacySQLTypeName#GEOGRAPHY}) or is {@code null}.
+   * <p>Returns {@link Attribute#REPEATED} if the corresponding field has ({@link
+   * Field.Mode#REPEATED}) mode. Returns {@link Attribute#RECORD} if the corresponding field is a
+   * {@link LegacySQLTypeName#RECORD} type.
    */
   public Attribute getAttribute() {
     return attribute;
   }
 
-  /** Returns {@code true} if this field's value is {@code null}, {@code false} otherwise. */
+  /**
+   * Returns {@code true} if this field's value is {@code null}, {@code false} otherwise.
+   */
   public boolean isNull() {
     return value == null;
   }
@@ -201,13 +210,11 @@ public class FieldValue implements Serializable {
    * @throws ClassCastException if the field is not a primitive type
    * @throws NumberFormatException if the field's value could not be converted to {@link Long}
    * @throws NullPointerException if {@link #isNull()} returns {@code true}
-   * @return
    */
   @SuppressWarnings("unchecked")
-  public String getReadableTimestampValue() {
+  public Instant getReadableTimestampValue() {
     checkNotNull(value);
-    Instant instant = Instant.EPOCH.plus(getTimestampValue(), ChronoUnit.MICROS);
-    return instant.toString();
+    return Instant.EPOCH.plus(getTimestampValue(), MICROS);
   }
 
   /**
@@ -216,7 +223,7 @@ public class FieldValue implements Serializable {
    *
    * @throws ClassCastException if the field is not a primitive type
    * @throws NumberFormatException if the field's value could not be converted to {@link
-   *     java.math.BigDecimal}
+   * java.math.BigDecimal}
    * @throws NullPointerException if {@link #isNull()} returns {@code true}
    */
   @SuppressWarnings("unchecked")
