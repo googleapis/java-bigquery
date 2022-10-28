@@ -127,12 +127,6 @@
         <version>${google-api-services-bigquery.version}</version>
       </dependency>
 
-      <!-- Used for JSON type -->
-      <dependency>
-        <groupId>com.google.code.gson</groupId>
-        <artifactId>gson</artifactId>
-      </dependency>
-
       <!-- Used for Interval and Range types -->
       <dependency>
         <groupId>org.threeten</groupId>
