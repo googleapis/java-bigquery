@@ -14,6 +14,7 @@
 # limitations under the License.
 
 set -eo pipefail
+shopt -s nullglob
 
 ## Get the directory of the build script
 scriptDir=$(realpath $(dirname "${BASH_SOURCE[0]}"))
@@ -41,9 +42,9 @@ function determineMavenOpts() {
     then
       # MaxPermSize is no longer supported as of jdk 17
       echo -n "-Xmx1024m"
-    else
+  else
       echo -n "-Xmx1024m -XX:MaxPermSize=128m"
-    fi
+  fi
 }
 
 export MAVEN_OPTS=$(determineMavenOpts)
