@@ -195,9 +195,9 @@ public class FieldValue implements Serializable {
   }
 
   /**
-   * Returns this field's value as a {@code String}, representing a timestamp as an Instant.
-   * This method should only be used if the corresponding field has {@link
-   * LegacySQLTypeName#TIMESTAMP} type.
+   * Returns this field's value as a {@code String}, representing a timestamp as an Instant. This
+   * method should only be used if the corresponding field has {@link LegacySQLTypeName#TIMESTAMP}
+   * type.
    *
    * @throws ClassCastException if the field is not a primitive type
    * @throws NumberFormatException if the field's value could not be converted to {@link Long}
