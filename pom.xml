@@ -95,6 +95,11 @@
         <artifactId>google-api-services-bigquery</artifactId>
         <version>${google-api-services-bigquery.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-bom</artifactId>
+        <version>3.16.3</version>
+       </dependency>
 
       <!-- Test dependencies -->
       <dependency>
