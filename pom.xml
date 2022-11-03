@@ -99,7 +99,13 @@
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-bom</artifactId>
         <version>3.16.3</version>
-       </dependency>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-bom</artifactId>
+        <version>1.36.3</version>
+      </dependency>
+        
 
       <!-- Test dependencies -->
       <dependency>
