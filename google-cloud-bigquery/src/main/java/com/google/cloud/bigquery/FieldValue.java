@@ -204,7 +204,7 @@ public class FieldValue implements Serializable {
    * @throws NullPointerException if {@link #isNull()} returns {@code true}
    */
   @SuppressWarnings("unchecked")
-  public Instant getReadableTimestampValue() {
+  public Instant getTimestampInstant() {
     checkNotNull(value);
     return Instant.EPOCH.plus(getTimestampValue(), MICROS);
   }
