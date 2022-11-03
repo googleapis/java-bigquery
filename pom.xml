@@ -99,11 +99,15 @@
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-bom</artifactId>
         <version>3.16.3</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-bom</artifactId>
         <version>1.36.3</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
         
 
