@@ -1389,7 +1389,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       // the job created by the query method will be in that location, even if the table to be
       // queried is in a different location. This may
       // cause the query to fail with "BigQueryException: Not found"
-      if(jobId.getLocation() != null) {
+      if (jobId.getLocation() != null) {
         content.setLocation(jobId.getLocation());
       }
       return queryRpc(projectId, content, options);
