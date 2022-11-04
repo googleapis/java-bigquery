@@ -58,14 +58,14 @@ final class QueryRequestInfo {
   }
 
   boolean isFastQuerySupported(JobId jobId) {
-    boolean isJobId;
-    // Fast query path is not possible if jobId is specified
-    // Respect both JobId and Location specified by user.
-    // Specifying either will force the query to take the slower path.
+    boolean isJobIdFastQuerySupported;
+    // Fast query path is not possible if job is specified in the JobID object
+    // Respect Job field value in JobId specified by user.
+    // Specifying it will force the query to take the slower path.
     if (jobId != null) {
-      isJobId = jobId.getJob() == null && jobId.getLocation() == null;
+      isJobIdFastQuerySupported = jobId.getJob() == null;
     } else {
-      isJobId = true;
+      isJobIdFastQuerySupported = true;
     }
     return config.getClustering() == null
         && config.getCreateDisposition() == null
@@ -80,7 +80,7 @@ final class QueryRequestInfo {
         && config.getTimePartitioning() == null
         && config.getUserDefinedFunctions() == null
         && config.getWriteDisposition() == null
-        && isJobId;
+        && isJobIdFastQuerySupported;
   }
 
   QueryRequest toPb() {
