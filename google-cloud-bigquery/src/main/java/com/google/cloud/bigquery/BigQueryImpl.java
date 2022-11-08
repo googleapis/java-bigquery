@@ -1387,7 +1387,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       // Be careful when setting the projectID in JobId, if a projectID is specified in the JobId,
       // the job created by the query method will use that project. This may
       // cause the query to fail with "BigQueryException: Not found"
-      if(jobId.getProject() != null){
+      if (jobId.getProject() != null) {
         projectId = jobId.getProject();
       }
       QueryRequest content = requestInfo.toPb();
