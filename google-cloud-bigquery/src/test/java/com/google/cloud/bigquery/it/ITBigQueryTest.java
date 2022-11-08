@@ -3273,7 +3273,28 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testFastSQLQueryWithJobId() throws InterruptedException {
+  public void testProjectIDFastSQLQueryWithJobId() throws InterruptedException {
+    String random_project_id = "RANDOM_PROJECT_" + UUID.randomUUID().toString().replace('-', '_');
+    System.out.println(random_project_id);
+    String query =
+        "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID_FASTQUERY.getTable();
+    // With incorrect projectID in jobid
+    // The job will be created with the specified(incorrect) projectID
+    // hence failing the operation
+    JobId jobIdWithProjectId = JobId.newBuilder().setProject(random_project_id).build();
+    QueryJobConfiguration configSelect =
+        QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
+    try {
+      bigquery.query(configSelect, jobIdWithProjectId);
+    } catch (Exception exception) {
+      // error message for non-existent project
+      assertTrue(exception.getMessage().contains("Cannot parse  as CloudRegion"));
+      assertEquals(BigQueryException.class, exception.getClass());
+    }
+  }
+
+  @Test
+  public void testLocationFastSQLQueryWithJobId() throws InterruptedException {
     DatasetInfo infoUK =
         DatasetInfo.newBuilder(UK_DATASET)
             .setDescription(DESCRIPTION)
@@ -3307,6 +3328,7 @@ public class ITBigQueryTest {
     }
     // With incorrect location in jobid
     // The job will be created with the specified(incorrect) location
+    // hence failing the operation
     String query = "SELECT StringField FROM " + TABLE_ID_FASTQUERY_UK.getTable();
     JobId jobIdWithLocation = JobId.newBuilder().setLocation("us-west1").build();
     QueryJobConfiguration configSelect =
@@ -3318,7 +3340,7 @@ public class ITBigQueryTest {
       assertEquals(BigQueryException.class, exception.getClass());
     }
 
-    // WithoutJobId in location, the query job defaults to the location of the dataset
+    // Without location in jobID, the query job defaults to the location of the dataset
     JobId jobIdNoLocation = JobId.newBuilder().build();
     QueryJobConfiguration configNoLocation =
         QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(UK_DATASET)).build();
