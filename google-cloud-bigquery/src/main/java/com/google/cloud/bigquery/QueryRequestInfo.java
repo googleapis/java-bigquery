@@ -62,7 +62,7 @@ final class QueryRequestInfo {
     // Respect Job field value in JobId specified by user.
     // Specifying it will force the query to take the slower path.
     if (jobId != null) {
-      if(jobId.getJob() != null){
+      if (jobId.getJob() != null) {
         return false;
       }
     }

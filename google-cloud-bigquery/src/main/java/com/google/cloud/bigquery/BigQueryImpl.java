@@ -1387,7 +1387,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       // the job created by the query method will use that project. This may cause the query to
       // fail with "Access denied" if the project do not have enough permissions to run the job.
 
-      String projectId = jobId.getProject() != null ? jobId.getProject() : getOptions().getProjectId();
+      String projectId =
+          jobId.getProject() != null ? jobId.getProject() : getOptions().getProjectId();
       QueryRequest content = requestInfo.toPb();
       // Be careful when setting the location in JobId, if a location is specified in the JobId,
       // the job created by the query method will be in that location, even if the table to be
