@@ -1383,18 +1383,16 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     // put on fast path
     QueryRequestInfo requestInfo = new QueryRequestInfo(configuration);
     if (requestInfo.isFastQuerySupported(jobId)) {
-      String projectId = getOptions().getProjectId();
       // Be careful when setting the projectID in JobId, if a projectID is specified in the JobId,
-      // the job created by the query method will use that project. This may
-      // cause the query to fail with "BigQueryException: Not found"
-      if (jobId.getProject() != null) {
-        projectId = jobId.getProject();
-      }
+      // the job created by the query method will use that project. This may cause the query to
+      // fail with "Access denied" if the project do not have enough permissions to run the job.
+
+      String projectId = jobId.getProject() != null ? jobId.getProject() : getOptions().getProjectId();
       QueryRequest content = requestInfo.toPb();
       // Be careful when setting the location in JobId, if a location is specified in the JobId,
       // the job created by the query method will be in that location, even if the table to be
-      // queried is in a different location. This may
-      // cause the query to fail with "BigQueryException: Not found"
+      // queried is in a different location. This may cause the query to fail with
+      // "BigQueryException: Not found"
       if (jobId.getLocation() != null) {
         content.setLocation(jobId.getLocation());
       }
