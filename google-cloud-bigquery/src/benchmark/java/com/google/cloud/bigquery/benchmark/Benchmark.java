@@ -16,7 +16,8 @@
 
 package com.google.cloud.bigquery.benchmark;
 
-import com.google.api.client.json.jackson2.JacksonFactory;
+//import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.FieldValue;
@@ -40,7 +41,7 @@ public class Benchmark {
       return;
     }
     String[] requests =
-        new JacksonFactory()
+        new GsonFactory()
             .createJsonParser(new FileInputStream(args[0]))
             .parseAndClose(String[].class);
 
