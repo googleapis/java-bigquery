@@ -1185,11 +1185,16 @@ public class ITBigQueryTest {
     assertEquals(schema, remoteTable.<StandardTableDefinition>getDefinition().getSchema());
     bigquery.delete(tableId);
   }
+
   @Test
   public void testCreateDatasetWithDefaultCollation() {
     String collationDataset = "collation_dataset";
     DatasetInfo info =
-        DatasetInfo.newBuilder(collationDataset).setDescription(DESCRIPTION).setDefaultCollation("und:ci").setLabels(LABELS).build();
+        DatasetInfo.newBuilder(collationDataset)
+            .setDescription(DESCRIPTION)
+            .setDefaultCollation("und:ci")
+            .setLabels(LABELS)
+            .build();
     bigquery.create(info);
 
     Dataset dataset = bigquery.getDataset(DatasetId.of(collationDataset));
@@ -1209,11 +1214,11 @@ public class ITBigQueryTest {
             .setMaxLength(150L)
             .build();
 
-    Schema schema =
-        Schema.of(stringFieldWithoutCollation);
+    Schema schema = Schema.of(stringFieldWithoutCollation);
     StandardTableDefinition tableDefinition =
         StandardTableDefinition.newBuilder().setSchema(schema).build();
-    TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).setDefaultCollation("und:ci").build();
+    TableInfo tableInfo =
+        TableInfo.newBuilder(tableId, tableDefinition).setDefaultCollation("und:ci").build();
 
     // Create table with default collation but fields do not have collation.
     Table createdTable = bigquery.create(tableInfo);
@@ -1248,8 +1253,7 @@ public class ITBigQueryTest {
             .setMaxLength(150L)
             .build();
 
-    Schema schema =
-        Schema.of(stringFieldWithCollation);
+    Schema schema = Schema.of(stringFieldWithCollation);
     StandardTableDefinition tableDefinition =
         StandardTableDefinition.newBuilder().setSchema(schema).build();
     TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build();

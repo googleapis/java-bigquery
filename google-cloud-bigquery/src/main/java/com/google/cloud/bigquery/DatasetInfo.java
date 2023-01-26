@@ -150,20 +150,16 @@ public class DatasetInfo implements Serializable {
     public abstract Builder setDefaultPartitionExpirationMs(Long defaultPartitionExpirationMs);
 
     /**
-    * Optional. Defines the default collation specification of future tables
-    * created in the dataset. If a table is created in this dataset without
-    * table-level default collation, then the table inherits the dataset default
-    * collation, which is applied to the string fields that do not have explicit
-    * collation specified. A change to this field affects only tables created
-    * afterwards, and does not alter the existing tables.
-    * The following values are supported:
-    *
-    * * 'und:ci': undetermined locale, case insensitive.
-    * * '': empty string. Default to case-sensitive behavior.
-    * (-- A wrapper is used here because it is possible to set the value to the
-    *     empty string. --)
-    * (-- api-linter: standard-fields=disabled --)
-    */
+     * Optional. Defines the default collation specification of future tables created in the
+     * dataset. If a table is created in this dataset without table-level default collation, then
+     * the table inherits the dataset default collation, which is applied to the string fields that
+     * do not have explicit collation specified. A change to this field affects only tables created
+     * afterwards, and does not alter the existing tables. The following values are supported:
+     *
+     * <p>* 'und:ci': undetermined locale, case insensitive. * '': empty string. Default to
+     * case-sensitive behavior. (-- A wrapper is used here because it is possible to set the value
+     * to the empty string. --) (-- api-linter: standard-fields=disabled --)
+     */
     public abstract Builder setDefaultCollation(String defaultCollation);
 
     /** Creates a {@code DatasetInfo} object. */
@@ -589,7 +585,7 @@ public class DatasetInfo implements Serializable {
     if (defaultPartitionExpirationMs != null) {
       datasetPb.setDefaultPartitionExpirationMs(defaultPartitionExpirationMs);
     }
-    if (defaultCollation !=null) {
+    if (defaultCollation != null) {
       datasetPb.setDefaultCollation(defaultCollation);
     }
     return datasetPb;
