@@ -289,13 +289,12 @@ public final class Field implements Serializable {
     }
 
     /**
-     * Optional. Field collation can be set only when the type of field is STRING.
-     * The following values are supported:
+     * Optional. Field collation can be set only when the type of field is STRING. The following
+     * values are supported:
      *
-     * * 'und:ci': undetermined locale, case insensitive.
-     * * '': empty string. Default to case-sensitive behavior.
-     * (-- A wrapper is used here because it is possible to set the value to the
-     *    empty string. --)
+     * <p>* 'und:ci': undetermined locale, case insensitive. * '': empty string. Default to
+     * case-sensitive behavior. (-- A wrapper is used here because it is possible to set the value
+     * to the empty string. --)
      */
     public Builder setCollation(String collation) {
       this.collation = collation;
@@ -491,7 +490,7 @@ public final class Field implements Serializable {
       List<TableFieldSchema> fieldsPb = Lists.transform(getSubFields(), TO_PB_FUNCTION);
       fieldSchemaPb.setFields(fieldsPb);
     }
-    if(collation != null) {
+    if (collation != null) {
       fieldSchemaPb.setCollation(collation);
     }
     return fieldSchemaPb;
@@ -526,7 +525,7 @@ public final class Field implements Serializable {
             ? FieldList.of(Lists.transform(fieldSchemaPb.getFields(), FROM_PB_FUNCTION))
             : null;
     fieldBuilder.setType(LegacySQLTypeName.valueOf(fieldSchemaPb.getType()), subFields);
-    if(fieldSchemaPb.getCollation() != null) {
+    if (fieldSchemaPb.getCollation() != null) {
       fieldBuilder.setCollation(fieldSchemaPb.getCollation());
     }
     return fieldBuilder.build();

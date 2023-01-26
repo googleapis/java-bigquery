@@ -302,6 +302,7 @@ public class TableInfo implements Serializable {
       this.requirePartitionFilter = requirePartitionFilter;
       return this;
     }
+
     @Override
     public Builder setDefaultCollation(String defaultCollation) {
       this.defaultCollation = defaultCollation;
