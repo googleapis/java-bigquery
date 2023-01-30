@@ -452,7 +452,6 @@ public class ITBigQueryTest {
   private static Storage storage;
 
   @Rule public Timeout globalTimeout = Timeout.seconds(300);
-
   @BeforeClass
   public static void beforeClass() throws InterruptedException, IOException {
     RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
@@ -3154,7 +3153,7 @@ public class ITBigQueryTest {
           statistics.getBiEngineStats().getBiEngineReasons().get(0).getCode(), "OTHER_REASON");
       assertEquals(
           statistics.getBiEngineStats().getBiEngineReasons().get(0).getMessage(),
-          "Query output to destination table is not supported.");
+          "Only SELECT queries without a destination table can be accelerated.");
     }
     assertNotNull(statistics.getQueryPlan());
   }
