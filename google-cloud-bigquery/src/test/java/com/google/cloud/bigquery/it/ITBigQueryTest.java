@@ -185,6 +185,7 @@ public class ITBigQueryTest {
   private static final String OTHER_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String MODEL_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String ROUTINE_DATASET = RemoteBigQueryHelper.generateDatasetName();
+  private static final String COLLATION_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
   private static final String RANDOM_ID = UUID.randomUUID().toString().substring(0, 8);
   private static final String CLOUD_SAMPLES_DATA =
@@ -788,6 +789,7 @@ public class ITBigQueryTest {
       RemoteBigQueryHelper.forceDelete(bigquery, UK_DATASET);
       RemoteBigQueryHelper.forceDelete(bigquery, MODEL_DATASET);
       RemoteBigQueryHelper.forceDelete(bigquery, ROUTINE_DATASET);
+      RemoteBigQueryHelper.forceDelete(bigquery, COLLATION_DATASET);
     }
     if (storage != null) {
       boolean wasDeleted = RemoteStorageHelper.forceDelete(storage, BUCKET, 10, TimeUnit.SECONDS);
@@ -1188,19 +1190,17 @@ public class ITBigQueryTest {
 
   @Test
   public void testCreateDatasetWithDefaultCollation() {
-    String collationDataset = RemoteBigQueryHelper.generateDatasetName();
     DatasetInfo info =
-        DatasetInfo.newBuilder(collationDataset)
+        DatasetInfo.newBuilder(COLLATION_DATASET)
             .setDescription(DESCRIPTION)
             .setDefaultCollation("und:ci")
             .setLabels(LABELS)
             .build();
     bigquery.create(info);
 
-    Dataset dataset = bigquery.getDataset(DatasetId.of(collationDataset));
+    Dataset dataset = bigquery.getDataset(DatasetId.of(COLLATION_DATASET));
     assertEquals("und:ci", dataset.getDefaultCollation());
 
-    RemoteBigQueryHelper.forceDelete(bigquery, collationDataset);
   }
 
   @Test
