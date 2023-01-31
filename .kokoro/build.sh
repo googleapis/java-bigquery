@@ -61,7 +61,7 @@ javadoc)
 integration)
     mvn -B ${INTEGRATION_TEST_ARGS} \
       -ntp \
-      -e \
+      -e -X \
       -Dtest=ITBigQueryTest \
       -DtrimStackTrace=false \
       -Dclirr.skip=true \
@@ -83,12 +83,12 @@ nightly-it)
     ;;
 graalvm)
     # Run Integration Tests with Native Image. Skip running nightly tests in presubmits.
-    mvn -B ${INTEGRATION_TEST_ARGS} -ntp  -e -Dtest=ITBigQueryTest -Pnative -Penable-integration-tests test
+    mvn -B ${INTEGRATION_TEST_ARGS} -ntp  -e -X -Dtest=ITBigQueryTest -Pnative -Penable-integration-tests test
     RETURN_CODE=$?
     ;;
 graalvm17)
     # Run Integration Tests with Native Image. Skip running nightly tests in presubmits.
-    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -e -Dtest=ITBigQueryTest -Pnative -Penable-integration-tests test
+    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -e -X -Dtest=ITBigQueryTest -Pnative -Penable-integration-tests test
     RETURN_CODE=$?
     ;;
 nightly-graalvm)
