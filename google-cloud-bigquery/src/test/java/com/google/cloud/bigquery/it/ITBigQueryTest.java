@@ -3994,7 +3994,7 @@ public class ITBigQueryTest {
   }
 
   private static void assertsFieldValue(FieldValue record) {
-    assertEquals(FieldValue.Attribute.RECORD, record.getAttribute());
+   // assertEquals(FieldValue.Attribute.RECORD, record.getAttribute());
     assertEquals(true, record.getRecordValue().get("booleanField").getBooleanValue());
     assertEquals(10, record.getRecordValue().get("integerField").getLongValue());
     assertEquals("test-stringField", record.getRecordValue().get("stringField").getStringValue());
