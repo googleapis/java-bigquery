@@ -3967,9 +3967,9 @@ public class ITBigQueryTest {
     assertEquals(1, Iterables.size(result.getValues()));
     for (FieldValueList values : result.iterateAll()) {
       for (FieldValue value : values) {
-       // for (FieldValue record : value.getRecordValue()) {
+        for (FieldValue record : value.getRecordValue()) {
           assertsFieldValue(value);
-       // }
+        }
       }
     }
   }
