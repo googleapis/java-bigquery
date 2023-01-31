@@ -61,7 +61,7 @@ javadoc)
 integration)
     mvn -B ${INTEGRATION_TEST_ARGS} \
       -ntp \
-      -Dtest=ITBigQueryTest,ITRemoteUDFTest \
+      -Dtest=ITBigQueryTest \
       -DtrimStackTrace=false \
       -Dclirr.skip=true \
       -Denforcer.skip=true \
