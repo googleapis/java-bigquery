@@ -88,6 +88,7 @@ graalvm)
     ;;
 graalvm17)
     # Run Integration Tests with Native Image. Skip running nightly tests in presubmits.
+
     mvn -B ${INTEGRATION_TEST_ARGS} -ntp -X -Dtest=ITRemoteUDFTest -Pnative -Penable-integration-tests test
     RETURN_CODE=$?
     ;;
