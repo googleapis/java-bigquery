@@ -4027,8 +4027,7 @@ public class ITBigQueryTest {
     for (FieldValueList values : result.iterateAll()) {
       for (FieldValue value : values) {
         assertEquals(Attribute.RECORD, value.getAttribute());
-        assertEquals(
-            true, value.getRecordValue().get(0).getRecordValue().get(0).getBooleanValue());
+        assertEquals(true, value.getRecordValue().get(0).getRecordValue().get(0).getBooleanValue());
         assertEquals(10, value.getRecordValue().get(0).getRecordValue().get(1).getLongValue());
         assertEquals(
             "test-stringField",
@@ -4036,7 +4035,6 @@ public class ITBigQueryTest {
         assertEquals(true, value.getRecordValue().get(1).getBooleanValue());
         assertEquals("test-stringField", value.getRecordValue().get(2).getStringValue());
         assertEquals(10, value.getRecordValue().get(3).getLongValue());
-
       }
     }
   }
