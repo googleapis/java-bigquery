@@ -3967,9 +3967,7 @@ public class ITBigQueryTest {
     assertEquals(1, Iterables.size(result.getValues()));
     for (FieldValueList values : result.iterateAll()) {
       for (FieldValue value : values) {
-        for (FieldValue record : value.getRecordValue()) {
           assertsFieldValue(value);
-        }
       }
     }
   }
@@ -3994,7 +3992,7 @@ public class ITBigQueryTest {
   }
 
   private static void assertsFieldValue(FieldValue record) {
-   // assertEquals(FieldValue.Attribute.RECORD, record.getAttribute());
+    assertEquals(FieldValue.Attribute.RECORD, record.getAttribute());
     assertEquals(true, record.getRecordValue().get("booleanField").getBooleanValue());
     assertEquals(10, record.getRecordValue().get("integerField").getLongValue());
     assertEquals("test-stringField", record.getRecordValue().get("stringField").getStringValue());
@@ -4028,18 +4026,17 @@ public class ITBigQueryTest {
     assertEquals(1, Iterables.size(result.getValues()));
     for (FieldValueList values : result.iterateAll()) {
       for (FieldValue value : values) {
-        assertEquals(FieldValue.Attribute.RECORD, value.getAttribute());
-        for (FieldValue record : value.getRecordValue()) {
+        assertEquals(Attribute.RECORD, value.getAttribute());
           assertEquals(
-              true, record.getRecordValue().get(0).getRecordValue().get(0).getBooleanValue());
-          assertEquals(10, record.getRecordValue().get(0).getRecordValue().get(1).getLongValue());
+              true, value.getRecordValue().get(0).getRecordValue().get(0).getBooleanValue());
+          assertEquals(10, value.getRecordValue().get(0).getRecordValue().get(1).getLongValue());
           assertEquals(
               "test-stringField",
-              record.getRecordValue().get(0).getRecordValue().get(2).getStringValue());
-          assertEquals(true, record.getRecordValue().get(1).getBooleanValue());
-          assertEquals("test-stringField", record.getRecordValue().get(2).getStringValue());
-          assertEquals(10, record.getRecordValue().get(3).getLongValue());
-        }
+              value.getRecordValue().get(0).getRecordValue().get(2).getStringValue());
+          assertEquals(true, value.getRecordValue().get(1).getBooleanValue());
+          assertEquals("test-stringField", value.getRecordValue().get(2).getStringValue());
+          assertEquals(10, value.getRecordValue().get(3).getLongValue());
+
       }
     }
   }
