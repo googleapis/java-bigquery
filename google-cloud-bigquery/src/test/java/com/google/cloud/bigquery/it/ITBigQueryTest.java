@@ -3956,7 +3956,7 @@ public class ITBigQueryTest {
     struct.put("integerField", integerValue);
     struct.put("stringField", stringValue);
     QueryParameterValue recordValue = QueryParameterValue.struct(struct);
-    String query = "SELECT STRUCT(@recordField) AS record";
+    String query = "SELECT @recordField AS record";
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query)
             .setDefaultDataset(DATASET)
