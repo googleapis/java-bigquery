@@ -4017,7 +4017,7 @@ public class ITBigQueryTest {
     structValue.put("string", stringValue);
     structValue.put("struct", recordValue);
     QueryParameterValue nestedRecordField = QueryParameterValue.struct(structValue);
-    String query = "SELECT STRUCT(@nestedRecordField) AS record";
+    String query = "SELECT @nestedRecordField AS record";
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query)
             .setDefaultDataset(DATASET)
