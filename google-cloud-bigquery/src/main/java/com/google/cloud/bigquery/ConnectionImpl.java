@@ -1217,8 +1217,8 @@ class ConnectionImpl implements Connection {
       return false;
     }
 
-    long resultRatio = totalRows / pageRows;
     if (Boolean.TRUE.equals(connectionSettings.getUseReadAPI())) {
+      long resultRatio = totalRows / pageRows;
       return resultRatio >= connectionSettings.getTotalToPageRowCountRatio()
           && totalRows > connectionSettings.getMinResultSize();
     } else {
