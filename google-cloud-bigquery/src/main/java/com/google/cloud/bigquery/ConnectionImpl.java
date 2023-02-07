@@ -1203,12 +1203,8 @@ class ConnectionImpl implements Connection {
 
   @VisibleForTesting
   boolean useReadAPI(Long totalRows, Long pageRows, Schema schema, Boolean hasQueryParameters) {
-    if ((totalRows == null || pageRows == null)
-        && Boolean.TRUE.equals(
-            connectionSettings
-                .getUseReadAPI())) { // totalRows and pageRows are returned null when the job is not
-      // complete
-      return true;
+    if (totalRows == null || pageRows == null) {
+      return false;
     }
 
     // Read API does not yet support Interval Type or QueryParameters
