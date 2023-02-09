@@ -665,7 +665,7 @@ public class ITBigQueryTest {
           + "  \"StringField\": \"stringValue\","
           + "  \"BooleanField\": \"false\""
           + "}";
-  private static final String KEY = "session_id";
+  private static final String KEY = "time_zone";
   private static final String VALUE = "US/Eastern";
   private static final ConnectionProperty CONNECTION_PROPERTY =
       ConnectionProperty.newBuilder().setKey(KEY).setValue(VALUE).build();
