@@ -216,8 +216,9 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
       }
       if (loadConfigurationPb.getConnectionProperties() != null) {
 
-        this.connectionProperties = Lists.transform(loadConfigurationPb.getConnectionProperties(),
-            ConnectionProperty.FROM_PB_FUNCTION );
+        this.connectionProperties =
+            Lists.transform(
+                loadConfigurationPb.getConnectionProperties(), ConnectionProperty.FROM_PB_FUNCTION);
       }
       createSession = loadConfigurationPb.getCreateSession();
     }
@@ -388,7 +389,7 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
       return this;
     }
 
-    public Builder setCreateSession(Boolean createSession){
+    public Builder setCreateSession(Boolean createSession) {
       this.createSession = createSession;
       return this;
     }
@@ -554,6 +555,7 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
   public Boolean getCreateSession() {
     return createSession;
   }
+
   @Override
   public Builder toBuilder() {
     return new Builder(this);
@@ -585,7 +587,6 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
         .add("referenceFileSchemaUri", referenceFileSchemaUri)
         .add("connectionProperties", connectionProperties)
         .add("createSession", createSession);
-
   }
 
   @Override
@@ -691,11 +692,11 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
     if (referenceFileSchemaUri != null) {
       loadConfigurationPb.setReferenceFileSchemaUri(referenceFileSchemaUri);
     }
-    if(connectionProperties != null){
-      loadConfigurationPb.setConnectionProperties
-          (Lists.transform(connectionProperties, ConnectionProperty.TO_PB_FUNCTION));
+    if (connectionProperties != null) {
+      loadConfigurationPb.setConnectionProperties(
+          Lists.transform(connectionProperties, ConnectionProperty.TO_PB_FUNCTION));
     }
-    if(createSession != null){
+    if (createSession != null) {
       loadConfigurationPb.setCreateSession(createSession);
     }
 

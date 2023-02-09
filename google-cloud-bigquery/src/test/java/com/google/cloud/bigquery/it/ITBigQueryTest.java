@@ -87,7 +87,6 @@ import com.google.cloud.bigquery.JobStatistics.SessionInfo;
 import com.google.cloud.bigquery.JobStatistics.TransactionInfo;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.LoadJobConfiguration;
-import com.google.cloud.bigquery.LoadJobConfigurationTest;
 import com.google.cloud.bigquery.MaterializedViewDefinition;
 import com.google.cloud.bigquery.Model;
 import com.google.cloud.bigquery.ModelId;
@@ -3658,7 +3657,7 @@ public class ITBigQueryTest {
 
   @Test
   public void testLoadSessionSupport() throws InterruptedException {
-    //Start the session
+    // Start the session
     TableId sessionTableId = TableId.of("_SESSION", "test_temp_destination_table");
     LoadJobConfiguration configuration =
         LoadJobConfiguration.newBuilder(
