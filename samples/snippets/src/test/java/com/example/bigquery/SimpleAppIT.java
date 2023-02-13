@@ -31,7 +31,7 @@ import org.junit.runners.JUnit4;
 /** Tests for simple app sample. */
 @RunWith(JUnit4.class)
 @SuppressWarnings("checkstyle:abbreviationaswordinname")
-public class AppIT {
+public class SimpleAppIT {
 
   private final Logger log = Logger.getLogger(this.getClass().getName());
   private ByteArrayOutputStream bout;
