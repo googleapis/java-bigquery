@@ -31,7 +31,7 @@ import org.junit.runners.JUnit4;
 /** Tests for simple app sample. */
 @RunWith(JUnit4.class)
 @SuppressWarnings("checkstyle:abbreviationaswordinname")
-public class SimpleAppIT {
+public class AppIT {
 
   private final Logger log = Logger.getLogger(this.getClass().getName());
   private ByteArrayOutputStream bout;
@@ -56,7 +56,7 @@ public class SimpleAppIT {
 
   @Test
   public void testQuickstart() throws Exception {
-    SimpleApp.main();
+    App.main();
     String got = bout.toString();
     assertThat(got).contains("https://stackoverflow.com/questions/");
   }

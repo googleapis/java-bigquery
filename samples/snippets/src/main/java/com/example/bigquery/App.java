@@ -31,7 +31,7 @@ import java.util.UUID;
 
 // [END bigquery_simple_app_deps]
 
-public class SimpleApp {
+public class App {
   public static void main(String... args) throws Exception {
     // [START bigquery_simple_app_client]
     BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
