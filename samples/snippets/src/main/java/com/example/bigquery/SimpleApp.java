@@ -75,8 +75,8 @@ public class SimpleApp {
     for (FieldValueList row : result.iterateAll()) {
       // String type
       String url = row.get("url").getStringValue();
-      String view_count = row.get("view_count").getStringValue();
-      System.out.printf("%s : %s views\n", url, view_count);
+      String viewCount = row.get("view_count").getStringValue();
+      System.out.printf("%s : %s views\n", url, viewCount);
     }
     // [END bigquery_simple_app_print]
   }
