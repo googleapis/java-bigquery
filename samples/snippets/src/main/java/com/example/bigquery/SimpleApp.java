@@ -50,7 +50,6 @@ public class SimpleApp {
             .setUseLegacySql(false)
             .build();
 
-
     // Create a job ID so that we can safely retry.
     JobId jobId = JobId.of(UUID.randomUUID().toString());
     Job queryJob = bigquery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
@@ -78,7 +77,6 @@ public class SimpleApp {
       String url = row.get("url").getStringValue();
       String view_count = row.get("view_count").getStringValue();
       System.out.printf("%s : %s views\n", url, view_count);
-
     }
     // [END bigquery_simple_app_print]
   }
