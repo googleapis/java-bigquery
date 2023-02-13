@@ -56,7 +56,7 @@ public class AppIT {
 
   @Test
   public void testQuickstart() throws Exception {
-    App.main();
+    SimpleApp.main();
     String got = bout.toString();
     assertThat(got).contains("https://stackoverflow.com/questions/");
   }
