@@ -5184,7 +5184,7 @@ public class ITBigQueryTest {
 
   @Test
   public void testCloneTableCopyJob() throws InterruptedException {
-  /*  String sourceTableName = "test_copy_job_base_table";
+    /*  String sourceTableName = "test_copy_job_base_table";
     String ddlTableName = TABLE_ID_DDL.getTable();
     // this creates a clone table at specified snapshotTime
     String cloneTableName = String.format("test_clone_table");

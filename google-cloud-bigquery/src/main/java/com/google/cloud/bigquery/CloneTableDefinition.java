@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
 
 @AutoValue
 @BetaApi
-public abstract class CloneTableDefinition  extends TableDefinition {
+public abstract class CloneTableDefinition extends TableDefinition {
 
   private static final long serialVersionUID = 1460853787400450649L;
 
@@ -42,9 +42,11 @@ public abstract class CloneTableDefinition  extends TableDefinition {
      */
     public abstract CloneTableDefinition.Builder setCloneTime(String dateTime);
 
-    public abstract CloneTableDefinition.Builder setTimePartitioning(TimePartitioning timePartitioning);
+    public abstract CloneTableDefinition.Builder setTimePartitioning(
+        TimePartitioning timePartitioning);
 
-    public abstract CloneTableDefinition.Builder setRangePartitioning(RangePartitioning rangePartitioning);
+    public abstract CloneTableDefinition.Builder setRangePartitioning(
+        RangePartitioning rangePartitioning);
 
     public abstract CloneTableDefinition.Builder setClustering(Clustering clustering);
 
