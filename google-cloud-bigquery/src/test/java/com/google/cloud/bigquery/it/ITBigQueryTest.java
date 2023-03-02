@@ -2353,6 +2353,7 @@ public class ITBigQueryTest {
     assertTrue(result2.hasNextPage());
   }
 
+  //Testing
   @Test
   public void testFastDMLQuery() throws InterruptedException {
     String tableName = TABLE_ID_FASTQUERY.getTable();
