@@ -5184,9 +5184,8 @@ public class ITBigQueryTest {
 
   @Test
   public void testCloneTableCopyJob() throws InterruptedException {
-    /*  String sourceTableName = "test_copy_job_base_table";
+      String sourceTableName = "test_copy_job_base_table";
     String ddlTableName = TABLE_ID_DDL.getTable();
-    // this creates a clone table at specified snapshotTime
     String cloneTableName = String.format("test_clone_table");
     // Create source table with some data in it
     String ddlQuery =
@@ -5217,24 +5216,23 @@ public class ITBigQueryTest {
     assertNotNull(createdConfiguration.getOperationType());
     assertNotNull(createdConfiguration.getDestinationTable());
     Job completedJob = createdJob.waitFor();
-    assertNull(completedJob.getStatus().getError());*/
-    String cloneTableName = "addressClone";
-    TableId cloneTableId = TableId.of("test_dataset_name_1", cloneTableName);
-    Table cloneTable = bigquery.getTable("test_dataset_name_1", cloneTableName);
+    assertNull(completedJob.getStatus().getError());
+
+    Table cloneTable = bigquery.getTable(DATASET, cloneTableName);
     assertNotNull(cloneTable);
     System.out.println(cloneTable.getDefinition().getType());
     assertEquals(cloneTableId.getDataset(), cloneTable.getTableId().getDataset());
     assertEquals(cloneTableName, cloneTable.getTableId().getTable());
     System.out.println(cloneTable.getDefinition());
     assertTrue(cloneTable.getDefinition() instanceof CloneTableDefinition);
-    // assertEquals(DDL_TABLE_SCHEMA, cloneTable.getDefinition().getSchema());
-    // assertNotNull(((CloneTableDefinition) cloneTable.getDefinition()).getCloneTime());
-    // assertEquals(
-    //     sourceTableName,
-    //     ((CloneTableDefinition) cloneTable.getDefinition()).getBaseTableId().getTable());
-    //
-    // // Clean up
-    // assertTrue(remoteTable.delete());
-    // assertTrue(cloneTable.delete());
+    assertEquals(DDL_TABLE_SCHEMA, cloneTable.getDefinition().getSchema());
+    assertNotNull(((CloneTableDefinition) cloneTable.getDefinition()).getCloneTime());
+    assertEquals(
+        sourceTableName,
+        ((CloneTableDefinition) cloneTable.getDefinition()).getBaseTableId().getTable());
+
+    // Clean up
+    assertTrue(remoteTable.delete());
+    assertTrue(cloneTable.delete());
   }
 }
