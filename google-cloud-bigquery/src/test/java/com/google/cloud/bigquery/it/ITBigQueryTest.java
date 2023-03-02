@@ -2353,7 +2353,6 @@ public class ITBigQueryTest {
     assertTrue(result2.hasNextPage());
   }
 
-  //Testing
   @Test
   public void testFastDMLQuery() throws InterruptedException {
     String tableName = TABLE_ID_FASTQUERY.getTable();
@@ -3155,7 +3154,7 @@ public class ITBigQueryTest {
           statistics.getBiEngineStats().getBiEngineReasons().get(0).getCode(), "OTHER_REASON");
       assertEquals(
           statistics.getBiEngineStats().getBiEngineReasons().get(0).getMessage(),
-          "Query output to destination table is not supported.");
+          "Only SELECT queries without a destination table can be accelerated.");
     }
     assertNotNull(statistics.getQueryPlan());
   }
