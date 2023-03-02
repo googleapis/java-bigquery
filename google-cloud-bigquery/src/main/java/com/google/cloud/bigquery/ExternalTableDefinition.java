@@ -320,6 +320,9 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     if (getFormatOptions() != null && FormatOptions.CSV.equals(getFormatOptions().getType())) {
       externalConfigurationPb.setCsvOptions(((CsvOptions) getFormatOptions()).toPb());
     }
+    if (getFormatOptions() != null && FormatOptions.PARQUET.equals(getFormatOptions().getType())) {
+      externalConfigurationPb.setParquetOptions(((ParquetOptions) getFormatOptions()).toPb());
+    }
     if (getFormatOptions() != null
         && FormatOptions.GOOGLE_SHEETS.equals(getFormatOptions().getType())) {
       externalConfigurationPb.setGoogleSheetsOptions(
