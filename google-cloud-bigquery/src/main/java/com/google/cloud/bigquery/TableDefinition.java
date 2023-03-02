@@ -85,6 +85,8 @@ public abstract class TableDefinition implements Serializable {
 
     public static final Type SNAPSHOT = type.createAndRegister("SNAPSHOT");
 
+    public static final Type CLONE = type.createAndRegister("CLONE");
+
     private Type(String constant) {
       super(constant);
     }
@@ -169,6 +171,8 @@ public abstract class TableDefinition implements Serializable {
         return (T) ModelTableDefinition.fromPb(tablePb);
       case "SNAPSHOT":
         return (T) SnapshotTableDefinition.fromPb(tablePb);
+      case "CLONE":
+        return (T) CloneTableDefinition.fromPb(tablePb);
       default:
         // never reached
         throw new IllegalArgumentException("Format " + tablePb.getType() + " is not supported");

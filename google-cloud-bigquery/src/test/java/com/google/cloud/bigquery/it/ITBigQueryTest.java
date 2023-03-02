@@ -54,6 +54,7 @@ import com.google.cloud.bigquery.BigQueryError;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryResult;
 import com.google.cloud.bigquery.BigQuerySQLException;
+import com.google.cloud.bigquery.CloneTableDefinition;
 import com.google.cloud.bigquery.Clustering;
 import com.google.cloud.bigquery.Connection;
 import com.google.cloud.bigquery.ConnectionProperty;
@@ -4334,6 +4335,7 @@ public class ITBigQueryTest {
     assertNotNull(snapshotTable);
     assertEquals(snapshotTableId.getDataset(), snapshotTable.getTableId().getDataset());
     assertEquals(snapshotTableName, snapshotTable.getTableId().getTable());
+    System.out.println(snapshotTable.getDefinition());
     assertTrue(snapshotTable.getDefinition() instanceof SnapshotTableDefinition);
     assertEquals(DDL_TABLE_SCHEMA, snapshotTable.getDefinition().getSchema());
     assertNotNull(((SnapshotTableDefinition) snapshotTable.getDefinition()).getSnapshotTime());
@@ -5178,5 +5180,61 @@ public class ITBigQueryTest {
     // clean up after test to avoid conflict with other tests
     boolean success = bigquery.delete(tableId);
     assertEquals(true, success);
+  }
+
+  @Test
+  public void testCloneTableCopyJob() throws InterruptedException {
+  /*  String sourceTableName = "test_copy_job_base_table";
+    String ddlTableName = TABLE_ID_DDL.getTable();
+    // this creates a clone table at specified snapshotTime
+    String cloneTableName = String.format("test_clone_table");
+    // Create source table with some data in it
+    String ddlQuery =
+        String.format(
+            "CREATE OR REPLACE TABLE %s ("
+                + "TimestampField TIMESTAMP OPTIONS(description='TimestampDescription'), "
+                + "StringField STRING OPTIONS(description='StringDescription'), "
+                + "BooleanField BOOLEAN OPTIONS(description='BooleanDescription') "
+                + ") AS SELECT * FROM %s",
+            sourceTableName, ddlTableName);
+    QueryJobConfiguration ddlConfig =
+        QueryJobConfiguration.newBuilder(ddlQuery).setDefaultDataset(DatasetId.of(DATASET)).build();
+    TableId sourceTableId = TableId.of(DATASET, sourceTableName);
+    TableResult result = bigquery.query(ddlConfig);
+    assertEquals(DDL_TABLE_SCHEMA, result.getSchema());
+    Table remoteTable = bigquery.getTable(DATASET, sourceTableName);
+    assertNotNull(remoteTable);
+
+    // Create clone table using source table as the base table
+    TableId cloneTableId = TableId.of(DATASET, cloneTableName);
+    CopyJobConfiguration cloneConfiguration =
+        CopyJobConfiguration.newBuilder(cloneTableId, sourceTableId)
+            .setOperationType("CLONE")
+            .build();
+    Job createdJob = bigquery.create(JobInfo.of(cloneConfiguration));
+    CopyJobConfiguration createdConfiguration = createdJob.getConfiguration();
+    assertNotNull(createdConfiguration.getSourceTables());
+    assertNotNull(createdConfiguration.getOperationType());
+    assertNotNull(createdConfiguration.getDestinationTable());
+    Job completedJob = createdJob.waitFor();
+    assertNull(completedJob.getStatus().getError());*/
+    String cloneTableName = "addressClone";
+    TableId cloneTableId = TableId.of("test_dataset_name_1", cloneTableName);
+    Table cloneTable = bigquery.getTable("test_dataset_name_1", cloneTableName);
+    assertNotNull(cloneTable);
+    System.out.println(cloneTable.getDefinition().getType());
+    assertEquals(cloneTableId.getDataset(), cloneTable.getTableId().getDataset());
+    assertEquals(cloneTableName, cloneTable.getTableId().getTable());
+    System.out.println(cloneTable.getDefinition());
+    assertTrue(cloneTable.getDefinition() instanceof CloneTableDefinition);
+    // assertEquals(DDL_TABLE_SCHEMA, cloneTable.getDefinition().getSchema());
+    // assertNotNull(((CloneTableDefinition) cloneTable.getDefinition()).getCloneTime());
+    // assertEquals(
+    //     sourceTableName,
+    //     ((CloneTableDefinition) cloneTable.getDefinition()).getBaseTableId().getTable());
+    //
+    // // Clean up
+    // assertTrue(remoteTable.delete());
+    // assertTrue(cloneTable.delete());
   }
 }
