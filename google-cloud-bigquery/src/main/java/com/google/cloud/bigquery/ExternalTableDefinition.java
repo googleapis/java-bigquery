@@ -311,9 +311,6 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     if (getDecimalTargetTypes() != null) {
       externalConfigurationPb.setDecimalTargetTypes(getDecimalTargetTypes());
     }
-    if (getFormatOptions() != null && FormatOptions.PARQUET.equals(getFormatOptions().getType())) {
-      externalConfigurationPb.setParquetOptions(((ParquetOptions) getFormatOptions()).toPb());
-    }
     if (getFormatOptions() != null && FormatOptions.AVRO.equals(getFormatOptions().getType())) {
       externalConfigurationPb.setAvroOptions(((AvroOptions) getFormatOptions()).toPb());
     }
