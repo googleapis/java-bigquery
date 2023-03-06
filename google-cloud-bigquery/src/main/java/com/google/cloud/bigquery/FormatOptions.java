@@ -106,7 +106,7 @@ public class FormatOptions implements Serializable {
   }
 
   /** Default options for PARQUET format. */
-  public static ParquetOptions parquet() {
+  public static FormatOptions parquet() {
     return ParquetOptions.newBuilder().build();
   }
 
