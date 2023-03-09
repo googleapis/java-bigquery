@@ -72,7 +72,6 @@ public class Table extends TableInfo {
       return this;
     }
 
-
     @Override
     Builder setEtag(String etag) {
       infoBuilder.setEtag(etag);

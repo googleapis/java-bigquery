@@ -316,7 +316,7 @@ public class TableInfo implements Serializable {
       return this;
     }
 
-    public Builder setCloneDefinition (CloneDefinition cloneDefinition){
+    public Builder setCloneDefinition(CloneDefinition cloneDefinition) {
       this.cloneDefinition = cloneDefinition;
       return this;
     }
@@ -451,7 +451,8 @@ public class TableInfo implements Serializable {
   public String getDefaultCollation() {
     return defaultCollation;
   }
-  public CloneDefinition getCloneDefinition(){
+
+  public CloneDefinition getCloneDefinition() {
     return cloneDefinition;
   }
 
@@ -545,7 +546,7 @@ public class TableInfo implements Serializable {
     if (defaultCollation != null) {
       tablePb.setDefaultCollation(defaultCollation);
     }
-    if(cloneDefinition !=null) {
+    if (cloneDefinition != null) {
       tablePb.setCloneDefinition(cloneDefinition.toPb());
     }
     return tablePb;

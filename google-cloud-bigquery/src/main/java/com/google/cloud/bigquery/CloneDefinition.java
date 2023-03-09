@@ -53,10 +53,7 @@ public abstract class CloneDefinition implements Serializable {
   @Nullable
   public abstract String getCloneTime();
 
-  /**
-   * Returns a builder for a Clone table definition.
-   */
-
+  /** Returns a builder for a Clone table definition. */
   @VisibleForTesting
   public abstract Builder toBuilder();
 
@@ -73,9 +70,7 @@ public abstract class CloneDefinition implements Serializable {
   @AutoValue.Builder
   public abstract static class Builder {
 
-    /**
-     * Reference describing the ID of the table that was Cloned. *
-     */
+    /** Reference describing the ID of the table that was Cloned. * */
     public abstract Builder setBaseTableId(TableId baseTableId);
 
     /**
@@ -84,10 +79,7 @@ public abstract class CloneDefinition implements Serializable {
      */
     public abstract Builder setCloneTime(String dateTime);
 
-
-    /**
-     * Creates a {@code CloneTableDefinition} object.
-     */
+    /** Creates a {@code CloneTableDefinition} object. */
     public abstract CloneDefinition build();
   }
 }
