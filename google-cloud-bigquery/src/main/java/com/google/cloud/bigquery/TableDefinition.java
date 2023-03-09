@@ -85,8 +85,6 @@ public abstract class TableDefinition implements Serializable {
 
     public static final Type SNAPSHOT = type.createAndRegister("SNAPSHOT");
 
-    public static final Type CLONE = type.createAndRegister("CLONE");
-
     private Type(String constant) {
       super(constant);
     }
