@@ -54,7 +54,7 @@ import com.google.cloud.bigquery.BigQueryError;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryResult;
 import com.google.cloud.bigquery.BigQuerySQLException;
-import com.google.cloud.bigquery.CloneTableDefinition;
+import com.google.cloud.bigquery.CloneDefinition;
 import com.google.cloud.bigquery.Clustering;
 import com.google.cloud.bigquery.Connection;
 import com.google.cloud.bigquery.ConnectionProperty;
@@ -5220,16 +5220,14 @@ public class ITBigQueryTest {
 
     Table cloneTable = bigquery.getTable(DATASET, cloneTableName);
     assertNotNull(cloneTable);
-    System.out.println(cloneTable.getDefinition().getType());
     assertEquals(cloneTableId.getDataset(), cloneTable.getTableId().getDataset());
     assertEquals(cloneTableName, cloneTable.getTableId().getTable());
-    System.out.println(cloneTable.getDefinition());
-    assertTrue(cloneTable.getDefinition() instanceof CloneTableDefinition);
+    assertEquals(TableDefinition.Type.TABLE, cloneTable.getDefinition().getType());
+    assertTrue(cloneTable.getDefinition() instanceof StandardTableDefinition);
     assertEquals(DDL_TABLE_SCHEMA, cloneTable.getDefinition().getSchema());
-    assertNotNull(((CloneTableDefinition) cloneTable.getDefinition()).getCloneTime());
-    assertEquals(
-        sourceTableName,
-        ((CloneTableDefinition) cloneTable.getDefinition()).getBaseTableId().getTable());
+    assertTrue(cloneTable.getCloneDefinition() instanceof CloneDefinition);
+    assertEquals(sourceTableName, cloneTable.getCloneDefinition().getBaseTableId());
+    assertNotNull(cloneTable.getCloneDefinition().getCloneTime());
 
     // Clean up
     assertTrue(remoteTable.delete());
