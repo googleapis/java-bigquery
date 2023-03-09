@@ -72,6 +72,7 @@ public class Table extends TableInfo {
       return this;
     }
 
+
     @Override
     Builder setEtag(String etag) {
       infoBuilder.setEtag(etag);
@@ -159,6 +160,12 @@ public class Table extends TableInfo {
     @Override
     public Builder setDefaultCollation(String defaultCollation) {
       infoBuilder.setDefaultCollation(defaultCollation);
+      return this;
+    }
+
+    @Override
+    public TableInfo.Builder setCloneDefinition(CloneDefinition cloneDefinition) {
+      infoBuilder.setCloneDefinition(cloneDefinition);
       return this;
     }
 
