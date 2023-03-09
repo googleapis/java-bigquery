@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.23.2](https://github.com/googleapis/java-bigquery/compare/v2.23.1...v2.23.2) (2023-03-07)
+
+
+### Bug Fixes
+
+* External table definition parquet format options ([#2535](https://github.com/googleapis/java-bigquery/issues/2535)) ([eb45973](https://github.com/googleapis/java-bigquery/commit/eb4597314fad72bbdb666a832f0f15f732f40817))
+
+
+### Documentation
+
+* Remove stale snippet comment ([#2555](https://github.com/googleapis/java-bigquery/issues/2555)) ([a71b1b2](https://github.com/googleapis/java-bigquery/commit/a71b1b2abb568bd1ed088f7bd4b77f93a68ec95e))
+
+## [2.23.1](https://github.com/googleapis/java-bigquery/compare/v2.23.0...v2.23.1) (2023-03-02)
+
+
+### Dependencies
+
+* Update dependency com.google.api.grpc:proto-google-cloud-bigqueryconnection-v1 to v2.14.0 ([#2545](https://github.com/googleapis/java-bigquery/issues/2545)) ([ad78ebb](https://github.com/googleapis/java-bigquery/commit/ad78ebb35a5b6d7d86d59e6c0fa078c68a65a275))
+* Update dependency com.google.cloud:google-cloud-datacatalog-bom to v1.18.0 ([#2546](https://github.com/googleapis/java-bigquery/issues/2546)) ([60e45e4](https://github.com/googleapis/java-bigquery/commit/60e45e457edfd257e16e37f0c0d5049dd722f0e3))
+* Update dependency com.google.cloud:google-cloud-shared-dependencies to v3.4.0 ([#2547](https://github.com/googleapis/java-bigquery/issues/2547)) ([2588582](https://github.com/googleapis/java-bigquery/commit/25885821328ecb72c57d9ebeb548a6710d186381))
+
 ## [2.23.0](https://github.com/googleapis/java-bigquery/compare/v2.22.0...v2.23.0) (2023-02-22)
 
 
