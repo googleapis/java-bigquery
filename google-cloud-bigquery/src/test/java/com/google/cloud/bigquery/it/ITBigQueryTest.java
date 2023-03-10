@@ -5226,7 +5226,7 @@ public class ITBigQueryTest {
     assertTrue(cloneTable.getDefinition() instanceof StandardTableDefinition);
     assertEquals(DDL_TABLE_SCHEMA, cloneTable.getDefinition().getSchema());
     assertTrue(cloneTable.getCloneDefinition() instanceof CloneDefinition);
-    assertEquals(sourceTableName, cloneTable.getCloneDefinition().getBaseTableId());
+    assertEquals(sourceTableName, cloneTable.getCloneDefinition().getBaseTableId().getTable());
     assertNotNull(cloneTable.getCloneDefinition().getCloneTime());
 
     // Clean up
