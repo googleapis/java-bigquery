@@ -211,7 +211,7 @@ public class TableInfo implements Serializable {
       this.labels = Labels.fromPb(tablePb.getLabels());
       this.requirePartitionFilter = tablePb.getRequirePartitionFilter();
       this.defaultCollation = tablePb.getDefaultCollation();
-      if(tablePb.getCloneDefinition() != null) {
+      if (tablePb.getCloneDefinition() != null) {
         this.cloneDefinition = CloneDefinition.fromPb(tablePb.getCloneDefinition());
       }
     }
