@@ -30,7 +30,7 @@ public abstract class CloneDefinition implements Serializable {
   private static final long serialVersionUID = 1460853787400450649L;
 
   public static Builder newBuilder() {
-    return new AutoValue_CloneTableDefinition.Builder();
+    return new AutoValue_CloneDefinition.Builder();
   }
 
   static CloneDefinition fromPb(
@@ -79,7 +79,7 @@ public abstract class CloneDefinition implements Serializable {
      */
     public abstract Builder setCloneTime(String dateTime);
 
-    /** Creates a {@code CloneTableDefinition} object. */
+    /** Creates a {@code CloneDefinition} object. */
     public abstract CloneDefinition build();
   }
 }
