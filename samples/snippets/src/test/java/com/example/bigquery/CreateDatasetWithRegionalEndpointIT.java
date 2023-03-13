@@ -53,5 +53,4 @@ public class CreateDatasetWithRegionalEndpointIT {
     CreateDatasetWithRegionalEndpoint.createDatasetWithRegionalEndpoint();
     assertThat(bout.toString().contains("Region of dataset: us-east4"));
   }
-
 }

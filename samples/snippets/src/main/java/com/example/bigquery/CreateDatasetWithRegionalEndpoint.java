@@ -20,11 +20,8 @@ package com.example.bigquery;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
-import com.google.cloud.bigquery.ConnectionProperty;
-import com.google.cloud.bigquery.ConnectionSettings;
 import com.google.cloud.bigquery.Dataset;
 import com.google.cloud.bigquery.DatasetInfo;
-import java.util.List;
 
 public class CreateDatasetWithRegionalEndpoint {
   public static void createDatasetWithRegionalEndpoint() {
@@ -32,10 +29,11 @@ public class CreateDatasetWithRegionalEndpoint {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
-      bigquery = BigQueryOptions.newBuilder()
-          .setHost("https://us-east4-bigquery.googleapis.com/")
-          .build()
-          .getService();
+      bigquery =
+          BigQueryOptions.newBuilder()
+              .setHost("https://us-east4-bigquery.googleapis.com/")
+              .build()
+              .getService();
       String datasetName = "MyRegionalDataset";
 
       DatasetInfo datasetInfo = DatasetInfo.newBuilder(datasetName).build();
