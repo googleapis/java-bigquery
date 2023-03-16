@@ -17,13 +17,12 @@
 /**
  * A testing helper for Google BigQuery.
  *
- * <p>A simple usage example:
- * 1. Create a test Google Cloud project.
+ * <p>A simple usage example: 1. Create a test Google Cloud project.
  *
- * 2. Download a JSON service account credentials file from the Google Developer's Console.
+ * <p>2. Download a JSON service account credentials file from the Google Developer's Console.
  *
- * 3. Create a RemoteBigQueryHelper object using your project ID and JSON key. Here is an example that uses the RemoteBigQueryHelper to create a dataset.
- * 4. Run tests.
+ * <p>3. Create a RemoteBigQueryHelper object using your project ID and JSON key. Here is an example
+ * that uses the RemoteBigQueryHelper to create a dataset. 4. Run tests.
  *
  * <p>Before the test:
  *
@@ -39,6 +38,5 @@
  * <pre>{@code
  * RemoteBigQueryHelper.forceDelete(bigquery, DATASET);
  * }</pre>
- *
  */
 package com.google.cloud.bigquery.testing;
