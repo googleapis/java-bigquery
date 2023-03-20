@@ -22,7 +22,7 @@
  * <p>2. Download a JSON service account credentials file from the Google Developer's Console.
  *
  * <p>3. Create a RemoteBigQueryHelper object using your project ID and JSON key. Here is an example
- * that uses the RemoteBigQueryHelper to create a dataset. 
+ * that uses the RemoteBigQueryHelper to create a dataset.
  *
  * <p>4. Run tests.
  *
