@@ -4,7 +4,7 @@
   <groupId>com.google.cloud</groupId>
   <artifactId>google-cloud-bigquery-parent</artifactId>
   <packaging>pom</packaging>
-  <version>2.23.2-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
+  <version>2.23.3-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
   <name>BigQuery Parent</name>
   <url>https://github.com/googleapis/java-bigquery</url>
   <description>
@@ -53,8 +53,8 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <github.global.server>github</github.global.server>
     <site.installationModule>google-cloud-bigquery-parent</site.installationModule>
-    <google-api-services-bigquery.version>v2-rev20230210-2.0.0</google-api-services-bigquery.version>
-    <google.cloud.shared-dependencies.version>3.4.0</google.cloud.shared-dependencies.version>
+    <google-api-services-bigquery.version>v2-rev20230311-2.0.0</google-api-services-bigquery.version>
+    <google.cloud.shared-dependencies.version>3.5.0</google.cloud.shared-dependencies.version>
     <arrow.version>11.0.0</arrow.version>
   </properties>
 
@@ -110,7 +110,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-bigquery</artifactId>
-        <version>2.23.2-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
+        <version>2.23.3-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
       </dependency>
 
       <dependency>
@@ -160,13 +160,13 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-bigqueryconnection</artifactId>
-        <version>2.14.0</version>
+        <version>2.15.0</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>com.google.api.grpc</groupId>
         <artifactId>proto-google-cloud-bigqueryconnection-v1</artifactId>
-        <version>2.14.0</version>
+        <version>2.15.0</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
