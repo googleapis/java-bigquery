@@ -23,15 +23,13 @@
  * CreateTable.java</a>.
  *
  * <pre>{@code
- *       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
- *
+ *       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService(); *
  *       TableId tableId = TableId.of(datasetName, tableName);
  *       TableDefinition tableDefinition = StandardTableDefinition.of(schema);
- *       TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build();
- *
+ *       TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build(); *
  *       bigquery.create(tableInfo);
  *       System.out.println("Table created successfully");
- * </pre>
+ * }</pre>
  *
  * @see <a href="https://cloud.google.com/bigquery/">Google Cloud BigQuery</a>
  */
