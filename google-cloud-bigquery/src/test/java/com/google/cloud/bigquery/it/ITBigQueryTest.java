@@ -5233,4 +5233,48 @@ public class ITBigQueryTest {
     assertTrue(remoteTable.delete());
     assertTrue(cloneTable.delete());
   }
+   @Test
+  public void testAutoDetectSchemaUpdateExternalTable() {
+    String tableName = "test_create_external_table_auto_detect_schema";
+    TableId tableId = TableId.of(DATASET, tableName);
+    ExternalTableDefinition externalTableDefinition =
+        ExternalTableDefinition.newBuilder(
+                "gs://" + BUCKET + "/" + JSON_LOAD_FILE, FormatOptions.json())
+            .setSchema(TABLE_SCHEMA)
+            /*.setConnectionId(
+                "projects/java-docs-samples-testing/locations/us/connections/DEVREL_TEST_CONNECTION")*/
+            .build();
+    TableInfo tableInfo = TableInfo.of(tableId, externalTableDefinition);
+    Table createdTable = bigquery.create(tableInfo);
+
+    assertNotNull(createdTable);
+    assertEquals(DATASET, createdTable.getTableId().getDataset());
+    assertEquals(tableName, createdTable.getTableId().getTable());
+
+    TableOption tableOption = TableOption.autoDetectSchema(true);
+
+    Map<String, String> updateLabels = new HashMap<>();
+    updateLabels.put("x", "y");
+    updateLabels.put("a", null);
+    Table updatedTable =
+        bigquery.update(
+            createdTable
+                .toBuilder()
+                .setDescription("Updated Description")
+                .setLabels(updateLabels)
+                .build(),
+            tableOption);
+    assertThat(updatedTable.getDescription()).isEqualTo("Updated Description");
+    assertThat(updatedTable.getLabels()).containsExactly("x", "y");
+
+    Schema schema = updatedTable.getDefinition().getSchema();
+    assertThat(schema);
+    System.out.println(schema.toString());
+
+    updatedTable = bigquery.update(updatedTable.toBuilder().setLabels(null).build());
+    assertThat(updatedTable.getLabels()).isEmpty();
+    assertThat(createdTable.delete()).isTrue();
+    assertEquals(schema, updatedTable.getDefinition().getSchema());
+  }
+  
 }
