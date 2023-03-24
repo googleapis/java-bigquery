@@ -55,7 +55,8 @@ public interface BigQueryRpc extends ServiceRpc {
     START_INDEX("startIndex"),
     STATE_FILTER("stateFilter"),
     TIMEOUT("timeoutMs"),
-    REQUESTED_POLICY_VERSION("requestedPolicyVersion");
+    REQUESTED_POLICY_VERSION("requestedPolicyVersion"),
+    AUTO_DETECT_SCHEMA("autoDetectSchema");
 
     private final String value;
 
