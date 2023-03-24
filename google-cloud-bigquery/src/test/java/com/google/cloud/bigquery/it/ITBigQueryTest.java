@@ -5251,7 +5251,7 @@ public class ITBigQueryTest {
     assertEquals(DATASET, createdTable.getTableId().getDataset());
     assertEquals(tableName, createdTable.getTableId().getTable());
 
-    TableOption tableOption = TableOption.autoDetectSchema(true);
+   // TableOption tableOption = TableOption.autoDetectSchema(true);
 
     Map<String, String> updateLabels = new HashMap<>();
     updateLabels.put("x", "y");
@@ -5262,8 +5262,7 @@ public class ITBigQueryTest {
                 .toBuilder()
                 .setDescription("Updated Description")
                 .setLabels(updateLabels)
-                .build(),
-            tableOption);
+                .build());
     assertThat(updatedTable.getDescription()).isEqualTo("Updated Description");
     assertThat(updatedTable.getLabels()).containsExactly("x", "y");
 
