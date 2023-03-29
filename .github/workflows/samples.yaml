@@ -16,6 +16,8 @@
 on:
   pull_request:
 name: samples
+permissions:
+  contents: read
 jobs:
   checkstyle:
     runs-on: ubuntu-latest
