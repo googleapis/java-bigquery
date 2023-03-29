@@ -19,7 +19,10 @@ on:
     - main
   pull_request:
 name: ci
+permissions:
+  contents: read
 jobs:
+  permissions: write-all
   units:
     runs-on: ubuntu-latest
     strategy:
