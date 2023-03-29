@@ -16,10 +16,7 @@
 on:
   pull_request:
 name: auto-merge-readme
-permissions:
-  contents: read
 jobs:
-  permissions: write-all
   approve:
     runs-on: ubuntu-latest
     if: github.repository_owner == 'googleapis' && github.head_ref == 'autosynth-readme'
