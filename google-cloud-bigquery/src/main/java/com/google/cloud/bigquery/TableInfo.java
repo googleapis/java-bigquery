@@ -534,8 +534,7 @@ public class TableInfo implements Serializable {
   /**
    * Returns the number of time travel physical bytes.
    *
-   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage
-   *     Pricing</a>
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
    */
   public Long getNumTimeTravelPhysicalBytes() {
     return this.numTimeTravelPhysicalBytes;
@@ -544,8 +543,7 @@ public class TableInfo implements Serializable {
   /**
    * Returns the number of total logical bytes.
    *
-   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage
-   *     Pricing</a>
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
    */
   public Long getNumTotalLogicalBytes() {
     return this.numTotalLogicalBytes;
@@ -554,8 +552,7 @@ public class TableInfo implements Serializable {
   /**
    * Returns the number of active logical bytes.
    *
-   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage
-   *     Pricing</a>
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
    */
   public Long getNumActiveLogicalBytes() {
     return this.numActiveLogicalBytes;
@@ -564,8 +561,7 @@ public class TableInfo implements Serializable {
   /**
    * Returns the number of long term logical bytes.
    *
-   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage
-   *     Pricing</a>
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
    */
   public Long getNumLongTermLogicalBytes() {
     return this.numLongTermLogicalBytes;
@@ -574,8 +570,7 @@ public class TableInfo implements Serializable {
   /**
    * Returns the number of total physical bytes.
    *
-   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage
-   *     Pricing</a>
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
    */
   public Long getNumTotalPhysicalBytes() {
     return this.numTotalPhysicalBytes;
@@ -584,8 +579,7 @@ public class TableInfo implements Serializable {
   /**
    * Returns the number of active physical bytes.
    *
-   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage
-   *     Pricing</a>
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
    */
   public Long getNumActivePhysicalBytes() {
     return this.numActivePhysicalBytes;
@@ -594,8 +588,7 @@ public class TableInfo implements Serializable {
   /**
    * Returns the number of long term physical bytes.
    *
-   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage
-   *     Pricing</a>
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
    */
   public Long getNumLongTermPhysicalBytes() {
     return this.numLongTermPhysicalBytes;

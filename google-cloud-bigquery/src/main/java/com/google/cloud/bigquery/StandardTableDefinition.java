@@ -197,8 +197,7 @@ public abstract class StandardTableDefinition extends TableDefinition {
   /**
    * Returns the number of time travel physical bytes.
    *
-   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage
-   *     Pricing</a>
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
    */
   @Nullable
   public abstract Long getNumTimeTravelPhysicalBytes();
@@ -206,8 +205,7 @@ public abstract class StandardTableDefinition extends TableDefinition {
   /**
    * Returns the number of total logical bytes.
    *
-   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage
-   *     Pricing</a>
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
    */
   @Nullable
   public abstract Long getNumTotalLogicalBytes();
@@ -215,8 +213,7 @@ public abstract class StandardTableDefinition extends TableDefinition {
   /**
    * Returns the number of active logical bytes.
    *
-   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage
-   *     Pricing</a>
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
    */
   @Nullable
   public abstract Long getNumActiveLogicalBytes();
@@ -224,8 +221,7 @@ public abstract class StandardTableDefinition extends TableDefinition {
   /**
    * Returns the number of long term logical bytes.
    *
-   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage
-   *     Pricing</a>
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
    */
   @Nullable
   public abstract Long getNumLongTermLogicalBytes();
@@ -233,8 +229,7 @@ public abstract class StandardTableDefinition extends TableDefinition {
   /**
    * Returns the number of total physical bytes.
    *
-   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage
-   *     Pricing</a>
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
    */
   @Nullable
   public abstract Long getNumTotalPhysicalBytes();
@@ -242,8 +237,7 @@ public abstract class StandardTableDefinition extends TableDefinition {
   /**
    * Returns the number of active physical bytes.
    *
-   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage
-   *     Pricing</a>
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
    */
   @Nullable
   public abstract Long getNumActivePhysicalBytes();
@@ -251,8 +245,7 @@ public abstract class StandardTableDefinition extends TableDefinition {
   /**
    * Returns the number of long term physical bytes.
    *
-   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage
-   *     Pricing</a>
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
    */
   @Nullable
   public abstract Long getNumLongTermPhysicalBytes();
