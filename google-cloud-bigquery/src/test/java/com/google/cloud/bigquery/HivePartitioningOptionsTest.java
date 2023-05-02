@@ -18,10 +18,9 @@ package com.google.cloud.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import org.junit.Test;
-
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Test;
 
 public class HivePartitioningOptionsTest {
 

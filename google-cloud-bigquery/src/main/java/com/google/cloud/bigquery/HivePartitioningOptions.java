@@ -17,7 +17,6 @@
 package com.google.cloud.bigquery;
 
 import com.google.common.base.MoreObjects;
-
 import java.util.List;
 import java.util.Objects;
 
@@ -84,14 +83,14 @@ public final class HivePartitioningOptions {
     }
 
     /**
-     * [Output-only] For permanent external tables, this field is populated with
-     * the hive partition keys in the order they were inferred.
+     * [Output-only] For permanent external tables, this field is populated with the hive partition
+     * keys in the order they were inferred.
      *
-     * The types of the partition keys can be deduced by checking the table schema
-     * (which will include the partition keys). Not every API will populate this
-     * field in the output. For example, Tables.Get will populate it, but
-     * Tables.List will not contain this field.
-     */    public Builder setFields(List<String> fields) {
+     * <p>The types of the partition keys can be deduced by checking the table schema (which will
+     * include the partition keys). Not every API will populate this field in the output. For
+     * example, Tables.Get will populate it, but Tables.List will not contain this field.
+     */
+    public Builder setFields(List<String> fields) {
       this.fields = fields;
       return this;
     }
@@ -159,10 +158,8 @@ public final class HivePartitioningOptions {
             && Objects.equals(mode, ((HivePartitioningOptions) obj).getMode())
             && Objects.equals(
                 requirePartitionFilter, ((HivePartitioningOptions) obj).getRequirePartitionFilter())
-            && Objects.equals(
-                sourceUriPrefix, ((HivePartitioningOptions) obj).getSourceUriPrefix())
-           && Objects.equals(
-                fields, ((HivePartitioningOptions) obj).getFields());
+            && Objects.equals(sourceUriPrefix, ((HivePartitioningOptions) obj).getSourceUriPrefix())
+            && Objects.equals(fields, ((HivePartitioningOptions) obj).getFields());
   }
 
   @Override
