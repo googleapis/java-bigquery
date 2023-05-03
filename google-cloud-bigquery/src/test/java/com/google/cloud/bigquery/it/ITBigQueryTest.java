@@ -1707,9 +1707,9 @@ public class ITBigQueryTest {
         if (standardTableDefinition.getTimePartitioning() != null
             && standardTableDefinition.getTimePartitioning().getType().equals(Type.DAY)
             && standardTableDefinition
-            .getTimePartitioning()
-            .getExpirationMs()
-            .equals(EXPIRATION_MS)) {
+                .getTimePartitioning()
+                .getExpirationMs()
+                .equals(EXPIRATION_MS)) {
           found = true;
         }
       }
@@ -1834,7 +1834,7 @@ public class ITBigQueryTest {
             .update(BigQuery.TableOption.fields(BigQuery.TableField.TIME_PARTITIONING));
     TableDefinition updatedDefinition = table.getDefinition();
     assertThat(
-        ((StandardTableDefinition) updatedDefinition).getTimePartitioning().getExpirationMs())
+            ((StandardTableDefinition) updatedDefinition).getTimePartitioning().getExpirationMs())
         .isEqualTo(42L);
 
     table =
@@ -2910,7 +2910,7 @@ public class ITBigQueryTest {
   @Test
   public void testReadAPIIterationAndOrderAsync()
       throws SQLException, ExecutionException,
-      InterruptedException { // use read API to read 300K records and check the order
+          InterruptedException { // use read API to read 300K records and check the order
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable()
@@ -2956,7 +2956,7 @@ public class ITBigQueryTest {
   // specified amount of time
   public void testExecuteSelectAsyncCancel()
       throws SQLException, ExecutionException,
-      InterruptedException { // use read API to read 300K records and check the order
+          InterruptedException { // use read API to read 300K records and check the order
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable()
@@ -3002,7 +3002,7 @@ public class ITBigQueryTest {
   // specified amount of time
   public void testExecuteSelectAsyncTimeout()
       throws SQLException, ExecutionException,
-      InterruptedException { // use read API to read 300K records and check the order
+          InterruptedException { // use read API to read 300K records and check the order
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable()
@@ -3069,7 +3069,7 @@ public class ITBigQueryTest {
   // b/235591056 are resolved
   public void testReadAPIConnectionMultiClose()
       throws
-      SQLException { // use read API to read 300K records, then closes the connection. This test
+          SQLException { // use read API to read 300K records, then closes the connection. This test
     // repeats it multiple times and assets if the connection was closed
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
@@ -4911,11 +4911,11 @@ public class ITBigQueryTest {
       // Test query
       {
         assertThat(
-            bigquery
-                .query(
-                    QueryJobConfiguration.of(query),
-                    JobId.newBuilder().setLocation(location).build())
-                .iterateAll())
+                bigquery
+                    .query(
+                        QueryJobConfiguration.of(query),
+                        JobId.newBuilder().setLocation(location).build())
+                    .iterateAll())
             .isEmpty();
 
         try {
@@ -4996,7 +4996,7 @@ public class ITBigQueryTest {
                   .setMode(Mode.NULLABLE)
                   .build(),
               Field.newBuilder("likes", StandardSQLTypeName.INT64).setMode(Mode.NULLABLE).build());
-            // By default, the table should have c-twitter schema because it is lexicographically last.
+      // By default, the table should have c-twitter schema because it is lexicographically last.
       // a-twitter schema (username, tweet, timestamp, likes)
       // b-twitter schema (username, tweet, timestamp)
       // c-twitter schema (username, tweet)
@@ -5233,7 +5233,6 @@ public class ITBigQueryTest {
     assertTrue(cloneTable.delete());
   }
 
-
   @Test
   public void testAutoDetectSchemaUpdateExternalTable() {
     String tableName = "test_create_external_table_auto_detect_schema";
@@ -5253,8 +5252,8 @@ public class ITBigQueryTest {
                     + "/bigquery/federated-formats-reference-file-schema/a-twitter.avro",
                 FormatOptions.avro())
             .setSchema(initialSchema)
-/*.setConnectionId(
-"projects/java-docs-samples-testing/locations/us/connections/DEVREL_TEST_CONNECTION")*/
+            /*.setConnectionId(
+            "projects/java-docs-samples-testing/locations/us/connections/DEVREL_TEST_CONNECTION")*/
             .build();
     TableInfo tableInfo = TableInfo.of(tableId, externalTableDefinition);
     Table createdTable = bigquery.create(tableInfo);
@@ -5267,9 +5266,7 @@ public class ITBigQueryTest {
 
     Schema updatedSchema =
         Schema.of(
-            Field.newBuilder("username", StandardSQLTypeName.STRING)
-                .setMode(Mode.NULLABLE)
-                .build(),
+            Field.newBuilder("username", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
             Field.newBuilder("tweet", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
             Field.newBuilder("timestamp", StandardSQLTypeName.STRING)
                 .setMode(Mode.NULLABLE)
@@ -5281,7 +5278,7 @@ public class ITBigQueryTest {
                     + CLOUD_SAMPLES_DATA
                     + "/bigquery/federated-formats-reference-file-schema/b-twitter.avro",
                 FormatOptions.avro())
-                .setSchema(updatedSchema)
+            .setSchema(updatedSchema)
             /*.setConnectionId(
             "projects/java-docs-samples-testing/locations/us/connections/DEVREL_TEST_CONNECTION")*/
             .build();
@@ -5293,7 +5290,5 @@ public class ITBigQueryTest {
     Schema finalSchema = updatedTable.getDefinition().getSchema();
     assertThat(finalSchema);
     assertEquals(updatedSchema, finalSchema);
-
   }
-
 }
