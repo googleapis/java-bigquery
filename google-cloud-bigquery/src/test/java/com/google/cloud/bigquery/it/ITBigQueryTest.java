@@ -1567,6 +1567,45 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testUpdatePermExternableTableWithAutodetectSchemaUpdatesSchema() {
+    String tableName = "test_create_external_table_perm_with_auto_detect";
+    TableId tableId = TableId.of(DATASET, tableName);
+    Schema setSchema = Schema.of(TIMESTAMP_FIELD_SCHEMA, STRING_FIELD_SCHEMA);
+
+    ExternalTableDefinition externalTableDefinition =
+        ExternalTableDefinition.newBuilder(
+                "gs://" + BUCKET + "/" + JSON_LOAD_FILE, FormatOptions.json())
+            .setSchema(setSchema)
+            .setConnectionId(
+                "projects/java-docs-samples-testing/locations/us/connections/DEVREL_TEST_CONNECTION")
+            .build();
+    TableInfo tableInfo = TableInfo.of(tableId, externalTableDefinition);
+    Table createdTable = bigquery.create(tableInfo);
+
+    assertNotNull(createdTable);
+    assertEquals(DATASET, createdTable.getTableId().getDataset());
+    assertEquals(tableName, createdTable.getTableId().getTable());
+    Table remoteTable = bigquery.getTable(DATASET, tableName);
+    assertNotNull(remoteTable);
+    assertEquals(setSchema, remoteTable.getDefinition().getSchema());
+
+    Table updatedTable =
+        bigquery.update(
+            createdTable
+                .toBuilder()
+                .setDefinition(
+                    ((ExternalTableDefinition) createdTable.getDefinition())
+                        .toBuilder()
+                        .setSchema(null)
+                        .build())
+                .build(),
+            BigQuery.TableOption.autodetectSchema(true));
+    assertEquals(TABLE_SCHEMA, updatedTable.getDefinition().getSchema());
+
+    assertTrue(remoteTable.delete());
+  }
+
+  @Test
   public void testCreateViewTable() throws InterruptedException {
     String tableName = "test_create_view_table";
     TableId tableId = TableId.of(DATASET, tableName);
