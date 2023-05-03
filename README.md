@@ -21,7 +21,7 @@ See https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>libraries-bom</artifactId>
-      <version>26.13.0</version>
+      <version>26.14.0</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>
@@ -53,7 +53,7 @@ If you are using Maven without the BOM, add this to your dependencies:
 If you are using Gradle 5.x or later, add this to your dependencies:
 
 ```Groovy
-implementation platform('com.google.cloud:libraries-bom:26.13.0')
+implementation platform('com.google.cloud:libraries-bom:26.14.0')
 
 implementation 'com.google.cloud:google-cloud-bigquery'
 ```
