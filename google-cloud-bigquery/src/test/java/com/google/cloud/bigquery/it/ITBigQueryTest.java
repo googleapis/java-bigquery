@@ -1877,6 +1877,69 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testAutoDetectSchemaUpdateExternalTable() {
+    String tableName = "test_create_external_table_auto_detect_schema";
+    TableId tableId = TableId.of(DATASET, tableName);
+    Schema expectedSchema =
+        Schema.of(
+            Field.newBuilder("username", StandardSQLTypeName.STRING)
+                .setMode(Mode.NULLABLE)
+                .build(),
+            Field.newBuilder("tweet", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
+            Field.newBuilder("timestamp", StandardSQLTypeName.STRING)
+                .setMode(Mode.NULLABLE)
+                .build(),
+            Field.newBuilder("likes", StandardSQLTypeName.INT64).setMode(Mode.NULLABLE).build());
+    ExternalTableDefinition externalTableDefinition =
+        ExternalTableDefinition.newBuilder(
+                "gs://"
+    + CLOUD_SAMPLES_DATA
+        + "/bigquery/federated-formats-reference-file-schema/a-twitter.avro",
+         FormatOptions.avro())
+            .setSchema(expectedSchema)
+            /*.setConnectionId(
+                "projects/java-docs-samples-testing/locations/us/connections/DEVREL_TEST_CONNECTION")*/
+            .build();
+    TableInfo tableInfo = TableInfo.of(tableId, externalTableDefinition);
+    Table createdTable = bigquery.create(tableInfo);
+    Schema createdSchema = createdTable.getDefinition().getSchema();
+    System.out.println(createdSchema);
+
+    assertNotNull(createdTable);
+    assertEquals(DATASET, createdTable.getTableId().getDataset());
+    assertEquals(tableName, createdTable.getTableId().getTable());
+    ExternalTableDefinition updatedExternalTableDefinition =
+        ExternalTableDefinition.newBuilder(
+                "gs://"
+                    + CLOUD_SAMPLES_DATA
+                    + "/bigquery/federated-formats-reference-file-schema/b-twitter.avro", FormatOptions.avro())
+            //.setSchema(TABLE_SCHEMA)
+            /*.setConnectionId(
+                "projects/java-docs-samples-testing/locations/us/connections/DEVREL_TEST_CONNECTION")*/
+            .build();
+    TableInfo updatedTableInfo = TableInfo.of(tableId, updatedExternalTableDefinition);
+    TableOption tableOption = TableOption.autoDetectSchema(true);
+
+    Map<String, String> updateLabels = new HashMap<>();
+    updateLabels.put("x", "y");
+    updateLabels.put("a", null);
+    Table updatedTable =
+        bigquery.update(
+            updatedTableInfo,
+            tableOption);
+
+    Schema schema = updatedTable.getDefinition().getSchema();
+    assertThat(schema);
+    System.out.println("\n\n\n new schema");
+    System.out.println(schema.toString());
+
+    updatedTable = bigquery.update(updatedTable.toBuilder().setLabels(null).build());
+    assertThat(updatedTable.getLabels()).isEmpty();
+    assertThat(createdTable.delete()).isTrue();
+   // assertEquals(schema, updatedTable.getDefinition().getSchema());
+  }
+
+  @Test
   public void testUpdateNonExistingTable() {
     TableInfo tableInfo =
         TableInfo.of(
