@@ -1708,18 +1708,17 @@ public class ITBigQueryTest {
           if (standardTableDefinition.getTimePartitioning() != null
               && standardTableDefinition.getTimePartitioning().getType().equals(Type.DAY)
               && standardTableDefinition
-              .getTimePartitioning()
-              .getExpirationMs()
-              .equals(EXPIRATION_MS)) {
+                  .getTimePartitioning()
+                  .getExpirationMs()
+                  .equals(EXPIRATION_MS)) {
             found = true;
           }
         }
       }
-        assertTrue(found);
-      } finally{
-        createdPartitioningTable.delete();
-      }
-
+      assertTrue(found);
+    } finally {
+      createdPartitioningTable.delete();
+    }
   }
 
   @Test
