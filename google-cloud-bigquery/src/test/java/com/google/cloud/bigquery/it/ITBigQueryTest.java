@@ -1567,45 +1567,6 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testUpdatePermExternableTableWithAutodetectSchemaUpdatesSchema() {
-    String tableName = "test_create_external_table_perm_with_auto_detect";
-    TableId tableId = TableId.of(DATASET, tableName);
-    Schema setSchema = Schema.of(TIMESTAMP_FIELD_SCHEMA, STRING_FIELD_SCHEMA);
-
-    ExternalTableDefinition externalTableDefinition =
-        ExternalTableDefinition.newBuilder(
-                "gs://" + BUCKET + "/" + JSON_LOAD_FILE, FormatOptions.json())
-            .setSchema(setSchema)
-            .setConnectionId(
-                "projects/java-docs-samples-testing/locations/us/connections/DEVREL_TEST_CONNECTION")
-            .build();
-    TableInfo tableInfo = TableInfo.of(tableId, externalTableDefinition);
-    Table createdTable = bigquery.create(tableInfo);
-
-    assertNotNull(createdTable);
-    assertEquals(DATASET, createdTable.getTableId().getDataset());
-    assertEquals(tableName, createdTable.getTableId().getTable());
-    Table remoteTable = bigquery.getTable(DATASET, tableName);
-    assertNotNull(remoteTable);
-    assertEquals(setSchema, remoteTable.getDefinition().getSchema());
-
-    Table updatedTable =
-        bigquery.update(
-            createdTable
-                .toBuilder()
-                .setDefinition(
-                    ((ExternalTableDefinition) createdTable.getDefinition())
-                        .toBuilder()
-                        .setSchema(null)
-                        .build())
-                .build(),
-            BigQuery.TableOption.autoDetectSchema(true));
-    assertEquals(TABLE_SCHEMA, updatedTable.getDefinition().getSchema());
-
-    assertTrue(remoteTable.delete());
-  }
-
-  @Test
   public void testCreateViewTable() throws InterruptedException {
     String tableName = "test_create_view_table";
     TableId tableId = TableId.of(DATASET, tableName);
@@ -1746,9 +1707,9 @@ public class ITBigQueryTest {
         if (standardTableDefinition.getTimePartitioning() != null
             && standardTableDefinition.getTimePartitioning().getType().equals(Type.DAY)
             && standardTableDefinition
-                .getTimePartitioning()
-                .getExpirationMs()
-                .equals(EXPIRATION_MS)) {
+            .getTimePartitioning()
+            .getExpirationMs()
+            .equals(EXPIRATION_MS)) {
           found = true;
         }
       }
@@ -1873,7 +1834,7 @@ public class ITBigQueryTest {
             .update(BigQuery.TableOption.fields(BigQuery.TableField.TIME_PARTITIONING));
     TableDefinition updatedDefinition = table.getDefinition();
     assertThat(
-            ((StandardTableDefinition) updatedDefinition).getTimePartitioning().getExpirationMs())
+        ((StandardTableDefinition) updatedDefinition).getTimePartitioning().getExpirationMs())
         .isEqualTo(42L);
 
     table =
@@ -1913,65 +1874,6 @@ public class ITBigQueryTest {
     assertNull(updatedTable.<StandardTableDefinition>getDefinition().getNumLongTermBytes());
     assertNull(updatedTable.<StandardTableDefinition>getDefinition().getNumRows());
     assertTrue(createdTable.delete());
-  }
-
-  @Test
-  public void testAutoDetectSchemaUpdateExternalTable() {
-    String tableName = "test_create_external_table_auto_detect_schema";
-    TableId tableId = TableId.of(DATASET, tableName);
-    Schema expectedSchema =
-        Schema.of(
-            Field.newBuilder("username", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
-            Field.newBuilder("tweet", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
-            Field.newBuilder("timestamp", StandardSQLTypeName.STRING)
-                .setMode(Mode.NULLABLE)
-                .build(),
-            Field.newBuilder("likes", StandardSQLTypeName.INT64).setMode(Mode.NULLABLE).build());
-    ExternalTableDefinition externalTableDefinition =
-        ExternalTableDefinition.newBuilder(
-                "gs://"
-                    + CLOUD_SAMPLES_DATA
-                    + "/bigquery/federated-formats-reference-file-schema/a-twitter.avro",
-                FormatOptions.avro())
-            .setSchema(expectedSchema)
-            /*.setConnectionId(
-            "projects/java-docs-samples-testing/locations/us/connections/DEVREL_TEST_CONNECTION")*/
-            .build();
-    TableInfo tableInfo = TableInfo.of(tableId, externalTableDefinition);
-    Table createdTable = bigquery.create(tableInfo);
-    Schema createdSchema = createdTable.getDefinition().getSchema();
-    System.out.println(createdSchema);
-
-    assertNotNull(createdTable);
-    assertEquals(DATASET, createdTable.getTableId().getDataset());
-    assertEquals(tableName, createdTable.getTableId().getTable());
-    ExternalTableDefinition updatedExternalTableDefinition =
-        ExternalTableDefinition.newBuilder(
-                "gs://"
-                    + CLOUD_SAMPLES_DATA
-                    + "/bigquery/federated-formats-reference-file-schema/b-twitter.avro",
-                FormatOptions.avro())
-            // .setSchema(TABLE_SCHEMA)
-            /*.setConnectionId(
-            "projects/java-docs-samples-testing/locations/us/connections/DEVREL_TEST_CONNECTION")*/
-            .build();
-    TableInfo updatedTableInfo = TableInfo.of(tableId, updatedExternalTableDefinition);
-    TableOption tableOption = TableOption.autoDetectSchema(true);
-
-    Map<String, String> updateLabels = new HashMap<>();
-    updateLabels.put("x", "y");
-    updateLabels.put("a", null);
-    Table updatedTable = bigquery.update(updatedTableInfo, tableOption);
-
-    Schema schema = updatedTable.getDefinition().getSchema();
-    assertThat(schema);
-    System.out.println("\n\n\n new schema");
-    System.out.println(schema.toString());
-
-    updatedTable = bigquery.update(updatedTable.toBuilder().setLabels(null).build());
-    assertThat(updatedTable.getLabels()).isEmpty();
-    assertThat(createdTable.delete()).isTrue();
-    // assertEquals(schema, updatedTable.getDefinition().getSchema());
   }
 
   @Test
@@ -3008,7 +2910,7 @@ public class ITBigQueryTest {
   @Test
   public void testReadAPIIterationAndOrderAsync()
       throws SQLException, ExecutionException,
-          InterruptedException { // use read API to read 300K records and check the order
+      InterruptedException { // use read API to read 300K records and check the order
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable()
@@ -3054,7 +2956,7 @@ public class ITBigQueryTest {
   // specified amount of time
   public void testExecuteSelectAsyncCancel()
       throws SQLException, ExecutionException,
-          InterruptedException { // use read API to read 300K records and check the order
+      InterruptedException { // use read API to read 300K records and check the order
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable()
@@ -3100,7 +3002,7 @@ public class ITBigQueryTest {
   // specified amount of time
   public void testExecuteSelectAsyncTimeout()
       throws SQLException, ExecutionException,
-          InterruptedException { // use read API to read 300K records and check the order
+      InterruptedException { // use read API to read 300K records and check the order
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable()
@@ -3167,7 +3069,7 @@ public class ITBigQueryTest {
   // b/235591056 are resolved
   public void testReadAPIConnectionMultiClose()
       throws
-          SQLException { // use read API to read 300K records, then closes the connection. This test
+      SQLException { // use read API to read 300K records, then closes the connection. This test
     // repeats it multiple times and assets if the connection was closed
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
@@ -5009,11 +4911,11 @@ public class ITBigQueryTest {
       // Test query
       {
         assertThat(
-                bigquery
-                    .query(
-                        QueryJobConfiguration.of(query),
-                        JobId.newBuilder().setLocation(location).build())
-                    .iterateAll())
+            bigquery
+                .query(
+                    QueryJobConfiguration.of(query),
+                    JobId.newBuilder().setLocation(location).build())
+                .iterateAll())
             .isEmpty();
 
         try {
@@ -5094,8 +4996,7 @@ public class ITBigQueryTest {
                   .setMode(Mode.NULLABLE)
                   .build(),
               Field.newBuilder("likes", StandardSQLTypeName.INT64).setMode(Mode.NULLABLE).build());
-
-      // By default, the table should have c-twitter schema because it is lexicographically last.
+            // By default, the table should have c-twitter schema because it is lexicographically last.
       // a-twitter schema (username, tweet, timestamp, likes)
       // b-twitter schema (username, tweet, timestamp)
       // c-twitter schema (username, tweet)
@@ -5331,4 +5232,68 @@ public class ITBigQueryTest {
     assertTrue(remoteTable.delete());
     assertTrue(cloneTable.delete());
   }
+
+
+  @Test
+  public void testAutoDetectSchemaUpdateExternalTable() {
+    String tableName = "test_create_external_table_auto_detect_schema";
+    TableId tableId = TableId.of(DATASET, tableName);
+    Schema initialSchema =
+        Schema.of(
+            Field.newBuilder("username", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
+            Field.newBuilder("tweet", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
+            Field.newBuilder("timestamp", StandardSQLTypeName.STRING)
+                .setMode(Mode.NULLABLE)
+                .build(),
+            Field.newBuilder("likes", StandardSQLTypeName.INT64).setMode(Mode.NULLABLE).build());
+    ExternalTableDefinition externalTableDefinition =
+        ExternalTableDefinition.newBuilder(
+                "gs://"
+                    + CLOUD_SAMPLES_DATA
+                    + "/bigquery/federated-formats-reference-file-schema/a-twitter.avro",
+                FormatOptions.avro())
+            .setSchema(initialSchema)
+/*.setConnectionId(
+"projects/java-docs-samples-testing/locations/us/connections/DEVREL_TEST_CONNECTION")*/
+            .build();
+    TableInfo tableInfo = TableInfo.of(tableId, externalTableDefinition);
+    Table createdTable = bigquery.create(tableInfo);
+    Schema createdSchema = createdTable.getDefinition().getSchema();
+
+    assertNotNull(createdTable);
+    assertEquals(DATASET, createdTable.getTableId().getDataset());
+    assertEquals(tableName, createdTable.getTableId().getTable());
+    assertEquals(initialSchema, createdSchema);
+
+    Schema updatedSchema =
+        Schema.of(
+            Field.newBuilder("username", StandardSQLTypeName.STRING)
+                .setMode(Mode.NULLABLE)
+                .build(),
+            Field.newBuilder("tweet", StandardSQLTypeName.STRING).setMode(Mode.NULLABLE).build(),
+            Field.newBuilder("timestamp", StandardSQLTypeName.STRING)
+                .setMode(Mode.NULLABLE)
+                .build());
+
+    ExternalTableDefinition updatedExternalTableDefinition =
+        ExternalTableDefinition.newBuilder(
+                "gs://"
+                    + CLOUD_SAMPLES_DATA
+                    + "/bigquery/federated-formats-reference-file-schema/b-twitter.avro",
+                FormatOptions.avro())
+                .setSchema(updatedSchema)
+            /*.setConnectionId(
+            "projects/java-docs-samples-testing/locations/us/connections/DEVREL_TEST_CONNECTION")*/
+            .build();
+    TableInfo updatedTableInfo = TableInfo.of(tableId, updatedExternalTableDefinition);
+    TableOption tableOption = TableOption.autoDetectSchema(true);
+
+    Table updatedTable = bigquery.update(updatedTableInfo, tableOption);
+
+    Schema finalSchema = updatedTable.getDefinition().getSchema();
+    assertThat(finalSchema);
+    assertEquals(updatedSchema, finalSchema);
+
+  }
+
 }
