@@ -21,7 +21,7 @@ See https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>libraries-bom</artifactId>
-      <version>26.11.0</version>
+      <version>26.13.0</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>
@@ -37,14 +37,15 @@ See https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google
 
 ```
 
-If you are using Maven without BOM, add this to your dependencies:
+If you are using Maven without the BOM, add this to your dependencies:
 
+<!-- {x-version-update-start:google-cloud-bigquery:released} -->
 
 ```xml
 <dependency>
   <groupId>com.google.cloud</groupId>
   <artifactId>google-cloud-bigquery</artifactId>
-  <version>2.24.2</version>
+  <version>2.24.5</version>
 </dependency>
 
 ```
@@ -356,7 +357,7 @@ Java is a registered trademark of Oracle and/or its affiliates.
 [developer-console]: https://console.developers.google.com/
 [create-project]: https://cloud.google.com/resource-manager/docs/creating-managing-projects
 [cloud-cli]: https://cloud.google.com/cli
-[troubleshooting]: https://github.com/googleapis/google-cloud-common/blob/main/troubleshooting/readme.md#troubleshooting
+[troubleshooting]: https://github.com/googleapis/google-cloud-java/blob/main/TROUBLESHOOTING.md
 [contributing]: https://github.com/googleapis/java-bigquery/blob/main/CONTRIBUTING.md
 [code-of-conduct]: https://github.com/googleapis/java-bigquery/blob/main/CODE_OF_CONDUCT.md#contributor-code-of-conduct
 [license]: https://github.com/googleapis/java-bigquery/blob/main/LICENSE

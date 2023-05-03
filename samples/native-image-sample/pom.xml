@@ -39,7 +39,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>libraries-bom</artifactId>
-        <version>26.11.0</version>
+        <version>26.13.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -93,13 +93,13 @@
         <dependency>
           <groupId>org.junit.vintage</groupId>
           <artifactId>junit-vintage-engine</artifactId>
-          <version>5.9.2</version>
+          <version>5.9.3</version>
           <scope>test</scope>
         </dependency>
         <dependency>
           <groupId>org.graalvm.buildtools</groupId>
           <artifactId>junit-platform-native</artifactId>
-          <version>0.9.20</version>
+          <version>0.9.21</version>
           <scope>test</scope>
         </dependency>
 
@@ -121,7 +121,7 @@
           <plugin>
             <groupId>org.graalvm.buildtools</groupId>
             <artifactId>native-maven-plugin</artifactId>
-            <version>0.9.20</version>
+            <version>0.9.21</version>
             <extensions>true</extensions>
             <configuration>
               <mainClass>com.example.bigquery.NativeImageBigquerySample
