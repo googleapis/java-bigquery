@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Google LLC
+ * Copyright 2023 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,39 +16,34 @@
 
 package com.example.bigquery;
 
-// [START bigquery_omni_create_dataset]
+// [START bigquery_create_dataset_with_regional_endpoint]
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Dataset;
 import com.google.cloud.bigquery.DatasetInfo;
 
-// Sample to create a aws dataset
-public class CreateDatasetAws {
-
-  public static void main(String[] args) {
-    // TODO(developer): Replace these variables before running the sample.
-    String projectId = "MY_PROJECT_ID";
-    String datasetName = "MY_DATASET_NAME";
-    String location = "aws-us-east-1";
-    createDatasetAws(projectId, datasetName, location);
-  }
-
-  public static void createDatasetAws(String projectId, String datasetName, String location) {
+public class CreateDatasetWithRegionalEndpoint {
+  public static void createDatasetWithRegionalEndpoint() {
+    BigQuery bigquery;
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
-      BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
+      bigquery =
+          BigQueryOptions.newBuilder()
+              .setHost("https://us-east4-bigquery.googleapis.com/")
+              .build()
+              .getService();
+      String datasetName = "MyRegionalDataset";
 
-      DatasetInfo datasetInfo =
-          DatasetInfo.newBuilder(projectId, datasetName).setLocation(location).build();
+      DatasetInfo datasetInfo = DatasetInfo.newBuilder(datasetName).build();
 
-      Dataset dataset = bigquery.create(datasetInfo);
-      System.out.println(
-          "Aws dataset created successfully :" + dataset.getDatasetId().getDataset());
+      Dataset newDataset = bigquery.create(datasetInfo);
+      System.out.println("Region of dataset: " + newDataset.getLocation());
+      bigquery.delete("MyRegionalDataset");
     } catch (BigQueryException e) {
-      System.out.println("Aws dataset was not created. \n" + e.toString());
+      System.out.println("Dataset was not created. \n" + e);
     }
   }
 }
-// [END bigquery_omni_create_dataset]
+// [END bigquery_create_dataset_with_regional_endpoint]

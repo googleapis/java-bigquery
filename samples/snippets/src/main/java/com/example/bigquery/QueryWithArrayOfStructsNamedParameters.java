@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Google LLC
+ * Copyright 2023 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,50 +16,53 @@
 
 package com.example.bigquery;
 
-// [START bigquery_query_params_structs]
+// [START bigquery_query_array_structs_params_named]
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.QueryParameterValue;
+import com.google.cloud.bigquery.StandardSQLTypeName;
 import com.google.cloud.bigquery.TableResult;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public class QueryWithStructsParameters {
+public class QueryWithArrayOfStructsNamedParameters {
 
   public static void main(String[] args) {
-    queryWithStructsParameters();
+    queryWithArrayOfStructsNamedParameters();
   }
 
-  public static void queryWithStructsParameters() {
+  public static void queryWithArrayOfStructsNamedParameters() {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
-      // Create struct
-      Map<String, QueryParameterValue> struct = new HashMap<>();
-      struct.put("x", QueryParameterValue.int64(1));
-      struct.put("y", QueryParameterValue.string("foo"));
-      QueryParameterValue recordValue = QueryParameterValue.struct(struct);
+      Map<String, QueryParameterValue> structMap = new HashMap<>();
+      structMap.put("stringField", QueryParameterValue.string("test-stringField"));
+      QueryParameterValue structQueryParam = QueryParameterValue.struct(structMap);
+      List<QueryParameterValue> arrayOfStructs = new ArrayList<>();
+      arrayOfStructs.add(structQueryParam);
 
-      String query = "SELECT STRUCT(@recordField) AS s";
+      String query = "SELECT (@arrayOfStructField) AS record";
       QueryJobConfiguration queryConfig =
           QueryJobConfiguration.newBuilder(query)
-              .addNamedParameter("recordField", recordValue)
+              .setUseLegacySql(false)
+              .addNamedParameter(
+                  "arrayOfStructField",
+                  QueryParameterValue.array(arrayOfStructs.toArray(), StandardSQLTypeName.STRING))
               .build();
-
       TableResult results = bigquery.query(queryConfig);
-
       results
           .iterateAll()
           .forEach(row -> row.forEach(val -> System.out.printf("%s", val.toString())));
-
-      System.out.println("Query with struct parameter performed successfully.");
+      System.out.println("Query with Array of struct parameters performed successfully.");
     } catch (BigQueryException | InterruptedException e) {
       System.out.println("Query not performed \n" + e.toString());
     }
   }
 }
-// [END bigquery_query_params_structs]
+// [END bigquery_query_array_structs_params_named]

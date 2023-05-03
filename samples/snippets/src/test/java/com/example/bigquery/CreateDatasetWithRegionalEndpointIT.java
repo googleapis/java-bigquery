@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Google Inc.
+ * Copyright 2023 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,14 +25,8 @@ import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
-/** Tests for simple app sample. */
-@RunWith(JUnit4.class)
-@SuppressWarnings("checkstyle:abbreviationaswordinname")
-public class SimpleAppIT {
-
+public class CreateDatasetWithRegionalEndpointIT {
   private final Logger log = Logger.getLogger(this.getClass().getName());
   private ByteArrayOutputStream bout;
   private PrintStream out;
@@ -55,9 +49,8 @@ public class SimpleAppIT {
   }
 
   @Test
-  public void testQuickstart() throws Exception {
-    SimpleApp.main();
-    String got = bout.toString();
-    assertThat(got).contains("https://stackoverflow.com/questions/");
+  public void testCreateDatasetWithRegionalEndpoint() {
+    CreateDatasetWithRegionalEndpoint.createDatasetWithRegionalEndpoint();
+    assertThat(bout.toString().contains("Region of dataset: us-east4"));
   }
 }
