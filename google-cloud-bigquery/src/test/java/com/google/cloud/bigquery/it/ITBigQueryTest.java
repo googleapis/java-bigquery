@@ -1599,7 +1599,7 @@ public class ITBigQueryTest {
                         .setSchema(null)
                         .build())
                 .build(),
-            BigQuery.TableOption.autodetectSchema(true));
+            BigQuery.TableOption.autoDetectSchema(true));
     assertEquals(TABLE_SCHEMA, updatedTable.getDefinition().getSchema());
 
     assertTrue(remoteTable.delete());
