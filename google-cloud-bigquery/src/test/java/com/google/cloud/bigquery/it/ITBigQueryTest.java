@@ -1703,6 +1703,7 @@ public class ITBigQueryTest {
       boolean found = false;
       Iterator<Table> tableIterator = tables.getValues().iterator();
       while (tableIterator.hasNext() && !found) {
+<<<<<<< Updated upstream
         StandardTableDefinition standardTableDefinition = tableIterator.next().getDefinition();
         if (standardTableDefinition.getTimePartitioning() != null
             && standardTableDefinition.getTimePartitioning().getType().equals(Type.DAY)
@@ -1711,6 +1712,18 @@ public class ITBigQueryTest {
                 .getExpirationMs()
                 .equals(EXPIRATION_MS)) {
           found = true;
+=======
+        if(tableIterator.next().getDefinition() instanceof StandardTableDefinition) {
+          StandardTableDefinition standardTableDefinition = tableIterator.next().getDefinition();
+          if (standardTableDefinition.getTimePartitioning() != null
+              && standardTableDefinition.getTimePartitioning().getType().equals(Type.DAY)
+              && standardTableDefinition
+              .getTimePartitioning()
+              .getExpirationMs()
+              .equals(EXPIRATION_MS)) {
+            found = true;
+          }
+>>>>>>> Stashed changes
         }
       }
       assertTrue(found);
