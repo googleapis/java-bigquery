@@ -376,9 +376,9 @@ public interface BigQuery extends Service<BigQueryOptions> {
       return new TableOption(
           BigQueryRpc.Option.FIELDS, Helper.selector(TableField.REQUIRED_FIELDS, fields));
     }
+
     public static TableOption autoDetectSchema(Boolean... autoDetectSchema) {
-      return new TableOption(
-          BigQueryRpc.Option.AUTO_DETECT_SCHEMA, autoDetectSchema);
+      return new TableOption(BigQueryRpc.Option.AUTO_DETECT_SCHEMA, autoDetectSchema);
     }
   }
 

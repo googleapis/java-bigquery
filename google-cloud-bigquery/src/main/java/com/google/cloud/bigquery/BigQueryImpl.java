@@ -318,7 +318,6 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     }
   }
 
-
   @Override
   public Routine create(RoutineInfo routineInfo, RoutineOption... options) {
     final com.google.api.services.bigquery.model.Routine routinePb =
@@ -687,11 +686,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             .toPb();
 
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    if(!optionsMap.containsKey(BigQueryRpc.Option.AUTO_DETECT_SCHEMA)) {
+    if (!optionsMap.containsKey(BigQueryRpc.Option.AUTO_DETECT_SCHEMA)) {
       handleExternalTableSchema(tablePb);
-     // handleAutoDetectExternalTableSchema(tablePb);
-    }
-    else{
+      // handleAutoDetectExternalTableSchema(tablePb);
+    } else {
       // do something?
     }
     try {
@@ -721,6 +719,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       tablePb.getExternalDataConfiguration().setSchema(null);
     }
   }
+
   @Override
   public Model update(ModelInfo modelInfo, ModelOption... options) {
     final com.google.api.services.bigquery.model.Model modelPb =
