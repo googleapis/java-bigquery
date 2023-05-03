@@ -1568,7 +1568,7 @@ public class ITBigQueryTest {
 
   @Test
   public void testUpdatePermExternableTableWithAutodetectSchemaUpdatesSchema() {
-    String tableName = "test_create_external_table_perm";
+    String tableName = "test_create_external_table_perm_with_auto_detect";
     TableId tableId = TableId.of(DATASET, tableName);
     Schema setSchema = Schema.of(TIMESTAMP_FIELD_SCHEMA, STRING_FIELD_SCHEMA);
 
