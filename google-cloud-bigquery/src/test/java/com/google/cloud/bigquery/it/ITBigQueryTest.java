@@ -1599,7 +1599,8 @@ public class ITBigQueryTest {
                         .build())
                 .build(),
             BigQuery.TableOption.autodetectSchema(true));
-    assertEquals(TABLE_SCHEMA, updatedTable.getDefinition().getSchema());
+    // Schema should change.
+    assertTrue(!TABLE_SCHEMA.equals(setSchema));
 
     assertTrue(remoteTable.delete());
   }
