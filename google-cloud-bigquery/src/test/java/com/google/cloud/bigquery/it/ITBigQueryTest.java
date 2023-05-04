@@ -1576,8 +1576,6 @@ public class ITBigQueryTest {
         ExternalTableDefinition.newBuilder(
                 "gs://" + BUCKET + "/" + JSON_LOAD_FILE, FormatOptions.json())
             .setSchema(setSchema)
-            .setConnectionId(
-                "projects/java-docs-samples-testing/locations/us/connections/DEVREL_TEST_CONNECTION")
             .build();
     TableInfo tableInfo = TableInfo.of(tableId, externalTableDefinition);
     Table createdTable = bigquery.create(tableInfo);
