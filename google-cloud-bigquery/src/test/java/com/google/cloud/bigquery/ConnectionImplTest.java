@@ -676,7 +676,8 @@ public class ConnectionImplTest {
 
     connection = (ConnectionImpl) bigquery.createConnection(connectionSettingsSpy);
 
-    // defaults to connectionSettings.getUseReadAPI() when total/page rows are null (job is still running)
+    // defaults to connectionSettings.getUseReadAPI() when total/page rows are null (job is still
+    // running)
     assertTrue(connection.useReadAPI(null, null, QUERY_SCHEMA, false));
 
     assertFalse(connection.useReadAPI(10000L, 10000L, QUERY_SCHEMA, false));
