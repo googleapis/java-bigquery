@@ -1597,6 +1597,7 @@ public class ITBigQueryTest {
                     ((ExternalTableDefinition) createdTable.getDefinition())
                         .toBuilder()
                         .setSchema(null)
+                        .setAutodetect(true)
                         .build())
                 .build(),
             BigQuery.TableOption.autodetectSchema(true));
