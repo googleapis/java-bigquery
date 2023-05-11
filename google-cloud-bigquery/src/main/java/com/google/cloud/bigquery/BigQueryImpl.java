@@ -405,10 +405,11 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                       return bigQueryRpc.create(newJobPb, optionsMap);
                     } else {
                       // Option 2: A More Fault Tolerant Retry
-                      // TODO: We can only do this if we randomly generated the ID. Otherwise we might
+                      // TODO: We can only do this if we randomly generated the ID. Otherwise we
+                      // might
                       // mistakenly fetch a job created by someone else.
                       Job job = getJob(jobInfo.getJobId());
-                      if(job != null){
+                      if (job != null) {
                         return job.toPb();
                       }
                       com.google.api.services.bigquery.model.Job jobPb =

@@ -54,10 +54,11 @@ public class TableResult implements Page<FieldValueList>, Serializable {
     this.schema = schema;
     this.totalRows = totalRows;
     this.pageNoSchema = checkNotNull(pageNoSchema);
-
   }
+
   @InternalApi("Exposed for testing")
-  public TableResult(Schema schema, long totalRows, Page<FieldValueList> pageNoSchema, JobId jobId) {
+  public TableResult(
+      Schema schema, long totalRows, Page<FieldValueList> pageNoSchema, JobId jobId) {
     this.schema = schema;
     this.totalRows = totalRows;
     this.pageNoSchema = checkNotNull(pageNoSchema);
