@@ -35,6 +35,15 @@ public class TableResult implements Page<FieldValueList>, Serializable {
   @Nullable private final Schema schema;
   private final long totalRows;
   private final Page<FieldValueList> pageNoSchema;
+  @Nullable private JobId jobId = null;
+
+  public void setJobId(@Nullable JobId jobId) {
+    this.jobId = jobId;
+  }
+
+  public JobId getJobId() {
+    return jobId;
+  }
 
   /**
    * If {@code schema} is non-null, {@code TableResult} adds the schema to {@code FieldValueList}s
@@ -45,6 +54,14 @@ public class TableResult implements Page<FieldValueList>, Serializable {
     this.schema = schema;
     this.totalRows = totalRows;
     this.pageNoSchema = checkNotNull(pageNoSchema);
+
+  }
+  @InternalApi("Exposed for testing")
+  public TableResult(Schema schema, long totalRows, Page<FieldValueList> pageNoSchema, JobId jobId) {
+    this.schema = schema;
+    this.totalRows = totalRows;
+    this.pageNoSchema = checkNotNull(pageNoSchema);
+    this.jobId = jobId;
   }
 
   /** Returns the schema of the results. Null if the schema is not supplied. */

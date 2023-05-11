@@ -404,6 +404,13 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                       finalJobId[0] = recreatedJobInfo.getJobId();
                       return bigQueryRpc.create(newJobPb, optionsMap);
                     } else {
+                      // Option 2: A More Fault Tolerant Retry
+                      // TODO: We can only do this if we randomly generated the ID. Otherwise we might
+                      // mistakenly fetch a job created by someone else.
+                      Job job = getJob(jobInfo.getJobId());
+                      if(job != null){
+                        return job.toPb();
+                      }
                       com.google.api.services.bigquery.model.Job jobPb =
                           jobInfo.setProjectId(getOptions().getProjectId()).toPb();
                       return bigQueryRpc.create(jobPb, optionsMap);
@@ -1355,7 +1362,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       // here, but this is left as future work.
       JobId jobId = JobId.fromPb(results.getJobReference());
       Job job = getJob(jobId, options);
-      return job.getQueryResults();
+      TableResult tableResult = job.getQueryResults();
+      // Option 1: Return the JobID of the successful job
+      tableResult.setJobId(jobId);
+      return tableResult;
     }
 
     if (results.getPageToken() != null) {
@@ -1369,7 +1379,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               new QueryPageFetcher(jobId, schema, getOptions(), cursor, optionMap(options)),
               cursor,
               // cache first page of result
-              transformTableData(results.getRows(), schema)));
+              transformTableData(results.getRows(), schema)),
+          // Option 1: Return the JobID of the successful job
+          jobId);
     }
     // only 1 page of result
     return new TableResult(
@@ -1378,7 +1390,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         new PageImpl<>(
             new TableDataPageFetcher(null, schema, getOptions(), null, optionMap(options)),
             null,
-            transformTableData(results.getRows(), schema)));
+            transformTableData(results.getRows(), schema)),
+        // Option 1: Return the JobID of the successful job
+        JobId.fromPb(results.getJobReference()));
   }
 
   @Override
