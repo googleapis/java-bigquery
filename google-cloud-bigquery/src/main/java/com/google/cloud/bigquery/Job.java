@@ -320,8 +320,9 @@ public class Job extends JobInfo {
         ((QueryJobConfiguration) getConfiguration()).getDestinationTable() == null
             ? ((QueryJobConfiguration) job.getConfiguration()).getDestinationTable()
             : ((QueryJobConfiguration) getConfiguration()).getDestinationTable();
-    TableResult tableResult = bigquery.listTableData(
-        table, response.getSchema(), listOptions.toArray(new TableDataListOption[0]));
+    TableResult tableResult =
+        bigquery.listTableData(
+            table, response.getSchema(), listOptions.toArray(new TableDataListOption[0]));
     tableResult.setJobId(job.getJobId());
     return tableResult;
   }
