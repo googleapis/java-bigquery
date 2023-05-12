@@ -404,15 +404,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                       finalJobId[0] = recreatedJobInfo.getJobId();
                       return bigQueryRpc.create(newJobPb, optionsMap);
                     } else {
-                      // Option 2: A More Fault Tolerant Retry
-                      // TODO: We can only do this if we randomly generated the ID. Otherwise we
-                      // might
-                      // mistakenly fetch a job created by someone else.
-                      Job job = getJob(jobInfo.getJobId());
-                      if (job != null) {
-                        return job.toPb();
-                      }
-                      com.google.api.services.bigquery.model.Job jobPb =
+                        com.google.api.services.bigquery.model.Job jobPb =
                           jobInfo.setProjectId(getOptions().getProjectId()).toPb();
                       return bigQueryRpc.create(jobPb, optionsMap);
                     }
@@ -1342,7 +1334,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       List<BigQueryError> bigQueryErrors =
           Lists.transform(results.getErrors(), BigQueryError.FROM_PB_FUNCTION);
       // Throwing BigQueryException since there may be no JobId and we want to stay consistent
-      // with the case where there there is a HTTP error
+      // with the case where there is an HTTP error
       throw new BigQueryException(bigQueryErrors);
     }
 
