@@ -1385,7 +1385,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             null,
             transformTableData(results.getRows(), schema)),
         // Option 1: Return the JobID of the successful job
-        results.getJobReference()!=null ? JobId.fromPb(results.getJobReference()) : null);
+        results.getJobReference() != null ? JobId.fromPb(results.getJobReference()) : null);
   }
 
   @Override
