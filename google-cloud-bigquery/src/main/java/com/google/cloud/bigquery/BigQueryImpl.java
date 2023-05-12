@@ -404,7 +404,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                       finalJobId[0] = recreatedJobInfo.getJobId();
                       return bigQueryRpc.create(newJobPb, optionsMap);
                     } else {
-                        com.google.api.services.bigquery.model.Job jobPb =
+                      com.google.api.services.bigquery.model.Job jobPb =
                           jobInfo.setProjectId(getOptions().getProjectId()).toPb();
                       return bigQueryRpc.create(jobPb, optionsMap);
                     }
