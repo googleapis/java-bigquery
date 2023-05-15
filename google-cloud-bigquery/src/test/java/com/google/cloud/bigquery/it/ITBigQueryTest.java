@@ -4063,6 +4063,47 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testRepeatedRecordNamedQueryParameters() throws InterruptedException {
+    String[] stringValues = new String[] {"test-stringField", "test-stringField2"};
+    List<QueryParameterValue> tuples = new ArrayList<>();
+    for (int i = 0; i < 2; i++) {
+      QueryParameterValue stringValue = QueryParameterValue.string(stringValues[i]);
+      Map<String, QueryParameterValue> struct = new HashMap<>();
+      struct.put("stringField", stringValue);
+      QueryParameterValue recordValue = QueryParameterValue.struct(struct);
+      tuples.add(recordValue);
+    }
+
+    QueryParameterValue repeatedRecord =
+        QueryParameterValue.array(tuples.toArray(), StandardSQLTypeName.STRUCT);
+    String query = "SELECT @repeatedRecordField AS repeatedRecord";
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query)
+            .setDefaultDataset(DATASET)
+            .setUseLegacySql(false)
+            .addNamedParameter("repeatedRecordField", repeatedRecord)
+            .build();
+    TableResult result = bigquery.query(config);
+    assertEquals(1, Iterables.size(result.getValues()));
+
+    FieldList subSchema = result.getSchema().getFields().get("repeatedRecord").getSubFields();
+    for (FieldValueList values : result.iterateAll()) {
+      for (FieldValue value : values) {
+        assertEquals(FieldValue.Attribute.REPEATED, value.getAttribute());
+        assertEquals(2, value.getRepeatedValue().size());
+        for (int i = 0; i < 2; i++) {
+          FieldValue record = value.getRepeatedValue().get(i);
+          assertEquals(FieldValue.Attribute.RECORD, record.getAttribute());
+          FieldValueList recordValue = record.getRecordValue();
+          assertEquals(
+              stringValues[i],
+              FieldValueList.of(recordValue, subSchema).get("stringField").getValue());
+        }
+      }
+    }
+  }
+
+  @Test
   public void testStructQuery() throws InterruptedException {
     // query into a table
     String query = String.format("SELECT RecordField FROM %s.%s", DATASET, TABLE_ID.getTable());
