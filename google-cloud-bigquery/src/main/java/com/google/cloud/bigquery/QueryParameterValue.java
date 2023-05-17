@@ -37,7 +37,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import javax.annotation.Nullable;
 import org.threeten.bp.Instant;
 import org.threeten.bp.ZoneOffset;
@@ -527,9 +526,8 @@ public abstract class QueryParameterValue implements Serializable {
     QueryParameterType typePb = new QueryParameterType();
     typePb.setType(getType().toString());
     if (getArrayType() != null) {
-      if (getArrayType() == StandardSQLTypeName.STRUCT) {
-        List<QueryParameterValue> values =
-            Objects.requireNonNull(getArrayValues(), "Array of struct cannot be empty");
+      List<QueryParameterValue> values = getArrayValues();
+      if (getArrayType() == StandardSQLTypeName.STRUCT && values != null && values.size() != 0) {
         QueryParameterType structType = values.get(0).toTypePb();
         typePb.setArrayType(structType);
       } else {

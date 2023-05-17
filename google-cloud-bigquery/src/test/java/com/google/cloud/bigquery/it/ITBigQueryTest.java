@@ -4104,6 +4104,67 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testUnnestRepeatedRecordNamedQueryParameter() throws InterruptedException {
+    Boolean[] boolValues = new Boolean[] {true, false};
+    List<QueryParameterValue> tuples = new ArrayList<>();
+    for (int i = 0; i < 2; i++) {
+      QueryParameterValue boolValue = QueryParameterValue.bool(boolValues[i]);
+      Map<String, QueryParameterValue> struct = new HashMap<>();
+      struct.put("boolField", boolValue);
+      QueryParameterValue recordValue = QueryParameterValue.struct(struct);
+      tuples.add(recordValue);
+    }
+
+    QueryParameterValue repeatedRecord =
+        QueryParameterValue.array(tuples.toArray(), StandardSQLTypeName.STRUCT);
+    String query =
+        "SELECT * FROM (SELECT STRUCT("
+            + boolValues[0]
+            + " AS boolField) AS repeatedRecord) WHERE repeatedRecord IN UNNEST(@repeatedRecordField)";
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query)
+            .setDefaultDataset(DATASET)
+            .setUseLegacySql(false)
+            .addNamedParameter("repeatedRecordField", repeatedRecord)
+            .build();
+    TableResult result = bigquery.query(config);
+    assertEquals(1, Iterables.size(result.getValues()));
+
+    FieldList subSchema = result.getSchema().getFields().get("repeatedRecord").getSubFields();
+    for (FieldValueList values : result.iterateAll()) {
+      for (FieldValue value : values) {
+        assertEquals(FieldValue.Attribute.RECORD, value.getAttribute());
+        FieldValueList recordValue = value.getRecordValue();
+        assertEquals(
+            boolValues[0],
+            FieldValueList.of(recordValue, subSchema).get("boolField").getBooleanValue());
+      }
+    }
+  }
+
+  @Test
+  public void testEmptyRepeatedRecordNamedQueryParameters() throws InterruptedException {
+    QueryParameterValue[] tuples = {};
+
+    QueryParameterValue repeatedRecord =
+        QueryParameterValue.array(tuples, StandardSQLTypeName.STRUCT);
+    String query =
+        "SELECT * FROM (SELECT STRUCT(false AS boolField) AS repeatedRecord) WHERE repeatedRecord IN UNNEST(@repeatedRecordField)";
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query)
+            .setDefaultDataset(DATASET)
+            .setUseLegacySql(false)
+            .addNamedParameter("repeatedRecordField", repeatedRecord)
+            .build();
+    try {
+      bigquery.query(config);
+      fail("an empty array of struct query parameter shouldn't work with 'IN UNNEST'");
+    } catch (BigQueryException e) {
+      // Nothing to do
+    }
+  }
+
+  @Test
   public void testStructQuery() throws InterruptedException {
     // query into a table
     String query = String.format("SELECT RecordField FROM %s.%s", DATASET, TABLE_ID.getTable());
