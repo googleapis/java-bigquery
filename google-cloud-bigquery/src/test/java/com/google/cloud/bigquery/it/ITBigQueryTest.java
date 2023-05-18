@@ -4143,6 +4143,61 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testUnnestRepeatedRecordNamedQueryParameterFromDataset() throws InterruptedException {
+    List<QueryParameterValue> tuples = new ArrayList<>();
+      QueryParameterValue statusValue = QueryParameterValue.string("single");
+    QueryParameterValue addressValue = QueryParameterValue.string("123 this lane");
+    QueryParameterValue cityValue = QueryParameterValue.string("Torono");
+    QueryParameterValue stateValue = QueryParameterValue.string("ON");
+        QueryParameterValue zipValue = QueryParameterValue.string("1h2j34");
+    QueryParameterValue numberOfYearsValue = QueryParameterValue.string("3");
+
+      Map<String, QueryParameterValue> struct = new HashMap<>();
+      struct.put("statusValue", statusValue);
+    struct.put("addressValue", addressValue);
+    struct.put("cityValue", cityValue);
+    struct.put("stateValue", stateValue);
+    struct.put("zipValue", zipValue);
+    struct.put("numberOfYearsValue", numberOfYearsValue);
+      QueryParameterValue recordValue = QueryParameterValue.struct(struct);
+      tuples.add(recordValue);
+
+    QueryParameterValue repeatedRecord =
+        QueryParameterValue.array(tuples.toArray(), StandardSQLTypeName.STRUCT);
+
+    String unnestRecord = "SELECT TEMP from `neenutestproject.AVRODATASET.NESTEDREPEATEDTABLE`, UNNEST(@repeatedRecord) AS TEMP ";
+    QueryJobConfiguration queryJobConfiguration = QueryJobConfiguration.newBuilder(unnestRecord)
+        .setUseLegacySql(false)
+        .addNamedParameter("repeatedRecord", repeatedRecord)
+        .build();
+    TableResult unnestResult = bigquery.query(queryJobConfiguration);
+    FieldValueList rowValue = unnestResult.getValues().iterator().next();
+    //Why is this printing the one row 4 times?
+    unnestResult
+        .iterateAll()
+        .forEach(row -> row.forEach(val -> System.out.printf("%s\n", val.toString())));
+
+    System.out.println("**************FROM DATASET****************");
+    // addresses is a REPEATED RECORD field with an array of Structs of the above type.
+    // @repeatedRecord is array of struct type namedQueryParameter with 1 struct
+    // the UI does return the correct 1 row output
+    // this test returns 0 results.
+    String query = "SELECT * FROM `neenutestproject.AVRODATASET.NESTEDREPEATEDTABLE`, UNNEST(@repeatedRecord) AS TEMP where TEMP IN UNNEST(addresses);";
+    QueryJobConfiguration queryConfig =
+        QueryJobConfiguration.newBuilder(query)
+            .setUseLegacySql(false)
+            .addNamedParameter("repeatedRecord", repeatedRecord)
+            .build();
+    TableResult results = bigquery.query(queryConfig);
+
+    System.out.println( Iterables.size(results.getValues()));
+    results
+        .iterateAll()
+        .forEach(row -> row.forEach(val -> System.out.printf("%s", val.toString())));
+    System.out.println("Query with Array of struct parameter performed successfully.");
+  }
+
+  @Test
   public void testEmptyRepeatedRecordNamedQueryParameters() throws InterruptedException {
     QueryParameterValue[] tuples = {};
 
