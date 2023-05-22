@@ -156,6 +156,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -230,6 +231,31 @@ public class ITBigQueryTest {
               BYTES_FIELD_SCHEMA)
           .setMode(Field.Mode.REQUIRED)
           .setDescription("RecordDescription")
+          .build();
+
+  private static final Field REPEATED_RECORD_FIELD_SCHEMA =
+      Field.newBuilder(
+              "Addresses",
+              LegacySQLTypeName.RECORD,
+              Field.newBuilder("Status", LegacySQLTypeName.STRING)
+                  .setMode(Field.Mode.NULLABLE)
+                  .build(),
+              Field.newBuilder("Address", LegacySQLTypeName.STRING)
+                  .setMode(Field.Mode.NULLABLE)
+                  .build(),
+              Field.newBuilder("City", LegacySQLTypeName.STRING)
+                  .setMode(Field.Mode.NULLABLE)
+                  .build(),
+              Field.newBuilder("State", LegacySQLTypeName.STRING)
+                  .setMode(Field.Mode.NULLABLE)
+                  .build(),
+              Field.newBuilder("Zip", LegacySQLTypeName.STRING)
+                  .setMode(Field.Mode.NULLABLE)
+                  .build(),
+              Field.newBuilder("NumberOfYears", LegacySQLTypeName.STRING)
+                  .setMode(Field.Mode.NULLABLE)
+                  .build())
+          .setMode(Field.Mode.REPEATED)
           .build();
   private static final Field INTEGER_FIELD_SCHEMA =
       Field.newBuilder("IntegerField", LegacySQLTypeName.INTEGER)
@@ -421,6 +447,18 @@ public class ITBigQueryTest {
           Field.newBuilder("deaths", LegacySQLTypeName.INTEGER)
               .setMode(Field.Mode.NULLABLE)
               .build());
+
+  private static final Schema REPEATED_RECORD_TABLE_SCHEMA =
+      Schema.of(
+          Field.newBuilder("ID", LegacySQLTypeName.STRING).setMode(Field.Mode.NULLABLE).build(),
+          Field.newBuilder("FirstName", LegacySQLTypeName.STRING)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("LastName", LegacySQLTypeName.STRING)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("DOB", LegacySQLTypeName.DATE).setMode(Field.Mode.NULLABLE).build(),
+          REPEATED_RECORD_FIELD_SCHEMA);
 
   private static final Schema SIMPLE_SCHEMA = Schema.of(STRING_FIELD_SCHEMA);
   private static final Schema QUERY_RESULT_SCHEMA =
@@ -4144,15 +4182,18 @@ public class ITBigQueryTest {
 
   @Test
   public void testUnnestRepeatedRecordNamedQueryParameterFromDataset() throws InterruptedException {
+    TableId tableId = TableId.of(DATASET, "test_repeated_record_table");
+    setUpRepeatedRecordTable(tableId);
+
     List<QueryParameterValue> tuples = new ArrayList<>();
     QueryParameterValue statusValue = QueryParameterValue.string("single");
     QueryParameterValue addressValue = QueryParameterValue.string("123 this lane");
-    QueryParameterValue cityValue = QueryParameterValue.string("Torono");
+    QueryParameterValue cityValue = QueryParameterValue.string("Toronto");
     QueryParameterValue stateValue = QueryParameterValue.string("ON");
     QueryParameterValue zipValue = QueryParameterValue.string("1h2j34");
     QueryParameterValue numberOfYearsValue = QueryParameterValue.string("3");
 
-    Map<String, QueryParameterValue> struct = new HashMap<>();
+    Map<String, QueryParameterValue> struct = new LinkedHashMap<>();
     struct.put("statusValue", statusValue);
     struct.put("addressValue", addressValue);
     struct.put("cityValue", cityValue);
@@ -4165,39 +4206,84 @@ public class ITBigQueryTest {
     QueryParameterValue repeatedRecord =
         QueryParameterValue.array(tuples.toArray(), StandardSQLTypeName.STRUCT);
 
-    String unnestRecord =
-        "SELECT TEMP from `neenutestproject.AVRODATASET.NESTEDREPEATEDTABLE`, UNNEST(@repeatedRecord) AS TEMP ";
-    QueryJobConfiguration queryJobConfiguration =
-        QueryJobConfiguration.newBuilder(unnestRecord)
-            .setUseLegacySql(false)
-            .addNamedParameter("repeatedRecord", repeatedRecord)
-            .build();
-    TableResult unnestResult = bigquery.query(queryJobConfiguration);
-    FieldValueList rowValue = unnestResult.getValues().iterator().next();
-    // Why is this printing the one row 4 times?
-    unnestResult
-        .iterateAll()
-        .forEach(row -> row.forEach(val -> System.out.printf("%s\n", val.toString())));
-
-    System.out.println("**************FROM DATASET****************");
-    // addresses is a REPEATED RECORD field with an array of Structs of the above type.
-    // @repeatedRecord is array of struct type namedQueryParameter with 1 struct
-    // the UI does return the correct 1 row output
-    // this test returns 0 results.
     String query =
-        "SELECT * FROM `neenutestproject.AVRODATASET.NESTEDREPEATEDTABLE`, UNNEST(@repeatedRecord) AS TEMP where TEMP IN UNNEST(addresses);";
+        "SELECT * FROM "
+            + tableId.getTable()
+            + ", UNNEST(@repeatedRecord) AS TEMP where TEMP IN UNNEST(addresses);";
     QueryJobConfiguration queryConfig =
         QueryJobConfiguration.newBuilder(query)
+            .setDefaultDataset(DATASET)
             .setUseLegacySql(false)
             .addNamedParameter("repeatedRecord", repeatedRecord)
             .build();
     TableResult results = bigquery.query(queryConfig);
 
-    System.out.println(Iterables.size(results.getValues()));
-    results
-        .iterateAll()
-        .forEach(row -> row.forEach(val -> System.out.printf("%s", val.toString())));
-    System.out.println("Query with Array of struct parameter performed successfully.");
+    assertEquals(1, Iterables.size(results.getValues()));
+    for (FieldValueList values : results.iterateAll()) {
+      assertEquals("1", values.get("ID").getStringValue());
+      assertEquals("first_name1", values.get("FirstName").getStringValue());
+      assertEquals(2, values.get("Addresses").getRecordValue().size());
+    }
+  }
+
+  private void setUpRepeatedRecordTable(TableId tableId) {
+    StandardTableDefinition tableDefinition =
+        StandardTableDefinition.of(REPEATED_RECORD_TABLE_SCHEMA);
+    TableInfo tableInfo = TableInfo.of(tableId, tableDefinition);
+    bigquery.create(tableInfo);
+
+    ImmutableMap.Builder<String, Object> builder1 = ImmutableMap.builder();
+    builder1.put("ID", "1");
+    builder1.put("FirstName", "first_name1");
+    builder1.put("LastName", "last_name1");
+    builder1.put("DOB", "1995-08-09");
+    builder1.put(
+        "Addresses",
+        ImmutableList.of(
+            ImmutableMap.of(
+                "Status", "single",
+                "Address", "123 this lane",
+                "City", "Toronto",
+                "State", "ON",
+                "Zip", "1h2j34",
+                "NumberOfYears", "3"),
+            ImmutableMap.of(
+                "Status", "couple",
+                "Address", "345 that lane",
+                "City", "Maple",
+                "State", "ON",
+                "Zip", "1h2j34",
+                "NumberOfYears", "5")));
+
+    ImmutableMap.Builder<String, Object> builder2 = ImmutableMap.builder();
+    builder2.put("ID", "2");
+    builder2.put("FirstName", "first_name2");
+    builder2.put("LastName", "last_name2");
+    builder2.put("DOB", "1992-03-19");
+    builder2.put(
+        "Addresses",
+        ImmutableList.of(
+            ImmutableMap.of(
+                "Status", "single",
+                "Address", "97 Kota lane",
+                "City", "Ottawa",
+                "State", "ON",
+                "Zip", "1h2j34",
+                "NumberOfYears", "3"),
+            ImmutableMap.of(
+                "Status", "couple",
+                "Address", "75 Malta lane",
+                "City", "Victoria",
+                "State", "AL",
+                "Zip", "1h2j34",
+                "NumberOfYears", "5")));
+
+    InsertAllRequest request =
+        InsertAllRequest.newBuilder(tableInfo.getTableId())
+            .addRow(builder1.build())
+            .addRow(builder2.build())
+            .build();
+    bigquery.insertAll(request);
   }
 
   @Test
