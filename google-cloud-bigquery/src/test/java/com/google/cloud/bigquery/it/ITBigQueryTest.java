@@ -28,6 +28,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.api.client.util.IOUtils;
 import com.google.api.gax.paging.Page;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
@@ -3783,10 +3784,13 @@ public class ITBigQueryTest {
     String jobName = "jobId_" + UUID.randomUUID().toString();
     JobId jobId = JobId.newBuilder().setLocation("us").setJob(jobName).build();
     String sessionId;
+    InputStream inputStream =
+        ITBigQueryTest.class.getClassLoader().getResourceAsStream("sessionTest.csv");
     // Imports a local file into a table.
     try (TableDataWriteChannel writer = bigquery.writer(jobId, configuration);
         OutputStream stream = Channels.newOutputStream(writer)) {
-      Files.copy(csvPath, stream);
+      //Files.copy(csvPath, stream);
+      IOUtils.copy(inputStream, stream);
 
     } catch (IOException e) {
       throw new RuntimeException(e);
