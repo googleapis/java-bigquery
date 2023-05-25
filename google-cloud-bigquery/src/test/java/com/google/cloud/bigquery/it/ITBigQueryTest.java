@@ -3789,7 +3789,8 @@ public class ITBigQueryTest {
     // Imports a local file into a table.
     try (TableDataWriteChannel writer = bigquery.writer(jobId, configuration);
         OutputStream stream = Channels.newOutputStream(writer)) {
-      // Files.copy(csvPath, stream);
+      // Can use `Files.copy(csvPath, stream);` instead.
+      // Using IOUtils here because graalvm can't handle resource files.
       IOUtils.copy(inputStream, stream);
 
     } catch (IOException e) {
@@ -3821,7 +3822,7 @@ public class ITBigQueryTest {
     JobId sessionJobId = JobId.newBuilder().setLocation("us").setJob(sessionJobName).build();
     try (TableDataWriteChannel writer = bigquery.writer(sessionJobId, sessionConfiguration);
         OutputStream stream = Channels.newOutputStream(writer)) {
-      Files.copy(csvPath, stream);
+      IOUtils.copy(inputStream, stream);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
