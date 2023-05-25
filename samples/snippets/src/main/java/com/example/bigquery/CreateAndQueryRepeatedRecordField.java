@@ -152,7 +152,6 @@ public class CreateAndQueryRepeatedRecordField {
       bigquery.insertAll(request);
 
       // Query using a named parameter
-      List<QueryParameterValue> tuples = new ArrayList<>();
       QueryParameterValue statusValue = QueryParameterValue.string("single");
       QueryParameterValue addressValue = QueryParameterValue.string("123 this lane");
       QueryParameterValue cityValue = QueryParameterValue.string("Toronto");
@@ -168,6 +167,7 @@ public class CreateAndQueryRepeatedRecordField {
       struct.put("zipValue", zipValue);
       struct.put("numberOfYearsValue", numberOfYearsValue);
       QueryParameterValue recordValue = QueryParameterValue.struct(struct);
+      List<QueryParameterValue> tuples = new ArrayList<>();
       tuples.add(recordValue);
 
       QueryParameterValue repeatedRecord =
