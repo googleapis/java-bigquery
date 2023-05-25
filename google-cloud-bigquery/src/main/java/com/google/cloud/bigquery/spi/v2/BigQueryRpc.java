@@ -342,6 +342,15 @@ public interface BigQueryRpc extends ServiceRpc {
   String open(Job job);
 
   /**
+   * Opens a resumable upload session to load data into a BigQuery table and returns an upload URI.
+   *
+   * @param job load job
+   * @param uploadType uploadType
+   * @throws BigQueryException upon failure
+   */
+  String open(Job loadJob, String uploadType);
+
+  /**
    * Uploads the provided data to the resumable upload session at the specified position. This
    * method returns the job created to insert the rows, only when {@code last} is {@code true}.
    *

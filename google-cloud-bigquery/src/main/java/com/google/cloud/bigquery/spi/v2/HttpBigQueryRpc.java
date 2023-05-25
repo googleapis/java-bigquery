@@ -83,6 +83,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   private static final int HTTP_RESUME_INCOMPLETE = 308;
   private final BigQueryOptions options;
   private final Bigquery bigquery;
+  private static final String RESUMABLE_UPLOAD_TYPE = "resumable";
 
   @InternalApi("Visible for testing")
   static final Function<DatasetList.Datasets, Dataset> LIST_TO_DATASET =
@@ -723,6 +724,11 @@ public class HttpBigQueryRpc implements BigQueryRpc {
 
   @Override
   public String open(Job loadJob) {
+    return open(loadJob, RESUMABLE_UPLOAD_TYPE);
+  }
+
+  @Override
+  public String open(Job loadJob, String uploadType) {
     try {
       String builder = options.getHost();
       if (!builder.endsWith("/")) {
@@ -730,7 +736,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       }
       builder += BASE_RESUMABLE_URI + options.getProjectId() + "/jobs";
       GenericUrl url = new GenericUrl(builder);
-      url.set("uploadType", "resumable");
+      url.set("uploadType", uploadType);
       JsonFactory jsonFactory = bigquery.getJsonFactory();
       HttpRequestFactory requestFactory = bigquery.getRequestFactory();
       HttpRequest httpRequest =
