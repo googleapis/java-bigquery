@@ -4166,7 +4166,7 @@ public class ITBigQueryTest {
     }
   }
 
-   @Test
+  @Test
   public void testEmptyRepeatedRecordNamedQueryParameters() throws InterruptedException {
     QueryParameterValue[] tuples = {};
 
