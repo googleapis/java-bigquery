@@ -3789,7 +3789,7 @@ public class ITBigQueryTest {
     // Imports a local file into a table.
     try (TableDataWriteChannel writer = bigquery.writer(jobId, configuration);
         OutputStream stream = Channels.newOutputStream(writer)) {
-      //Files.copy(csvPath, stream);
+      // Files.copy(csvPath, stream);
       IOUtils.copy(inputStream, stream);
 
     } catch (IOException e) {
