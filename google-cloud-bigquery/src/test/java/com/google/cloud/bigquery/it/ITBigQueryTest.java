@@ -1782,9 +1782,9 @@ public class ITBigQueryTest {
         if (standardTableDefinition.getTimePartitioning() != null
             && standardTableDefinition.getTimePartitioning().getType().equals(Type.DAY)
             && standardTableDefinition
-            .getTimePartitioning()
-            .getExpirationMs()
-            .equals(EXPIRATION_MS)) {
+                .getTimePartitioning()
+                .getExpirationMs()
+                .equals(EXPIRATION_MS)) {
           found = true;
         }
       }
@@ -1909,7 +1909,7 @@ public class ITBigQueryTest {
             .update(BigQuery.TableOption.fields(BigQuery.TableField.TIME_PARTITIONING));
     TableDefinition updatedDefinition = table.getDefinition();
     assertThat(
-        ((StandardTableDefinition) updatedDefinition).getTimePartitioning().getExpirationMs())
+            ((StandardTableDefinition) updatedDefinition).getTimePartitioning().getExpirationMs())
         .isEqualTo(42L);
 
     table =
@@ -2985,7 +2985,7 @@ public class ITBigQueryTest {
   @Test
   public void testReadAPIIterationAndOrderAsync()
       throws SQLException, ExecutionException,
-      InterruptedException { // use read API to read 300K records and check the order
+          InterruptedException { // use read API to read 300K records and check the order
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable()
@@ -3031,7 +3031,7 @@ public class ITBigQueryTest {
   // specified amount of time
   public void testExecuteSelectAsyncCancel()
       throws SQLException, ExecutionException,
-      InterruptedException { // use read API to read 300K records and check the order
+          InterruptedException { // use read API to read 300K records and check the order
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable()
@@ -3077,7 +3077,7 @@ public class ITBigQueryTest {
   // specified amount of time
   public void testExecuteSelectAsyncTimeout()
       throws SQLException, ExecutionException,
-      InterruptedException { // use read API to read 300K records and check the order
+          InterruptedException { // use read API to read 300K records and check the order
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable()
@@ -3144,7 +3144,7 @@ public class ITBigQueryTest {
   // b/235591056 are resolved
   public void testReadAPIConnectionMultiClose()
       throws
-      SQLException { // use read API to read 300K records, then closes the connection. This test
+          SQLException { // use read API to read 300K records, then closes the connection. This test
     // repeats it multiple times and assets if the connection was closed
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
@@ -5214,11 +5214,11 @@ public class ITBigQueryTest {
       // Test query
       {
         assertThat(
-            bigquery
-                .query(
-                    QueryJobConfiguration.of(query),
-                    JobId.newBuilder().setLocation(location).build())
-                .iterateAll())
+                bigquery
+                    .query(
+                        QueryJobConfiguration.of(query),
+                        JobId.newBuilder().setLocation(location).build())
+                    .iterateAll())
             .isEmpty();
 
         try {

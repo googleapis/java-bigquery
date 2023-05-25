@@ -168,7 +168,7 @@ public final class WriteChannelConfiguration implements LoadConfiguration, Seria
       if (loadConfigurationPb.getDestinationEncryptionConfiguration() != null) {
         this.destinationEncryptionConfiguration =
             new EncryptionConfiguration.Builder(
-                configurationPb.getLoad().getDestinationEncryptionConfiguration())
+                    configurationPb.getLoad().getDestinationEncryptionConfiguration())
                 .build();
       }
       if (loadConfigurationPb.getTimePartitioning() != null) {
@@ -462,7 +462,7 @@ public final class WriteChannelConfiguration implements LoadConfiguration, Seria
   public boolean equals(Object obj) {
     return obj == this
         || obj instanceof WriteChannelConfiguration
-        && Objects.equals(toPb(), ((WriteChannelConfiguration) obj).toPb());
+            && Objects.equals(toPb(), ((WriteChannelConfiguration) obj).toPb());
   }
 
   @Override
