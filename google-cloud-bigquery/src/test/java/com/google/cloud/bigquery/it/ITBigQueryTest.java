@@ -745,7 +745,7 @@ public class ITBigQueryTest {
   private static final Schema SESSION_TABLE_SCHEMA =
       Schema.of(ID_SCHEMA, FIRST_NAME_SCHEMA, LAST_NAME_SCHEMA, EMAIL_SCHEMA, PROFESSION_SCHEMA);
   private static final Path csvPath =
-      FileSystems.getDefault().getPath("src/test/resources", "sessionTest.csv");
+      FileSystems.getDefault().getPath("src/test/resources", "sessionTest.csv").toAbsolutePath();
 
   private static final Set<String> PUBLIC_DATASETS =
       ImmutableSet.of("github_repos", "hacker_news", "noaa_gsod", "samples", "usa_names");
