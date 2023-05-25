@@ -60,6 +60,7 @@ import com.google.cloud.bigquery.Connection;
 import com.google.cloud.bigquery.ConnectionProperty;
 import com.google.cloud.bigquery.ConnectionSettings;
 import com.google.cloud.bigquery.CopyJobConfiguration;
+import com.google.cloud.bigquery.CsvOptions;
 import com.google.cloud.bigquery.Dataset;
 import com.google.cloud.bigquery.DatasetId;
 import com.google.cloud.bigquery.DatasetInfo;
@@ -141,9 +142,14 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
@@ -672,6 +678,36 @@ public class ITBigQueryTest {
       ConnectionProperty.newBuilder().setKey(KEY).setValue(VALUE).build();
   private static final List<ConnectionProperty> CONNECTION_PROPERTIES =
       ImmutableList.of(CONNECTION_PROPERTY);
+
+  private static final Field ID_SCHEMA =
+      Field.newBuilder("id", LegacySQLTypeName.STRING)
+          .setMode(Mode.REQUIRED)
+          .setDescription("id")
+          .build();
+  private static final Field FIRST_NAME_SCHEMA =
+      Field.newBuilder("firstname", LegacySQLTypeName.STRING)
+          .setMode(Field.Mode.NULLABLE)
+          .setDescription("First Name")
+          .build();
+  private static final Field LAST_NAME_SCHEMA =
+      Field.newBuilder("lastname", LegacySQLTypeName.STRING)
+          .setMode(Field.Mode.NULLABLE)
+          .setDescription("LAST NAME")
+          .build();
+  private static final Field EMAIL_SCHEMA =
+      Field.newBuilder("email", LegacySQLTypeName.STRING)
+          .setMode(Field.Mode.NULLABLE)
+          .setDescription("email")
+          .build();
+  private static final Field PROFESSION_SCHEMA =
+      Field.newBuilder("profession", LegacySQLTypeName.STRING)
+          .setMode(Field.Mode.NULLABLE)
+          .setDescription("profession")
+          .build();
+  private static final Schema SESSION_TABLE_SCHEMA =
+      Schema.of(ID_SCHEMA, FIRST_NAME_SCHEMA, LAST_NAME_SCHEMA, EMAIL_SCHEMA, PROFESSION_SCHEMA);
+  private static final Path csvPath =
+      FileSystems.getDefault().getPath("src/test/resources", "sessionTest.csv");
 
   private static final Set<String> PUBLIC_DATASETS =
       ImmutableSet.of("github_repos", "hacker_news", "noaa_gsod", "samples", "usa_names");
@@ -3696,6 +3732,74 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testLoadSessionSupportWriteChannelConfiguration() throws InterruptedException {
+    TableId sessionTableId = TableId.of("_SESSION", "test_temp_destination_table_from_file");
+
+    WriteChannelConfiguration configuration =
+        WriteChannelConfiguration.newBuilder(sessionTableId)
+            .setFormatOptions(CsvOptions.newBuilder().setFieldDelimiter(",").build())
+            .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
+            .setSchema(SESSION_TABLE_SCHEMA)
+            .setCreateSession(true)
+            .build();
+    String jobName = "jobId_" + UUID.randomUUID().toString();
+    JobId jobId = JobId.newBuilder().setLocation("us").setJob(jobName).build();
+    String sessionId;
+    // Imports a local file into a table.
+    try (TableDataWriteChannel writer = bigquery.writer(jobId, configuration);
+        OutputStream stream = Channels.newOutputStream(writer)) {
+      Files.copy(csvPath, stream);
+
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    Job loadJob = bigquery.getJob(jobId);
+    Job completedJob = loadJob.waitFor();
+
+    assertNotNull(completedJob);
+    assertEquals(jobId.getJob(), completedJob.getJobId().getJob());
+    JobStatistics.LoadStatistics statistics = completedJob.getStatistics();
+
+    sessionId = statistics.getSessionInfo().getSessionId();
+    System.out.println(sessionId);
+    assertNotNull(sessionId);
+
+    // Load job in the same session.
+    // Should load the data to a temp table.
+    ConnectionProperty sessionConnectionProperty =
+        ConnectionProperty.newBuilder().setKey("session_id").setValue(sessionId).build();
+    WriteChannelConfiguration sessionConfiguration =
+        WriteChannelConfiguration.newBuilder(sessionTableId)
+            .setConnectionProperties(ImmutableList.of(sessionConnectionProperty))
+            .setFormatOptions(CsvOptions.newBuilder().setFieldDelimiter(",").build())
+            .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
+            .setSchema(SESSION_TABLE_SCHEMA)
+            .build();
+    String sessionJobName = "jobId_" + UUID.randomUUID().toString();
+    JobId sessionJobId = JobId.newBuilder().setLocation("us").setJob(sessionJobName).build();
+    try (TableDataWriteChannel writer = bigquery.writer(sessionJobId, sessionConfiguration);
+        OutputStream stream = Channels.newOutputStream(writer)) {
+      Files.copy(csvPath, stream);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    Job queryJobWithSession = bigquery.getJob(sessionJobId);
+    queryJobWithSession = queryJobWithSession.waitFor();
+    LoadStatistics statisticsWithSession = queryJobWithSession.getStatistics();
+    assertNotNull(statisticsWithSession.getSessionInfo().getSessionId());
+
+    // Checking if the data loaded to the temp table in the session
+    String queryTempTable = "SELECT * FROM _SESSION.test_temp_destination_table_from_file;";
+    QueryJobConfiguration queryJobConfigurationWithSession =
+        QueryJobConfiguration.newBuilder(queryTempTable)
+            .setConnectionProperties(ImmutableList.of(sessionConnectionProperty))
+            .build();
+    Job queryTempTableJob = bigquery.create(JobInfo.of(queryJobConfigurationWithSession));
+    queryTempTableJob = queryTempTableJob.waitFor();
+    assertNotNull(queryTempTableJob.getQueryResults());
+  }
+
+  @Test
   public void testLoadSessionSupport() throws InterruptedException {
     // Start the session
     TableId sessionTableId = TableId.of("_SESSION", "test_temp_destination_table");
@@ -4145,34 +4249,36 @@ public class ITBigQueryTest {
   @Test
   public void testUnnestRepeatedRecordNamedQueryParameterFromDataset() throws InterruptedException {
     List<QueryParameterValue> tuples = new ArrayList<>();
-      QueryParameterValue statusValue = QueryParameterValue.string("single");
+    QueryParameterValue statusValue = QueryParameterValue.string("single");
     QueryParameterValue addressValue = QueryParameterValue.string("123 this lane");
     QueryParameterValue cityValue = QueryParameterValue.string("Torono");
     QueryParameterValue stateValue = QueryParameterValue.string("ON");
-        QueryParameterValue zipValue = QueryParameterValue.string("1h2j34");
+    QueryParameterValue zipValue = QueryParameterValue.string("1h2j34");
     QueryParameterValue numberOfYearsValue = QueryParameterValue.string("3");
 
-      Map<String, QueryParameterValue> struct = new HashMap<>();
-      struct.put("statusValue", statusValue);
+    Map<String, QueryParameterValue> struct = new HashMap<>();
+    struct.put("statusValue", statusValue);
     struct.put("addressValue", addressValue);
     struct.put("cityValue", cityValue);
     struct.put("stateValue", stateValue);
     struct.put("zipValue", zipValue);
     struct.put("numberOfYearsValue", numberOfYearsValue);
-      QueryParameterValue recordValue = QueryParameterValue.struct(struct);
-      tuples.add(recordValue);
+    QueryParameterValue recordValue = QueryParameterValue.struct(struct);
+    tuples.add(recordValue);
 
     QueryParameterValue repeatedRecord =
         QueryParameterValue.array(tuples.toArray(), StandardSQLTypeName.STRUCT);
 
-    String unnestRecord = "SELECT TEMP from `neenutestproject.AVRODATASET.NESTEDREPEATEDTABLE`, UNNEST(@repeatedRecord) AS TEMP ";
-    QueryJobConfiguration queryJobConfiguration = QueryJobConfiguration.newBuilder(unnestRecord)
-        .setUseLegacySql(false)
-        .addNamedParameter("repeatedRecord", repeatedRecord)
-        .build();
+    String unnestRecord =
+        "SELECT TEMP from `neenutestproject.AVRODATASET.NESTEDREPEATEDTABLE`, UNNEST(@repeatedRecord) AS TEMP ";
+    QueryJobConfiguration queryJobConfiguration =
+        QueryJobConfiguration.newBuilder(unnestRecord)
+            .setUseLegacySql(false)
+            .addNamedParameter("repeatedRecord", repeatedRecord)
+            .build();
     TableResult unnestResult = bigquery.query(queryJobConfiguration);
     FieldValueList rowValue = unnestResult.getValues().iterator().next();
-    //Why is this printing the one row 4 times?
+    // Why is this printing the one row 4 times?
     unnestResult
         .iterateAll()
         .forEach(row -> row.forEach(val -> System.out.printf("%s\n", val.toString())));
@@ -4182,7 +4288,8 @@ public class ITBigQueryTest {
     // @repeatedRecord is array of struct type namedQueryParameter with 1 struct
     // the UI does return the correct 1 row output
     // this test returns 0 results.
-    String query = "SELECT * FROM `neenutestproject.AVRODATASET.NESTEDREPEATEDTABLE`, UNNEST(@repeatedRecord) AS TEMP where TEMP IN UNNEST(addresses);";
+    String query =
+        "SELECT * FROM `neenutestproject.AVRODATASET.NESTEDREPEATEDTABLE`, UNNEST(@repeatedRecord) AS TEMP where TEMP IN UNNEST(addresses);";
     QueryJobConfiguration queryConfig =
         QueryJobConfiguration.newBuilder(query)
             .setUseLegacySql(false)
@@ -4190,7 +4297,7 @@ public class ITBigQueryTest {
             .build();
     TableResult results = bigquery.query(queryConfig);
 
-    System.out.println( Iterables.size(results.getValues()));
+    System.out.println(Iterables.size(results.getValues()));
     results
         .iterateAll()
         .forEach(row -> row.forEach(val -> System.out.printf("%s", val.toString())));
