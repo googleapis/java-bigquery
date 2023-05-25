@@ -71,7 +71,9 @@ public class CreateAndQueryRepeatedRecordFieldIT {
 
   @Test
   public void testCreateAndQueryRepeatedRecordField() {
-    CreateAndQueryRepeatedRecordField.createAndQueryRepeatedRecordField(BIGQUERY_DATASET_NAME, tableName);
-    assertThat(bout.toString()).contains("Query with Array of struct parameters performed successfully.");
+    CreateAndQueryRepeatedRecordField.createAndQueryRepeatedRecordField(
+        BIGQUERY_DATASET_NAME, tableName);
+    assertThat(bout.toString())
+        .contains("Query with Array of struct parameters performed successfully.");
   }
 }

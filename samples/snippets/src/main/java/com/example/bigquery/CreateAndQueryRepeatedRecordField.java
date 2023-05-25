@@ -76,6 +76,7 @@ public class CreateAndQueryRepeatedRecordField {
               .build(),
           Field.newBuilder("DOB", LegacySQLTypeName.DATE).setMode(Field.Mode.NULLABLE).build(),
           REPEATED_RECORD_FIELD_SCHEMA);
+
   public static void main(String[] args) {
     // TODO(developer): Replace these variables before running the sample.
     String datasetName = "MY_DATASET_NAME";
