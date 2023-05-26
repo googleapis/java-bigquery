@@ -3804,7 +3804,6 @@ public class ITBigQueryTest {
     JobStatistics.LoadStatistics statistics = completedJob.getStatistics();
 
     sessionId = statistics.getSessionInfo().getSessionId();
-    System.out.println(sessionId);
     assertNotNull(sessionId);
 
     // Load job in the same session.

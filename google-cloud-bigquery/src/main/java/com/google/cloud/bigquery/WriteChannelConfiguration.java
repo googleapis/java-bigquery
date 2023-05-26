@@ -85,7 +85,6 @@ public final class WriteChannelConfiguration implements LoadConfiguration, Seria
     private Builder() {}
 
     private Builder(WriteChannelConfiguration writeChannelConfiguration) {
-      this();
       this.destinationTable = writeChannelConfiguration.destinationTable;
       this.createDisposition = writeChannelConfiguration.createDisposition;
       this.writeDisposition = writeChannelConfiguration.writeDisposition;
