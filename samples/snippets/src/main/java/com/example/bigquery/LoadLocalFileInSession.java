@@ -48,7 +48,9 @@ public class LoadLocalFileInSession {
         createSessionForLoading(datasetName, tableName, csvPath, FormatOptions.csv());
     loadLocalFileInSession(datasetName, tableName, csvPath, FormatOptions.csv(), sessionId);
   }
+
   // [START bigquery_load_from_file_create_session]
+
   public static String createSessionForLoading(
       String datasetName, String tableName, Path csvPath, CsvOptions formatOptions)
       throws IOException, InterruptedException {
