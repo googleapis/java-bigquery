@@ -70,9 +70,12 @@ public class LoadLocalFileInSessionIT {
   @Test
   public void loadLocalFileInSession() throws IOException, InterruptedException {
     Path csvPath = FileSystems.getDefault().getPath("src/test/resources", "bigquery_noheader.csv");
-    String sessionId = LoadLocalFileInSession.createSessionForLoading(BIGQUERY_DATASET_NAME, tableName, csvPath, FormatOptions.csv());
+    String sessionId =
+        LoadLocalFileInSession.createSessionForLoading(
+            BIGQUERY_DATASET_NAME, tableName, csvPath, FormatOptions.csv());
     assertFalse(sessionId.isEmpty());
-    LoadLocalFileInSession.loadLocalFileInSession(BIGQUERY_DATASET_NAME, tableName, csvPath, FormatOptions.csv(), sessionId);
+    LoadLocalFileInSession.loadLocalFileInSession(
+        BIGQUERY_DATASET_NAME, tableName, csvPath, FormatOptions.csv(), sessionId);
     assertThat(bout.toString()).contains("Successfully loaded to Session");
   }
 }

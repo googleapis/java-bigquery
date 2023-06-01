@@ -16,7 +16,6 @@
 
 package com.example.bigquery;
 
-
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
@@ -45,11 +44,13 @@ public class LoadLocalFileInSession {
     String datasetName = "MY_DATASET_NAME";
     String tableName = "MY_TABLE_NAME";
     Path csvPath = FileSystems.getDefault().getPath(".", "my-data.csv");
-    String sessionId = createSessionForLoading(datasetName, tableName, csvPath, FormatOptions.csv());
+    String sessionId =
+        createSessionForLoading(datasetName, tableName, csvPath, FormatOptions.csv());
     loadLocalFileInSession(datasetName, tableName, csvPath, FormatOptions.csv(), sessionId);
   }
   // [START bigquery_load_from_file_create_session]
-  public static String createSessionForLoading(String datasetName, String tableName, Path csvPath, CsvOptions formatOptions)
+  public static String createSessionForLoading(
+      String datasetName, String tableName, Path csvPath, CsvOptions formatOptions)
       throws IOException, InterruptedException {
     LoadStatistics loadStatistics = null;
     try {
@@ -62,7 +63,8 @@ public class LoadLocalFileInSession {
 
       // Enable createSession in the configuration
       WriteChannelConfiguration writeChannelConfiguration =
-          WriteChannelConfiguration.newBuilder(tableId).setFormatOptions(formatOptions)
+          WriteChannelConfiguration.newBuilder(tableId)
+              .setFormatOptions(formatOptions)
               .setCreateSession(true)
               .build();
 
@@ -90,9 +92,8 @@ public class LoadLocalFileInSession {
                 + job.getStatus().getError());
         return "";
       }
-   
-    }
-    catch (BigQueryException e){
+
+    } catch (BigQueryException e) {
       System.out.println("Local file not loaded. \n" + e.toString());
     }
     return loadStatistics.getSessionInfo().getSessionId();
@@ -102,21 +103,26 @@ public class LoadLocalFileInSession {
 
   // [START bigquery_load_from_file_with_session]
   public static void loadLocalFileInSession(
-      String datasetName, String tableName, Path csvPath, FormatOptions formatOptions, String sessionId)
+      String datasetName,
+      String tableName,
+      Path csvPath,
+      FormatOptions formatOptions,
+      String sessionId)
       throws IOException, InterruptedException {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
       TableId tableId = TableId.of(datasetName, tableName);
-      
+
       // Create ConnectionProperty with sessionID
       ConnectionProperty sessionConnectionProperty =
           ConnectionProperty.newBuilder().setKey("session_id").setValue(sessionId).build();
 
       // Set the Connection Property with the SessionID in the Configuration.
       WriteChannelConfiguration writeChannelConfiguration =
-          WriteChannelConfiguration.newBuilder(tableId).setFormatOptions(formatOptions)
+          WriteChannelConfiguration.newBuilder(tableId)
+              .setFormatOptions(formatOptions)
               .setConnectionProperties(ImmutableList.of(sessionConnectionProperty))
               .build();
 
@@ -145,11 +151,11 @@ public class LoadLocalFileInSession {
 
       // Get output status
       LoadStatistics stats = job.getStatistics();
-      System.out.printf("Successfully loaded to Session %s. \n", stats.getSessionInfo().getSessionId());
+      System.out.printf(
+          "Successfully loaded to Session %s. \n", stats.getSessionInfo().getSessionId());
     } catch (BigQueryException e) {
       System.out.println("Local file not loaded. \n" + e.toString());
     }
   }
   // [END bigquery_load_from_file_with_session]
 }
-
