@@ -21,7 +21,7 @@ See https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>libraries-bom</artifactId>
-      <version>26.15.0</version>
+      <version>26.16.0</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>
@@ -32,7 +32,6 @@ See https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google
   <dependency>
     <groupId>com.google.cloud</groupId>
     <artifactId>google-cloud-bigquery</artifactId>
-    <version>2.27.0</version> <!-- TODO: Remove this when the libraries-bom with latest version is available-->
   </dependency>
 </dependencies>
 
