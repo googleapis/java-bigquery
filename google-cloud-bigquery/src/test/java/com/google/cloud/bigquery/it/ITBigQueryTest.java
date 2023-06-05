@@ -182,6 +182,7 @@ import org.threeten.bp.Duration;
 import org.threeten.extra.PeriodDuration;
 
 public class ITBigQueryTest {
+  
 
   private static final byte[] BYTES = {0xD, 0xE, 0xA, 0xD};
   private static final String BYTES_BASE64 = BaseEncoding.base64().encode(BYTES);
