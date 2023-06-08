@@ -37,7 +37,8 @@ public class TableResult implements Page<FieldValueList>, Serializable {
   private final Page<FieldValueList> pageNoSchema;
   @Nullable private JobId jobId = null;
 
-  public void setJobId(@Nullable JobId jobId) {
+  // package-private so job id is not set outside the package.
+  void setJobId(@Nullable JobId jobId) {
     this.jobId = jobId;
   }
 
