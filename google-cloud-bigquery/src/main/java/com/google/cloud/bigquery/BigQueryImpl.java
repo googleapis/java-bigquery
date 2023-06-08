@@ -1356,7 +1356,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       JobId jobId = JobId.fromPb(results.getJobReference());
       Job job = getJob(jobId, options);
       TableResult tableResult = job.getQueryResults();
-      // Option 1: Return the JobID of the successful job
+      // Return the JobID of the successful job
       tableResult.setJobId(jobId);
       return tableResult;
     }
@@ -1373,7 +1373,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               cursor,
               // cache first page of result
               transformTableData(results.getRows(), schema)),
-          // Option 1: Return the JobID of the successful job
+          // Return the JobID of the successful job
           jobId);
     }
     // only 1 page of result
@@ -1384,7 +1384,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             new TableDataPageFetcher(null, schema, getOptions(), null, optionMap(options)),
             null,
             transformTableData(results.getRows(), schema)),
-        // Option 1: Return the JobID of the successful job
+        // Return the JobID of the successful job
         results.getJobReference() != null ? JobId.fromPb(results.getJobReference()) : null);
   }
 

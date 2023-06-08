@@ -1011,6 +1011,7 @@ public class ITBigQueryTest {
               .addPositionalParameter(stringParameter)
               .build();
       TableResult result = bigquery.query(queryJobConfiguration);
+      assertNotNull(result.getJobId());
       for (FieldValueList values : result.iterateAll()) {
         assertEquals("10", values.get(0).getValue());
       }
@@ -1135,6 +1136,7 @@ public class ITBigQueryTest {
               .addPositionalParameter(intervalParameter2)
               .build();
       TableResult result = bigquery.query(queryJobConfiguration);
+      assertNotNull(result.getJobId());
       for (FieldValueList values : result.iterateAll()) {
         assertEquals("125-7 -19 0:24:12.000006", values.get(0).getValue());
       }
@@ -1632,6 +1634,7 @@ public class ITBigQueryTest {
             .setUseLegacySql(true)
             .build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     int rowCount = 0;
     for (FieldValueList row : result.getValues()) {
       FieldValue timestampCell = row.get(0);
@@ -2529,6 +2532,7 @@ public class ITBigQueryTest {
             QueryJobConfiguration.newBuilder(query)
                 .setDefaultDataset(DatasetId.of(DATASET))
                 .build());
+    assertNotNull(resultInteractive.getJobId());
     for (FieldValueList row : resultInteractive.getValues()) {
       FieldValue timeStampCell = row.get(0);
       Instant timestampStringValueActual = timeStampCell.getTimestampInstant();
@@ -2594,6 +2598,7 @@ public class ITBigQueryTest {
                 .setDefaultDataset(DatasetId.of(DATASET))
                 .setPriority(QueryJobConfiguration.Priority.INTERACTIVE)
                 .build());
+    assertNotNull(result.getJobId());
     for (FieldValueList row : result.getValues()) {
       FieldValue timeStampCell = row.get(0);
       long microsAfterQuery = timeStampCell.getTimestampValue();
@@ -2606,6 +2611,7 @@ public class ITBigQueryTest {
             QueryJobConfiguration.newBuilder(query)
                 .setDefaultDataset(DatasetId.of(DATASET))
                 .build());
+    assertNotNull(resultInteractive.getJobId());
     for (FieldValueList row : resultInteractive.getValues()) {
       FieldValue timeStampCell = row.get(0);
       long microsAfterQuery = timeStampCell.getTimestampValue();
@@ -2670,6 +2676,7 @@ public class ITBigQueryTest {
         String.format(
             "SELECT COUNT(*) as ct FROM %s.%s WHERE dt=\"2020-11-15\"", DATASET, tableName);
     TableResult result = bigquery.query(QueryJobConfiguration.of(query));
+    assertNotNull(result.getJobId());
     for (FieldValueList fieldValues : result.iterateAll()) {
       assertEquals(50, fieldValues.get("ct").getLongValue());
     }
@@ -2706,6 +2713,7 @@ public class ITBigQueryTest {
     String query =
         String.format("SELECT COUNT(*) as ct FROM %s.%s WHERE pkey=\"foo\"", DATASET, tableName);
     TableResult result = bigquery.query(QueryJobConfiguration.of(query));
+    assertNotNull(result.getJobId());
     for (FieldValueList fieldValues : result.iterateAll()) {
       assertEquals(50, fieldValues.get("ct").getLongValue());
     }
@@ -3336,6 +3344,7 @@ public class ITBigQueryTest {
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
     assertEquals(2, result.getTotalRows());
     assertNull(result.getNextPage());
@@ -3344,6 +3353,8 @@ public class ITBigQueryTest {
 
     // running the same QueryJobConfiguration with the same query again
     TableResult result1Duplicate = bigquery.query(config);
+    assertNotNull(result1Duplicate.getJobId());
+    assertNotEquals(result.getJobId(), result1Duplicate.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result1Duplicate.getSchema());
     assertEquals(2, result.getTotalRows());
     assertNull(result1Duplicate.getNextPage());
@@ -3354,6 +3365,7 @@ public class ITBigQueryTest {
     QueryJobConfiguration config2 =
         QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
     TableResult result2 = bigquery.query(config2);
+    assertNotNull(result2.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result2.getSchema());
     assertEquals(2, result2.getTotalRows());
     assertNull(result2.getNextPage());
@@ -3369,6 +3381,7 @@ public class ITBigQueryTest {
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
     assertEquals(2, result.getTotalRows());
     assertNull(result.getNextPage());
@@ -3376,6 +3389,7 @@ public class ITBigQueryTest {
     assertFalse(result.hasNextPage());
 
     TableResult result1 = bigquery.query(config);
+    assertNotNull(result1.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result1.getSchema());
     assertEquals(2, result1.getTotalRows());
     assertNull(result1.getNextPage());
@@ -3384,6 +3398,7 @@ public class ITBigQueryTest {
 
     config.toBuilder().setQuery(query).build();
     TableResult result2 = bigquery.query(config);
+    assertNotNull(result2.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result2.getSchema());
     assertEquals(2, result2.getTotalRows());
     assertNull(result2.getNextPage());
@@ -3399,6 +3414,7 @@ public class ITBigQueryTest {
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
     assertEquals(2, result.getTotalRows());
     assertNull(result.getNextPage());
@@ -3464,6 +3480,7 @@ public class ITBigQueryTest {
             .setDefaultDataset(DatasetId.of(UK_DATASET))
             .build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     assertEquals(SIMPLE_SCHEMA, result.getSchema());
     assertEquals(1, result.getTotalRows());
     assertNull(result.getNextPage());
@@ -3510,6 +3527,7 @@ public class ITBigQueryTest {
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     assertEquals(LARGE_TABLE_SCHEMA, result.getSchema());
     assertEquals(313348, result.getTotalRows());
     assertNotNull(result.getNextPage());
@@ -3517,6 +3535,7 @@ public class ITBigQueryTest {
     assertTrue(result.hasNextPage());
 
     TableResult result1 = bigquery.query(config);
+    assertNotNull(result1.getJobId());
     assertEquals(LARGE_TABLE_SCHEMA, result.getSchema());
     assertEquals(313348, result.getTotalRows());
     assertNotNull(result1.getNextPage());
@@ -3525,6 +3544,7 @@ public class ITBigQueryTest {
 
     config.toBuilder().setQuery(query).build();
     TableResult result2 = bigquery.query(config);
+    assertNotNull(result2.getJobId());
     assertEquals(LARGE_TABLE_SCHEMA, result2.getSchema());
     assertEquals(313348, result2.getTotalRows());
     assertNotNull(result2.getNextPage());
@@ -3539,12 +3559,14 @@ public class ITBigQueryTest {
         String.format("UPDATE %s.%s SET StringField = 'hello' WHERE TRUE", DATASET, tableName);
     QueryJobConfiguration dmlConfig = QueryJobConfiguration.newBuilder(dmlQuery).build();
     TableResult result = bigquery.query(dmlConfig);
+    assertNotNull(result.getJobId());
     assertEquals(TABLE_SCHEMA, result.getSchema());
     assertEquals(2, result.getTotalRows());
     // Verify correctness of table content
     String sqlQuery = String.format("SELECT * FROM %s.%s", DATASET, tableName);
     QueryJobConfiguration sqlConfig = QueryJobConfiguration.newBuilder(sqlQuery).build();
     TableResult resultAfterDML = bigquery.query(sqlConfig);
+    assertNotNull(resultAfterDML.getJobId());
     for (FieldValueList row : resultAfterDML.getValues()) {
       FieldValue timestampCell = row.get(0);
       assertEquals(timestampCell, row.get("TimestampField"));
@@ -3576,12 +3598,14 @@ public class ITBigQueryTest {
     QueryJobConfiguration ddlConfig =
         QueryJobConfiguration.newBuilder(ddlQuery).setDefaultDataset(DatasetId.of(DATASET)).build();
     TableResult result = bigquery.query(ddlConfig);
+    assertNotNull(result.getJobId());
     assertEquals(DDL_TABLE_SCHEMA, result.getSchema());
     assertEquals(0, result.getTotalRows());
     // Verify correctness of table content
     String sqlQuery = String.format("SELECT * FROM %s.%s", DATASET, tableName);
     QueryJobConfiguration sqlConfig = QueryJobConfiguration.newBuilder(sqlQuery).build();
     TableResult resultAfterDDL = bigquery.query(sqlConfig);
+    assertNotNull(resultAfterDDL.getJobId());
     for (FieldValueList row : resultAfterDDL.getValues()) {
       FieldValue timestampCell = row.get(0);
       assertEquals(timestampCell, row.get("TimestampField"));
@@ -3612,12 +3636,14 @@ public class ITBigQueryTest {
             .setDefaultDataset(DatasetId.of(DATASET))
             .build();
     TableResult result = bigquery.query(ddlConfig);
+    assertNotNull(result.getJobId());
     assertEquals(0, result.getTotalRows());
     assertNotNull(result.getSchema());
     // Verify correctness of table content
     String sqlQuery = String.format("SELECT * FROM %s.%s", DATASET, tableName);
     QueryJobConfiguration sqlConfig = QueryJobConfiguration.newBuilder(sqlQuery).build();
     TableResult resultAfterDDL = bigquery.query(sqlConfig);
+    assertNotNull(resultAfterDDL.getJobId());
     for (FieldValueList row : resultAfterDDL.getValues()) {
       FieldValue unique_key = row.get(0);
       assertEquals(unique_key, row.get("unique_key"));
@@ -3946,6 +3972,7 @@ public class ITBigQueryTest {
             .addPositionalParameter(bigNumericParameter4)
             .build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA_BIGNUMERIC, result.getSchema());
     assertEquals(2, Iterables.size(result.getValues()));
     for (FieldValueList values : result.iterateAll()) {
@@ -4008,6 +4035,7 @@ public class ITBigQueryTest {
             .addNamedParameter("integerList", intArrayParameter)
             .build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
     assertEquals(2, Iterables.size(result.getValues()));
   }
@@ -4054,6 +4082,7 @@ public class ITBigQueryTest {
             .addNamedParameter("recordField", recordValue)
             .build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     assertEquals(1, Iterables.size(result.getValues()));
     for (FieldValueList values : result.iterateAll()) {
       for (FieldValue value : values) {
@@ -4072,6 +4101,7 @@ public class ITBigQueryTest {
             .setUseLegacySql(false)
             .build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     assertEquals(2, Iterables.size(result.getValues()));
     for (FieldValueList values : result.iterateAll()) {
       for (FieldValue value : values) {
@@ -4113,6 +4143,7 @@ public class ITBigQueryTest {
             .addNamedParameter("nestedRecordField", nestedRecordField)
             .build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     assertEquals(1, Iterables.size(result.getValues()));
     for (FieldValueList values : result.iterateAll()) {
       for (FieldValue value : values) {
@@ -4141,6 +4172,7 @@ public class ITBigQueryTest {
             .addNamedParameter("p", bytesParameter)
             .build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     int rowCount = 0;
     for (FieldValueList row : result.getValues()) {
       rowCount++;
@@ -4164,6 +4196,7 @@ public class ITBigQueryTest {
             .addNamedParameter("geo", geoParameterValue)
             .build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     int rowCount = 0;
     for (FieldValueList row : result.getValues()) {
       rowCount++;
@@ -4353,6 +4386,7 @@ public class ITBigQueryTest {
         QueryJobConfiguration.newBuilder(ddlQuery).setDefaultDataset(DatasetId.of(DATASET)).build();
     TableId sourceTableId = TableId.of(DATASET, sourceTableName);
     TableResult result = bigquery.query(ddlConfig);
+    assertNotNull(result.getJobId());
     assertEquals(DDL_TABLE_SCHEMA, result.getSchema());
     Table remoteTable = bigquery.getTable(DATASET, sourceTableName);
     assertNotNull(remoteTable);
@@ -5239,6 +5273,7 @@ public class ITBigQueryTest {
         QueryJobConfiguration.newBuilder(ddlQuery).setDefaultDataset(DatasetId.of(DATASET)).build();
     TableId sourceTableId = TableId.of(DATASET, sourceTableName);
     TableResult result = bigquery.query(ddlConfig);
+    assertNotNull(result.getJobId());
     assertEquals(DDL_TABLE_SCHEMA, result.getSchema());
     Table remoteTable = bigquery.getTable(DATASET, sourceTableName);
     assertNotNull(remoteTable);
