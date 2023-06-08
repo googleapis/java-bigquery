@@ -2623,6 +2623,7 @@ public class ITBigQueryTest {
     Job job = bigquery.create(JobInfo.of(JobId.of(), config));
 
     TableResult result = job.getQueryResults();
+    assertNotNull(result.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
     int rowCount = 0;
     for (FieldValueList row : result.getValues()) {
@@ -2702,6 +2703,7 @@ public class ITBigQueryTest {
     Job job = bigquery.create(JobInfo.of(JobId.of(), config));
 
     TableResult result = job.getQueryResults();
+    assertNotNull(result.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
     int rowCount = 0;
     for (FieldValueList row : result.getValues()) {
@@ -3957,6 +3959,7 @@ public class ITBigQueryTest {
     assertNull(remoteJob.getStatus().getError());
 
     TableResult result = remoteJob.getQueryResults();
+    assertNotNull(result.getJobId());
     assertEquals(TABLE_SCHEMA, result.getSchema());
 
     Job queryJob = bigquery.getJob(remoteJob.getJobId());
@@ -4848,6 +4851,7 @@ public class ITBigQueryTest {
     assertNull(remoteJob.getStatus().getError());
 
     TableResult result = remoteJob.getQueryResults();
+    assertNotNull(result.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
     int rowCount = 0;
     for (FieldValueList row : result.getValues()) {
