@@ -97,6 +97,7 @@ import com.google.cloud.bigquery.ModelInfo;
 import com.google.cloud.bigquery.Parameter;
 import com.google.cloud.bigquery.ParquetOptions;
 import com.google.cloud.bigquery.PolicyTags;
+import com.google.cloud.bigquery.PrimaryKey;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.QueryParameterValue;
 import com.google.cloud.bigquery.RangePartitioning;
@@ -157,6 +158,7 @@ import java.time.Instant;
 import java.time.LocalTime;
 import java.time.Period;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -5671,5 +5673,69 @@ public class ITBigQueryTest {
     // Clean up
     assertTrue(table.delete());
     assertTrue(storage.delete(blobInfo.getBlobId()));
+  }
+
+  @Test
+  public void primaryKeyTest() {
+    String tableName = "test_primary_key";
+    TableId tableId = TableId.of(DATASET, tableName);
+    PrimaryKey primaryKey = PrimaryKey.newBuilder().setColumns(Arrays.asList("ID")).build();
+
+    try {
+      StandardTableDefinition tableDefinition =
+          StandardTableDefinition.newBuilder()
+              .setSchema(Schema.of(
+                      Field.newBuilder("ID", LegacySQLTypeName.STRING).setMode(Field.Mode.NULLABLE).build(),
+                      Field.newBuilder("FirstName", LegacySQLTypeName.STRING)
+                          .setMode(Field.Mode.NULLABLE)
+                          .build(),
+                      Field.newBuilder("LastName", LegacySQLTypeName.STRING)
+                          .setMode(Field.Mode.NULLABLE)
+                          .build()))
+              .setPrimaryKey(primaryKey)
+              .build();
+      Table createdTable = bigquery.create(TableInfo.of(tableId, tableDefinition));
+      assertNotNull(createdTable);
+      Table remoteTable = bigquery.getTable(DATASET, tableName);
+      assertEquals(
+          primaryKey,
+          remoteTable.<StandardTableDefinition>getDefinition().getPrimaryKey());
+    } finally {
+      bigquery.delete(tableId);
+    }
+  }
+
+  @Test
+  public void primaryKeyUpdateTest() {
+    String tableName = "test_primary_key_update";
+    TableId tableId = TableId.of(DATASET, tableName);
+    PrimaryKey primaryKey = PrimaryKey.newBuilder().setColumns(Arrays.asList("FirstName", "LastName")).build();
+
+    try {
+      StandardTableDefinition tableDefinition =
+          StandardTableDefinition.newBuilder()
+              .setSchema(Schema.of(
+                  Field.newBuilder("ID", LegacySQLTypeName.STRING).setMode(Field.Mode.NULLABLE).build(),
+                  Field.newBuilder("FirstName", LegacySQLTypeName.STRING)
+                      .setMode(Field.Mode.NULLABLE)
+                      .build(),
+                  Field.newBuilder("LastName", LegacySQLTypeName.STRING)
+                      .setMode(Field.Mode.NULLABLE)
+                      .build()))
+              .build();
+      Table createdTable = bigquery.create(TableInfo.of(tableId, tableDefinition));
+      assertNotNull(createdTable);
+      Table remoteTable = bigquery.getTable(DATASET, tableName);
+      assertNull(remoteTable.<StandardTableDefinition>getDefinition().getPrimaryKey());
+
+      Table updatedTable = remoteTable.toBuilder().setPrimaryKey(primaryKey).build().update();
+      assertNotNull(updatedTable);
+      Table remoteUpdatedTable = bigquery.getTable(DATASET, tableName);
+      assertEquals(
+          primaryKey,
+          remoteUpdatedTable.<StandardTableDefinition>getDefinition().getPrimaryKey());
+    } finally {
+      bigquery.delete(tableId);
+    }
   }
 }

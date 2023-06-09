@@ -169,6 +169,12 @@ public class Table extends TableInfo {
     }
 
     @Override
+    public Builder setPrimaryKey(PrimaryKey primaryKey) {
+      infoBuilder.setPrimaryKey(primaryKey);
+      return this;
+    }
+
+    @Override
     public Table build() {
       return new Table(bigquery, infoBuilder);
     }

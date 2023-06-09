@@ -18,6 +18,7 @@ package com.google.cloud.bigquery;
 
 import com.google.api.services.bigquery.model.Streamingbuffer;
 import com.google.api.services.bigquery.model.Table;
+import com.google.api.services.bigquery.model.TableConstraints;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.MoreObjects;
 import java.io.Serializable;
@@ -161,6 +162,8 @@ public abstract class StandardTableDefinition extends TableDefinition {
      */
     public abstract Builder setClustering(Clustering clustering);
 
+    public abstract Builder setPrimaryKey(PrimaryKey primaryKey);
+
     /** Creates a {@code StandardTableDefinition} object. */
     public abstract StandardTableDefinition build();
   }
@@ -221,6 +224,13 @@ public abstract class StandardTableDefinition extends TableDefinition {
   @Nullable
   public abstract Clustering getClustering();
 
+  /**
+   * Returns the primary key for this table. Returns {@code null} if no primary keys are set for
+   * this table.
+   */
+  @Nullable
+  public abstract PrimaryKey getPrimaryKey();
+
   /** Returns a builder for a BigQuery standard table definition. */
   public static Builder newBuilder() {
     return new AutoValue_StandardTableDefinition.Builder().setType(Type.TABLE);
@@ -259,6 +269,13 @@ public abstract class StandardTableDefinition extends TableDefinition {
     if (getClustering() != null) {
       tablePb.setClustering(getClustering().toPb());
     }
+    if (getPrimaryKey() != null) {
+      if (tablePb.getTableConstraints() == null) {
+        tablePb.setTableConstraints(new TableConstraints());
+      }
+
+      tablePb.getTableConstraints().setPrimaryKey(getPrimaryKey().toPb());
+    }
     return tablePb;
   }
 
@@ -295,6 +312,9 @@ public abstract class StandardTableDefinition extends TableDefinition {
     }
     if (tablePb.getNumLongTermBytes() != null) {
       builder.setNumLongTermBytes(tablePb.getNumLongTermBytes());
+    }
+    if (tablePb.getTableConstraints() != null) {
+      builder.setPrimaryKey(PrimaryKey.fromPb(tablePb.getTableConstraints().getPrimaryKey()));
     }
     return builder.setNumBytes(tablePb.getNumBytes()).setLocation(tablePb.getLocation()).build();
   }

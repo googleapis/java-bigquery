@@ -23,6 +23,7 @@ import com.google.api.client.util.Data;
 import com.google.api.client.util.Strings;
 import com.google.api.core.BetaApi;
 import com.google.api.services.bigquery.model.Table;
+import com.google.api.services.bigquery.model.TableConstraints;
 import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
 import java.io.Serializable;
@@ -75,6 +76,7 @@ public class TableInfo implements Serializable {
   private final String defaultCollation;
 
   private final CloneDefinition cloneDefinition;
+  private final PrimaryKey primaryKey;
 
   /** A builder for {@code TableInfo} objects. */
   public abstract static class Builder {
@@ -142,6 +144,8 @@ public class TableInfo implements Serializable {
     public abstract Builder setDefaultCollation(String defaultCollation);
 
     public abstract Builder setCloneDefinition(CloneDefinition cloneDefinition);
+
+    public abstract Builder setPrimaryKey(PrimaryKey primaryKey);
   }
 
   static class BuilderImpl extends Builder {
@@ -164,6 +168,7 @@ public class TableInfo implements Serializable {
     private Boolean requirePartitionFilter;
     private String defaultCollation;
     private CloneDefinition cloneDefinition;
+    private PrimaryKey primaryKey;
 
     BuilderImpl() {}
 
@@ -186,6 +191,7 @@ public class TableInfo implements Serializable {
       this.requirePartitionFilter = tableInfo.requirePartitionFilter;
       this.defaultCollation = tableInfo.defaultCollation;
       this.cloneDefinition = tableInfo.cloneDefinition;
+      this.primaryKey = tableInfo.primaryKey;
     }
 
     BuilderImpl(Table tablePb) {
@@ -213,6 +219,9 @@ public class TableInfo implements Serializable {
       this.defaultCollation = tablePb.getDefaultCollation();
       if (tablePb.getCloneDefinition() != null) {
         this.cloneDefinition = CloneDefinition.fromPb(tablePb.getCloneDefinition());
+      }
+      if (tablePb.getTableConstraints() != null) {
+        this.primaryKey = PrimaryKey.fromPb(tablePb.getTableConstraints().getPrimaryKey());
       }
     }
 
@@ -323,6 +332,11 @@ public class TableInfo implements Serializable {
       return this;
     }
 
+    public Builder setPrimaryKey(PrimaryKey primaryKey) {
+      this.primaryKey = primaryKey;
+      return this;
+    }
+
     @Override
     public TableInfo build() {
       return new TableInfo(this);
@@ -348,6 +362,7 @@ public class TableInfo implements Serializable {
     this.requirePartitionFilter = builder.requirePartitionFilter;
     this.defaultCollation = builder.defaultCollation;
     this.cloneDefinition = builder.cloneDefinition;
+    this.primaryKey = builder.primaryKey;
   }
 
   /** Returns the hash of the table resource. */
@@ -458,6 +473,10 @@ public class TableInfo implements Serializable {
     return cloneDefinition;
   }
 
+  public PrimaryKey getPrimaryKey() {
+    return primaryKey;
+  }
+
   /** Returns a builder for the table object. */
   public Builder toBuilder() {
     return new BuilderImpl(this);
@@ -484,6 +503,7 @@ public class TableInfo implements Serializable {
         .add("requirePartitionFilter", requirePartitionFilter)
         .add("defaultCollation", defaultCollation)
         .add("cloneDefinition", cloneDefinition)
+        .add("primaryKey", primaryKey)
         .toString();
   }
 
@@ -550,6 +570,12 @@ public class TableInfo implements Serializable {
     }
     if (cloneDefinition != null) {
       tablePb.setCloneDefinition(cloneDefinition.toPb());
+    }
+    if (primaryKey != null) {
+      if (tablePb.getTableConstraints() == null) {
+        tablePb.setTableConstraints(new TableConstraints());
+      }
+      tablePb.getTableConstraints().setPrimaryKey(primaryKey.toPb());
     }
     return tablePb;
   }
