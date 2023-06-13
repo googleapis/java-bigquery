@@ -23,7 +23,9 @@ import com.google.auto.value.AutoValue;
 import com.google.common.base.MoreObjects;
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -164,6 +166,8 @@ public abstract class StandardTableDefinition extends TableDefinition {
 
     public abstract Builder setPrimaryKey(PrimaryKey primaryKey);
 
+    public abstract Builder setForeignKeys(List<ForeignKey> foreignKeys);
+
     /** Creates a {@code StandardTableDefinition} object. */
     public abstract StandardTableDefinition build();
   }
@@ -231,6 +235,13 @@ public abstract class StandardTableDefinition extends TableDefinition {
   @Nullable
   public abstract PrimaryKey getPrimaryKey();
 
+  /**
+   * Returns foreign keys for this table. Returns {@code null} if no foreign keys exist in this
+   * table.
+   */
+  @Nullable
+  public abstract List<ForeignKey> getForeignKeys();
+
   /** Returns a builder for a BigQuery standard table definition. */
   public static Builder newBuilder() {
     return new AutoValue_StandardTableDefinition.Builder().setType(Type.TABLE);
@@ -276,6 +287,16 @@ public abstract class StandardTableDefinition extends TableDefinition {
 
       tablePb.getTableConstraints().setPrimaryKey(getPrimaryKey().toPb());
     }
+    if (getForeignKeys() != null) {
+      if (tablePb.getTableConstraints() == null) {
+        tablePb.setTableConstraints(new TableConstraints());
+      }
+
+      tablePb
+          .getTableConstraints()
+          .setForeignKeys(
+              getForeignKeys().stream().map(ForeignKey::toPb).collect(Collectors.toList()));
+    }
     return tablePb;
   }
 
@@ -314,7 +335,15 @@ public abstract class StandardTableDefinition extends TableDefinition {
       builder.setNumLongTermBytes(tablePb.getNumLongTermBytes());
     }
     if (tablePb.getTableConstraints() != null) {
-      builder.setPrimaryKey(PrimaryKey.fromPb(tablePb.getTableConstraints().getPrimaryKey()));
+      if (tablePb.getTableConstraints().getPrimaryKey() != null) {
+        builder.setPrimaryKey(PrimaryKey.fromPb(tablePb.getTableConstraints().getPrimaryKey()));
+      }
+      if (tablePb.getTableConstraints().getForeignKeys() != null) {
+        builder.setForeignKeys(
+            tablePb.getTableConstraints().getForeignKeys().stream()
+                .map(ForeignKey::fromPb)
+                .collect(Collectors.toList()));
+      }
     }
     return builder.setNumBytes(tablePb.getNumBytes()).setLocation(tablePb.getLocation()).build();
   }

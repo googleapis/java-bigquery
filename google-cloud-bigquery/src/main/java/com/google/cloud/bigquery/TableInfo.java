@@ -28,8 +28,10 @@ import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Google BigQuery table information. Use {@link StandardTableDefinition} to create simple BigQuery
@@ -77,6 +79,7 @@ public class TableInfo implements Serializable {
 
   private final CloneDefinition cloneDefinition;
   private final PrimaryKey primaryKey;
+  private final List<ForeignKey> foreignKeys;
 
   /** A builder for {@code TableInfo} objects. */
   public abstract static class Builder {
@@ -146,6 +149,8 @@ public class TableInfo implements Serializable {
     public abstract Builder setCloneDefinition(CloneDefinition cloneDefinition);
 
     public abstract Builder setPrimaryKey(PrimaryKey primaryKey);
+
+    public abstract Builder setForeignKeys(List<ForeignKey> foreignKeys);
   }
 
   static class BuilderImpl extends Builder {
@@ -169,6 +174,7 @@ public class TableInfo implements Serializable {
     private String defaultCollation;
     private CloneDefinition cloneDefinition;
     private PrimaryKey primaryKey;
+    private List<ForeignKey> foreignKeys;
 
     BuilderImpl() {}
 
@@ -192,6 +198,7 @@ public class TableInfo implements Serializable {
       this.defaultCollation = tableInfo.defaultCollation;
       this.cloneDefinition = tableInfo.cloneDefinition;
       this.primaryKey = tableInfo.primaryKey;
+      this.foreignKeys = tableInfo.foreignKeys;
     }
 
     BuilderImpl(Table tablePb) {
@@ -221,7 +228,15 @@ public class TableInfo implements Serializable {
         this.cloneDefinition = CloneDefinition.fromPb(tablePb.getCloneDefinition());
       }
       if (tablePb.getTableConstraints() != null) {
-        this.primaryKey = PrimaryKey.fromPb(tablePb.getTableConstraints().getPrimaryKey());
+        if (tablePb.getTableConstraints().getPrimaryKey() != null) {
+          this.primaryKey = PrimaryKey.fromPb(tablePb.getTableConstraints().getPrimaryKey());
+        }
+        if (tablePb.getTableConstraints().getForeignKeys() != null) {
+          this.foreignKeys =
+              tablePb.getTableConstraints().getForeignKeys().stream()
+                  .map(ForeignKey::fromPb)
+                  .collect(Collectors.toList());
+        }
       }
     }
 
@@ -337,6 +352,11 @@ public class TableInfo implements Serializable {
       return this;
     }
 
+    public Builder setForeignKeys(List<ForeignKey> foreignKeys) {
+      this.foreignKeys = foreignKeys;
+      return this;
+    }
+
     @Override
     public TableInfo build() {
       return new TableInfo(this);
@@ -363,6 +383,7 @@ public class TableInfo implements Serializable {
     this.defaultCollation = builder.defaultCollation;
     this.cloneDefinition = builder.cloneDefinition;
     this.primaryKey = builder.primaryKey;
+    this.foreignKeys = builder.foreignKeys;
   }
 
   /** Returns the hash of the table resource. */
@@ -477,6 +498,10 @@ public class TableInfo implements Serializable {
     return primaryKey;
   }
 
+  public List<ForeignKey> getForeignKeys() {
+    return foreignKeys;
+  }
+
   /** Returns a builder for the table object. */
   public Builder toBuilder() {
     return new BuilderImpl(this);
@@ -504,6 +529,7 @@ public class TableInfo implements Serializable {
         .add("defaultCollation", defaultCollation)
         .add("cloneDefinition", cloneDefinition)
         .add("primaryKey", primaryKey)
+        .add("foreignKeys", foreignKeys)
         .toString();
   }
 
@@ -576,6 +602,14 @@ public class TableInfo implements Serializable {
         tablePb.setTableConstraints(new TableConstraints());
       }
       tablePb.getTableConstraints().setPrimaryKey(primaryKey.toPb());
+    }
+    if (foreignKeys != null) {
+      if (tablePb.getTableConstraints() == null) {
+        tablePb.setTableConstraints(new TableConstraints());
+      }
+      tablePb
+          .getTableConstraints()
+          .setForeignKeys(foreignKeys.stream().map(ForeignKey::toPb).collect(Collectors.toList()));
     }
     return tablePb;
   }

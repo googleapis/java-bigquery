@@ -25,8 +25,7 @@ import org.junit.Test;
 
 public class PrimaryKeyTest {
   private static final List<String> COLUMNS = Arrays.asList("column1", "column2");
-  private static final PrimaryKey PRIMARY_KEY =
-      PrimaryKey.newBuilder().setColumns(COLUMNS).build();
+  private static final PrimaryKey PRIMARY_KEY = PrimaryKey.newBuilder().setColumns(COLUMNS).build();
 
   @Test
   public void testToBuilder() {
@@ -39,8 +38,7 @@ public class PrimaryKeyTest {
   @Test
   public void testBuilder() {
     assertEquals(COLUMNS, PRIMARY_KEY.getColumns());
-    PrimaryKey primaryKey =
-        PRIMARY_KEY.newBuilder().setColumns(COLUMNS).build();
+    PrimaryKey primaryKey = PRIMARY_KEY.newBuilder().setColumns(COLUMNS).build();
     assertEquals(PRIMARY_KEY, primaryKey);
   }
 

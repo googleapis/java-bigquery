@@ -175,6 +175,12 @@ public class Table extends TableInfo {
     }
 
     @Override
+    public Builder setForeignKeys(List<ForeignKey> foreignKeys) {
+      infoBuilder.setForeignKeys(foreignKeys);
+      return this;
+    }
+
+    @Override
     public Table build() {
       return new Table(bigquery, infoBuilder);
     }
