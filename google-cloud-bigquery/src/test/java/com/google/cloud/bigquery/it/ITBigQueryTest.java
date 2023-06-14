@@ -750,7 +750,14 @@ public class ITBigQueryTest {
       Schema.of(ID_SCHEMA, FIRST_NAME_SCHEMA, LAST_NAME_SCHEMA, EMAIL_SCHEMA, PROFESSION_SCHEMA);
 
   private static final Schema CONSTRAINTS_TABLE_SCHEMA =
-      Schema.of(ID_SCHEMA, FIRST_NAME_SCHEMA, LAST_NAME_SCHEMA);
+      Schema.of(
+          Field.newBuilder("ID", LegacySQLTypeName.STRING).setMode(Mode.REQUIRED).build(),
+          Field.newBuilder("FirstName", LegacySQLTypeName.STRING)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("LastName", LegacySQLTypeName.STRING)
+              .setMode(Field.Mode.NULLABLE)
+              .build());
   private static final Path csvPath =
       FileSystems.getDefault().getPath("src/test/resources", "sessionTest.csv").toAbsolutePath();
 
