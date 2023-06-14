@@ -1355,10 +1355,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       // here, but this is left as future work.
       JobId jobId = JobId.fromPb(results.getJobReference());
       Job job = getJob(jobId, options);
-      TableResult tableResult = job.getQueryResults();
-      // Return the JobID of the successful job
-      tableResult.setJobId(jobId);
-      return tableResult;
+      return job.getQueryResults();
     }
 
     if (results.getPageToken() != null) {
