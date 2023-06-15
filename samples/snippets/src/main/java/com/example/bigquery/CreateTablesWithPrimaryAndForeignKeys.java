@@ -52,30 +52,46 @@ public class CreateTablesWithPrimaryAndForeignKeys {
     createTablesWithPrimaryAndForeignKeys(datasetName, tableNamePk, tableNameFk);
   }
 
-  public static void createTablesWithPrimaryAndForeignKeys(String datasetName, String tableNamePk, String tableNameFk) {
+  public static void createTablesWithPrimaryAndForeignKeys(
+      String datasetName, String tableNamePk, String tableNameFk) {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
       // TableIds referenced by foreign keys need project id to be set
-      TableId tableIdPk = TableId.of(bigquery.getOptions().getProjectId(), datasetName, tableNamePk);
+      TableId tableIdPk = TableId.of(bigquery.getOptions().getProjectId(),
+          datasetName,
+          tableNamePk);
       TableId tableIdFk = TableId.of(datasetName, tableNameFk);
 
-      PrimaryKey primaryKey = PrimaryKey.newBuilder().setColumns(Collections.singletonList("ID")).build();
+      PrimaryKey primaryKey =
+          PrimaryKey.newBuilder().setColumns(Collections.singletonList("ID")).build();
 
-      ColumnReference columnReference = ColumnReference.newBuilder().setReferencingColumn("ID").setReferencedColumn("ID").build();
-      ForeignKey foreignKey = ForeignKey.newBuilder().setName("foreign_key").setColumnReferences(Collections.singletonList(columnReference)).setReferencedTable(tableIdPk).build();
+      ColumnReference columnReference =
+          ColumnReference.newBuilder().setReferencingColumn("ID").setReferencedColumn("ID").build();
+      ForeignKey foreignKey =
+          ForeignKey.newBuilder()
+              .setName("foreign_key")
+              .setColumnReferences(Collections.singletonList(columnReference))
+              .setReferencedTable(tableIdPk)
+              .build();
 
       // Create a table with a primary key
       StandardTableDefinition tableDefinitionPk =
-          StandardTableDefinition.newBuilder().setSchema(PK_FK_SCHEMA).setPrimaryKey(primaryKey).build();
+          StandardTableDefinition.newBuilder()
+              .setSchema(PK_FK_SCHEMA)
+              .setPrimaryKey(primaryKey)
+              .build();
       TableInfo tableInfoPk = TableInfo.of(tableIdPk, tableDefinitionPk);
       bigquery.create(tableInfoPk);
 
       // Create a table with a foreign key
       StandardTableDefinition tableDefinitionFk =
-          StandardTableDefinition.newBuilder().setSchema(PK_FK_SCHEMA).setForeignKeys(Collections.singletonList(foreignKey)).build();
+          StandardTableDefinition.newBuilder()
+              .setSchema(PK_FK_SCHEMA)
+              .setForeignKeys(Collections.singletonList(foreignKey))
+              .build();
       TableInfo tableInfoFk = TableInfo.of(tableIdFk, tableDefinitionFk);
       bigquery.create(tableInfoFk);
 
