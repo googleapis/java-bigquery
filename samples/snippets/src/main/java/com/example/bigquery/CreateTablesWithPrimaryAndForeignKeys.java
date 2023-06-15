@@ -60,9 +60,8 @@ public class CreateTablesWithPrimaryAndForeignKeys {
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
       // TableIds referenced by foreign keys need project id to be set
-      TableId tableIdPk = TableId.of(bigquery.getOptions().getProjectId(),
-          datasetName,
-          tableNamePk);
+      TableId tableIdPk =
+          TableId.of(bigquery.getOptions().getProjectId(), datasetName, tableNamePk);
       TableId tableIdFk = TableId.of(datasetName, tableNameFk);
 
       PrimaryKey primaryKey =
