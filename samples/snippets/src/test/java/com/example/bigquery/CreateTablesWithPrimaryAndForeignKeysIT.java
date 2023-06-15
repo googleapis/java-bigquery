@@ -77,6 +77,6 @@ public class CreateTablesWithPrimaryAndForeignKeysIT {
     CreateTablesWithPrimaryAndForeignKeys.createTablesWithPrimaryAndForeignKeys(
         BIGQUERY_DATASET_NAME, tableNamePk, tableNameFk);
     assertThat(bout.toString())
-        .contains("Query with Array of struct parameters performed successfully.");
+        .contains("Tables with primary and foreign keys created successfully.");
   }
 }
