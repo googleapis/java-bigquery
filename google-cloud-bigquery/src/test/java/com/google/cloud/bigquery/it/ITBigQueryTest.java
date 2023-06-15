@@ -5736,10 +5736,11 @@ public class ITBigQueryTest {
 
   @Test
   public void testForeignKeys() {
-    String tableName1 = "test_foreign_key";
-    String tableName2 = "test_foreign_key2";
-    TableId tableId1 = TableId.of(DATASET, tableName1);
-    TableId tableId2 = TableId.of(DATASET, tableName2);
+    String tableNamePk = "test_foreign_key";
+    String tableNameFk = "test_foreign_key2";
+    // TableIds referenced by foreign keys need project id to be specified
+    TableId tableIdPk = TableId.of(PROJECT_ID, DATASET, tableNamePk);
+    TableId tableIdFk = TableId.of(DATASET, tableNameFk);
     ColumnReference columnReference =
         ColumnReference.newBuilder().setReferencingColumn("ID").setReferencedColumn("ID").build();
 
@@ -5748,122 +5749,123 @@ public class ITBigQueryTest {
     ForeignKey foreignKey =
         ForeignKey.newBuilder()
             .setName("foreign_key")
-            .setReferencedTable(tableId1)
+            .setReferencedTable(tableIdPk)
             .setColumnReferences(Collections.singletonList(columnReference))
             .build();
 
     try {
-      StandardTableDefinition tableDefinition1 =
+      StandardTableDefinition tableDefinitionPk =
           StandardTableDefinition.newBuilder()
               .setSchema(CONSTRAINTS_TABLE_SCHEMA)
               .setPrimaryKey(primaryKey)
               .build();
-      Table createdTable1 = bigquery.create(TableInfo.of(tableId1, tableDefinition1));
-      assertNotNull(createdTable1);
+      Table createdTablePk = bigquery.create(TableInfo.of(tableIdPk, tableDefinitionPk));
+      assertNotNull(createdTablePk);
 
-      StandardTableDefinition tableDefinition2 =
+      StandardTableDefinition tableDefinitionFk =
           StandardTableDefinition.newBuilder()
               .setSchema(CONSTRAINTS_TABLE_SCHEMA)
               .setForeignKeys(Collections.singletonList(foreignKey))
               .build();
-      Table createdTable2 = bigquery.create(TableInfo.of(tableId2, tableDefinition2));
-      assertNotNull(createdTable2);
-      Table remoteTable = bigquery.getTable(DATASET, tableName2);
+      Table createdTableFk = bigquery.create(TableInfo.of(tableIdFk, tableDefinitionFk));
+      assertNotNull(createdTableFk);
+      Table remoteTable = bigquery.getTable(DATASET, tableNameFk);
       assertEquals(
           Collections.singletonList(foreignKey),
           remoteTable.<StandardTableDefinition>getDefinition().getForeignKeys());
     } finally {
-      bigquery.delete(tableId1);
-      bigquery.delete(tableId2);
+      bigquery.delete(tableIdPk);
+      bigquery.delete(tableIdFk);
     }
   }
 
   @Test
   public void testForeignKeysUpdate() {
-    String tableName1 = "test_foreign_key";
-    String tableName2 = "test_foreign_key2";
-    String tableName3 = "test_foreign_key3";
-    TableId tableId1 = TableId.of(DATASET, tableName1);
-    TableId tableId2 = TableId.of(DATASET, tableName2);
-    TableId tableId3 = TableId.of(DATASET, tableName3);
+    String tableNameFk = "test_foreign_key";
+    String tableNamePk1 = "test_foreign_key2";
+    String tableNamePk2 = "test_foreign_key3";
+    TableId tableIdFk = TableId.of(DATASET, tableNameFk);
+    // TableIds referenced by foreign keys need project id to be specified
+    TableId tableIdPk1 = TableId.of(PROJECT_ID, DATASET, tableNamePk1);
+    TableId tableIdPk2 = TableId.of(PROJECT_ID, DATASET, tableNamePk2);
 
     ArrayList<ForeignKey> foreignKeys = new ArrayList<>();
 
     // set up ID in table 1 as a foreign key to table 2
-    ColumnReference columnReference12 =
+    ColumnReference columnReferencePk1 =
         ColumnReference.newBuilder().setReferencingColumn("ID").setReferencedColumn("ID").build();
-    PrimaryKey primaryKey2 =
+    PrimaryKey primaryKey1 =
         PrimaryKey.newBuilder().setColumns(Collections.singletonList("ID")).build();
     ForeignKey foreignKey1 =
         ForeignKey.newBuilder()
             .setName("foreign_key1")
-            .setReferencedTable(tableId2)
-            .setColumnReferences(Collections.singletonList(columnReference12))
+            .setReferencedTable(tableIdPk1)
+            .setColumnReferences(Collections.singletonList(columnReferencePk1))
             .build();
     foreignKeys.add(foreignKey1);
 
     // set up First and last names in table 1 as foreign keys to table 3
-    ArrayList<ColumnReference> columnReferences13 = new ArrayList<>();
-    columnReferences13.add(
+    ArrayList<ColumnReference> columnReferencesPk2 = new ArrayList<>();
+    columnReferencesPk2.add(
         ColumnReference.newBuilder()
             .setReferencingColumn("FirstName")
             .setReferencedColumn("FirstName")
             .build());
-    columnReferences13.add(
+    columnReferencesPk2.add(
         ColumnReference.newBuilder()
             .setReferencingColumn("LastName")
             .setReferencedColumn("LastName")
             .build());
 
-    ArrayList<String> primaryKey3Columns = new ArrayList<>();
-    primaryKey3Columns.add("FirstName");
-    primaryKey3Columns.add("LastName");
+    ArrayList<String> primaryKey2Columns = new ArrayList<>();
+    primaryKey2Columns.add("FirstName");
+    primaryKey2Columns.add("LastName");
 
-    PrimaryKey primaryKey3 = PrimaryKey.newBuilder().setColumns(primaryKey3Columns).build();
+    PrimaryKey primaryKey2 = PrimaryKey.newBuilder().setColumns(primaryKey2Columns).build();
     ForeignKey foreignKey2 =
         ForeignKey.newBuilder()
             .setName("foreign_key2")
-            .setReferencedTable(tableId3)
-            .setColumnReferences(columnReferences13)
+            .setReferencedTable(tableIdPk2)
+            .setColumnReferences(columnReferencesPk2)
             .build();
     foreignKeys.add(foreignKey2);
 
     try {
-      StandardTableDefinition tableDefinition1 =
+      StandardTableDefinition tableDefinitionFk =
           StandardTableDefinition.newBuilder().setSchema(CONSTRAINTS_TABLE_SCHEMA).build();
-      Table createdTable1 = bigquery.create(TableInfo.of(tableId1, tableDefinition1));
-      assertNotNull(createdTable1);
+      Table createdTableFk = bigquery.create(TableInfo.of(tableIdFk, tableDefinitionFk));
+      assertNotNull(createdTableFk);
 
-      StandardTableDefinition tableDefinition2 =
+      StandardTableDefinition tableDefinitionPk1 =
+          StandardTableDefinition.newBuilder()
+              .setSchema(CONSTRAINTS_TABLE_SCHEMA)
+              .setPrimaryKey(primaryKey1)
+              .build();
+      Table createdTablePk1 = bigquery.create(TableInfo.of(tableIdPk1, tableDefinitionPk1));
+      assertNotNull(createdTablePk1);
+
+      StandardTableDefinition tableDefinitionPk2 =
           StandardTableDefinition.newBuilder()
               .setSchema(CONSTRAINTS_TABLE_SCHEMA)
               .setPrimaryKey(primaryKey2)
               .build();
-      Table createdTable2 = bigquery.create(TableInfo.of(tableId2, tableDefinition2));
-      assertNotNull(createdTable2);
+      Table createdTablePk2 = bigquery.create(TableInfo.of(tableIdPk2, tableDefinitionPk2));
+      assertNotNull(createdTablePk2);
 
-      StandardTableDefinition tableDefinition3 =
-          StandardTableDefinition.newBuilder()
-              .setSchema(CONSTRAINTS_TABLE_SCHEMA)
-              .setPrimaryKey(primaryKey3)
-              .build();
-      Table createdTable3 = bigquery.create(TableInfo.of(tableId3, tableDefinition3));
-      assertNotNull(createdTable3);
-
-      Table remoteTable = bigquery.getTable(DATASET, tableName1);
+      Table remoteTable = bigquery.getTable(DATASET, tableNameFk);
       assertNull(remoteTable.<StandardTableDefinition>getDefinition().getForeignKeys());
 
       Table updatedTable = remoteTable.toBuilder().setForeignKeys(foreignKeys).build().update();
 
       assertNotNull(updatedTable);
-      Table remoteUpdatedTable = bigquery.getTable(DATASET, tableName1);
+      Table remoteUpdatedTable = bigquery.getTable(DATASET, tableNameFk);
       assertEquals(
           foreignKeys,
           remoteUpdatedTable.<StandardTableDefinition>getDefinition().getForeignKeys());
     } finally {
-      bigquery.delete(tableId1);
-      bigquery.delete(tableId2);
-      bigquery.delete(tableId3);
+      bigquery.delete(tableIdFk);
+      bigquery.delete(tableIdPk1);
+      bigquery.delete(tableIdPk2);
     }
   }
 }

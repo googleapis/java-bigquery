@@ -19,8 +19,8 @@ package com.google.cloud.bigquery;
 import com.google.auto.value.AutoValue;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 @AutoValue
@@ -48,12 +48,8 @@ public abstract class ForeignKey implements Serializable {
     }
 
     if (foreignKey.getColumnReferences() != null) {
-      ArrayList<ColumnReference> list = new ArrayList<>();
-      for (com.google.api.services.bigquery.model.TableConstraints.ForeignKeys.ColumnReferences
-          columnReferences : foreignKey.getColumnReferences()) {
-        list.add(ColumnReference.fromPb(columnReferences));
-      }
-      builder.setColumnReferences(list);
+      builder.setColumnReferences(foreignKey.getColumnReferences().stream().map(ColumnReference::fromPb).collect(
+          Collectors.toList()));
     }
 
     return builder.build();
@@ -70,12 +66,8 @@ public abstract class ForeignKey implements Serializable {
             .setTableId(referencedTableId.getTable())
             .setDatasetId(referencedTableId.getDataset())
             .setProjectId(referencedTableId.getProject()));
-    ArrayList<com.google.api.services.bigquery.model.TableConstraints.ForeignKeys.ColumnReferences>
-        columnReferences = new ArrayList<>();
-    for (ColumnReference columnReference : getColumnReferences()) {
-      columnReferences.add(columnReference.toPb());
-    }
-    foreignKey.setColumnReferences(columnReferences);
+    foreignKey.setColumnReferences(getColumnReferences().stream().map(ColumnReference::toPb).collect(
+        Collectors.toList()));
 
     return foreignKey;
   }
