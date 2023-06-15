@@ -48,8 +48,10 @@ public abstract class ForeignKey implements Serializable {
     }
 
     if (foreignKey.getColumnReferences() != null) {
-      builder.setColumnReferences(foreignKey.getColumnReferences().stream().map(ColumnReference::fromPb).collect(
-          Collectors.toList()));
+      builder.setColumnReferences(
+          foreignKey.getColumnReferences().stream()
+              .map(ColumnReference::fromPb)
+              .collect(Collectors.toList()));
     }
 
     return builder.build();
@@ -66,8 +68,8 @@ public abstract class ForeignKey implements Serializable {
             .setTableId(referencedTableId.getTable())
             .setDatasetId(referencedTableId.getDataset())
             .setProjectId(referencedTableId.getProject()));
-    foreignKey.setColumnReferences(getColumnReferences().stream().map(ColumnReference::toPb).collect(
-        Collectors.toList()));
+    foreignKey.setColumnReferences(
+        getColumnReferences().stream().map(ColumnReference::toPb).collect(Collectors.toList()));
 
     return foreignKey;
   }

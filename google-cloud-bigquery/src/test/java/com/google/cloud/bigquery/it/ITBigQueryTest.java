@@ -5791,7 +5791,7 @@ public class ITBigQueryTest {
 
     ArrayList<ForeignKey> foreignKeys = new ArrayList<>();
 
-    // set up ID in table 1 as a foreign key to table 2
+    // set up ID in tableFk as a foreign key to tablePk1
     ColumnReference columnReferencePk1 =
         ColumnReference.newBuilder().setReferencingColumn("ID").setReferencedColumn("ID").build();
     PrimaryKey primaryKey1 =
@@ -5804,7 +5804,7 @@ public class ITBigQueryTest {
             .build();
     foreignKeys.add(foreignKey1);
 
-    // set up First and last names in table 1 as foreign keys to table 3
+    // set up First and last names in tableFk as foreign keys to TablePk2
     ArrayList<ColumnReference> columnReferencesPk2 = new ArrayList<>();
     columnReferencesPk2.add(
         ColumnReference.newBuilder()
