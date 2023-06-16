@@ -169,14 +169,8 @@ public class Table extends TableInfo {
     }
 
     @Override
-    public Builder setPrimaryKey(PrimaryKey primaryKey) {
-      infoBuilder.setPrimaryKey(primaryKey);
-      return this;
-    }
-
-    @Override
-    public Builder setForeignKeys(List<ForeignKey> foreignKeys) {
-      infoBuilder.setForeignKeys(foreignKeys);
+    public Builder setTableConstraints(TableConstraints tableConstraints) {
+      infoBuilder.setTableConstraints(tableConstraints);
       return this;
     }
 

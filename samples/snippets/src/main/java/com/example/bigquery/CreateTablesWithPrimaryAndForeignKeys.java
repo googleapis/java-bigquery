@@ -16,7 +16,7 @@
 
 package com.example.bigquery;
 
-// [START bigquery_set_primary_and_foreign_keys]
+// [START bigquery_create_tables_with_primary_and_foreign_keys]
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
@@ -27,8 +27,10 @@ import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.PrimaryKey;
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.StandardTableDefinition;
+import com.google.cloud.bigquery.TableConstraints;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableInfo;
+import java.util.Arrays;
 import java.util.Collections;
 
 // Create tables with primary/foreign key columns
@@ -67,6 +69,8 @@ public class CreateTablesWithPrimaryAndForeignKeys {
 
       PrimaryKey primaryKey =
           PrimaryKey.newBuilder().setColumns(Collections.singletonList("ID")).build();
+      TableConstraints tableConstraintsPk =
+          TableConstraints.newBuilder().setPrimaryKey(primaryKey).build();
 
       ColumnReference columnReference =
           ColumnReference.newBuilder().setReferencingColumn("ID").setReferencedColumn("ID").build();
@@ -76,12 +80,14 @@ public class CreateTablesWithPrimaryAndForeignKeys {
               .setColumnReferences(Collections.singletonList(columnReference))
               .setReferencedTable(tableIdPk)
               .build();
+      TableConstraints tableConstraintsFk =
+          TableConstraints.newBuilder().setForeignKeys(Arrays.asList(foreignKey)).build();
 
       // Create a table with a primary key
       StandardTableDefinition tableDefinitionPk =
           StandardTableDefinition.newBuilder()
               .setSchema(PK_FK_SCHEMA)
-              .setPrimaryKey(primaryKey)
+              .setTableConstraints(tableConstraintsPk)
               .build();
       TableInfo tableInfoPk = TableInfo.of(tableIdPk, tableDefinitionPk);
       bigquery.create(tableInfoPk);
@@ -90,7 +96,7 @@ public class CreateTablesWithPrimaryAndForeignKeys {
       StandardTableDefinition tableDefinitionFk =
           StandardTableDefinition.newBuilder()
               .setSchema(PK_FK_SCHEMA)
-              .setForeignKeys(Collections.singletonList(foreignKey))
+              .setTableConstraints(tableConstraintsFk)
               .build();
       TableInfo tableInfoFk = TableInfo.of(tableIdFk, tableDefinitionFk);
       bigquery.create(tableInfoFk);
@@ -101,4 +107,4 @@ public class CreateTablesWithPrimaryAndForeignKeys {
     }
   }
 }
-// [END bigquery_set_primary_and_foreign_keys]
+// [END bigquery_create_tables_with_primary_and_foreign_keys]

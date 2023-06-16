@@ -115,6 +115,7 @@ import com.google.cloud.bigquery.StandardSQLTableType;
 import com.google.cloud.bigquery.StandardSQLTypeName;
 import com.google.cloud.bigquery.StandardTableDefinition;
 import com.google.cloud.bigquery.Table;
+import com.google.cloud.bigquery.TableConstraints;
 import com.google.cloud.bigquery.TableDataWriteChannel;
 import com.google.cloud.bigquery.TableDefinition;
 import com.google.cloud.bigquery.TableId;
@@ -5692,18 +5693,21 @@ public class ITBigQueryTest {
     String tableName = "test_primary_key";
     TableId tableId = TableId.of(DATASET, tableName);
     PrimaryKey primaryKey = PrimaryKey.newBuilder().setColumns(Arrays.asList("ID")).build();
+    TableConstraints tableConstraintsPk =
+        TableConstraints.newBuilder().setPrimaryKey(primaryKey).build();
 
     try {
       StandardTableDefinition tableDefinition =
           StandardTableDefinition.newBuilder()
               .setSchema(CONSTRAINTS_TABLE_SCHEMA)
-              .setPrimaryKey(primaryKey)
+              .setTableConstraints(tableConstraintsPk)
               .build();
       Table createdTable = bigquery.create(TableInfo.of(tableId, tableDefinition));
       assertNotNull(createdTable);
       Table remoteTable = bigquery.getTable(DATASET, tableName);
       assertEquals(
-          primaryKey, remoteTable.<StandardTableDefinition>getDefinition().getPrimaryKey());
+          tableConstraintsPk,
+          remoteTable.<StandardTableDefinition>getDefinition().getTableConstraints());
     } finally {
       bigquery.delete(tableId);
     }
@@ -5715,6 +5719,8 @@ public class ITBigQueryTest {
     TableId tableId = TableId.of(DATASET, tableName);
     PrimaryKey primaryKey =
         PrimaryKey.newBuilder().setColumns(Arrays.asList("FirstName", "LastName")).build();
+    TableConstraints tableConstraintsPk =
+        TableConstraints.newBuilder().setPrimaryKey(primaryKey).build();
 
     try {
       StandardTableDefinition tableDefinition =
@@ -5722,13 +5728,15 @@ public class ITBigQueryTest {
       Table createdTable = bigquery.create(TableInfo.of(tableId, tableDefinition));
       assertNotNull(createdTable);
       Table remoteTable = bigquery.getTable(DATASET, tableName);
-      assertNull(remoteTable.<StandardTableDefinition>getDefinition().getPrimaryKey());
+      assertNull(remoteTable.<StandardTableDefinition>getDefinition().getTableConstraints());
 
-      Table updatedTable = remoteTable.toBuilder().setPrimaryKey(primaryKey).build().update();
+      Table updatedTable =
+          remoteTable.toBuilder().setTableConstraints(tableConstraintsPk).build().update();
       assertNotNull(updatedTable);
       Table remoteUpdatedTable = bigquery.getTable(DATASET, tableName);
       assertEquals(
-          primaryKey, remoteUpdatedTable.<StandardTableDefinition>getDefinition().getPrimaryKey());
+          tableConstraintsPk,
+          remoteUpdatedTable.<StandardTableDefinition>getDefinition().getTableConstraints());
     } finally {
       bigquery.delete(tableId);
     }
@@ -5746,18 +5754,23 @@ public class ITBigQueryTest {
 
     PrimaryKey primaryKey =
         PrimaryKey.newBuilder().setColumns(Collections.singletonList("ID")).build();
+    TableConstraints tableConstraintsPk =
+        TableConstraints.newBuilder().setPrimaryKey(primaryKey).build();
+
     ForeignKey foreignKey =
         ForeignKey.newBuilder()
             .setName("foreign_key")
             .setReferencedTable(tableIdPk)
             .setColumnReferences(Collections.singletonList(columnReference))
             .build();
+    TableConstraints tableConstraintsFk =
+        TableConstraints.newBuilder().setForeignKeys(Collections.singletonList(foreignKey)).build();
 
     try {
       StandardTableDefinition tableDefinitionPk =
           StandardTableDefinition.newBuilder()
               .setSchema(CONSTRAINTS_TABLE_SCHEMA)
-              .setPrimaryKey(primaryKey)
+              .setTableConstraints(tableConstraintsPk)
               .build();
       Table createdTablePk = bigquery.create(TableInfo.of(tableIdPk, tableDefinitionPk));
       assertNotNull(createdTablePk);
@@ -5765,14 +5778,14 @@ public class ITBigQueryTest {
       StandardTableDefinition tableDefinitionFk =
           StandardTableDefinition.newBuilder()
               .setSchema(CONSTRAINTS_TABLE_SCHEMA)
-              .setForeignKeys(Collections.singletonList(foreignKey))
+              .setTableConstraints(tableConstraintsFk)
               .build();
       Table createdTableFk = bigquery.create(TableInfo.of(tableIdFk, tableDefinitionFk));
       assertNotNull(createdTableFk);
       Table remoteTable = bigquery.getTable(DATASET, tableNameFk);
       assertEquals(
-          Collections.singletonList(foreignKey),
-          remoteTable.<StandardTableDefinition>getDefinition().getForeignKeys());
+          tableConstraintsFk,
+          remoteTable.<StandardTableDefinition>getDefinition().getTableConstraints());
     } finally {
       bigquery.delete(tableIdPk);
       bigquery.delete(tableIdFk);
@@ -5796,6 +5809,9 @@ public class ITBigQueryTest {
         ColumnReference.newBuilder().setReferencingColumn("ID").setReferencedColumn("ID").build();
     PrimaryKey primaryKey1 =
         PrimaryKey.newBuilder().setColumns(Collections.singletonList("ID")).build();
+    TableConstraints tableConstraintsPk1 =
+        TableConstraints.newBuilder().setPrimaryKey(primaryKey1).build();
+
     ForeignKey foreignKey1 =
         ForeignKey.newBuilder()
             .setName("foreign_key1")
@@ -5822,6 +5838,8 @@ public class ITBigQueryTest {
     primaryKey2Columns.add("LastName");
 
     PrimaryKey primaryKey2 = PrimaryKey.newBuilder().setColumns(primaryKey2Columns).build();
+    TableConstraints tableConstraintsPk2 =
+        TableConstraints.newBuilder().setPrimaryKey(primaryKey2).build();
     ForeignKey foreignKey2 =
         ForeignKey.newBuilder()
             .setName("foreign_key2")
@@ -5829,6 +5847,8 @@ public class ITBigQueryTest {
             .setColumnReferences(columnReferencesPk2)
             .build();
     foreignKeys.add(foreignKey2);
+    TableConstraints tableConstraintsFk =
+        TableConstraints.newBuilder().setForeignKeys(foreignKeys).build();
 
     try {
       StandardTableDefinition tableDefinitionFk =
@@ -5839,7 +5859,7 @@ public class ITBigQueryTest {
       StandardTableDefinition tableDefinitionPk1 =
           StandardTableDefinition.newBuilder()
               .setSchema(CONSTRAINTS_TABLE_SCHEMA)
-              .setPrimaryKey(primaryKey1)
+              .setTableConstraints(tableConstraintsPk1)
               .build();
       Table createdTablePk1 = bigquery.create(TableInfo.of(tableIdPk1, tableDefinitionPk1));
       assertNotNull(createdTablePk1);
@@ -5847,21 +5867,22 @@ public class ITBigQueryTest {
       StandardTableDefinition tableDefinitionPk2 =
           StandardTableDefinition.newBuilder()
               .setSchema(CONSTRAINTS_TABLE_SCHEMA)
-              .setPrimaryKey(primaryKey2)
+              .setTableConstraints(tableConstraintsPk2)
               .build();
       Table createdTablePk2 = bigquery.create(TableInfo.of(tableIdPk2, tableDefinitionPk2));
       assertNotNull(createdTablePk2);
 
       Table remoteTable = bigquery.getTable(DATASET, tableNameFk);
-      assertNull(remoteTable.<StandardTableDefinition>getDefinition().getForeignKeys());
+      assertNull(remoteTable.<StandardTableDefinition>getDefinition().getTableConstraints());
 
-      Table updatedTable = remoteTable.toBuilder().setForeignKeys(foreignKeys).build().update();
+      Table updatedTable =
+          remoteTable.toBuilder().setTableConstraints(tableConstraintsFk).build().update();
 
       assertNotNull(updatedTable);
       Table remoteUpdatedTable = bigquery.getTable(DATASET, tableNameFk);
       assertEquals(
-          foreignKeys,
-          remoteUpdatedTable.<StandardTableDefinition>getDefinition().getForeignKeys());
+          tableConstraintsFk,
+          remoteUpdatedTable.<StandardTableDefinition>getDefinition().getTableConstraints());
     } finally {
       bigquery.delete(tableIdFk);
       bigquery.delete(tableIdPk1);

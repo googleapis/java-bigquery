@@ -43,8 +43,9 @@ public abstract class PrimaryKey implements Serializable {
 
     com.google.api.services.bigquery.model.TableConstraints.PrimaryKey primaryKey =
         new com.google.api.services.bigquery.model.TableConstraints.PrimaryKey();
-    primaryKey.setColumns(getColumns());
-
+    if (getColumns() != null) {
+      primaryKey.setColumns(getColumns());
+    }
     return primaryKey;
   }
 

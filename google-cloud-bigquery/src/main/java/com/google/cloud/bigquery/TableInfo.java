@@ -23,15 +23,12 @@ import com.google.api.client.util.Data;
 import com.google.api.client.util.Strings;
 import com.google.api.core.BetaApi;
 import com.google.api.services.bigquery.model.Table;
-import com.google.api.services.bigquery.model.TableConstraints;
 import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * Google BigQuery table information. Use {@link StandardTableDefinition} to create simple BigQuery
@@ -78,8 +75,7 @@ public class TableInfo implements Serializable {
   private final String defaultCollation;
 
   private final CloneDefinition cloneDefinition;
-  private final PrimaryKey primaryKey;
-  private final List<ForeignKey> foreignKeys;
+  private final TableConstraints tableConstraints;
 
   /** A builder for {@code TableInfo} objects. */
   public abstract static class Builder {
@@ -148,9 +144,7 @@ public class TableInfo implements Serializable {
 
     public abstract Builder setCloneDefinition(CloneDefinition cloneDefinition);
 
-    public abstract Builder setPrimaryKey(PrimaryKey primaryKey);
-
-    public abstract Builder setForeignKeys(List<ForeignKey> foreignKeys);
+    public abstract Builder setTableConstraints(TableConstraints tableConstraints);
   }
 
   static class BuilderImpl extends Builder {
@@ -173,8 +167,7 @@ public class TableInfo implements Serializable {
     private Boolean requirePartitionFilter;
     private String defaultCollation;
     private CloneDefinition cloneDefinition;
-    private PrimaryKey primaryKey;
-    private List<ForeignKey> foreignKeys;
+    private TableConstraints tableConstraints;
 
     BuilderImpl() {}
 
@@ -197,8 +190,7 @@ public class TableInfo implements Serializable {
       this.requirePartitionFilter = tableInfo.requirePartitionFilter;
       this.defaultCollation = tableInfo.defaultCollation;
       this.cloneDefinition = tableInfo.cloneDefinition;
-      this.primaryKey = tableInfo.primaryKey;
-      this.foreignKeys = tableInfo.foreignKeys;
+      this.tableConstraints = tableInfo.tableConstraints;
     }
 
     BuilderImpl(Table tablePb) {
@@ -228,15 +220,7 @@ public class TableInfo implements Serializable {
         this.cloneDefinition = CloneDefinition.fromPb(tablePb.getCloneDefinition());
       }
       if (tablePb.getTableConstraints() != null) {
-        if (tablePb.getTableConstraints().getPrimaryKey() != null) {
-          this.primaryKey = PrimaryKey.fromPb(tablePb.getTableConstraints().getPrimaryKey());
-        }
-        if (tablePb.getTableConstraints().getForeignKeys() != null) {
-          this.foreignKeys =
-              tablePb.getTableConstraints().getForeignKeys().stream()
-                  .map(ForeignKey::fromPb)
-                  .collect(Collectors.toList());
-        }
+        this.tableConstraints = TableConstraints.fromPb(tablePb.getTableConstraints());
       }
     }
 
@@ -347,13 +331,8 @@ public class TableInfo implements Serializable {
       return this;
     }
 
-    public Builder setPrimaryKey(PrimaryKey primaryKey) {
-      this.primaryKey = primaryKey;
-      return this;
-    }
-
-    public Builder setForeignKeys(List<ForeignKey> foreignKeys) {
-      this.foreignKeys = foreignKeys;
+    public Builder setTableConstraints(TableConstraints tableConstraints) {
+      this.tableConstraints = tableConstraints;
       return this;
     }
 
@@ -382,8 +361,7 @@ public class TableInfo implements Serializable {
     this.requirePartitionFilter = builder.requirePartitionFilter;
     this.defaultCollation = builder.defaultCollation;
     this.cloneDefinition = builder.cloneDefinition;
-    this.primaryKey = builder.primaryKey;
-    this.foreignKeys = builder.foreignKeys;
+    this.tableConstraints = builder.tableConstraints;
   }
 
   /** Returns the hash of the table resource. */
@@ -494,12 +472,8 @@ public class TableInfo implements Serializable {
     return cloneDefinition;
   }
 
-  public PrimaryKey getPrimaryKey() {
-    return primaryKey;
-  }
-
-  public List<ForeignKey> getForeignKeys() {
-    return foreignKeys;
+  public TableConstraints getTableConstraints() {
+    return tableConstraints;
   }
 
   /** Returns a builder for the table object. */
@@ -528,8 +502,7 @@ public class TableInfo implements Serializable {
         .add("requirePartitionFilter", requirePartitionFilter)
         .add("defaultCollation", defaultCollation)
         .add("cloneDefinition", cloneDefinition)
-        .add("primaryKey", primaryKey)
-        .add("foreignKeys", foreignKeys)
+        .add("primaryKey", tableConstraints)
         .toString();
   }
 
@@ -597,19 +570,8 @@ public class TableInfo implements Serializable {
     if (cloneDefinition != null) {
       tablePb.setCloneDefinition(cloneDefinition.toPb());
     }
-    if (primaryKey != null) {
-      if (tablePb.getTableConstraints() == null) {
-        tablePb.setTableConstraints(new TableConstraints());
-      }
-      tablePb.getTableConstraints().setPrimaryKey(primaryKey.toPb());
-    }
-    if (foreignKeys != null) {
-      if (tablePb.getTableConstraints() == null) {
-        tablePb.setTableConstraints(new TableConstraints());
-      }
-      tablePb
-          .getTableConstraints()
-          .setForeignKeys(foreignKeys.stream().map(ForeignKey::toPb).collect(Collectors.toList()));
+    if (tableConstraints != null) {
+      tablePb.setTableConstraints(tableConstraints.toPb());
     }
     return tablePb;
   }

@@ -18,14 +18,11 @@ package com.google.cloud.bigquery;
 
 import com.google.api.services.bigquery.model.Streamingbuffer;
 import com.google.api.services.bigquery.model.Table;
-import com.google.api.services.bigquery.model.TableConstraints;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.MoreObjects;
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -164,9 +161,7 @@ public abstract class StandardTableDefinition extends TableDefinition {
      */
     public abstract Builder setClustering(Clustering clustering);
 
-    public abstract Builder setPrimaryKey(PrimaryKey primaryKey);
-
-    public abstract Builder setForeignKeys(List<ForeignKey> foreignKeys);
+    public abstract Builder setTableConstraints(TableConstraints tableConstraints);
 
     /** Creates a {@code StandardTableDefinition} object. */
     public abstract StandardTableDefinition build();
@@ -229,18 +224,11 @@ public abstract class StandardTableDefinition extends TableDefinition {
   public abstract Clustering getClustering();
 
   /**
-   * Returns the primary key for this table. Returns {@code null} if no primary keys are set for
-   * this table.
+   * Returns the table constraints for this table. Returns {@code null} if no table constraints are
+   * set for this table.
    */
   @Nullable
-  public abstract PrimaryKey getPrimaryKey();
-
-  /**
-   * Returns foreign keys for this table. Returns {@code null} if no foreign keys exist in this
-   * table.
-   */
-  @Nullable
-  public abstract List<ForeignKey> getForeignKeys();
+  public abstract TableConstraints getTableConstraints();
 
   /** Returns a builder for a BigQuery standard table definition. */
   public static Builder newBuilder() {
@@ -280,22 +268,8 @@ public abstract class StandardTableDefinition extends TableDefinition {
     if (getClustering() != null) {
       tablePb.setClustering(getClustering().toPb());
     }
-    if (getPrimaryKey() != null) {
-      if (tablePb.getTableConstraints() == null) {
-        tablePb.setTableConstraints(new TableConstraints());
-      }
-
-      tablePb.getTableConstraints().setPrimaryKey(getPrimaryKey().toPb());
-    }
-    if (getForeignKeys() != null) {
-      if (tablePb.getTableConstraints() == null) {
-        tablePb.setTableConstraints(new TableConstraints());
-      }
-
-      tablePb
-          .getTableConstraints()
-          .setForeignKeys(
-              getForeignKeys().stream().map(ForeignKey::toPb).collect(Collectors.toList()));
+    if (getTableConstraints() != null) {
+      tablePb.setTableConstraints(getTableConstraints().toPb());
     }
     return tablePb;
   }
@@ -335,15 +309,7 @@ public abstract class StandardTableDefinition extends TableDefinition {
       builder.setNumLongTermBytes(tablePb.getNumLongTermBytes());
     }
     if (tablePb.getTableConstraints() != null) {
-      if (tablePb.getTableConstraints().getPrimaryKey() != null) {
-        builder.setPrimaryKey(PrimaryKey.fromPb(tablePb.getTableConstraints().getPrimaryKey()));
-      }
-      if (tablePb.getTableConstraints().getForeignKeys() != null) {
-        builder.setForeignKeys(
-            tablePb.getTableConstraints().getForeignKeys().stream()
-                .map(ForeignKey::fromPb)
-                .collect(Collectors.toList()));
-      }
+      builder.setTableConstraints(TableConstraints.fromPb(tablePb.getTableConstraints()));
     }
     return builder.setNumBytes(tablePb.getNumBytes()).setLocation(tablePb.getLocation()).build();
   }

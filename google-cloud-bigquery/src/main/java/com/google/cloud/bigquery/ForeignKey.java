@@ -61,16 +61,21 @@ public abstract class ForeignKey implements Serializable {
 
     com.google.api.services.bigquery.model.TableConstraints.ForeignKeys foreignKey =
         new com.google.api.services.bigquery.model.TableConstraints.ForeignKeys();
-    foreignKey.setName(getName());
-    TableId referencedTableId = getReferencedTable();
-    foreignKey.setReferencedTable(
-        new com.google.api.services.bigquery.model.TableConstraints.ForeignKeys.ReferencedTable()
-            .setTableId(referencedTableId.getTable())
-            .setDatasetId(referencedTableId.getDataset())
-            .setProjectId(referencedTableId.getProject()));
-    foreignKey.setColumnReferences(
-        getColumnReferences().stream().map(ColumnReference::toPb).collect(Collectors.toList()));
-
+    if (getName() != null) {
+      foreignKey.setName(getName());
+    }
+    if (getReferencedTable() != null) {
+      TableId referencedTableId = getReferencedTable();
+      foreignKey.setReferencedTable(
+          new com.google.api.services.bigquery.model.TableConstraints.ForeignKeys.ReferencedTable()
+              .setTableId(referencedTableId.getTable())
+              .setDatasetId(referencedTableId.getDataset())
+              .setProjectId(referencedTableId.getProject()));
+    }
+    if (getColumnReferences() != null) {
+      foreignKey.setColumnReferences(
+          getColumnReferences().stream().map(ColumnReference::toPb).collect(Collectors.toList()));
+    }
     return foreignKey;
   }
 
