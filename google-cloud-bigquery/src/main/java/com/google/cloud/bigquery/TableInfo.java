@@ -502,7 +502,7 @@ public class TableInfo implements Serializable {
         .add("requirePartitionFilter", requirePartitionFilter)
         .add("defaultCollation", defaultCollation)
         .add("cloneDefinition", cloneDefinition)
-        .add("primaryKey", tableConstraints)
+        .add("tableConstraints", tableConstraints)
         .toString();
   }
 
