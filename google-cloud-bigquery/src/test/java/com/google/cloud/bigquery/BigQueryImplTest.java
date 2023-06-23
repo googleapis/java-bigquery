@@ -58,7 +58,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -2868,7 +2867,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testSumeet() throws Exception{
+  public void testSumeet() throws Exception {
     String projectId = "scio-apps";
     String datasetId = "staging";
     String tableName = "processed_visits";
@@ -2876,16 +2875,17 @@ public class BigQueryImplTest {
     getBqTable(stream, projectId, datasetId, tableName);
   }
 
-  private static void getBqTable(FileInputStream stream, String projectId, String datasetId, String tableName) throws Exception{
-    BigQuery bigquery = BigQueryOptions.
-            newBuilder()
-            .setCredentials(ServiceAccountCredentials
-                    .fromStream(stream))
+  private static void getBqTable(
+      FileInputStream stream, String projectId, String datasetId, String tableName)
+      throws Exception {
+    BigQuery bigquery =
+        BigQueryOptions.newBuilder()
+            .setCredentials(ServiceAccountCredentials.fromStream(stream))
             .build()
             .getService();
 
     Table table = bigquery.getTable(TableId.of(projectId, datasetId, tableName));
-//        var json = WRITER.writeValueAsString(table);
+    //        var json = WRITER.writeValueAsString(table);
     System.out.println(table.getNumTotalLogicalBytes());
   }
 }
