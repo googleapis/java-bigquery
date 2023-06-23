@@ -43,7 +43,6 @@ import com.google.api.services.bigquery.model.TableDataInsertAllRequest;
 import com.google.api.services.bigquery.model.TableDataInsertAllResponse;
 import com.google.api.services.bigquery.model.TableDataList;
 import com.google.api.services.bigquery.model.TableRow;
-import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.Policy;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.Tuple;
@@ -2864,28 +2863,5 @@ public class BigQueryImplTest {
     List<String> perms = bigquery.testIamPermissions(TABLE_ID, checkedPermissions);
     assertEquals(perms, ImmutableList.of());
     verify(bigqueryRpcMock).testIamPermissions(resourceId, checkedPermissions, EMPTY_RPC_OPTIONS);
-  }
-
-  @Test
-  public void testSumeet() throws Exception {
-    String projectId = "scio-apps";
-    String datasetId = "staging";
-    String tableName = "processed_visits";
-    FileInputStream stream = new FileInputStream("/Users/sumeet/revefi/creds/bigquery-glean.json");
-    getBqTable(stream, projectId, datasetId, tableName);
-  }
-
-  private static void getBqTable(
-      FileInputStream stream, String projectId, String datasetId, String tableName)
-      throws Exception {
-    BigQuery bigquery =
-        BigQueryOptions.newBuilder()
-            .setCredentials(ServiceAccountCredentials.fromStream(stream))
-            .build()
-            .getService();
-
-    Table table = bigquery.getTable(TableId.of(projectId, datasetId, tableName));
-    //        var json = WRITER.writeValueAsString(table);
-    System.out.println(table.getNumTotalLogicalBytes());
   }
 }
