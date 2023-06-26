@@ -49,6 +49,7 @@ import com.google.cloud.bigquery.BigQuery.JobField;
 import com.google.cloud.bigquery.BigQuery.JobListOption;
 import com.google.cloud.bigquery.BigQuery.JobOption;
 import com.google.cloud.bigquery.BigQuery.TableField;
+import com.google.cloud.bigquery.BigQuery.TableMetadataView;
 import com.google.cloud.bigquery.BigQuery.TableOption;
 import com.google.cloud.bigquery.BigQueryDryRunResult;
 import com.google.cloud.bigquery.BigQueryError;
@@ -57,6 +58,7 @@ import com.google.cloud.bigquery.BigQueryResult;
 import com.google.cloud.bigquery.BigQuerySQLException;
 import com.google.cloud.bigquery.CloneDefinition;
 import com.google.cloud.bigquery.Clustering;
+import com.google.cloud.bigquery.ColumnReference;
 import com.google.cloud.bigquery.Connection;
 import com.google.cloud.bigquery.ConnectionProperty;
 import com.google.cloud.bigquery.ConnectionSettings;
@@ -74,6 +76,7 @@ import com.google.cloud.bigquery.FieldList;
 import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.FieldValue.Attribute;
 import com.google.cloud.bigquery.FieldValueList;
+import com.google.cloud.bigquery.ForeignKey;
 import com.google.cloud.bigquery.FormatOptions;
 import com.google.cloud.bigquery.HivePartitioningOptions;
 import com.google.cloud.bigquery.InsertAllRequest;
@@ -97,6 +100,7 @@ import com.google.cloud.bigquery.ModelInfo;
 import com.google.cloud.bigquery.Parameter;
 import com.google.cloud.bigquery.ParquetOptions;
 import com.google.cloud.bigquery.PolicyTags;
+import com.google.cloud.bigquery.PrimaryKey;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.QueryParameterValue;
 import com.google.cloud.bigquery.RangePartitioning;
@@ -112,6 +116,7 @@ import com.google.cloud.bigquery.StandardSQLTableType;
 import com.google.cloud.bigquery.StandardSQLTypeName;
 import com.google.cloud.bigquery.StandardTableDefinition;
 import com.google.cloud.bigquery.Table;
+import com.google.cloud.bigquery.TableConstraints;
 import com.google.cloud.bigquery.TableDataWriteChannel;
 import com.google.cloud.bigquery.TableDefinition;
 import com.google.cloud.bigquery.TableId;
@@ -157,6 +162,7 @@ import java.time.Instant;
 import java.time.LocalTime;
 import java.time.Period;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -744,6 +750,16 @@ public class ITBigQueryTest {
           .build();
   private static final Schema SESSION_TABLE_SCHEMA =
       Schema.of(ID_SCHEMA, FIRST_NAME_SCHEMA, LAST_NAME_SCHEMA, EMAIL_SCHEMA, PROFESSION_SCHEMA);
+
+  private static final Schema CONSTRAINTS_TABLE_SCHEMA =
+      Schema.of(
+          Field.newBuilder("ID", LegacySQLTypeName.STRING).setMode(Mode.REQUIRED).build(),
+          Field.newBuilder("FirstName", LegacySQLTypeName.STRING)
+              .setMode(Field.Mode.NULLABLE)
+              .build(),
+          Field.newBuilder("LastName", LegacySQLTypeName.STRING)
+              .setMode(Field.Mode.NULLABLE)
+              .build());
   private static final Path csvPath =
       FileSystems.getDefault().getPath("src/test/resources", "sessionTest.csv").toAbsolutePath();
 
@@ -1085,6 +1101,7 @@ public class ITBigQueryTest {
               .addPositionalParameter(stringParameter)
               .build();
       TableResult result = bigquery.query(queryJobConfiguration);
+      assertNotNull(result.getJobId());
       for (FieldValueList values : result.iterateAll()) {
         assertEquals("10", values.get(0).getValue());
       }
@@ -1209,6 +1226,7 @@ public class ITBigQueryTest {
               .addPositionalParameter(intervalParameter2)
               .build();
       TableResult result = bigquery.query(queryJobConfiguration);
+      assertNotNull(result.getJobId());
       for (FieldValueList values : result.iterateAll()) {
         assertEquals("125-7 -19 0:24:12.000006", values.get(0).getValue());
       }
@@ -1525,10 +1543,141 @@ public class ITBigQueryTest {
     assertNotNull(remoteTable.getLastModifiedTime());
     assertNotNull(remoteTable.<StandardTableDefinition>getDefinition().getNumBytes());
     assertNotNull(remoteTable.<StandardTableDefinition>getDefinition().getNumLongTermBytes());
+    assertNotNull(remoteTable.<StandardTableDefinition>getDefinition().getNumTotalLogicalBytes());
+    assertNotNull(remoteTable.<StandardTableDefinition>getDefinition().getNumActiveLogicalBytes());
+    assertNotNull(
+        remoteTable.<StandardTableDefinition>getDefinition().getNumLongTermLogicalBytes());
     assertNotNull(remoteTable.<StandardTableDefinition>getDefinition().getNumRows());
     assertEquals(
         partitioning, remoteTable.<StandardTableDefinition>getDefinition().getTimePartitioning());
     assertEquals(clustering, remoteTable.<StandardTableDefinition>getDefinition().getClustering());
+    assertTrue(remoteTable.delete());
+  }
+
+  @Test
+  public void testCreateAndGetTableWithBasicTableMetadataView() {
+    String tableName = "test_create_and_get_table_with_basic_metadata_view";
+    TableId tableId = TableId.of(DATASET, tableName);
+    TimePartitioning partitioning = TimePartitioning.of(Type.DAY);
+    Clustering clustering =
+        Clustering.newBuilder().setFields(ImmutableList.of(STRING_FIELD_SCHEMA.getName())).build();
+    StandardTableDefinition tableDefinition =
+        StandardTableDefinition.newBuilder()
+            .setSchema(TABLE_SCHEMA)
+            .setTimePartitioning(partitioning)
+            .setClustering(clustering)
+            .build();
+    Table createdTable = bigquery.create(TableInfo.of(tableId, tableDefinition));
+    assertNotNull(createdTable);
+    assertEquals(DATASET, createdTable.getTableId().getDataset());
+    assertEquals(tableName, createdTable.getTableId().getTable());
+    TableOption tableOption = BigQuery.TableOption.tableMetadataView(TableMetadataView.BASIC);
+    Table remoteTable = bigquery.getTable(DATASET, tableName, tableOption);
+    assertNotNull(remoteTable);
+    assertTrue(remoteTable.getDefinition() instanceof StandardTableDefinition);
+    assertEquals(createdTable.getTableId(), remoteTable.getTableId());
+    assertEquals(TableDefinition.Type.TABLE, remoteTable.getDefinition().getType());
+    assertEquals(TABLE_SCHEMA, remoteTable.getDefinition().getSchema());
+    // Next four values are considered transient fields that should not be calculated
+    assertNull(remoteTable.getLastModifiedTime());
+    assertNull(remoteTable.<StandardTableDefinition>getDefinition().getNumBytes());
+    assertNull(remoteTable.<StandardTableDefinition>getDefinition().getNumLongTermBytes());
+    assertNull(remoteTable.<StandardTableDefinition>getDefinition().getNumRows());
+    assertTrue(remoteTable.delete());
+  }
+
+  @Test
+  public void testCreateAndGetTableWithFullTableMetadataView() {
+    String tableName = "test_create_and_get_table_with_full_metadata_view";
+    TableId tableId = TableId.of(DATASET, tableName);
+    TimePartitioning partitioning = TimePartitioning.of(Type.DAY);
+    Clustering clustering =
+        Clustering.newBuilder().setFields(ImmutableList.of(STRING_FIELD_SCHEMA.getName())).build();
+    StandardTableDefinition tableDefinition =
+        StandardTableDefinition.newBuilder()
+            .setSchema(TABLE_SCHEMA)
+            .setTimePartitioning(partitioning)
+            .setClustering(clustering)
+            .build();
+    Table createdTable = bigquery.create(TableInfo.of(tableId, tableDefinition));
+    assertNotNull(createdTable);
+    assertEquals(DATASET, createdTable.getTableId().getDataset());
+    assertEquals(tableName, createdTable.getTableId().getTable());
+    TableOption tableOption = BigQuery.TableOption.tableMetadataView(TableMetadataView.FULL);
+    Table remoteTable = bigquery.getTable(DATASET, tableName, tableOption);
+    assertNotNull(remoteTable);
+    assertTrue(remoteTable.getDefinition() instanceof StandardTableDefinition);
+    assertEquals(createdTable.getTableId(), remoteTable.getTableId());
+    assertEquals(TableDefinition.Type.TABLE, remoteTable.getDefinition().getType());
+    assertEquals(TABLE_SCHEMA, remoteTable.getDefinition().getSchema());
+    assertNotNull(remoteTable.getLastModifiedTime());
+    assertNotNull(remoteTable.<StandardTableDefinition>getDefinition().getNumBytes());
+    assertNotNull(remoteTable.<StandardTableDefinition>getDefinition().getNumLongTermBytes());
+    assertNotNull(remoteTable.<StandardTableDefinition>getDefinition().getNumRows());
+    assertTrue(remoteTable.delete());
+  }
+
+  @Test
+  public void testCreateAndGetTableWithStorageStatsTableMetadataView() {
+    String tableName = "test_create_and_get_table_with_storage_stats_metadata_view";
+    TableId tableId = TableId.of(DATASET, tableName);
+    TimePartitioning partitioning = TimePartitioning.of(Type.DAY);
+    Clustering clustering =
+        Clustering.newBuilder().setFields(ImmutableList.of(STRING_FIELD_SCHEMA.getName())).build();
+    StandardTableDefinition tableDefinition =
+        StandardTableDefinition.newBuilder()
+            .setSchema(TABLE_SCHEMA)
+            .setTimePartitioning(partitioning)
+            .setClustering(clustering)
+            .build();
+    Table createdTable = bigquery.create(TableInfo.of(tableId, tableDefinition));
+    assertNotNull(createdTable);
+    assertEquals(DATASET, createdTable.getTableId().getDataset());
+    assertEquals(tableName, createdTable.getTableId().getTable());
+    TableOption tableOption =
+        BigQuery.TableOption.tableMetadataView(TableMetadataView.STORAGE_STATS);
+    Table remoteTable = bigquery.getTable(DATASET, tableName, tableOption);
+    assertNotNull(remoteTable);
+    assertTrue(remoteTable.getDefinition() instanceof StandardTableDefinition);
+    assertEquals(createdTable.getTableId(), remoteTable.getTableId());
+    assertEquals(TableDefinition.Type.TABLE, remoteTable.getDefinition().getType());
+    assertEquals(TABLE_SCHEMA, remoteTable.getDefinition().getSchema());
+    assertNotNull(remoteTable.getLastModifiedTime());
+    assertNotNull(remoteTable.<StandardTableDefinition>getDefinition().getNumBytes());
+    assertNotNull(remoteTable.<StandardTableDefinition>getDefinition().getNumLongTermBytes());
+    assertNotNull(remoteTable.<StandardTableDefinition>getDefinition().getNumRows());
+    assertTrue(remoteTable.delete());
+  }
+
+  @Test
+  public void testCreateAndGetTableWithUnspecifiedTableMetadataView() {
+    String tableName = "test_create_and_get_table_with_unspecified_metadata_view";
+    TableId tableId = TableId.of(DATASET, tableName);
+    TimePartitioning partitioning = TimePartitioning.of(Type.DAY);
+    Clustering clustering =
+        Clustering.newBuilder().setFields(ImmutableList.of(STRING_FIELD_SCHEMA.getName())).build();
+    StandardTableDefinition tableDefinition =
+        StandardTableDefinition.newBuilder()
+            .setSchema(TABLE_SCHEMA)
+            .setTimePartitioning(partitioning)
+            .setClustering(clustering)
+            .build();
+    Table createdTable = bigquery.create(TableInfo.of(tableId, tableDefinition));
+    assertNotNull(createdTable);
+    assertEquals(DATASET, createdTable.getTableId().getDataset());
+    assertEquals(tableName, createdTable.getTableId().getTable());
+    TableOption tableOption =
+        BigQuery.TableOption.tableMetadataView(TableMetadataView.TABLE_METADATA_VIEW_UNSPECIFIED);
+    Table remoteTable = bigquery.getTable(DATASET, tableName, tableOption);
+    assertNotNull(remoteTable);
+    assertTrue(remoteTable.getDefinition() instanceof StandardTableDefinition);
+    assertEquals(createdTable.getTableId(), remoteTable.getTableId());
+    assertEquals(TableDefinition.Type.TABLE, remoteTable.getDefinition().getType());
+    assertEquals(TABLE_SCHEMA, remoteTable.getDefinition().getSchema());
+    assertNotNull(remoteTable.getLastModifiedTime());
+    assertNotNull(remoteTable.<StandardTableDefinition>getDefinition().getNumBytes());
+    assertNotNull(remoteTable.<StandardTableDefinition>getDefinition().getNumLongTermBytes());
+    assertNotNull(remoteTable.<StandardTableDefinition>getDefinition().getNumRows());
     assertTrue(remoteTable.delete());
   }
 
@@ -1558,6 +1707,14 @@ public class ITBigQueryTest {
     assertNull(remoteTable.getLastModifiedTime());
     assertNull(remoteTable.<StandardTableDefinition>getDefinition().getNumBytes());
     assertNull(remoteTable.<StandardTableDefinition>getDefinition().getNumLongTermBytes());
+    assertNull(
+        remoteTable.<StandardTableDefinition>getDefinition().getNumTimeTravelPhysicalBytes());
+    assertNull(remoteTable.<StandardTableDefinition>getDefinition().getNumTotalLogicalBytes());
+    assertNull(remoteTable.<StandardTableDefinition>getDefinition().getNumActiveLogicalBytes());
+    assertNull(remoteTable.<StandardTableDefinition>getDefinition().getNumLongTermLogicalBytes());
+    assertNull(remoteTable.<StandardTableDefinition>getDefinition().getNumTotalPhysicalBytes());
+    assertNull(remoteTable.<StandardTableDefinition>getDefinition().getNumActivePhysicalBytes());
+    assertNull(remoteTable.<StandardTableDefinition>getDefinition().getNumLongTermPhysicalBytes());
     assertNull(remoteTable.<StandardTableDefinition>getDefinition().getNumRows());
     assertNull(remoteTable.<StandardTableDefinition>getDefinition().getTimePartitioning());
     assertNull(remoteTable.<StandardTableDefinition>getDefinition().getClustering());
@@ -1706,6 +1863,7 @@ public class ITBigQueryTest {
             .setUseLegacySql(true)
             .build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     int rowCount = 0;
     for (FieldValueList row : result.getValues()) {
       FieldValue timestampCell = row.get(0);
@@ -1985,6 +2143,14 @@ public class ITBigQueryTest {
     assertNull(updatedTable.getLastModifiedTime());
     assertNull(updatedTable.<StandardTableDefinition>getDefinition().getNumBytes());
     assertNull(updatedTable.<StandardTableDefinition>getDefinition().getNumLongTermBytes());
+    assertNull(
+        updatedTable.<StandardTableDefinition>getDefinition().getNumTimeTravelPhysicalBytes());
+    assertNull(updatedTable.<StandardTableDefinition>getDefinition().getNumTotalLogicalBytes());
+    assertNull(updatedTable.<StandardTableDefinition>getDefinition().getNumActiveLogicalBytes());
+    assertNull(updatedTable.<StandardTableDefinition>getDefinition().getNumLongTermLogicalBytes());
+    assertNull(updatedTable.<StandardTableDefinition>getDefinition().getNumTotalPhysicalBytes());
+    assertNull(updatedTable.<StandardTableDefinition>getDefinition().getNumActivePhysicalBytes());
+    assertNull(updatedTable.<StandardTableDefinition>getDefinition().getNumLongTermPhysicalBytes());
     assertNull(updatedTable.<StandardTableDefinition>getDefinition().getNumRows());
     assertTrue(createdTable.delete());
   }
@@ -2603,6 +2769,7 @@ public class ITBigQueryTest {
             QueryJobConfiguration.newBuilder(query)
                 .setDefaultDataset(DatasetId.of(DATASET))
                 .build());
+    assertNotNull(resultInteractive.getJobId());
     for (FieldValueList row : resultInteractive.getValues()) {
       FieldValue timeStampCell = row.get(0);
       Instant timestampStringValueActual = timeStampCell.getTimestampInstant();
@@ -2619,6 +2786,7 @@ public class ITBigQueryTest {
     Job job = bigquery.create(JobInfo.of(JobId.of(), config));
 
     TableResult result = job.getQueryResults();
+    assertNotNull(result.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
     int rowCount = 0;
     for (FieldValueList row : result.getValues()) {
@@ -2668,6 +2836,7 @@ public class ITBigQueryTest {
                 .setDefaultDataset(DatasetId.of(DATASET))
                 .setPriority(QueryJobConfiguration.Priority.INTERACTIVE)
                 .build());
+    assertNotNull(result.getJobId());
     for (FieldValueList row : result.getValues()) {
       FieldValue timeStampCell = row.get(0);
       long microsAfterQuery = timeStampCell.getTimestampValue();
@@ -2680,6 +2849,7 @@ public class ITBigQueryTest {
             QueryJobConfiguration.newBuilder(query)
                 .setDefaultDataset(DatasetId.of(DATASET))
                 .build());
+    assertNotNull(resultInteractive.getJobId());
     for (FieldValueList row : resultInteractive.getValues()) {
       FieldValue timeStampCell = row.get(0);
       long microsAfterQuery = timeStampCell.getTimestampValue();
@@ -2696,6 +2866,7 @@ public class ITBigQueryTest {
     Job job = bigquery.create(JobInfo.of(JobId.of(), config));
 
     TableResult result = job.getQueryResults();
+    assertNotNull(result.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
     int rowCount = 0;
     for (FieldValueList row : result.getValues()) {
@@ -2744,6 +2915,7 @@ public class ITBigQueryTest {
         String.format(
             "SELECT COUNT(*) as ct FROM %s.%s WHERE dt=\"2020-11-15\"", DATASET, tableName);
     TableResult result = bigquery.query(QueryJobConfiguration.of(query));
+    assertNotNull(result.getJobId());
     for (FieldValueList fieldValues : result.iterateAll()) {
       assertEquals(50, fieldValues.get("ct").getLongValue());
     }
@@ -2780,6 +2952,7 @@ public class ITBigQueryTest {
     String query =
         String.format("SELECT COUNT(*) as ct FROM %s.%s WHERE pkey=\"foo\"", DATASET, tableName);
     TableResult result = bigquery.query(QueryJobConfiguration.of(query));
+    assertNotNull(result.getJobId());
     for (FieldValueList fieldValues : result.iterateAll()) {
       assertEquals(50, fieldValues.get("ct").getLongValue());
     }
@@ -3410,6 +3583,7 @@ public class ITBigQueryTest {
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
     assertEquals(2, result.getTotalRows());
     assertNull(result.getNextPage());
@@ -3418,6 +3592,8 @@ public class ITBigQueryTest {
 
     // running the same QueryJobConfiguration with the same query again
     TableResult result1Duplicate = bigquery.query(config);
+    assertNotNull(result1Duplicate.getJobId());
+    assertNotEquals(result.getJobId(), result1Duplicate.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result1Duplicate.getSchema());
     assertEquals(2, result.getTotalRows());
     assertNull(result1Duplicate.getNextPage());
@@ -3428,6 +3604,7 @@ public class ITBigQueryTest {
     QueryJobConfiguration config2 =
         QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
     TableResult result2 = bigquery.query(config2);
+    assertNotNull(result2.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result2.getSchema());
     assertEquals(2, result2.getTotalRows());
     assertNull(result2.getNextPage());
@@ -3443,6 +3620,7 @@ public class ITBigQueryTest {
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
     assertEquals(2, result.getTotalRows());
     assertNull(result.getNextPage());
@@ -3450,6 +3628,7 @@ public class ITBigQueryTest {
     assertFalse(result.hasNextPage());
 
     TableResult result1 = bigquery.query(config);
+    assertNotNull(result1.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result1.getSchema());
     assertEquals(2, result1.getTotalRows());
     assertNull(result1.getNextPage());
@@ -3458,6 +3637,7 @@ public class ITBigQueryTest {
 
     config.toBuilder().setQuery(query).build();
     TableResult result2 = bigquery.query(config);
+    assertNotNull(result2.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result2.getSchema());
     assertEquals(2, result2.getTotalRows());
     assertNull(result2.getNextPage());
@@ -3473,6 +3653,7 @@ public class ITBigQueryTest {
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
     assertEquals(2, result.getTotalRows());
     assertNull(result.getNextPage());
@@ -3538,6 +3719,7 @@ public class ITBigQueryTest {
             .setDefaultDataset(DatasetId.of(UK_DATASET))
             .build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     assertEquals(SIMPLE_SCHEMA, result.getSchema());
     assertEquals(1, result.getTotalRows());
     assertNull(result.getNextPage());
@@ -3584,6 +3766,7 @@ public class ITBigQueryTest {
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     assertEquals(LARGE_TABLE_SCHEMA, result.getSchema());
     assertEquals(313348, result.getTotalRows());
     assertNotNull(result.getNextPage());
@@ -3591,6 +3774,7 @@ public class ITBigQueryTest {
     assertTrue(result.hasNextPage());
 
     TableResult result1 = bigquery.query(config);
+    assertNotNull(result1.getJobId());
     assertEquals(LARGE_TABLE_SCHEMA, result.getSchema());
     assertEquals(313348, result.getTotalRows());
     assertNotNull(result1.getNextPage());
@@ -3599,6 +3783,7 @@ public class ITBigQueryTest {
 
     config.toBuilder().setQuery(query).build();
     TableResult result2 = bigquery.query(config);
+    assertNotNull(result2.getJobId());
     assertEquals(LARGE_TABLE_SCHEMA, result2.getSchema());
     assertEquals(313348, result2.getTotalRows());
     assertNotNull(result2.getNextPage());
@@ -3613,12 +3798,14 @@ public class ITBigQueryTest {
         String.format("UPDATE %s.%s SET StringField = 'hello' WHERE TRUE", DATASET, tableName);
     QueryJobConfiguration dmlConfig = QueryJobConfiguration.newBuilder(dmlQuery).build();
     TableResult result = bigquery.query(dmlConfig);
+    assertNotNull(result.getJobId());
     assertEquals(TABLE_SCHEMA, result.getSchema());
     assertEquals(2, result.getTotalRows());
     // Verify correctness of table content
     String sqlQuery = String.format("SELECT * FROM %s.%s", DATASET, tableName);
     QueryJobConfiguration sqlConfig = QueryJobConfiguration.newBuilder(sqlQuery).build();
     TableResult resultAfterDML = bigquery.query(sqlConfig);
+    assertNotNull(resultAfterDML.getJobId());
     for (FieldValueList row : resultAfterDML.getValues()) {
       FieldValue timestampCell = row.get(0);
       assertEquals(timestampCell, row.get("TimestampField"));
@@ -3650,12 +3837,14 @@ public class ITBigQueryTest {
     QueryJobConfiguration ddlConfig =
         QueryJobConfiguration.newBuilder(ddlQuery).setDefaultDataset(DatasetId.of(DATASET)).build();
     TableResult result = bigquery.query(ddlConfig);
+    assertNotNull(result.getJobId());
     assertEquals(DDL_TABLE_SCHEMA, result.getSchema());
     assertEquals(0, result.getTotalRows());
     // Verify correctness of table content
     String sqlQuery = String.format("SELECT * FROM %s.%s", DATASET, tableName);
     QueryJobConfiguration sqlConfig = QueryJobConfiguration.newBuilder(sqlQuery).build();
     TableResult resultAfterDDL = bigquery.query(sqlConfig);
+    assertNotNull(resultAfterDDL.getJobId());
     for (FieldValueList row : resultAfterDDL.getValues()) {
       FieldValue timestampCell = row.get(0);
       assertEquals(timestampCell, row.get("TimestampField"));
@@ -3686,12 +3875,14 @@ public class ITBigQueryTest {
             .setDefaultDataset(DatasetId.of(DATASET))
             .build();
     TableResult result = bigquery.query(ddlConfig);
+    assertNotNull(result.getJobId());
     assertEquals(0, result.getTotalRows());
     assertNotNull(result.getSchema());
     // Verify correctness of table content
     String sqlQuery = String.format("SELECT * FROM %s.%s", DATASET, tableName);
     QueryJobConfiguration sqlConfig = QueryJobConfiguration.newBuilder(sqlQuery).build();
     TableResult resultAfterDDL = bigquery.query(sqlConfig);
+    assertNotNull(resultAfterDDL.getJobId());
     for (FieldValueList row : resultAfterDDL.getValues()) {
       FieldValue unique_key = row.get(0);
       assertEquals(unique_key, row.get("unique_key"));
@@ -3931,6 +4122,7 @@ public class ITBigQueryTest {
     assertNull(remoteJob.getStatus().getError());
 
     TableResult result = remoteJob.getQueryResults();
+    assertNotNull(result.getJobId());
     assertEquals(TABLE_SCHEMA, result.getSchema());
 
     Job queryJob = bigquery.getJob(remoteJob.getJobId());
@@ -4094,6 +4286,7 @@ public class ITBigQueryTest {
             .addPositionalParameter(bigNumericParameter4)
             .build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA_BIGNUMERIC, result.getSchema());
     assertEquals(2, Iterables.size(result.getValues()));
     for (FieldValueList values : result.iterateAll()) {
@@ -4156,6 +4349,7 @@ public class ITBigQueryTest {
             .addNamedParameter("integerList", intArrayParameter)
             .build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
     assertEquals(2, Iterables.size(result.getValues()));
   }
@@ -4202,6 +4396,7 @@ public class ITBigQueryTest {
             .addNamedParameter("recordField", recordValue)
             .build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     assertEquals(1, Iterables.size(result.getValues()));
     for (FieldValueList values : result.iterateAll()) {
       for (FieldValue value : values) {
@@ -4428,6 +4623,7 @@ public class ITBigQueryTest {
             .setUseLegacySql(false)
             .build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     assertEquals(2, Iterables.size(result.getValues()));
     for (FieldValueList values : result.iterateAll()) {
       for (FieldValue value : values) {
@@ -4469,6 +4665,7 @@ public class ITBigQueryTest {
             .addNamedParameter("nestedRecordField", nestedRecordField)
             .build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     assertEquals(1, Iterables.size(result.getValues()));
     for (FieldValueList values : result.iterateAll()) {
       for (FieldValue value : values) {
@@ -4497,6 +4694,7 @@ public class ITBigQueryTest {
             .addNamedParameter("p", bytesParameter)
             .build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     int rowCount = 0;
     for (FieldValueList row : result.getValues()) {
       rowCount++;
@@ -4520,6 +4718,7 @@ public class ITBigQueryTest {
             .addNamedParameter("geo", geoParameterValue)
             .build();
     TableResult result = bigquery.query(config);
+    assertNotNull(result.getJobId());
     int rowCount = 0;
     for (FieldValueList row : result.getValues()) {
       rowCount++;
@@ -4709,6 +4908,7 @@ public class ITBigQueryTest {
         QueryJobConfiguration.newBuilder(ddlQuery).setDefaultDataset(DatasetId.of(DATASET)).build();
     TableId sourceTableId = TableId.of(DATASET, sourceTableName);
     TableResult result = bigquery.query(ddlConfig);
+    assertNotNull(result.getJobId());
     assertEquals(DDL_TABLE_SCHEMA, result.getSchema());
     Table remoteTable = bigquery.getTable(DATASET, sourceTableName);
     assertNotNull(remoteTable);
@@ -4814,6 +5014,7 @@ public class ITBigQueryTest {
     assertNull(remoteJob.getStatus().getError());
 
     TableResult result = remoteJob.getQueryResults();
+    assertNotNull(result.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
     int rowCount = 0;
     for (FieldValueList row : result.getValues()) {
@@ -5595,6 +5796,7 @@ public class ITBigQueryTest {
         QueryJobConfiguration.newBuilder(ddlQuery).setDefaultDataset(DatasetId.of(DATASET)).build();
     TableId sourceTableId = TableId.of(DATASET, sourceTableName);
     TableResult result = bigquery.query(ddlConfig);
+    assertNotNull(result.getJobId());
     assertEquals(DDL_TABLE_SCHEMA, result.getSchema());
     Table remoteTable = bigquery.getTable(DATASET, sourceTableName);
     assertNotNull(remoteTable);
@@ -5671,5 +5873,207 @@ public class ITBigQueryTest {
     // Clean up
     assertTrue(table.delete());
     assertTrue(storage.delete(blobInfo.getBlobId()));
+  }
+
+  @Test
+  public void testPrimaryKey() {
+    String tableName = "test_primary_key";
+    TableId tableId = TableId.of(DATASET, tableName);
+    PrimaryKey primaryKey = PrimaryKey.newBuilder().setColumns(Arrays.asList("ID")).build();
+    TableConstraints tableConstraintsPk =
+        TableConstraints.newBuilder().setPrimaryKey(primaryKey).build();
+
+    try {
+      StandardTableDefinition tableDefinition =
+          StandardTableDefinition.newBuilder()
+              .setSchema(CONSTRAINTS_TABLE_SCHEMA)
+              .setTableConstraints(tableConstraintsPk)
+              .build();
+      Table createdTable = bigquery.create(TableInfo.of(tableId, tableDefinition));
+      assertNotNull(createdTable);
+      Table remoteTable = bigquery.getTable(DATASET, tableName);
+      assertEquals(
+          tableConstraintsPk,
+          remoteTable.<StandardTableDefinition>getDefinition().getTableConstraints());
+    } finally {
+      bigquery.delete(tableId);
+    }
+  }
+
+  @Test
+  public void testPrimaryKeyUpdate() {
+    String tableName = "test_primary_key_update";
+    TableId tableId = TableId.of(DATASET, tableName);
+    PrimaryKey primaryKey =
+        PrimaryKey.newBuilder().setColumns(Arrays.asList("FirstName", "LastName")).build();
+    TableConstraints tableConstraintsPk =
+        TableConstraints.newBuilder().setPrimaryKey(primaryKey).build();
+
+    try {
+      StandardTableDefinition tableDefinition =
+          StandardTableDefinition.newBuilder().setSchema(CONSTRAINTS_TABLE_SCHEMA).build();
+      Table createdTable = bigquery.create(TableInfo.of(tableId, tableDefinition));
+      assertNotNull(createdTable);
+      Table remoteTable = bigquery.getTable(DATASET, tableName);
+      assertNull(remoteTable.<StandardTableDefinition>getDefinition().getTableConstraints());
+
+      Table updatedTable =
+          remoteTable.toBuilder().setTableConstraints(tableConstraintsPk).build().update();
+      assertNotNull(updatedTable);
+      Table remoteUpdatedTable = bigquery.getTable(DATASET, tableName);
+      assertEquals(
+          tableConstraintsPk,
+          remoteUpdatedTable.<StandardTableDefinition>getDefinition().getTableConstraints());
+    } finally {
+      bigquery.delete(tableId);
+    }
+  }
+
+  @Test
+  public void testForeignKeys() {
+    String tableNamePk = "test_foreign_key";
+    String tableNameFk = "test_foreign_key2";
+    // TableIds referenced by foreign keys need project id to be specified
+    TableId tableIdPk = TableId.of(PROJECT_ID, DATASET, tableNamePk);
+    TableId tableIdFk = TableId.of(DATASET, tableNameFk);
+    ColumnReference columnReference =
+        ColumnReference.newBuilder().setReferencingColumn("ID").setReferencedColumn("ID").build();
+
+    PrimaryKey primaryKey =
+        PrimaryKey.newBuilder().setColumns(Collections.singletonList("ID")).build();
+    TableConstraints tableConstraintsPk =
+        TableConstraints.newBuilder().setPrimaryKey(primaryKey).build();
+
+    ForeignKey foreignKey =
+        ForeignKey.newBuilder()
+            .setName("foreign_key")
+            .setReferencedTable(tableIdPk)
+            .setColumnReferences(Collections.singletonList(columnReference))
+            .build();
+    TableConstraints tableConstraintsFk =
+        TableConstraints.newBuilder().setForeignKeys(Collections.singletonList(foreignKey)).build();
+
+    try {
+      StandardTableDefinition tableDefinitionPk =
+          StandardTableDefinition.newBuilder()
+              .setSchema(CONSTRAINTS_TABLE_SCHEMA)
+              .setTableConstraints(tableConstraintsPk)
+              .build();
+      Table createdTablePk = bigquery.create(TableInfo.of(tableIdPk, tableDefinitionPk));
+      assertNotNull(createdTablePk);
+
+      StandardTableDefinition tableDefinitionFk =
+          StandardTableDefinition.newBuilder()
+              .setSchema(CONSTRAINTS_TABLE_SCHEMA)
+              .setTableConstraints(tableConstraintsFk)
+              .build();
+      Table createdTableFk = bigquery.create(TableInfo.of(tableIdFk, tableDefinitionFk));
+      assertNotNull(createdTableFk);
+      Table remoteTable = bigquery.getTable(DATASET, tableNameFk);
+      assertEquals(
+          tableConstraintsFk,
+          remoteTable.<StandardTableDefinition>getDefinition().getTableConstraints());
+    } finally {
+      bigquery.delete(tableIdPk);
+      bigquery.delete(tableIdFk);
+    }
+  }
+
+  @Test
+  public void testForeignKeysUpdate() {
+    String tableNameFk = "test_foreign_key";
+    String tableNamePk1 = "test_foreign_key2";
+    String tableNamePk2 = "test_foreign_key3";
+    TableId tableIdFk = TableId.of(DATASET, tableNameFk);
+    // TableIds referenced by foreign keys need project id to be specified
+    TableId tableIdPk1 = TableId.of(PROJECT_ID, DATASET, tableNamePk1);
+    TableId tableIdPk2 = TableId.of(PROJECT_ID, DATASET, tableNamePk2);
+
+    ArrayList<ForeignKey> foreignKeys = new ArrayList<>();
+
+    // set up ID in tableFk as a foreign key to tablePk1
+    ColumnReference columnReferencePk1 =
+        ColumnReference.newBuilder().setReferencingColumn("ID").setReferencedColumn("ID").build();
+    PrimaryKey primaryKey1 =
+        PrimaryKey.newBuilder().setColumns(Collections.singletonList("ID")).build();
+    TableConstraints tableConstraintsPk1 =
+        TableConstraints.newBuilder().setPrimaryKey(primaryKey1).build();
+
+    ForeignKey foreignKey1 =
+        ForeignKey.newBuilder()
+            .setName("foreign_key1")
+            .setReferencedTable(tableIdPk1)
+            .setColumnReferences(Collections.singletonList(columnReferencePk1))
+            .build();
+    foreignKeys.add(foreignKey1);
+
+    // set up First and last names in tableFk as foreign keys to TablePk2
+    ArrayList<ColumnReference> columnReferencesPk2 = new ArrayList<>();
+    columnReferencesPk2.add(
+        ColumnReference.newBuilder()
+            .setReferencingColumn("FirstName")
+            .setReferencedColumn("FirstName")
+            .build());
+    columnReferencesPk2.add(
+        ColumnReference.newBuilder()
+            .setReferencingColumn("LastName")
+            .setReferencedColumn("LastName")
+            .build());
+
+    ArrayList<String> primaryKey2Columns = new ArrayList<>();
+    primaryKey2Columns.add("FirstName");
+    primaryKey2Columns.add("LastName");
+
+    PrimaryKey primaryKey2 = PrimaryKey.newBuilder().setColumns(primaryKey2Columns).build();
+    TableConstraints tableConstraintsPk2 =
+        TableConstraints.newBuilder().setPrimaryKey(primaryKey2).build();
+    ForeignKey foreignKey2 =
+        ForeignKey.newBuilder()
+            .setName("foreign_key2")
+            .setReferencedTable(tableIdPk2)
+            .setColumnReferences(columnReferencesPk2)
+            .build();
+    foreignKeys.add(foreignKey2);
+    TableConstraints tableConstraintsFk =
+        TableConstraints.newBuilder().setForeignKeys(foreignKeys).build();
+
+    try {
+      StandardTableDefinition tableDefinitionFk =
+          StandardTableDefinition.newBuilder().setSchema(CONSTRAINTS_TABLE_SCHEMA).build();
+      Table createdTableFk = bigquery.create(TableInfo.of(tableIdFk, tableDefinitionFk));
+      assertNotNull(createdTableFk);
+
+      StandardTableDefinition tableDefinitionPk1 =
+          StandardTableDefinition.newBuilder()
+              .setSchema(CONSTRAINTS_TABLE_SCHEMA)
+              .setTableConstraints(tableConstraintsPk1)
+              .build();
+      Table createdTablePk1 = bigquery.create(TableInfo.of(tableIdPk1, tableDefinitionPk1));
+      assertNotNull(createdTablePk1);
+
+      StandardTableDefinition tableDefinitionPk2 =
+          StandardTableDefinition.newBuilder()
+              .setSchema(CONSTRAINTS_TABLE_SCHEMA)
+              .setTableConstraints(tableConstraintsPk2)
+              .build();
+      Table createdTablePk2 = bigquery.create(TableInfo.of(tableIdPk2, tableDefinitionPk2));
+      assertNotNull(createdTablePk2);
+
+      Table remoteTable = bigquery.getTable(DATASET, tableNameFk);
+      assertNull(remoteTable.<StandardTableDefinition>getDefinition().getTableConstraints());
+
+      Table updatedTable =
+          remoteTable.toBuilder().setTableConstraints(tableConstraintsFk).build().update();
+
+      assertNotNull(updatedTable);
+      Table remoteUpdatedTable = bigquery.getTable(DATASET, tableNameFk);
+      assertEquals(
+          tableConstraintsFk,
+          remoteUpdatedTable.<StandardTableDefinition>getDefinition().getTableConstraints());
+    } finally {
+      bigquery.delete(tableIdFk);
+      bigquery.delete(tableIdPk1);
+      bigquery.delete(tableIdPk2);
+    }
   }
 }

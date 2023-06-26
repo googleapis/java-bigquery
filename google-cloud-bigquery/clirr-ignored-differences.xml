@@ -44,10 +44,54 @@
     <className>com/google/cloud/bigquery/TableInfo*</className>
     <method>*DefaultCollation(*)</method>
   </difference>
-
   <difference>
     <differenceType>7013</differenceType>
     <className>com/google/cloud/bigquery/TableInfo*</className>
     <method>*CloneDefinition(*)</method>
+  </difference>
+  <difference>
+    <differenceType>7013</differenceType>
+    <className>com/google/cloud/bigquery/StandardTableDefinition*</className>
+    <method>*TableConstraints(*)</method>
+  </difference>
+  <difference>
+    <differenceType>7013</differenceType>
+    <className>com/google/cloud/bigquery/StandardTableDefinition*</className>
+    <method>*NumActiveLogicalBytes(*)</method>
+  </difference>
+  <difference>
+    <differenceType>7013</differenceType>
+    <className>com/google/cloud/bigquery/StandardTableDefinition*</className>
+    <method>*NumActivePhysicalBytes(*)</method>
+  </difference>
+  <difference>
+    <differenceType>7013</differenceType>
+    <className>com/google/cloud/bigquery/StandardTableDefinition*</className>
+    <method>*NumLongTermLogicalBytes(*)</method>
+  </difference>
+  <difference>
+    <differenceType>7013</differenceType>
+    <className>com/google/cloud/bigquery/StandardTableDefinition*</className>
+    <method>*NumLongTermPhysicalBytes(*)</method>
+  </difference>
+  <difference>
+    <differenceType>7013</differenceType>
+    <className>com/google/cloud/bigquery/StandardTableDefinition*</className>
+    <method>*NumTimeTravelPhysicalBytes(*)</method>
+  </difference>
+  <difference>
+    <differenceType>7013</differenceType>
+    <className>com/google/cloud/bigquery/StandardTableDefinition*</className>
+    <method>*NumTotalLogicalBytes(*)</method>
+  </difference>
+  <difference>
+    <differenceType>7013</differenceType>
+    <className>com/google/cloud/bigquery/StandardTableDefinition*</className>
+    <method>*NumTotalPhysicalBytes(*)</method>
+  </difference>
+  <difference>
+    <differenceType>7013</differenceType>
+    <className>com/google/cloud/bigquery/TableInfo*</className>
+    <method>*TableConstraints(*)</method>
   </difference>
   </differences>

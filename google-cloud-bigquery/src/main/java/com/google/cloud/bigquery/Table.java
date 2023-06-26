@@ -49,10 +49,10 @@ public class Table extends TableInfo {
     private final BigQuery bigquery;
     private final TableInfo.BuilderImpl infoBuilder;
 
-    Builder(BigQuery bigquery, TableId tableId, TableDefinition defintion) {
+    Builder(BigQuery bigquery, TableId tableId, TableDefinition definition) {
       this.bigquery = bigquery;
       this.infoBuilder = new TableInfo.BuilderImpl();
-      this.infoBuilder.setTableId(tableId).setDefinition(defintion);
+      this.infoBuilder.setTableId(tableId).setDefinition(definition);
     }
 
     Builder(Table table) {
@@ -115,6 +115,48 @@ public class Table extends TableInfo {
     }
 
     @Override
+    Builder setNumTimeTravelPhysicalBytes(Long numTimeTravelPhysicalBytes) {
+      infoBuilder.setNumTimeTravelPhysicalBytes(numTimeTravelPhysicalBytes);
+      return this;
+    }
+
+    @Override
+    Builder setNumTotalLogicalBytes(Long numTotalLogicalBytes) {
+      infoBuilder.setNumTotalLogicalBytes(numTotalLogicalBytes);
+      return this;
+    }
+
+    @Override
+    Builder setNumActiveLogicalBytes(Long numActiveLogicalBytes) {
+      infoBuilder.setNumActiveLogicalBytes(numActiveLogicalBytes);
+      return this;
+    }
+
+    @Override
+    Builder setNumLongTermLogicalBytes(Long numLongTermLogicalBytes) {
+      infoBuilder.setNumLongTermLogicalBytes(numLongTermLogicalBytes);
+      return this;
+    }
+
+    @Override
+    Builder setNumTotalPhysicalBytes(Long numTotalPhysicalBytes) {
+      infoBuilder.setNumTotalPhysicalBytes(numTotalPhysicalBytes);
+      return this;
+    }
+
+    @Override
+    Builder setNumActivePhysicalBytes(Long numActivePhysicalBytes) {
+      infoBuilder.setNumActivePhysicalBytes(numActivePhysicalBytes);
+      return this;
+    }
+
+    @Override
+    Builder setNumLongTermPhysicalBytes(Long numLongTermPhysicalBytes) {
+      infoBuilder.setNumLongTermPhysicalBytes(numLongTermPhysicalBytes);
+      return this;
+    }
+
+    @Override
     Builder setNumRows(BigInteger numRows) {
       infoBuilder.setNumRows(numRows);
       return this;
@@ -165,6 +207,12 @@ public class Table extends TableInfo {
     @Override
     public TableInfo.Builder setCloneDefinition(CloneDefinition cloneDefinition) {
       infoBuilder.setCloneDefinition(cloneDefinition);
+      return this;
+    }
+
+    @Override
+    public Builder setTableConstraints(TableConstraints tableConstraints) {
+      infoBuilder.setTableConstraints(tableConstraints);
       return this;
     }
 

@@ -62,7 +62,7 @@
     <dependency>
       <groupId>com.google.truth</groupId>
       <artifactId>truth</artifactId>
-      <version>1.1.4</version>
+      <version>1.1.5</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -99,7 +99,7 @@
         <dependency>
           <groupId>org.graalvm.buildtools</groupId>
           <artifactId>junit-platform-native</artifactId>
-          <version>0.9.22</version>
+          <version>0.9.23</version>
           <scope>test</scope>
         </dependency>
 
@@ -121,7 +121,7 @@
           <plugin>
             <groupId>org.graalvm.buildtools</groupId>
             <artifactId>native-maven-plugin</artifactId>
-            <version>0.9.22</version>
+            <version>0.9.23</version>
             <extensions>true</extensions>
             <configuration>
               <mainClass>com.example.bigquery.NativeImageBigquerySample
