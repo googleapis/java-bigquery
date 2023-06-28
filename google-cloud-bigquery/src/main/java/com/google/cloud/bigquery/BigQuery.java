@@ -1036,11 +1036,9 @@ public interface BigQuery extends Service<BigQueryOptions> {
   /**
    * Deletes the requested routine.
    *
-   * <p>
-   * Example of deleting a routine.
+   * <p>Example of deleting a routine.
    *
-   * <pre>
-   * {@code
+   * <pre>{@code
    * String projectId = "my_project_id";
    * String datasetId = "my_dataset_id";
    * String routineId = "my_routine_id";
@@ -1051,12 +1049,9 @@ public interface BigQuery extends Service<BigQueryOptions> {
    * } else {
    *   // the routine was not found
    * }
-   * }
-   * </pre>
+   * }</pre>
    *
-   * @return {@code true} if routine was deleted, {@code false} if it was not
-   * found
-   *
+   * @return {@code true} if routine was deleted, {@code false} if it was not found
    * @throws BigQueryException upon failure
    */
   boolean delete(RoutineId routineId);
@@ -1263,15 +1258,12 @@ public interface BigQuery extends Service<BigQueryOptions> {
   Page<Routine> listRoutines(DatasetId datasetId, RoutineListOption... options);
 
   /**
-   * Lists the tables in the dataset. This method returns partial information on
-   * each table: ({@link Table#getTableId()}, {@link Table#getFriendlyName()},
-   * {@link Table#getGeneratedId()} and type, which is part of
-   * {@link Table#getDefinition()}). To get complete information use either
-   * {@link #getTable(TableId, TableOption...)} or
-   * {@link #getTable(String, String, TableOption...)}.
+   * Lists the tables in the dataset. This method returns partial information on each table: ({@link
+   * Table#getTableId()}, {@link Table#getFriendlyName()}, {@link Table#getGeneratedId()} and type,
+   * which is part of {@link Table#getDefinition()}). To get complete information use either {@link
+   * #getTable(TableId, TableOption...)} or {@link #getTable(String, String, TableOption...)}.
    *
-   * <p>
-   * Example of listing the tables in a dataset, specifying the page size.
+   * <p>Example of listing the tables in a dataset, specifying the page size.
    *
    * <pre>
    * {
@@ -1289,15 +1281,12 @@ public interface BigQuery extends Service<BigQueryOptions> {
   Page<Table> listTables(String datasetId, TableListOption... options);
 
   /**
-   * Lists the tables in the dataset. This method returns partial information on
-   * each table: ({@link Table#getTableId()}, {@link Table#getFriendlyName()},
-   * {@link Table#getGeneratedId()} and type, which is part of
-   * {@link Table#getDefinition()}). To get complete information use either
-   * {@link #getTable(TableId, TableOption...)} or
-   * {@link #getTable(String, String, TableOption...)}.
+   * Lists the tables in the dataset. This method returns partial information on each table: ({@link
+   * Table#getTableId()}, {@link Table#getFriendlyName()}, {@link Table#getGeneratedId()} and type,
+   * which is part of {@link Table#getDefinition()}). To get complete information use either {@link
+   * #getTable(TableId, TableOption...)} or {@link #getTable(String, String, TableOption...)}.
    *
-   * <p>
-   * Example of listing the tables in a dataset.
+   * <p>Example of listing the tables in a dataset.
    *
    * <pre>
    * {

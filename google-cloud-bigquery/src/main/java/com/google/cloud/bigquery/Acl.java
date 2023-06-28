@@ -83,7 +83,6 @@ public final class Acl implements Serializable {
     }
 
     /**
-     *
      * @param constant
      * @return Get the Role for the given String constant, and allow unrecognized values.
      */
@@ -91,10 +90,7 @@ public final class Acl implements Serializable {
       return type.valueOf(constant);
     }
 
-    /**
-     *
-     * @return Return the known values for Role.
-     */
+    /** @return Return the known values for Role. */
     public static Role[] values() {
       return type.values();
     }
@@ -176,6 +172,7 @@ public final class Acl implements Serializable {
 
     /**
      * Creates a DatasetAclEntity given the DatasetAclEntity's id.
+     *
      * @param id
      * @param targetTypes
      */
@@ -303,8 +300,8 @@ public final class Acl implements Serializable {
 
     /**
      * @return Returns group's identifier, can be either a <a
-     * href="https://cloud.google.com/bigquery/docs/reference/v2/datasets#access.specialGroup">
-     * special group identifier</a> or a group email.
+     *     href="https://cloud.google.com/bigquery/docs/reference/v2/datasets#access.specialGroup">
+     *     special group identifier</a> or a group email.
      */
     public String getIdentifier() {
       return identifier;
@@ -576,22 +573,18 @@ public final class Acl implements Serializable {
     this.role = role;
   }
 
-  /**
-   * @return Returns the entity for this ACL.
-   */
+  /** @return Returns the entity for this ACL. */
   public Entity getEntity() {
     return entity;
   }
 
-  /**
-   * @return Returns the role specified by this ACL. */
+  /** @return Returns the role specified by this ACL. */
   public Role getRole() {
     return role;
   }
 
   /**
    * @return Returns an Acl object.
-   *
    * @param entity the entity for this ACL object
    * @param role the role to associate to the {@code entity} object
    */
@@ -600,7 +593,6 @@ public final class Acl implements Serializable {
   }
 
   /**
-   *
    * @param datasetAclEntity
    * @return Returns an Acl object for a datasetAclEntity.
    */
@@ -609,7 +601,6 @@ public final class Acl implements Serializable {
   }
 
   /**
-   *
    * @param view
    * @return Returns an Acl object for a view entity.
    */
@@ -618,7 +609,6 @@ public final class Acl implements Serializable {
   }
 
   /**
-   *
    * @param routine
    * @return Returns an Acl object for a routine entity.
    */
