@@ -106,7 +106,7 @@ public interface Connection {
    *            .build();
    *   Connection connection = bigquery.createConnection(connectionSettings);
    *   String selectQuery = "SELECT corpus FROM `bigquery-public-data.samples.shakespeare` GROUP BY corpus;";
-   * ListenableFuture<ExecuteSelectResponse> executeSelectFuture = connection.executeSelectAsync(selectQuery);
+   * ListenableFuture&lt;ExecuteSelectResponse&gt; executeSelectFuture = connection.executeSelectAsync(selectQuery);
    * ExecuteSelectResponse executeSelectRes = executeSelectFuture.get();
    *
    *  if(!executeSelectRes.getIsSuccessful()){
@@ -157,7 +157,7 @@ public interface Connection {
    *         Parameter.newBuilder().setName("integerList").setValue(intArrayParameter).build();
    *     List<Parameter> parameters = ImmutableList.of(stringParam, intArrayParam);
    *
-   *     ListenableFuture<ExecuteSelectResponse> executeSelectFut =
+   *     ListenableFuture&lt;ExecuteSelectResponse&gt; executeSelectFut =
    *         connection.executeSelectAsync(selectQuery, parameters);
    * ExecuteSelectResponse executeSelectRes = executeSelectFuture.get();
    *

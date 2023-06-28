@@ -910,7 +910,7 @@ public interface BigQuery extends Service<BigQueryOptions> {
    *   &#64;code
    *   String projectId = "my_project_id";
    *   // List datasets in a specified project
-   *   Page<Dataset> datasets = bigquery.listDatasets(projectId, DatasetListOption.pageSize(100));
+   *   Page&lt;{@link Dataset}&gt datasets = bigquery.listDatasets(projectId, DatasetListOption.pageSize(100));
    *   for (Dataset dataset : datasets.iterateAll()) {
    *     // do something with the dataset
    *   }
@@ -1050,6 +1050,7 @@ public interface BigQuery extends Service<BigQueryOptions> {
    *   // the routine was deleted
    * } else {
    *   // the routine was not found
+   * }
    * }
    * </pre>
    *
@@ -1276,7 +1277,7 @@ public interface BigQuery extends Service<BigQueryOptions> {
    * {
    *   &#64;code
    *   String datasetName = "my_dataset_name";
-   *   Page<Table> tables = bigquery.listTables(datasetName, TableListOption.pageSize(100));
+   *   Page&lt;Table&gt tables = bigquery.listTables(datasetName, TableListOption.pageSize(100));
    *   for (Table table : tables.iterateAll()) {
    *     // do something with the table
    *   }
@@ -1304,7 +1305,7 @@ public interface BigQuery extends Service<BigQueryOptions> {
    *   String projectId = "my_project_id";
    *   String datasetName = "my_dataset_name";
    *   DatasetId datasetId = DatasetId.of(projectId, datasetName);
-   *   Page<Table> tables = bigquery.listTables(datasetId, TableListOption.pageSize(100));
+   *   Page&lt;Table&gt; tables = bigquery.listTables(datasetId, TableListOption.pageSize(100));
    *   for (Table table : tables.iterateAll()) {
    *     // do something with the table
    *   }
@@ -1339,12 +1340,12 @@ public interface BigQuery extends Service<BigQueryOptions> {
    *   String tableName = "my_table_name";
    *   TableId tableId = TableId.of(datasetName, tableName);
    *   // Values of the row to insert
-   *   Map<String, Object> rowContent = new HashMap<>();
+   *   Map&lt;String, Object&gt; rowContent = new HashMap<>();
    *   rowContent.put("booleanField", true);
    *   // Bytes are passed in base64
    *   rowContent.put("bytesField", "Cg0NDg0="); // 0xA, 0xD, 0xD, 0xE, 0xD in base64
    *   // Records are passed as a map
-   *   Map<String, Object> recordsContent = new HashMap<>();
+   *   Map&lt;String, Object&gt; recordsContent = new HashMap<>();
    *   recordsContent.put("stringField", "Hello, World!");
    *   rowContent.put("recordField", recordsContent);
    *   InsertAllResponse response = bigquery.insertAll(InsertAllRequest.newBuilder(tableId).addRow("rowId", rowContent)
@@ -1353,7 +1354,7 @@ public interface BigQuery extends Service<BigQueryOptions> {
    *       .build());
    *   if (response.hasErrors()) {
    *     // If any of the insertions failed, this lets you inspect the errors
-   *     for (Entry<Long, List<BigQueryError>> entry : response.getInsertErrors().entrySet()) {
+   *     for (Entry&lt;Long, List&lt;BigQueryError&gt;&gt; entry : response.getInsertErrors().entrySet()) {
    *       // inspect row error
    *     }
    *   }
@@ -1509,7 +1510,7 @@ public interface BigQuery extends Service<BigQueryOptions> {
    * <pre>
    * {
    *   &#64;code
-   *   Page<Job> jobs = bigquery.listJobs(JobListOption.pageSize(100));
+   *   Page&lt;Job&gt; jobs = bigquery.listJobs(JobListOption.pageSize(100));
    *   for (Job job : jobs.iterateAll()) {
    *     // do something with the job
    *   }
