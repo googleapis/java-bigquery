@@ -155,7 +155,7 @@ public interface Connection {
    *         Parameter.newBuilder().setName("stringParam").setValue(stringParameter).build();
    *     Parameter intArrayParam =
    *         Parameter.newBuilder().setName("integerList").setValue(intArrayParameter).build();
-   *     List<Parameter> parameters = ImmutableList.of(stringParam, intArrayParam);
+   *     List&lt;Parameter&gt; parameters = ImmutableList.of(stringParam, intArrayParam);
    *
    *     ListenableFuture&lt;ExecuteSelectResponse&gt; executeSelectFut =
    *         connection.executeSelectAsync(selectQuery, parameters);
