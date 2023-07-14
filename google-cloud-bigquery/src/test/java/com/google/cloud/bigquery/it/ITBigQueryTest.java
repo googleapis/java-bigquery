@@ -83,6 +83,7 @@ import com.google.cloud.bigquery.InsertAllRequest;
 import com.google.cloud.bigquery.InsertAllRequest.RowToInsert;
 import com.google.cloud.bigquery.InsertAllResponse;
 import com.google.cloud.bigquery.Job;
+import com.google.cloud.bigquery.JobConfiguration;
 import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.JobStatistics;
@@ -6075,5 +6076,27 @@ public class ITBigQueryTest {
       bigquery.delete(tableIdPk1);
       bigquery.delete(tableIdPk2);
     }
+  }
+
+  @Test
+  public void testAlreadyExistJobExceptionHandling() throws InterruptedException {
+    String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
+    JobId jobId =JobId.newBuilder().setRandomJob().build();
+
+    JobConfiguration queryJobConfiguration = QueryJobConfiguration.newBuilder(query).build();
+    // Creating the job with the explicit jobID
+    bigquery.create(JobInfo.of(jobId, queryJobConfiguration));
+    // Calling the query method with the job that has already been created.
+    // This should throw ALREADY_EXISTS error without the exception handling added
+    // or if the job id older than 24 hours.
+    try {
+      bigquery.query(QueryJobConfiguration.newBuilder(query).build(), jobId);
+      // Test succeeds if Exception is not thrown and code flow reaches this statement.
+      assertTrue(true);
+    }catch (BigQueryException ex){
+      // test fails if an exception is thrown
+      assertTrue(false);
+    }
+
   }
 }

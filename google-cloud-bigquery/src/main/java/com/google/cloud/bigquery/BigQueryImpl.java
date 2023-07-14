@@ -21,6 +21,7 @@ import static com.google.cloud.bigquery.PolicyHelper.convertToApiPolicy;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.core.BetaApi;
 import com.google.api.core.InternalApi;
 import com.google.api.gax.paging.Page;
@@ -55,7 +56,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.threeten.bp.Instant;
+import org.threeten.bp.temporal.ChronoUnit;
+import org.threeten.extra.Days;
 
 final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuery {
 
@@ -422,15 +428,39 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     }
 
     if (!idRandom) {
+      if (createException instanceof BigQueryException) {
+
+        GoogleJsonResponseException createExceptionCause = (GoogleJsonResponseException) createException.getCause();
+
+        Pattern pattern = Pattern.compile(".*Already.*Exists:.*Job.*", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(createExceptionCause.getMessage());
+
+        if (matcher.find() && createExceptionCause.getStatusCode() == 409) {
+          // If the Job ALREADY EXISTS, retrieve it.
+          Job job = this.getJob(jobInfo.getJobId());
+
+          long jobCreationTime = job.getStatistics().getCreationTime();
+          long endTime = System.currentTimeMillis();
+          long startTime = Instant.ofEpochMilli(endTime)
+              .minus(1, ChronoUnit.DAYS)
+              .toEpochMilli();
+
+          // Only return the job if it has been created in the past 24 hours.
+          // This is assuming any job older than 24 hours is a valid duplicate JobID
+          // and not a false positive like b/290419183
+          if(jobCreationTime>=startTime && jobCreationTime<=endTime){
+            return job;
+          }
+
+        }
+      }
       throw createException;
     }
 
     // If create RPC fails, it's still possible that the job has been successfully
-    // created,
-    // and get might work.
+    // created, and get might work.
     // We can only do this if we randomly generated the ID. Otherwise we might
-    // mistakenly
-    // fetch a job created by someone else.
+    // mistakenly fetch a job created by someone else.
     Job job;
     try {
       job = getJob(finalJobId[0]);
