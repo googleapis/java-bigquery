@@ -61,7 +61,6 @@ import java.util.regex.Pattern;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.threeten.bp.Instant;
 import org.threeten.bp.temporal.ChronoUnit;
-import org.threeten.extra.Days;
 
 final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuery {
 
@@ -430,7 +429,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     if (!idRandom) {
       if (createException instanceof BigQueryException) {
 
-        GoogleJsonResponseException createExceptionCause = (GoogleJsonResponseException) createException.getCause();
+        GoogleJsonResponseException createExceptionCause =
+            (GoogleJsonResponseException) createException.getCause();
 
         Pattern pattern = Pattern.compile(".*Already.*Exists:.*Job.*", Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(createExceptionCause.getMessage());
@@ -441,17 +441,14 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
           long jobCreationTime = job.getStatistics().getCreationTime();
           long endTime = System.currentTimeMillis();
-          long startTime = Instant.ofEpochMilli(endTime)
-              .minus(1, ChronoUnit.DAYS)
-              .toEpochMilli();
+          long startTime = Instant.ofEpochMilli(endTime).minus(1, ChronoUnit.DAYS).toEpochMilli();
 
           // Only return the job if it has been created in the past 24 hours.
           // This is assuming any job older than 24 hours is a valid duplicate JobID
           // and not a false positive like b/290419183
-          if(jobCreationTime>=startTime && jobCreationTime<=endTime){
+          if (jobCreationTime >= startTime && jobCreationTime <= endTime) {
             return job;
           }
-
         }
       }
       throw createException;
