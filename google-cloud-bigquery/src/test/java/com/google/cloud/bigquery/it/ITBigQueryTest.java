@@ -6081,7 +6081,7 @@ public class ITBigQueryTest {
   @Test
   public void testAlreadyExistJobExceptionHandling() throws InterruptedException {
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
-    JobId jobId =JobId.newBuilder().setRandomJob().build();
+    JobId jobId = JobId.newBuilder().setRandomJob().build();
 
     JobConfiguration queryJobConfiguration = QueryJobConfiguration.newBuilder(query).build();
     // Creating the job with the explicit jobID
@@ -6093,10 +6093,9 @@ public class ITBigQueryTest {
       bigquery.query(QueryJobConfiguration.newBuilder(query).build(), jobId);
       // Test succeeds if Exception is not thrown and code flow reaches this statement.
       assertTrue(true);
-    }catch (BigQueryException ex){
+    } catch (BigQueryException ex) {
       // test fails if an exception is thrown
       assertTrue(false);
     }
-
   }
 }
