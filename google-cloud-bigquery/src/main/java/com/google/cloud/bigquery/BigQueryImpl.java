@@ -448,12 +448,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           // Only return the job if it has been created in the past 24 hours.
           // This is assuming any job older than 24 hours is a valid duplicate JobID
           // and not a false positive like b/290419183
-<<<<<<< Updated upstream
           if (jobCreationTime >= startTime && jobCreationTime <= endTime) {
-=======
-          if(jobCreationTime>=startTime && jobCreationTime<=endTime){
-
->>>>>>> Stashed changes
             return job;
           }
         }
