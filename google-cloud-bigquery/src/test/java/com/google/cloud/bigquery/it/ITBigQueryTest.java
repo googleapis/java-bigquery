@@ -6080,7 +6080,11 @@ public class ITBigQueryTest {
 
   @Test
   public void testAlreadyExistJobExceptionHandling() throws InterruptedException {
-    String query = "SELECT TimestampField, StringField, BooleanField FROM " +DATASET + "."+ TABLE_ID.getTable();
+    String query =
+        "SELECT TimestampField, StringField, BooleanField FROM "
+            + DATASET
+            + "."
+            + TABLE_ID.getTable();
     JobId jobId = JobId.newBuilder().setRandomJob().build();
 
     JobConfiguration queryJobConfiguration = QueryJobConfiguration.newBuilder(query).build();

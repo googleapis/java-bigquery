@@ -426,16 +426,15 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     }
 
     if (!idRandom) {
-      if (createException instanceof BigQueryException &&
-      createException.getCause() != null ) {
+      if (createException instanceof BigQueryException && createException.getCause() != null) {
 
         /*GoogleJsonResponseException createExceptionCause =
-            (GoogleJsonResponseException) createException.getCause();*/
+        (GoogleJsonResponseException) createException.getCause();*/
 
         Pattern pattern = Pattern.compile(".*Already.*Exists:.*Job.*", Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(createException.getCause().getMessage());
 
-        if (matcher.find() ) {
+        if (matcher.find()) {
           // If the Job ALREADY EXISTS, retrieve it.
           Job job = this.getJob(jobInfo.getJobId());
 
