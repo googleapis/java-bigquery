@@ -21,7 +21,6 @@ import static com.google.cloud.bigquery.PolicyHelper.convertToApiPolicy;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.core.BetaApi;
 import com.google.api.core.InternalApi;
 import com.google.api.gax.paging.Page;
@@ -427,17 +426,16 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     }
 
     if (!idRandom) {
-      if (createException instanceof BigQueryException
-          && createException.getCause() != null
-          && createException.getCause() instanceof GoogleJsonResponseException) {
+      if (createException instanceof BigQueryException &&
+      createException.getCause() != null ) {
 
-        GoogleJsonResponseException createExceptionCause =
-            (GoogleJsonResponseException) createException.getCause();
+        /*GoogleJsonResponseException createExceptionCause =
+            (GoogleJsonResponseException) createException.getCause();*/
 
         Pattern pattern = Pattern.compile(".*Already.*Exists:.*Job.*", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(createExceptionCause.getMessage());
+        Matcher matcher = pattern.matcher(createException.getCause().getMessage());
 
-        if (matcher.find() && createExceptionCause.getStatusCode() == 409) {
+        if (matcher.find() ) {
           // If the Job ALREADY EXISTS, retrieve it.
           Job job = this.getJob(jobInfo.getJobId());
 

@@ -6080,7 +6080,7 @@ public class ITBigQueryTest {
 
   @Test
   public void testAlreadyExistJobExceptionHandling() throws InterruptedException {
-    String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
+    String query = "SELECT TimestampField, StringField, BooleanField FROM " +DATASET + "."+ TABLE_ID.getTable();
     JobId jobId = JobId.newBuilder().setRandomJob().build();
 
     JobConfiguration queryJobConfiguration = QueryJobConfiguration.newBuilder(query).build();
@@ -6088,7 +6088,7 @@ public class ITBigQueryTest {
     bigquery.create(JobInfo.of(jobId, queryJobConfiguration));
     // Calling the query method with the job that has already been created.
     // This should throw ALREADY_EXISTS error without the exception handling added
-    // or if the job id older than 24 hours.
+    // or if the job is older than 24 hours.
     try {
       bigquery.query(QueryJobConfiguration.newBuilder(query).build(), jobId);
       // Test succeeds if Exception is not thrown and code flow reaches this statement.
