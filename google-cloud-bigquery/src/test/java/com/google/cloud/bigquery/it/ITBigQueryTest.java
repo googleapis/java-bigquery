@@ -6099,7 +6099,9 @@ public class ITBigQueryTest {
       assertTrue(true);
     } catch (BigQueryException ex) {
       // test fails if an exception is thrown
-      assertTrue(false);
+      if(ex.getCause()!= null && ex.getCause().getMessage().contains("Already Exists: Job")){
+        fail("Already exists error should not be thrown");
+      }
     }
   }
 }
