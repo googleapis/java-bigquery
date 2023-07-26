@@ -41,7 +41,7 @@ public class GetTable {
 
       TableId tableId = TableId.of(projectId, datasetName, tableName);
       Table table = bigquery.getTable(tableId);
-      System.out.println("Table info: " + table.getDescription());
+      System.out.println("Table info: " + table.getDefinition());
     } catch (BigQueryException e) {
       System.out.println("Table not retrieved. \n" + e.toString());
     }
