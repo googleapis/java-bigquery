@@ -141,6 +141,11 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
       }
     }
 
+    @Override
+    public void close() throws SQLException {
+      // TODO: Implement the logic
+    }
+
     private boolean isEndOfStream(T cursor) {
       return cursor instanceof ConnectionImpl.EndOfFieldValueList;
     }
