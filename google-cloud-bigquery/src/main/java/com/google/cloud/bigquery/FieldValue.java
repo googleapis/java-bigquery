@@ -355,7 +355,7 @@ public class FieldValue implements Serializable {
   }
 
   /**
-   * Parse interval in canonical format and create instance of {@code FieldValue}.
+   * Parse interval in canonical format and create instance of {@code PeriodDuration}.
    *
    * <p>The parameter {@code interval} should be an interval in the canonical format: "[sign]Y-M
    * [sign]D [sign]H:M:S[.F]". More details <a href=
