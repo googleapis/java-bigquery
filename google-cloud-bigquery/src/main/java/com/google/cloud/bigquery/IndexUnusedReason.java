@@ -16,13 +16,14 @@
 
 package com.google.cloud.bigquery;
 
-import com.google.api.services.bigquery.model.TableReference;
+import com.google.api.core.BetaApi;
 import com.google.auto.value.AutoValue;
 import java.io.Serializable;
 import javax.annotation.Nullable;
 
 /** Represents Reason of why the index was not used in a SQL search. */
 @AutoValue
+@BetaApi
 public abstract class IndexUnusedReason implements Serializable {
 
   @AutoValue.Builder
@@ -52,9 +53,9 @@ public abstract class IndexUnusedReason implements Serializable {
     /**
      * Specifies the base table involved in the reason that no search index was used.
      *
-     * @param tableReference tableReference or {@code null} for none
+     * @param baseTable baseTable or {@code null} for none
      */
-    public abstract Builder setBaseTable(TableReference tableReference);
+    public abstract Builder setBaseTableId(TableId baseTable);
 
     /** Creates a @code IndexUnusedReason} object. */
     public abstract IndexUnusedReason build();
@@ -96,7 +97,7 @@ public abstract class IndexUnusedReason implements Serializable {
    * @return value or {@code null} for none
    */
   @Nullable
-  public abstract TableReference getBaseTable();
+  public abstract TableId getBaseTableId();
 
   com.google.api.services.bigquery.model.IndexUnusedReason toPb() {
     com.google.api.services.bigquery.model.IndexUnusedReason indexUnusedReason =
@@ -110,8 +111,8 @@ public abstract class IndexUnusedReason implements Serializable {
     if (getMessage() != null) {
       indexUnusedReason.setMessage(indexUnusedReason.getMessage());
     }
-    if (getBaseTable() != null) {
-      indexUnusedReason.setBaseTable(indexUnusedReason.getBaseTable());
+    if (getBaseTableId() != null) {
+      indexUnusedReason.setBaseTable(getBaseTableId().toPb());
     }
     return indexUnusedReason;
   }
@@ -129,7 +130,7 @@ public abstract class IndexUnusedReason implements Serializable {
       builder.setMessage(indexUnusedReason.getMessage());
     }
     if (indexUnusedReason.getBaseTable() != null) {
-      builder.setBaseTable(indexUnusedReason.getBaseTable());
+      builder.setBaseTableId(TableId.fromPb(indexUnusedReason.getBaseTable()));
     }
     return builder.build();
   }
