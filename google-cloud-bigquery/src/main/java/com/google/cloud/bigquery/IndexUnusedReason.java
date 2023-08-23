@@ -23,7 +23,6 @@ import javax.annotation.Nullable;
 
 /** Represents Reason of why the index was not used in a SQL search. */
 @AutoValue
-@BetaApi
 public abstract class IndexUnusedReason implements Serializable {
 
   @AutoValue.Builder
