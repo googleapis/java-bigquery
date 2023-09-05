@@ -571,6 +571,8 @@ public class ITBigQueryTest {
           Field.newBuilder("BooleanField", LegacySQLTypeName.BOOLEAN)
               .setMode(Field.Mode.NULLABLE)
               .build());
+  private static final Schema NULL_FIELD_MODE_SCHEMA =
+      Schema.of(Field.newBuilder("Field1", LegacySQLTypeName.INTEGER).build());
   private static final RangePartitioning.Range RANGE =
       RangePartitioning.Range.newBuilder().setStart(1L).setInterval(2L).setEnd(20L).build();
   private static final RangePartitioning RANGE_PARTITIONING =
@@ -6131,6 +6133,28 @@ public class ITBigQueryTest {
       if (ex.getCause() != null && ex.getCause().getMessage().contains("Already Exists: Job")) {
         fail("Already exists error should not be thrown");
       }
+    }
+  }
+
+  @Test
+  public void assertThatSchemaEqualsComparisonIsDeterministic() {
+    String tableName = "test_create_table_null_field_mode";
+    TableId tableId = TableId.of(DATASET, tableName);
+    try {
+      StandardTableDefinition tableDefinition =
+          StandardTableDefinition.newBuilder().setSchema(NULL_FIELD_MODE_SCHEMA).build();
+      Table createdTable = bigquery.create(TableInfo.of(tableId, tableDefinition));
+      assertNotNull(createdTable);
+      Table remoteTable = bigquery.getTable(DATASET, tableName);
+      assertNull(
+          remoteTable
+              .<StandardTableDefinition>getDefinition()
+              .getSchema()
+              .getFields()
+              .get(0)
+              .getMode());
+    } finally {
+      bigquery.delete(tableId);
     }
   }
 }
