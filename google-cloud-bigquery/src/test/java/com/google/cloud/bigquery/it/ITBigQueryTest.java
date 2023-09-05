@@ -6137,7 +6137,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void assertThatSchemaEqualsComparisonIsDeterministic() {
+  public void testNullFieldMode() {
     String tableName = "test_create_table_null_field_mode";
     TableId tableId = TableId.of(DATASET, tableName);
     try {
