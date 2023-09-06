@@ -6,12 +6,12 @@
   <parent>
     <artifactId>google-cloud-bigquery-parent</artifactId>
     <groupId>com.google.cloud</groupId>
-    <version>2.31.0</version><!-- {x-version-update:google-cloud-bigquery:current} -->
+    <version>2.31.2</version><!-- {x-version-update:google-cloud-bigquery:current} -->
   </parent>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jmh.version>1.36</jmh.version>
+    <jmh.version>1.37</jmh.version>
     <uberjar.name>benchmark</uberjar.name>
   </properties>
 
