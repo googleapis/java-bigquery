@@ -1228,8 +1228,11 @@ public class ITBigQueryTest {
               .build();
       TableResult result = bigquery.query(queryJobConfiguration);
       assertNotNull(result.getJobId());
+      PeriodDuration periodDuration =
+          PeriodDuration.of(Period.of(125, 7, -19), java.time.Duration.parse("PT24M12.000006S"));
       for (FieldValueList values : result.iterateAll()) {
         assertEquals("125-7 -19 0:24:12.000006", values.get(0).getValue());
+        assertEquals(periodDuration, values.get(0).getPeriodDuration());
       }
     } finally {
       assertTrue(bigquery.delete(tableId));
@@ -5090,7 +5093,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testQueryJobWithSearchReturnsSearchStatistics() throws InterruptedException {
+  public void testQueryJobWithSearchReturnsSearchStatisticsUnused() throws InterruptedException {
     String tableName = "test_query_job_table";
     String query =
         "SELECT * FROM "
@@ -5109,6 +5112,10 @@ public class ITBigQueryTest {
       JobStatistics.QueryStatistics stats = remoteJob.getStatistics();
       assertNotNull(stats.getSearchStats());
       assertEquals(stats.getSearchStats().getIndexUsageMode(), "UNUSED");
+      assertNotNull(stats.getSearchStats().getIndexUnusedReasons());
+      assertNotNull(
+          stats.getSearchStats().getIndexUnusedReasons().get(0).getCode(),
+          "INDEX_CONFIG_NOT_AVAILABLE");
     } finally {
       bigquery.delete(destinationTable);
     }
