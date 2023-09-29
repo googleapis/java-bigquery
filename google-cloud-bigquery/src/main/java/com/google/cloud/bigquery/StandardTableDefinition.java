@@ -177,6 +177,12 @@ public abstract class StandardTableDefinition extends TableDefinition {
 
     public abstract Builder setTableConstraints(TableConstraints tableConstraints);
 
+    /**
+     * Set the configuration of a BigLake managed table. If not set, the table is not a BigLake
+     * managed table.
+     */
+    public abstract Builder setBiglakeConfiguration(BigLakeConfiguration biglakeConfiguration);
+
     /** Creates a {@code StandardTableDefinition} object. */
     public abstract StandardTableDefinition build();
   }
@@ -300,6 +306,13 @@ public abstract class StandardTableDefinition extends TableDefinition {
   @Nullable
   public abstract TableConstraints getTableConstraints();
 
+  /**
+   * [Optional] Specifies the configuration of a BigLake managed table. The value may be {@code
+   * null}.
+   */
+  @Nullable
+  public abstract BigLakeConfiguration getBiglakeConfiguration();
+
   /** Returns a builder for a BigQuery standard table definition. */
   public static Builder newBuilder() {
     return new AutoValue_StandardTableDefinition.Builder().setType(Type.TABLE);
@@ -347,6 +360,9 @@ public abstract class StandardTableDefinition extends TableDefinition {
     }
     if (getTableConstraints() != null) {
       tablePb.setTableConstraints(getTableConstraints().toPb());
+    }
+    if (getBiglakeConfiguration() != null) {
+      tablePb.setBiglakeConfiguration(getBiglakeConfiguration().toPb());
     }
     return tablePb;
   }
@@ -409,6 +425,11 @@ public abstract class StandardTableDefinition extends TableDefinition {
     if (tablePb.getTableConstraints() != null) {
       builder.setTableConstraints(TableConstraints.fromPb(tablePb.getTableConstraints()));
     }
+    if (tablePb.getBiglakeConfiguration() != null) {
+      builder.setBiglakeConfiguration(
+          BigLakeConfiguration.fromPb(tablePb.getBiglakeConfiguration()));
+    }
+
     return builder.setNumBytes(tablePb.getNumBytes()).setLocation(tablePb.getLocation()).build();
   }
 }
