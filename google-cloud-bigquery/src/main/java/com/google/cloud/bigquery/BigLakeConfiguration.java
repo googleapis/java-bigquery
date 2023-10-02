@@ -17,107 +17,105 @@
 package com.google.cloud.bigquery;
 
 import com.google.auto.value.AutoValue;
+
 import java.io.Serializable;
 
 @AutoValue
 public abstract class BigLakeConfiguration implements Serializable {
 
-  private static final long serialVersionUID = -5951589238459622025L;
-
-  /**
-   * Credential reference for accessing external storage system. Normalized as
-   * project_id.location_id.connection_id.
-   *
-   * @return value or {@code null} for none
-   */
-  public abstract String getConnectionId();
-
-  /**
-   * Open source file format that the table data is stored in. Currently only PARQUET is supported.
-   *
-   * @return value or {@code null} for none
-   */
-  public abstract String getFileFormat();
-
-  /**
-   * Fully qualified location prefix of the external folder where data is stored. Normalized to
-   * standard format: "gs:/". Starts with "gs://" rather than "/bigstore/". Ends with "/". Does not
-   * contain "*". See also BigLakeStorageMetadata on how it is used.
-   *
-   * @return value or {@code null} for none
-   */
-  public abstract String getStorageUri();
-
-  /**
-   * Open source file format that the table data is stored in. Currently only PARQUET is supported.
-   *
-   * @return value or {@code null} for none
-   */
-  public abstract String getTableFormat();
-
-  public static Builder newBuilder() {
-    return new AutoValue_BigLakeConfiguration.Builder();
-  }
-
-  public abstract Builder toBuilder();
-
-  @AutoValue.Builder
-  public abstract static class Builder {
-    /**
-     * [Required] Required and immutable. Credential reference for accessing external storage
-     * system. Normalized as project_id.location_id.connection_id.
-     *
-     * @param connectionId connectionId or {@code null} for none
-     */
-    public abstract Builder setConnectionId(String connectionId);
+    private static final long serialVersionUID = -5951589238459622025L;
 
     /**
-     * [Required] Required and immutable. Open source file format that the table data is stored in.
-     * Currently only PARQUET is supported.
+     * Credential reference for accessing external storage system. Normalized as
+     * project_id.location_id.connection_id.
      *
-     * @param fileFormat fileFormat or {@code null} for none
+     * @return value or {@code null} for none
      */
-    public abstract Builder setFileFormat(String fileFormat);
+    public abstract String getConnectionId();
 
     /**
-     * [Required] Required and immutable. Fully qualified location prefix of the external folder
-     * where data is stored. Normalized to standard format: "gs:/". Starts with "gs://" rather than
-     * "/bigstore/". Ends with "/". Does not contain "*". See also BigLakeStorageMetadata on how it
-     * is used.
+     * Open source file format that the table data is stored in. Currently only PARQUET is supported.
      *
-     * @param storageUri storageUri or {@code null} for none
+     * @return value or {@code null} for none
      */
-    public abstract Builder setStorageUri(String storageUri);
+    public abstract String getFileFormat();
 
     /**
-     * [Required] Required and immutable. Open source file format that the table data is stored in.
-     * Currently only PARQUET is supported.
+     * Fully qualified location prefix of the external folder where data is stored.
+     * Starts with "gs://" ends with "/". Does not contain "*".
      *
-     * @param tableFormat tableFormat or {@code null} for none
+     * @return value or {@code null} for none
      */
-    public abstract Builder setTableFormat(String tableFormat);
+    public abstract String getStorageUri();
 
-    public abstract BigLakeConfiguration build();
-  }
+    /**
+     * Open source file format that the table data is stored in. Currently only PARQUET is supported.
+     *
+     * @return value or {@code null} for none
+     */
+    public abstract String getTableFormat();
 
-  com.google.api.services.bigquery.model.BigLakeConfiguration toPb() {
-    com.google.api.services.bigquery.model.BigLakeConfiguration biglakeConfiguration =
-        new com.google.api.services.bigquery.model.BigLakeConfiguration();
-    biglakeConfiguration.setConnectionId(getConnectionId());
-    biglakeConfiguration.setFileFormat(getFileFormat());
-    biglakeConfiguration.setStorageUri(getStorageUri());
-    biglakeConfiguration.setTableFormat(getTableFormat());
+    public static Builder newBuilder() {
+        return new AutoValue_BigLakeConfiguration.Builder();
+    }
 
-    return biglakeConfiguration;
-  }
+    public abstract Builder toBuilder();
 
-  static BigLakeConfiguration fromPb(
-      com.google.api.services.bigquery.model.BigLakeConfiguration biglakeConfigurationPb) {
-    return newBuilder()
-        .setConnectionId(biglakeConfigurationPb.getConnectionId())
-        .setFileFormat(biglakeConfigurationPb.getFileFormat())
-        .setStorageUri(biglakeConfigurationPb.getStorageUri())
-        .setTableFormat(biglakeConfigurationPb.getTableFormat())
-        .build();
-  }
+    @AutoValue.Builder
+    public abstract static class Builder {
+        /**
+         * [Required] Required and immutable. Credential reference for accessing external storage
+         * system. Normalized as project_id.location_id.connection_id.
+         *
+         * @param connectionId connectionId or {@code null} for none
+         */
+        public abstract Builder setConnectionId(String connectionId);
+
+        /**
+         * [Required] Required and immutable. Open source file format that the table data is stored in.
+         * Currently only PARQUET is supported.
+         *
+         * @param fileFormat fileFormat or {@code null} for none
+         */
+        public abstract Builder setFileFormat(String fileFormat);
+
+        /**
+         * [Required] Required and immutable. Fully qualified location prefix of the external folder
+         * where data is stored. Starts with "gs://" and ends with "/". Does not contain "*".
+         *
+         * @param storageUri storageUri or {@code null} for none
+         */
+        public abstract Builder setStorageUri(String storageUri);
+
+        /**
+         * [Required] Required and immutable. Open source file format that the table data is stored in.
+         * Currently only PARQUET is supported.
+         *
+         * @param tableFormat tableFormat or {@code null} for none
+         */
+        public abstract Builder setTableFormat(String tableFormat);
+
+        public abstract BigLakeConfiguration build();
+    }
+
+    com.google.api.services.bigquery.model.BigLakeConfiguration toPb() {
+        com.google.api.services.bigquery.model.BigLakeConfiguration biglakeConfiguration =
+                new com.google.api.services.bigquery.model.BigLakeConfiguration();
+        biglakeConfiguration.setConnectionId(getConnectionId());
+        biglakeConfiguration.setFileFormat(getFileFormat());
+        biglakeConfiguration.setStorageUri(getStorageUri());
+        biglakeConfiguration.setTableFormat(getTableFormat());
+
+        return biglakeConfiguration;
+    }
+
+    static BigLakeConfiguration fromPb(
+            com.google.api.services.bigquery.model.BigLakeConfiguration biglakeConfigurationPb) {
+        return newBuilder()
+                .setConnectionId(biglakeConfigurationPb.getConnectionId())
+                .setFileFormat(biglakeConfigurationPb.getFileFormat())
+                .setStorageUri(biglakeConfigurationPb.getStorageUri())
+                .setTableFormat(biglakeConfigurationPb.getTableFormat())
+                .build();
+    }
 }
