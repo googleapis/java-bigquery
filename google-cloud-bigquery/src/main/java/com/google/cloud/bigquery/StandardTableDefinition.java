@@ -181,7 +181,7 @@ public abstract class StandardTableDefinition extends TableDefinition {
      * Set the configuration of a BigLake managed table. If not set, the table is not a BigLake
      * managed table.
      */
-    public abstract Builder setBiglakeConfiguration(BigLakeConfiguration biglakeConfiguration);
+    public abstract Builder setBigLakeConfiguration(BigLakeConfiguration biglakeConfiguration);
 
     /** Creates a {@code StandardTableDefinition} object. */
     public abstract StandardTableDefinition build();
@@ -311,7 +311,7 @@ public abstract class StandardTableDefinition extends TableDefinition {
    * null}.
    */
   @Nullable
-  public abstract BigLakeConfiguration getBiglakeConfiguration();
+  public abstract BigLakeConfiguration getBigLakeConfiguration();
 
   /** Returns a builder for a BigQuery standard table definition. */
   public static Builder newBuilder() {
@@ -361,8 +361,8 @@ public abstract class StandardTableDefinition extends TableDefinition {
     if (getTableConstraints() != null) {
       tablePb.setTableConstraints(getTableConstraints().toPb());
     }
-    if (getBiglakeConfiguration() != null) {
-      tablePb.setBiglakeConfiguration(getBiglakeConfiguration().toPb());
+    if (getBigLakeConfiguration() != null) {
+      tablePb.setBiglakeConfiguration(getBigLakeConfiguration().toPb());
     }
     return tablePb;
   }
@@ -426,7 +426,7 @@ public abstract class StandardTableDefinition extends TableDefinition {
       builder.setTableConstraints(TableConstraints.fromPb(tablePb.getTableConstraints()));
     }
     if (tablePb.getBiglakeConfiguration() != null) {
-      builder.setBiglakeConfiguration(
+      builder.setBigLakeConfiguration(
           BigLakeConfiguration.fromPb(tablePb.getBiglakeConfiguration()));
     }
 

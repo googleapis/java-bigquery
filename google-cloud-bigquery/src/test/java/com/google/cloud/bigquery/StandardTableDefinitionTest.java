@@ -89,7 +89,7 @@ public class StandardTableDefinitionTest {
           .setSchema(TABLE_SCHEMA)
           .setTimePartitioning(TIME_PARTITIONING)
           .setClustering(CLUSTERING)
-          .setBiglakeConfiguration(BIG_LAKE_CONFIGURATION)
+          .setBigLakeConfiguration(BIG_LAKE_CONFIGURATION)
           .build();
 
   @Test
