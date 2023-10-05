@@ -103,6 +103,7 @@ import com.google.cloud.bigquery.ParquetOptions;
 import com.google.cloud.bigquery.PolicyTags;
 import com.google.cloud.bigquery.PrimaryKey;
 import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.QueryJobConfiguration.JobCreationMode;
 import com.google.cloud.bigquery.QueryParameterValue;
 import com.google.cloud.bigquery.RangePartitioning;
 import com.google.cloud.bigquery.Routine;
@@ -6164,5 +6165,16 @@ public class ITBigQueryTest {
         fail("Already exists error should not be thrown");
       }
     }
+  }
+
+  @Test
+  public void testJobCreationMode() throws InterruptedException {
+    String query = "SELECT 1 as one";
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query)
+            .setJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL)
+            .build();
+    TableResult result = bigquery.query(config);
+    assertNull(result.getJobId());
   }
 }
