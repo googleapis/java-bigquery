@@ -119,7 +119,9 @@ final class QueryRequestInfo {
     if (useQueryCache != null) {
       request.setUseQueryCache(useQueryCache);
     }
-    request.set("jobCreationMode", jobCreationMode.toString());
+    if (jobCreationMode != null) {
+      request.setJobCreationMode(jobCreationMode.toString());
+    }
     return request;
   }
 

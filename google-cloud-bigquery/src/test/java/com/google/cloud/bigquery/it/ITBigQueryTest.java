@@ -103,7 +103,6 @@ import com.google.cloud.bigquery.ParquetOptions;
 import com.google.cloud.bigquery.PolicyTags;
 import com.google.cloud.bigquery.PrimaryKey;
 import com.google.cloud.bigquery.QueryJobConfiguration;
-import com.google.cloud.bigquery.QueryJobConfiguration.JobCreationMode;
 import com.google.cloud.bigquery.QueryParameterValue;
 import com.google.cloud.bigquery.RangePartitioning;
 import com.google.cloud.bigquery.Routine;
@@ -6168,13 +6167,28 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testJobCreationMode() throws InterruptedException {
+  public void testStatelessQueries() throws InterruptedException {
+    // simulate setting the QUERY_PREVIEW_ENABLED environment variable
+    bigquery.getOptions().setQueryPreviewEnabled("TRUE");
+    assertNull(executeSimpleQuery().getJobId());
+
+    // the flag should be case-insensitive
+    bigquery.getOptions().setQueryPreviewEnabled("tRuE");
+    assertNull(executeSimpleQuery().getJobId());
+
+    // any other values won't enable optional job creation mode
+    bigquery.getOptions().setQueryPreviewEnabled("test_value");
+    assertNotNull(executeSimpleQuery().getJobId());
+
+    // reset the flag
+    bigquery.getOptions().setQueryPreviewEnabled(null);
+    assertNotNull(executeSimpleQuery().getJobId());
+  }
+
+  private TableResult executeSimpleQuery() throws InterruptedException {
     String query = "SELECT 1 as one";
-    QueryJobConfiguration config =
-        QueryJobConfiguration.newBuilder(query)
-            .setJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL)
-            .build();
+    QueryJobConfiguration config = QueryJobConfiguration.newBuilder(query).build();
     TableResult result = bigquery.query(config);
-    assertNull(result.getJobId());
+    return result;
   }
 }

@@ -95,9 +95,18 @@ public final class QueryJobConfiguration extends JobConfiguration {
     BATCH
   }
 
-  public enum JobCreationMode {
+  /** Job Creation Mode provides different options on job creation. */
+  enum JobCreationMode {
+    /** Unspecified JobCreationMode, defaults to JOB_CREATION_REQUIRED. */
     JOB_CREATION_MODE_UNSPECIFIED,
+    /** Default. Job creation is always required. */
     JOB_CREATION_REQUIRED,
+    /**
+     * Job creation is optional. Returning immediate results is prioritized. BigQuery will
+     * automatically determine if a Job needs to be created. The conditions under which BigQuery can
+     * decide to not create a Job are subject to change. If Job creation is required,
+     * JOB_CREATION_REQUIRED mode should be used, which is the default.
+     */
     JOB_CREATION_OPTIONAL,
   }
 
@@ -275,10 +284,6 @@ public final class QueryJobConfiguration extends JobConfiguration {
             Lists.transform(
                 queryConfigurationPb.getConnectionProperties(),
                 ConnectionProperty.FROM_PB_FUNCTION);
-      }
-      if (queryConfigurationPb.get("jobCreationMode") != null) {
-        jobCreationMode =
-            JobCreationMode.valueOf((String) queryConfigurationPb.get("jobCreationMode"));
       }
     }
 
@@ -672,7 +677,7 @@ public final class QueryJobConfiguration extends JobConfiguration {
      * Provides different options on job creation. If not specified the job creation mode is assumed
      * to be {@link JobCreationMode#JOB_CREATION_REQUIRED}.
      */
-    public Builder setJobCreationMode(JobCreationMode jobCreationMode) {
+    Builder setJobCreationMode(JobCreationMode jobCreationMode) {
       this.jobCreationMode = jobCreationMode;
       return this;
     }
@@ -721,10 +726,7 @@ public final class QueryJobConfiguration extends JobConfiguration {
     this.rangePartitioning = builder.rangePartitioning;
     this.connectionProperties = builder.connectionProperties;
     this.maxResults = builder.maxResults;
-    this.jobCreationMode =
-        builder.jobCreationMode != null
-            ? builder.jobCreationMode
-            : JobCreationMode.JOB_CREATION_MODE_UNSPECIFIED;
+    this.jobCreationMode = builder.jobCreationMode;
   }
 
   /**
@@ -937,7 +939,7 @@ public final class QueryJobConfiguration extends JobConfiguration {
   }
 
   /** Returns the job creation mode. */
-  public JobCreationMode getJobCreationMode() {
+  JobCreationMode getJobCreationMode() {
     return jobCreationMode;
   }
 
@@ -1014,8 +1016,7 @@ public final class QueryJobConfiguration extends JobConfiguration {
         jobTimeoutMs,
         labels,
         rangePartitioning,
-        connectionProperties,
-        jobCreationMode);
+        connectionProperties);
   }
 
   @Override
