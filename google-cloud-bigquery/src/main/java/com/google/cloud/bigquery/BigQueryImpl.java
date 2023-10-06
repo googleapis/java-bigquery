@@ -1426,14 +1426,6 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       throws InterruptedException, JobException {
     Job.checkNotDryRun(configuration, "query");
 
-    if (getOptions().isQueryPreviewEnabled()) {
-      configuration =
-          configuration
-              .toBuilder()
-              .setJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL)
-              .build();
-    }
-
     // If all parameters passed in configuration are supported by the query() method on the backend,
     // put on fast path
     QueryRequestInfo requestInfo = new QueryRequestInfo(configuration);
