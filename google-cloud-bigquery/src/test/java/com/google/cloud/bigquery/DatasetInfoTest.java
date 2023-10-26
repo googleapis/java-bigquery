@@ -59,6 +59,7 @@ public class DatasetInfoTest {
   private static final EncryptionConfiguration DATASET_ENCRYPTION_CONFIGURATION =
       EncryptionConfiguration.newBuilder().setKmsKeyName("KMS_KEY_1").build();
   private static final String STORAGE_BILLING_MODEL = "LOGICAL";
+  private static final Long MAX_TIME_TRAVEL_HOURS = 48L;
 
   private static final ExternalDatasetReference EXTERNAL_DATASET_REFERENCE =
       ExternalDatasetReference.newBuilder()
@@ -81,6 +82,7 @@ public class DatasetInfoTest {
           .setDefaultEncryptionConfiguration(DATASET_ENCRYPTION_CONFIGURATION)
           .setDefaultPartitionExpirationMs(DEFAULT_PARTITION__EXPIRATION)
           .setStorageBillingModel(STORAGE_BILLING_MODEL)
+          .setMaxTimeTravelHours(MAX_TIME_TRAVEL_HOURS)
           .build();
   private static final DatasetInfo DATASET_INFO_COMPLETE =
       DATASET_INFO
@@ -173,6 +175,7 @@ public class DatasetInfoTest {
         EXTERNAL_DATASET_REFERENCE,
         DATASET_INFO_COMPLETE_WITH_EXTERNAL_DATASET_REFERENCE.getExternalDatasetReference());
     assertEquals(STORAGE_BILLING_MODEL, DATASET_INFO_COMPLETE.getStorageBillingModel());
+    assertEquals(MAX_TIME_TRAVEL_HOURS, DATASET_INFO_COMPLETE.getMaxTimeTravelHours());
   }
 
   @Test
@@ -194,6 +197,7 @@ public class DatasetInfoTest {
     assertTrue(datasetInfo.getLabels().isEmpty());
     assertNull(datasetInfo.getExternalDatasetReference());
     assertNull(datasetInfo.getStorageBillingModel());
+    assertNull(datasetInfo.getMaxTimeTravelHours());
 
     datasetInfo = DatasetInfo.of(DATASET_ID);
     assertEquals(DATASET_ID, datasetInfo.getDatasetId());
@@ -212,6 +216,7 @@ public class DatasetInfoTest {
     assertTrue(datasetInfo.getLabels().isEmpty());
     assertNull(datasetInfo.getExternalDatasetReference());
     assertNull(datasetInfo.getStorageBillingModel());
+    assertNull(datasetInfo.getMaxTimeTravelHours());
   }
 
   @Test
@@ -249,5 +254,6 @@ public class DatasetInfoTest {
         expected.getDefaultPartitionExpirationMs(), value.getDefaultPartitionExpirationMs());
     assertEquals(expected.getExternalDatasetReference(), value.getExternalDatasetReference());
     assertEquals(expected.getStorageBillingModel(), value.getStorageBillingModel());
+    assertEquals(expected.getMaxTimeTravelHours(), value.getMaxTimeTravelHours());
   }
 }

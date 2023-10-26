@@ -203,6 +203,7 @@ public class ITBigQueryTest {
   private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
   private static final String RANDOM_ID = UUID.randomUUID().toString().substring(0, 8);
   private static final String STORAGE_BILLING_MODEL = "LOGICAL";
+  private static final Long MAX_TIME_TRAVEL_HOURS = 48L;
   private static final String CLOUD_SAMPLES_DATA =
       Optional.fromNullable(System.getenv("CLOUD_SAMPLES_DATA_BUCKET")).or("cloud-samples-data");
   private static final Map<String, String> LABELS =
@@ -967,6 +968,7 @@ public class ITBigQueryTest {
     assertNull(dataset.getLocation());
     assertNull(dataset.getSelfLink());
     assertNull(dataset.getStorageBillingModel());
+    assertNull(dataset.getMaxTimeTravelHours());
   }
 
   @Test
@@ -983,6 +985,7 @@ public class ITBigQueryTest {
     assertThat(dataset.getDescription()).isEqualTo("Some Description");
     assertThat(dataset.getLabels()).containsExactly("a", "b");
     assertThat(dataset.getStorageBillingModel()).isNull();
+    assertThat(dataset.getMaxTimeTravelHours()).isNull();
 
     Map<String, String> updateLabels = new HashMap<>();
     updateLabels.put("x", "y");
@@ -994,10 +997,12 @@ public class ITBigQueryTest {
                 .setDescription("Updated Description")
                 .setLabels(updateLabels)
                 .setStorageBillingModel("LOGICAL")
+                .setMaxTimeTravelHours(48L)
                 .build());
     assertThat(updatedDataset.getDescription()).isEqualTo("Updated Description");
     assertThat(updatedDataset.getLabels()).containsExactly("x", "y");
     assertThat(updatedDataset.getStorageBillingModel()).isEqualTo("LOGICAL");
+    assertThat(updatedDataset.getMaxTimeTravelHours()).isEqualTo(48L);
 
     updatedDataset = bigquery.update(updatedDataset.toBuilder().setLabels(null).build());
     assertThat(updatedDataset.getLabels()).isEmpty();
@@ -1028,6 +1033,7 @@ public class ITBigQueryTest {
     assertNull(updatedDataset.getLocation());
     assertNull(updatedDataset.getSelfLink());
     assertNull(updatedDataset.getStorageBillingModel());
+    assertNull(updatedDataset.getMaxTimeTravelHours());
     assertTrue(dataset.delete());
   }
 
@@ -1304,6 +1310,23 @@ public class ITBigQueryTest {
     assertEquals(STORAGE_BILLING_MODEL, dataset.getStorageBillingModel());
 
     RemoteBigQueryHelper.forceDelete(bigquery, billingModelDataset);
+  }
+
+  @Test
+  public void testCreateDatasetWithSpecifiedMaxTimeTravelHours() {
+    String timeTravelDataset = RemoteBigQueryHelper.generateDatasetName();
+    DatasetInfo info =
+        DatasetInfo.newBuilder(timeTravelDataset)
+            .setDescription(DESCRIPTION)
+            .setMaxTimeTravelHours(MAX_TIME_TRAVEL_HOURS)
+            .setLabels(LABELS)
+            .build();
+    bigquery.create(info);
+
+    Dataset dataset = bigquery.getDataset(DatasetId.of(timeTravelDataset));
+    assertEquals(MAX_TIME_TRAVEL_HOURS, dataset.getMaxTimeTravelHours());
+
+    RemoteBigQueryHelper.forceDelete(bigquery, timeTravelDataset);
   }
 
   @Test
