@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.34.2](https://github.com/googleapis/java-bigquery/compare/v2.34.1...v2.34.2) (2023-11-07)
+
+
+### Dependencies
+
+* Update dependency com.google.api.grpc:proto-google-cloud-bigqueryconnection-v1 to v2.32.0 ([#2989](https://github.com/googleapis/java-bigquery/issues/2989)) ([47a61a7](https://github.com/googleapis/java-bigquery/commit/47a61a7c2cb5fed88937670bca7b15e38529dfaf))
+* Update dependency com.google.cloud:google-cloud-datacatalog-bom to v1.36.0 ([#2990](https://github.com/googleapis/java-bigquery/issues/2990)) ([81c0727](https://github.com/googleapis/java-bigquery/commit/81c07275809eadc4e7146bd080475e4775102339))
+
+## [2.34.1](https://github.com/googleapis/java-bigquery/compare/v2.34.0...v2.34.1) (2023-11-06)
+
+
+### Dependencies
+
+* Update dependency com.google.cloud:google-cloud-shared-dependencies to v3.19.0 ([#2986](https://github.com/googleapis/java-bigquery/issues/2986)) ([0d400da](https://github.com/googleapis/java-bigquery/commit/0d400da7f73ee44ab5053ef51b1d45a9d29f0ebb))
+* Update dependency org.checkerframework:checker-compat-qual to v2.5.6 ([#2982](https://github.com/googleapis/java-bigquery/issues/2982)) ([c137f1f](https://github.com/googleapis/java-bigquery/commit/c137f1f17f192f4f0a3c4d33e1d27677dbf4556b))
+* Update dependency org.junit.vintage:junit-vintage-engine to v5.10.1 ([#2984](https://github.com/googleapis/java-bigquery/issues/2984)) ([a64b91c](https://github.com/googleapis/java-bigquery/commit/a64b91c03b0291452d53cc407d9c841b3567fe23))
+* Update github/codeql-action action to v2.22.5 ([#2975](https://github.com/googleapis/java-bigquery/issues/2975)) ([0b88846](https://github.com/googleapis/java-bigquery/commit/0b8884634f8bd21615a9263bb1344cb162adfa47))
+
 ## [2.34.0](https://github.com/googleapis/java-bigquery/compare/v2.33.2...v2.34.0) (2023-10-26)
 
 
