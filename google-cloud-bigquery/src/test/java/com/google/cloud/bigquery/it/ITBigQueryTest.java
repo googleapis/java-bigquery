@@ -87,6 +87,7 @@ import com.google.cloud.bigquery.JobConfiguration;
 import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.JobStatistics;
+import com.google.cloud.bigquery.JobStatistics.ExtractStatistics;
 import com.google.cloud.bigquery.JobStatistics.LoadStatistics;
 import com.google.cloud.bigquery.JobStatistics.QueryStatistics;
 import com.google.cloud.bigquery.JobStatistics.QueryStatistics.StatementType;
@@ -202,6 +203,7 @@ public class ITBigQueryTest {
   private static final String ROUTINE_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
   private static final String RANDOM_ID = UUID.randomUUID().toString().substring(0, 8);
+  private static final String STORAGE_BILLING_MODEL = "LOGICAL";
   private static final String CLOUD_SAMPLES_DATA =
       Optional.fromNullable(System.getenv("CLOUD_SAMPLES_DATA_BUCKET")).or("cloud-samples-data");
   private static final Map<String, String> LABELS =
@@ -965,6 +967,7 @@ public class ITBigQueryTest {
     assertNull(dataset.getLastModified());
     assertNull(dataset.getLocation());
     assertNull(dataset.getSelfLink());
+    assertNull(dataset.getStorageBillingModel());
   }
 
   @Test
@@ -980,6 +983,7 @@ public class ITBigQueryTest {
     assertThat(dataset.getDatasetId().getDataset()).isEqualTo(OTHER_DATASET);
     assertThat(dataset.getDescription()).isEqualTo("Some Description");
     assertThat(dataset.getLabels()).containsExactly("a", "b");
+    assertThat(dataset.getStorageBillingModel()).isNull();
 
     Map<String, String> updateLabels = new HashMap<>();
     updateLabels.put("x", "y");
@@ -990,9 +994,11 @@ public class ITBigQueryTest {
                 .toBuilder()
                 .setDescription("Updated Description")
                 .setLabels(updateLabels)
+                .setStorageBillingModel("LOGICAL")
                 .build());
     assertThat(updatedDataset.getDescription()).isEqualTo("Updated Description");
     assertThat(updatedDataset.getLabels()).containsExactly("x", "y");
+    assertThat(updatedDataset.getStorageBillingModel()).isEqualTo("LOGICAL");
 
     updatedDataset = bigquery.update(updatedDataset.toBuilder().setLabels(null).build());
     assertThat(updatedDataset.getLabels()).isEmpty();
@@ -1022,6 +1028,7 @@ public class ITBigQueryTest {
     assertNull(updatedDataset.getLastModified());
     assertNull(updatedDataset.getLocation());
     assertNull(updatedDataset.getSelfLink());
+    assertNull(updatedDataset.getStorageBillingModel());
     assertTrue(dataset.delete());
   }
 
@@ -1281,6 +1288,23 @@ public class ITBigQueryTest {
     Table remoteTable = bigquery.getTable(DATASET, tableName);
     assertEquals(schema, remoteTable.<StandardTableDefinition>getDefinition().getSchema());
     bigquery.delete(tableId);
+  }
+
+  @Test
+  public void testCreateDatasetWithSpecifiedStorageBillingModel() {
+    String billingModelDataset = RemoteBigQueryHelper.generateDatasetName();
+    DatasetInfo info =
+        DatasetInfo.newBuilder(billingModelDataset)
+            .setDescription(DESCRIPTION)
+            .setStorageBillingModel(STORAGE_BILLING_MODEL)
+            .setLabels(LABELS)
+            .build();
+    bigquery.create(info);
+
+    Dataset dataset = bigquery.getDataset(DatasetId.of(billingModelDataset));
+    assertEquals(STORAGE_BILLING_MODEL, dataset.getStorageBillingModel());
+
+    RemoteBigQueryHelper.forceDelete(bigquery, billingModelDataset);
   }
 
   @Test
@@ -5281,6 +5305,8 @@ public class ITBigQueryTest {
     assertNull(remoteLoadJob.getStatus().getError());
     LoadJobConfiguration loadJobConfiguration = remoteLoadJob.getConfiguration();
     assertEquals(labels, loadJobConfiguration.getLabels());
+    LoadStatistics loadStatistics = remoteLoadJob.getStatistics();
+    assertNotNull(loadStatistics);
 
     ExtractJobConfiguration extractConfiguration =
         ExtractJobConfiguration.newBuilder(destinationTable, "gs://" + BUCKET + "/" + EXTRACT_FILE)
@@ -5289,6 +5315,12 @@ public class ITBigQueryTest {
     Job remoteExtractJob = bigquery.create(JobInfo.of(extractConfiguration));
     remoteExtractJob = remoteExtractJob.waitFor();
     assertNull(remoteExtractJob.getStatus().getError());
+
+    ExtractStatistics extractStatistics = remoteExtractJob.getStatistics();
+    assertNotNull(extractStatistics);
+    assertEquals(1L, extractStatistics.getDestinationUriFileCounts().size());
+    assertEquals(
+        loadStatistics.getOutputBytes().longValue(), extractStatistics.getInputBytes().longValue());
 
     String extractedCsv =
         new String(storage.readAllBytes(BUCKET, EXTRACT_FILE), StandardCharsets.UTF_8);
@@ -6164,5 +6196,31 @@ public class ITBigQueryTest {
         fail("Already exists error should not be thrown");
       }
     }
+  }
+
+  @Test
+  public void testStatelessQueries() throws InterruptedException {
+    // simulate setting the QUERY_PREVIEW_ENABLED environment variable
+    bigquery.getOptions().setQueryPreviewEnabled("TRUE");
+    assertNull(executeSimpleQuery().getJobId());
+
+    // the flag should be case-insensitive
+    bigquery.getOptions().setQueryPreviewEnabled("tRuE");
+    assertNull(executeSimpleQuery().getJobId());
+
+    // any other values won't enable optional job creation mode
+    bigquery.getOptions().setQueryPreviewEnabled("test_value");
+    assertNotNull(executeSimpleQuery().getJobId());
+
+    // reset the flag
+    bigquery.getOptions().setQueryPreviewEnabled(null);
+    assertNotNull(executeSimpleQuery().getJobId());
+  }
+
+  private TableResult executeSimpleQuery() throws InterruptedException {
+    String query = "SELECT 1 as one";
+    QueryJobConfiguration config = QueryJobConfiguration.newBuilder(query).build();
+    TableResult result = bigquery.query(config);
+    return result;
   }
 }
