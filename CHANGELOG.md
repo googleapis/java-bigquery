@@ -2193,8 +2193,8 @@
 * **samples:** add auth user flow and query ([#478](https://www.github.com/googleapis/java-bigquery/issues/478)) ([65dffac](https://www.github.com/googleapis/java-bigquery/commit/65dffac6af316d0baca5cfbd2b3dd3fae323549d))
 * **samples:** add create view ddl ([#558](https://www.github.com/googleapis/java-bigquery/issues/558)) ([9253218](https://www.github.com/googleapis/java-bigquery/commit/925321881cde3edd187a9a442a26eb508535744a))
 * **samples:** add extract compressed table ([#538](https://www.github.com/googleapis/java-bigquery/issues/538)) ([3f129a6](https://www.github.com/googleapis/java-bigquery/commit/3f129a6a4fff2162d1aef5ba29b4fa6246793d97))
-* **samples:** add get dataset labels ([#539](https://www.github.com/googleapis/java-bigquery/issues/539)) ([563157c](https://www.github.com/googleapis/java-bigquery/commit/563157cc40727cb7cb9aed16dfbb956a668ead51))
-* **samples:** add get table labels ([#540](https://www.github.com/googleapis/java-bigquery/issues/540)) ([a6d9491](https://www.github.com/googleapis/java-bigquery/commit/a6d94913f74a6b4d29e9314a0652a9e3fa30aed9))
+* **samples:** add get dataset annotations ([#539](https://www.github.com/googleapis/java-bigquery/issues/539)) ([563157c](https://www.github.com/googleapis/java-bigquery/commit/563157cc40727cb7cb9aed16dfbb956a668ead51))
+* **samples:** add get table annotations ([#540](https://www.github.com/googleapis/java-bigquery/issues/540)) ([a6d9491](https://www.github.com/googleapis/java-bigquery/commit/a6d94913f74a6b4d29e9314a0652a9e3fa30aed9))
 * **samples:** add grant view access ([#563](https://www.github.com/googleapis/java-bigquery/issues/563)) ([0c092e0](https://www.github.com/googleapis/java-bigquery/commit/0c092e06cdf47882a38901e8e4814afa87c7eba4))
 * **samples:** add insert rows without rowids in a table ([#573](https://www.github.com/googleapis/java-bigquery/issues/573)) ([b07dee3](https://www.github.com/googleapis/java-bigquery/commit/b07dee31e4b6fec8bf05f23ed52006829dbdbc4a))
 * **samples:** add list dataset by label ([#555](https://www.github.com/googleapis/java-bigquery/issues/555)) ([a0d7bea](https://www.github.com/googleapis/java-bigquery/commit/a0d7beab025a2895f0efc1e9888594e386a0a1b3))
@@ -2355,7 +2355,7 @@
 ### Features
 
 * add extract model for extractjobconfiguration ([#227](https://www.github.com/googleapis/java-bigquery/issues/227)) ([9e8cd76](https://www.github.com/googleapis/java-bigquery/commit/9e8cd76759e584d743a1d5c310d8cd7299b3a39d))
-* add labels for writechannelconfiguration ([#347](https://www.github.com/googleapis/java-bigquery/issues/347)) ([7dbd0df](https://www.github.com/googleapis/java-bigquery/commit/7dbd0df6e46a0760c28925ea65eed9c306c22f21))
+* add annotations for writechannelconfiguration ([#347](https://www.github.com/googleapis/java-bigquery/issues/347)) ([7dbd0df](https://www.github.com/googleapis/java-bigquery/commit/7dbd0df6e46a0760c28925ea65eed9c306c22f21))
 
 
 ### Dependencies

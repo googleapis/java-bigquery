@@ -77,7 +77,7 @@ public class TableInfo implements Serializable {
   private final BigInteger numRows;
   private final TableDefinition definition;
   private final EncryptionConfiguration encryptionConfiguration;
-  private final Labels labels;
+  private final Annotations labels;
   private final Boolean requirePartitionFilter;
   private final String defaultCollation;
 
@@ -191,7 +191,7 @@ public class TableInfo implements Serializable {
     private BigInteger numRows;
     private TableDefinition definition;
     private EncryptionConfiguration encryptionConfiguration;
-    private Labels labels = Labels.ZERO;
+    private Annotations labels = Annotations.ZERO;
     private Boolean requirePartitionFilter;
     private String defaultCollation;
     private CloneDefinition cloneDefinition;
@@ -255,7 +255,7 @@ public class TableInfo implements Serializable {
         this.encryptionConfiguration =
             new EncryptionConfiguration.Builder(tablePb.getEncryptionConfiguration()).build();
       }
-      this.labels = Labels.fromPb(tablePb.getLabels());
+      this.labels = Annotations.fromPb(tablePb.getLabels());
       this.requirePartitionFilter = tablePb.getRequirePartitionFilter();
       this.defaultCollation = tablePb.getDefaultCollation();
       if (tablePb.getCloneDefinition() != null) {
@@ -394,7 +394,7 @@ public class TableInfo implements Serializable {
 
     @Override
     public Builder setLabels(Map<String, String> labels) {
-      this.labels = Labels.fromUser(labels);
+      this.labels = Annotations.fromUser(labels);
       return this;
     }
 
