@@ -2355,7 +2355,7 @@
 ### Features
 
 * add extract model for extractjobconfiguration ([#227](https://www.github.com/googleapis/java-bigquery/issues/227)) ([9e8cd76](https://www.github.com/googleapis/java-bigquery/commit/9e8cd76759e584d743a1d5c310d8cd7299b3a39d))
-* add annotations for writechannelconfiguration ([#347](https://www.github.com/googleapis/java-bigquery/issues/347)) ([7dbd0df](https://www.github.com/googleapis/java-bigquery/commit/7dbd0df6e46a0760c28925ea65eed9c306c22f21))
+* add labels for writechannelconfiguration ([#347](https://www.github.com/googleapis/java-bigquery/issues/347)) ([7dbd0df](https://www.github.com/googleapis/java-bigquery/commit/7dbd0df6e46a0760c28925ea65eed9c306c22f21))
 
 
 ### Dependencies
