@@ -64,7 +64,6 @@ public final class Field implements Serializable {
   private final Long precision;
   private final String defaultValueExpression;
   private final String collation;
-
   private final FieldElementType rangeElementType;
 
   /**
@@ -91,7 +90,6 @@ public final class Field implements Serializable {
     private Long precision;
     private String defaultValueExpression;
     private String collation;
-
     private FieldElementType rangeElementType;
 
     private Builder() {}
