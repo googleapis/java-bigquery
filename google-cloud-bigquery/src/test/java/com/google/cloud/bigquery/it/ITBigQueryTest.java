@@ -6227,27 +6227,32 @@ public class ITBigQueryTest {
 
   @Test
   public void testStatelessQueries() throws InterruptedException {
+    // Create local BigQuery to not contaminate global test parameters.
+    RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
+    BigQuery bigQuery =
+        bigqueryHelper.getOptions().toBuilder().setLocation("US").build().getService();
+
     // simulate setting the QUERY_PREVIEW_ENABLED environment variable
-    bigquery.getOptions().setQueryPreviewEnabled("TRUE");
-    assertNull(executeSimpleQuery().getJobId());
+    bigQuery.getOptions().setQueryPreviewEnabled("TRUE");
+    assertNull(executeSimpleQuery(bigQuery).getJobId());
 
     // the flag should be case-insensitive
-    bigquery.getOptions().setQueryPreviewEnabled("tRuE");
-    assertNull(executeSimpleQuery().getJobId());
+    bigQuery.getOptions().setQueryPreviewEnabled("tRuE");
+    assertNull(executeSimpleQuery(bigQuery).getJobId());
 
     // any other values won't enable optional job creation mode
-    bigquery.getOptions().setQueryPreviewEnabled("test_value");
-    assertNotNull(executeSimpleQuery().getJobId());
+    bigQuery.getOptions().setQueryPreviewEnabled("test_value");
+    assertNotNull(executeSimpleQuery(bigQuery).getJobId());
 
     // reset the flag
-    bigquery.getOptions().setQueryPreviewEnabled(null);
-    assertNotNull(executeSimpleQuery().getJobId());
+    bigQuery.getOptions().setQueryPreviewEnabled(null);
+    assertNotNull(executeSimpleQuery(bigQuery).getJobId());
   }
 
-  private TableResult executeSimpleQuery() throws InterruptedException {
+  private TableResult executeSimpleQuery(BigQuery bigQuery) throws InterruptedException {
     String query = "SELECT 1 as one";
     QueryJobConfiguration config = QueryJobConfiguration.newBuilder(query).build();
-    TableResult result = bigquery.query(config);
+    TableResult result = bigQuery.query(config);
     return result;
   }
 }
