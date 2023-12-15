@@ -1339,10 +1339,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     if (requestInfo.isFastQuerySupported(null)) {
       String projectId = getOptions().getProjectId();
       QueryRequest content = requestInfo.toPb();
-      // if (getOptions().getLocation() != null) {
-      //   content.setLocation(getOptions().getLocation());
-      // }
-      content.setLocation("US");
+      if (getOptions().getLocation() != null) {
+        content.setLocation(getOptions().getLocation());
+      }
       return queryRpc(projectId, content, options);
     }
     // Otherwise, fall back to the existing create query job logic
