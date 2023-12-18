@@ -6229,8 +6229,7 @@ public class ITBigQueryTest {
   public void testStatelessQueries() throws InterruptedException {
     // Create local BigQuery to not contaminate global test parameters.
     RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
-    BigQuery bigQuery =
-        bigqueryHelper.getOptions().toBuilder().setLocation("US").build().getService();
+    BigQuery bigQuery = bigqueryHelper.getOptions().getService();
 
     // simulate setting the QUERY_PREVIEW_ENABLED environment variable
     bigQuery.getOptions().setQueryPreviewEnabled("TRUE");
