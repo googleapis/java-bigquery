@@ -44,7 +44,7 @@ public class SimpleQuery {
       TableResult result = bigquery.query(queryConfig);
 
       // Print the results.
-      result.iterateAll().forEach(rows -> rows.forEach(row -> System.out.println(row.getValue())));
+      result.iterateAll().forEach(row -> row.forEach(column -> System.out.println(column.getValue())));
 
       System.out.println("Query ran successfully");
     } catch (BigQueryException | InterruptedException e) {
