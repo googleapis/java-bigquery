@@ -100,7 +100,7 @@ public final class LegacySQLTypeName extends StringEnumValue {
   public static final LegacySQLTypeName INTERVAL =
       type.createAndRegister("INTERVAL").setStandardType(StandardSQLTypeName.INTERVAL);
 
-  /** Represents  a contiguous range of values. */
+  /** Represents a contiguous range of values. */
   public static final LegacySQLTypeName RANGE =
       type.createAndRegister("RANGE").setStandardType(StandardSQLTypeName.RANGE);
 
