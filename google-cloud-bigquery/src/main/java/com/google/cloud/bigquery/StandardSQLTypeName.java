@@ -61,6 +61,6 @@ public enum StandardSQLTypeName {
   JSON,
   /** Represents duration or amount of time. */
   INTERVAL,
-  /** Represents represents a contiguous range of values. */
+  /** Represents a contiguous range of values. */
   RANGE
 }
