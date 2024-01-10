@@ -17,6 +17,7 @@
 package com.example.bigquery;
 
 // [START bigquery_query]
+
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
@@ -27,8 +28,8 @@ public class SimpleQuery {
 
   public static void runSimpleQuery() {
     // TODO(developer): Replace this query before running the sample.
-    String query = "SELECT corpus, count(*) as corpus_count " + 
-      "FROM `bigquery-public-data.samples.shakespeare` GROUP BY corpus;";
+    String query = "SELECT corpus, count(*) as corpus_count "
+        + "FROM `bigquery-public-data.samples.shakespeare` GROUP BY corpus;";
     simpleQuery(query);
   }
 
@@ -46,11 +47,11 @@ public class SimpleQuery {
 
       // Print the results.
       result.iterateAll().forEach(
-        row -> {
-          System.out.print("corpus:" + row.get("corpus").getStringValue());
-          System.out.print(", count:" + row.get("corpus_count").getLongValue());
-          System.out.println();
-        });
+          row -> {
+            System.out.print("corpus:" + row.get("corpus").getStringValue());
+            System.out.print(", count:" + row.get("corpus_count").getLongValue());
+            System.out.println();
+          });
 
       System.out.println("Query ran successfully");
     } catch (BigQueryException | InterruptedException e) {
