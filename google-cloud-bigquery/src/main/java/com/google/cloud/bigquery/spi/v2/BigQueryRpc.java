@@ -17,29 +17,36 @@
 package com.google.cloud.bigquery.spi.v2;
 
 import com.google.api.core.InternalExtensionOnly;
+import com.google.api.services.bigquery.Bigquery.Jobs.Query;
 import com.google.api.services.bigquery.model.Dataset;
 import com.google.api.services.bigquery.model.GetQueryResultsResponse;
 import com.google.api.services.bigquery.model.Job;
 import com.google.api.services.bigquery.model.Model;
+import com.google.api.services.bigquery.model.Policy;
+import com.google.api.services.bigquery.model.QueryRequest;
+import com.google.api.services.bigquery.model.QueryResponse;
 import com.google.api.services.bigquery.model.Routine;
 import com.google.api.services.bigquery.model.Table;
 import com.google.api.services.bigquery.model.TableDataInsertAllRequest;
 import com.google.api.services.bigquery.model.TableDataInsertAllResponse;
 import com.google.api.services.bigquery.model.TableDataList;
+import com.google.api.services.bigquery.model.TestIamPermissionsResponse;
 import com.google.cloud.ServiceRpc;
 import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.BigQueryException;
+import java.util.List;
 import java.util.Map;
 
 @InternalExtensionOnly
 public interface BigQueryRpc extends ServiceRpc {
 
-  // These options are part of the Google Cloud BigQuery query parameters
+  // These options are part of the Google Cloud BigQuery query parameters.
   enum Option {
     FIELDS("fields"),
     DELETE_CONTENTS("deleteContents"),
     ALL_DATASETS("all"),
     ALL_USERS("allUsers"),
+    AUTODETECT_SCHEMA("autodetectSchema"),
     LABEL_FILTER("filter"),
     MIN_CREATION_TIME("minCreationTime"),
     MAX_CREATION_TIME("maxCreationTime"),
@@ -48,7 +55,9 @@ public interface BigQueryRpc extends ServiceRpc {
     PARENT_JOB_ID("parentJobId"),
     START_INDEX("startIndex"),
     STATE_FILTER("stateFilter"),
-    TIMEOUT("timeoutMs");
+    TIMEOUT("timeoutMs"),
+    REQUESTED_POLICY_VERSION("requestedPolicyVersion"),
+    TABLE_METADATA_VIEW("view");
 
     private final String value;
 
@@ -114,6 +123,13 @@ public interface BigQueryRpc extends ServiceRpc {
    * @throws BigQueryException upon failure
    */
   Job create(Job job, Map<Option, ?> options);
+
+  /**
+   * Creates a new query job.
+   *
+   * @throws BigQueryException upon failure
+   */
+  Job createJobForQuery(Job job);
 
   /**
    * Delete the requested dataset.
@@ -240,11 +256,26 @@ public interface BigQueryRpc extends ServiceRpc {
       String projectId, String datasetId, String tableId, Map<Option, ?> options);
 
   /**
+   * Lists the table's rows with a limit on how many rows of data to pre-fetch.
+   *
+   * @throws BigQueryException upon failure
+   */
+  TableDataList listTableDataWithRowLimit(
+      String projectId, String datasetId, String tableId, Integer rowLimit, String pageToken);
+
+  /**
    * Returns the requested job or {@code null} if not found.
    *
    * @throws BigQueryException upon failure
    */
   Job getJob(String projectId, String jobId, String location, Map<Option, ?> options);
+
+  /**
+   * Returns the requested query job or {@code null} if not found.
+   *
+   * @throws BigQueryException upon failure
+   */
+  Job getQueryJob(String projectId, String jobId, String location);
 
   /**
    * Lists the project's jobs.
@@ -264,12 +295,44 @@ public interface BigQueryRpc extends ServiceRpc {
   boolean cancel(String projectId, String jobId, String location);
 
   /**
+   * Sends a job delete request.
+   *
+   * @return {@code true} if delete was successful, {@code false} if the job was not found
+   * @throws BigQueryException upon failure
+   */
+  boolean deleteJob(String projectId, String jobName, String location);
+
+  /**
    * Returns results of the query associated with the provided job.
    *
    * @throws BigQueryException upon failure
    */
   GetQueryResultsResponse getQueryResults(
       String projectId, String jobId, String location, Map<Option, ?> options);
+
+  /**
+   * Returns results of the query with a limit on how many rows of data to pre-fetch associated with
+   * the provided job.
+   *
+   * @throws BigQueryException upon failure
+   */
+  GetQueryResultsResponse getQueryResultsWithRowLimit(
+      String projectId, String jobId, String location, Integer preFetchedRowLimit, Long timeoutMs);
+
+  /**
+   * Runs a BigQuery SQL query synchronously and returns query results if the query completes within
+   * a specified timeout.
+   *
+   * <p>Create a request for the method "jobs.query".
+   *
+   * <p>This request holds the parameters needed by the bigquery server. After setting any optional
+   * parameters, call the {@link Query#execute()} method to invoke the remote operation.
+   *
+   * @param projectId Project ID of the project billed for the query
+   * @param content the {@link com.google.api.services.bigquery.model.QueryRequest}
+   * @return the request
+   */
+  QueryResponse queryRpc(String projectId, QueryRequest content);
 
   /**
    * Opens a resumable upload session to load data into a BigQuery table and returns an upload URI.
@@ -300,4 +363,27 @@ public interface BigQueryRpc extends ServiceRpc {
       long destOffset,
       int length,
       boolean last);
+
+  /**
+   * Returns the IAM Policy for the specified resource, using Policy V1.
+   *
+   * @throws BigQueryException upon failure
+   */
+  Policy getIamPolicy(String resourceId, Map<Option, ?> options);
+
+  /**
+   * Updates the IAM policy for the specified resource.
+   *
+   * @throws BigQueryException upon failure
+   */
+  Policy setIamPolicy(String resourceId, Policy policy, Map<Option, ?> options);
+
+  /**
+   * Tests whether the caller holds the provided permissions for the specified resource. Returns the
+   * subset of permissions the caller actually holds.
+   *
+   * @throws BigQueryException upon failure
+   */
+  TestIamPermissionsResponse testIamPermissions(
+      String resourceId, List<String> permissions, Map<Option, ?> options);
 }

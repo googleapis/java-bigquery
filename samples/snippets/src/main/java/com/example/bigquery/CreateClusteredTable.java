@@ -32,7 +32,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 
 public class CreateClusteredTable {
-  public static void runCreateClusteredTable() {
+  public static void main(String[] args) {
     // TODO(developer): Replace these variables before running the sample.
     String datasetName = "MY_DATASET_NAME";
     String tableName = "MY_TABLE_NAME";
@@ -55,7 +55,7 @@ public class CreateClusteredTable {
 
       TimePartitioning partitioning = TimePartitioning.of(TimePartitioning.Type.DAY);
       // Clustering fields will be consisted of fields mentioned in the schema.
-      // As of now, another condition is that the table should be partitioned.
+      // BigQuery supports clustering for both partitioned and non-partitioned tables.
       Clustering clustering = Clustering.newBuilder().setFields(clusteringFields).build();
 
       StandardTableDefinition tableDefinition =

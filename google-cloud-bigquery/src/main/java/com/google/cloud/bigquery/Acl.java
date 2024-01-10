@@ -20,16 +20,18 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.api.core.ApiFunction;
 import com.google.api.services.bigquery.model.Dataset.Access;
+import com.google.api.services.bigquery.model.DatasetAccessEntry;
 import com.google.cloud.StringEnumType;
 import com.google.cloud.StringEnumValue;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 
 /**
  * Access Control for a BigQuery Dataset. BigQuery uses ACLs to manage permissions on datasets. ACLs
  * are not directly supported on tables. A table inherits its ACL from the dataset that contains it.
  * Project roles affect your ability to run jobs or manage the project, while dataset roles affect
- * how you can access or modify the data inside of a project.
+ * how you can access or modify the data inside a project.
  *
  * @see <a href="https://cloud.google.com/bigquery/access-control">Access Control</a>
  */
@@ -80,12 +82,15 @@ public final class Acl implements Serializable {
       return type.valueOfStrict(constant);
     }
 
-    /** Get the Role for the given String constant, and allow unrecognized values. */
+    /**
+     * @param constant
+     * @return Get the Role for the given String constant, and allow unrecognized values.
+     */
     public static Role valueOf(String constant) {
       return type.valueOf(constant);
     }
 
-    /** Return the known values for Role. */
+    /** @return Return the known values for Role. */
     public static Role[] values() {
       return type.values();
     }
@@ -104,7 +109,9 @@ public final class Acl implements Serializable {
       GROUP,
       USER,
       VIEW,
-      IAM_MEMBER
+      IAM_MEMBER,
+      ROUTINE,
+      DATASET
     }
 
     Entity(Type type) {
@@ -118,6 +125,11 @@ public final class Acl implements Serializable {
     abstract Access toPb();
 
     static Entity fromPb(Access access) {
+      if (access.getDataset() != null) {
+        return new DatasetAclEntity(
+            DatasetId.fromPb(access.getDataset().getDataset()),
+            access.getDataset().getTargetTypes());
+      }
       if (access.getDomain() != null) {
         return new Domain(access.getDomain());
       }
@@ -136,9 +148,77 @@ public final class Acl implements Serializable {
       if (access.getIamMember() != null) {
         return new IamMember(access.getIamMember());
       }
+      if (access.getRoutine() != null) {
+        return new Routine(RoutineId.fromPb(access.getRoutine()));
+      }
       // Unreachable
       throw new BigQueryException(
           BigQueryException.UNKNOWN_CODE, "Unrecognized access configuration");
+    }
+  }
+
+  /**
+   * Class for a BigQuery DatasetAclEntity ACL entity. Objects of this class represent a
+   * DatasetAclEntity from a different DatasetAclEntity to grant access to. Only views are supported
+   * for now. The role field is not required when this field is set. If that DatasetAclEntity is
+   * deleted and re-created, its access needs to be granted again via an update operation.
+   */
+  public static final class DatasetAclEntity extends Entity {
+
+    private static final long serialVersionUID = -8392885851733136526L;
+
+    private final DatasetId id;
+    private final List<String> targetTypes;
+
+    /**
+     * Creates a DatasetAclEntity given the DatasetAclEntity's id.
+     *
+     * @param id
+     * @param targetTypes
+     */
+    public DatasetAclEntity(DatasetId id, List<String> targetTypes) {
+      super(Type.DATASET);
+      this.id = id;
+      this.targetTypes = targetTypes;
+    }
+
+    /** @return Returns DatasetAclEntity's identity. */
+    public DatasetId getId() {
+      return id;
+    }
+
+    public List<String> getTargetTypes() {
+      return targetTypes;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null || getClass() != obj.getClass()) {
+        return false;
+      }
+      DatasetAclEntity datasetAclEntity = (DatasetAclEntity) obj;
+      return Objects.equals(getType(), datasetAclEntity.getType())
+          && Objects.equals(id, datasetAclEntity.id)
+          && Objects.equals(targetTypes, datasetAclEntity.targetTypes);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(getType(), id);
+    }
+
+    @Override
+    public String toString() {
+      return toPb().toString();
+    }
+
+    @Override
+    Access toPb() {
+      return new Access()
+          .setDataset(new DatasetAccessEntry().setDataset(id.toPb()).setTargetTypes(targetTypes));
     }
   }
 
@@ -158,7 +238,7 @@ public final class Acl implements Serializable {
       this.domain = domain;
     }
 
-    /** Returns the domain name. */
+    /** @return Returns the domain name. */
     public String getDomain() {
       return domain;
     }
@@ -219,9 +299,9 @@ public final class Acl implements Serializable {
     }
 
     /**
-     * Returns group's identifier, can be either a <a
-     * href="https://cloud.google.com/bigquery/docs/reference/v2/datasets#access.specialGroup">
-     * special group identifier</a> or a group email.
+     * @return Returns group's identifier, can be either a <a
+     *     href="https://cloud.google.com/bigquery/docs/reference/v2/datasets#access.specialGroup">
+     *     special group identifier</a> or a group email.
      */
     public String getIdentifier() {
       return identifier;
@@ -266,22 +346,22 @@ public final class Acl implements Serializable {
       }
     }
 
-    /** Returns a Group entity representing all project's owners. */
+    /** @return Returns a Group entity representing all project's owners. */
     public static Group ofProjectOwners() {
       return new Group(PROJECT_OWNERS);
     }
 
-    /** Returns a Group entity representing all project's readers. */
+    /** @return Returns a Group entity representing all project's readers. */
     public static Group ofProjectReaders() {
       return new Group(PROJECT_READERS);
     }
 
-    /** Returns a Group entity representing all project's writers. */
+    /** @return Returns a Group entity representing all project's writers. */
     public static Group ofProjectWriters() {
       return new Group(PROJECT_WRITERS);
     }
 
-    /** Returns a Group entity representing all BigQuery authenticated users. */
+    /** @return Returns a Group entity representing all BigQuery authenticated users. */
     public static Group ofAllAuthenticatedUsers() {
       return new Group(ALL_AUTHENTICATED_USERS);
     }
@@ -303,7 +383,7 @@ public final class Acl implements Serializable {
       this.email = email;
     }
 
-    /** Returns user's email. */
+    /** @return Returns user's email. */
     public String getEmail() {
       return email;
     }
@@ -338,9 +418,10 @@ public final class Acl implements Serializable {
 
   /**
    * Class for a BigQuery View entity. Objects of this class represent a view from a different
-   * dataset to grant access to. Queries executed against that view will have read access to tables
-   * in this dataset. The role field is not required when this field is set. If that view is updated
-   * by any user, access to the view needs to be granted again via an update operation.
+   * datasetAclEntity to grant access to. Queries executed against that view will have read access
+   * to tables in this datasetAclEntity. The role field is not required when this field is set. If
+   * that view is updated by any user, access to the view needs to be granted again via an update
+   * operation.
    */
   public static final class View extends Entity {
 
@@ -354,7 +435,7 @@ public final class Acl implements Serializable {
       this.id = id;
     }
 
-    /** Returns table's identity. */
+    /** @return Returns table's identity. */
     public TableId getId() {
       return id;
     }
@@ -388,11 +469,64 @@ public final class Acl implements Serializable {
   }
 
   /**
+   * Class for a BigQuery Routine entity. Objects of this class represent a routine from a different
+   * datasetAclEntity to grant access to. Queries executed against that routine will have read
+   * access to views/tables/routines in this datasetAclEntity. Only UDF is supported for now. The
+   * role field is not required when this field is set. If that routine is updated by any user,
+   * access to the routine needs to be granted again via an update operation.
+   */
+  public static final class Routine extends Entity {
+
+    private static final long serialVersionUID = -8392885851733136262L;
+
+    private final RoutineId id;
+
+    /** Creates a Routine entity given the routine's id. */
+    public Routine(RoutineId id) {
+      super(Type.ROUTINE);
+      this.id = id;
+    }
+
+    /** @return Returns routine's identity. */
+    public RoutineId getId() {
+      return id;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null || getClass() != obj.getClass()) {
+        return false;
+      }
+      Routine routine = (Routine) obj;
+      return Objects.equals(getType(), routine.getType()) && Objects.equals(id, routine.id);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(getType(), id);
+    }
+
+    @Override
+    public String toString() {
+      return toPb().toString();
+    }
+
+    @Override
+    Access toPb() {
+      return new Access().setRoutine(id.toPb());
+    }
+  }
+
+  /**
    * Class for a BigQuery IamMember entity. Objects of this class represent a iamMember to grant
    * access to given the IAM Policy.
    */
   public static final class IamMember extends Entity {
 
+    private static final long serialVersionUID = 3562909264454016939L;
     private final String iamMember;
 
     /** Creates a iamMember entity given the iamMember. */
@@ -401,7 +535,7 @@ public final class Acl implements Serializable {
       this.iamMember = iamMember;
     }
 
-    /** Returns iamMember. */
+    /** @return Returns iamMember. */
     public String getIamMember() {
       return iamMember;
     }
@@ -439,19 +573,18 @@ public final class Acl implements Serializable {
     this.role = role;
   }
 
-  /** Returns the entity for this ACL. */
+  /** @return Returns the entity for this ACL. */
   public Entity getEntity() {
     return entity;
   }
 
-  /** Returns the role specified by this ACL. */
+  /** @return Returns the role specified by this ACL. */
   public Role getRole() {
     return role;
   }
 
   /**
-   * Returns an Acl object.
-   *
+   * @return Returns an Acl object.
    * @param entity the entity for this ACL object
    * @param role the role to associate to the {@code entity} object
    */
@@ -459,9 +592,28 @@ public final class Acl implements Serializable {
     return new Acl(entity, role);
   }
 
-  /** Returns an Acl object for a view entity. */
+  /**
+   * @param datasetAclEntity
+   * @return Returns an Acl object for a datasetAclEntity.
+   */
+  public static Acl of(DatasetAclEntity datasetAclEntity) {
+    return new Acl(datasetAclEntity, null);
+  }
+
+  /**
+   * @param view
+   * @return Returns an Acl object for a view entity.
+   */
   public static Acl of(View view) {
     return new Acl(view, null);
+  }
+
+  /**
+   * @param routine
+   * @return Returns an Acl object for a routine entity.
+   */
+  public static Acl of(Routine routine) {
+    return new Acl(routine, null);
   }
 
   @Override

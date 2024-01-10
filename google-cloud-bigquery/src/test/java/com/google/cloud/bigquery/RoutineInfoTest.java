@@ -29,8 +29,11 @@ public class RoutineInfoTest {
   private static final String ROUTINE_TYPE = "SCALAR_FUNCTION";
   private static final Long CREATION_TIME = 10L;
   private static final String DESCRIPTION = "description";
+  private static final String DETERMINISM = "DETERMINISTIC";
   private static final Long LAST_MODIFIED_TIME = 20L;
   private static final String LANGUAGE = "SQL";
+
+  private static final String DATA_GOVERNANCE_TYPE = "DATA_MASKING";
 
   private static final RoutineArgument ARG_1 =
       RoutineArgument.newBuilder()
@@ -55,12 +58,14 @@ public class RoutineInfoTest {
           .setRoutineType(ROUTINE_TYPE)
           .setCreationTime(CREATION_TIME)
           .setDescription(DESCRIPTION)
+          .setDeterminismLevel(DETERMINISM)
           .setLastModifiedTime(LAST_MODIFIED_TIME)
           .setLanguage(LANGUAGE)
           .setArguments(ARGUMENT_LIST)
           .setReturnType(RETURN_TYPE)
           .setImportedLibraries(IMPORTED_LIBRARIES)
           .setBody(BODY)
+          .setDataGovernanceType(DATA_GOVERNANCE_TYPE)
           .build();
 
   @Test
@@ -81,12 +86,14 @@ public class RoutineInfoTest {
     assertEquals(ROUTINE_TYPE, ROUTINE_INFO.getRoutineType());
     assertEquals(CREATION_TIME, ROUTINE_INFO.getCreationTime());
     assertEquals(DESCRIPTION, ROUTINE_INFO.getDescription());
+    assertEquals(DETERMINISM, ROUTINE_INFO.getDeterminismLevel());
     assertEquals(LAST_MODIFIED_TIME, ROUTINE_INFO.getLastModifiedTime());
     assertEquals(LANGUAGE, ROUTINE_INFO.getLanguage());
     assertEquals(ARGUMENT_LIST, ROUTINE_INFO.getArguments());
     assertEquals(RETURN_TYPE, ROUTINE_INFO.getReturnType());
     assertEquals(IMPORTED_LIBRARIES, ROUTINE_INFO.getImportedLibraries());
     assertEquals(BODY, ROUTINE_INFO.getBody());
+    assertEquals(DATA_GOVERNANCE_TYPE, ROUTINE_INFO.getDataGovernanceType());
   }
 
   @Test
@@ -97,14 +104,17 @@ public class RoutineInfoTest {
     assertNull(routineInfo.getRoutineType());
     assertNull(routineInfo.getCreationTime());
     assertNull(routineInfo.getDescription());
+    assertNull(routineInfo.getDeterminismLevel());
     assertNull(routineInfo.getLastModifiedTime());
     assertNull(routineInfo.getLanguage());
     assertNull(routineInfo.getArguments());
     assertNull(routineInfo.getReturnType());
     assertNull(routineInfo.getImportedLibraries());
     assertNull(routineInfo.getBody());
+    assertNull(routineInfo.getDataGovernanceType());
   }
 
+  @Test
   public void testToAndFromPb() {
     compareRoutineInfo(ROUTINE_INFO, RoutineInfo.fromPb(ROUTINE_INFO.toPb()));
   }
@@ -121,12 +131,14 @@ public class RoutineInfoTest {
     assertEquals(expected.getRoutineType(), value.getRoutineType());
     assertEquals(expected.getCreationTime(), value.getCreationTime());
     assertEquals(expected.getDescription(), value.getDescription());
+    assertEquals(expected.getDeterminismLevel(), value.getDeterminismLevel());
     assertEquals(expected.getLastModifiedTime(), value.getLastModifiedTime());
     assertEquals(expected.getLanguage(), value.getLanguage());
     assertEquals(expected.getArguments(), value.getArguments());
     assertEquals(expected.getReturnType(), value.getReturnType());
     assertEquals(expected.getImportedLibraries(), value.getImportedLibraries());
     assertEquals(expected.getBody(), value.getBody());
+    assertEquals(expected.getDataGovernanceType(), value.getDataGovernanceType());
     assertEquals(expected.hashCode(), value.hashCode());
     assertEquals(expected.toString(), value.toString());
   }

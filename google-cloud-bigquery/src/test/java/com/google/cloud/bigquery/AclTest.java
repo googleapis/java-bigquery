@@ -19,16 +19,31 @@ package com.google.cloud.bigquery;
 import static org.junit.Assert.assertEquals;
 
 import com.google.api.services.bigquery.model.Dataset;
+import com.google.cloud.bigquery.Acl.DatasetAclEntity;
 import com.google.cloud.bigquery.Acl.Domain;
 import com.google.cloud.bigquery.Acl.Entity;
 import com.google.cloud.bigquery.Acl.Entity.Type;
 import com.google.cloud.bigquery.Acl.Group;
+import com.google.cloud.bigquery.Acl.IamMember;
 import com.google.cloud.bigquery.Acl.Role;
 import com.google.cloud.bigquery.Acl.User;
 import com.google.cloud.bigquery.Acl.View;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import org.junit.Test;
 
 public class AclTest {
+
+  @Test
+  public void testDatasetEntity() {
+    DatasetId datasetId = DatasetId.of("dataset");
+    List<String> targetTypes = ImmutableList.of("VIEWS");
+    DatasetAclEntity entity = new DatasetAclEntity(datasetId, targetTypes);
+    assertEquals(datasetId, entity.getId());
+    assertEquals(targetTypes, entity.getTargetTypes());
+    Dataset.Access pb = entity.toPb();
+    assertEquals(entity, Entity.fromPb(pb));
+  }
 
   @Test
   public void testDomainEntity() {
@@ -52,12 +67,20 @@ public class AclTest {
   public void testSpecialGroupEntity() {
     Group entity = Group.ofAllAuthenticatedUsers();
     assertEquals("allAuthenticatedUsers", entity.getIdentifier());
+    Dataset.Access pb = entity.toPb();
+    assertEquals(entity, Entity.fromPb(pb));
     entity = Group.ofProjectWriters();
     assertEquals("projectWriters", entity.getIdentifier());
+    pb = entity.toPb();
+    assertEquals(entity, Entity.fromPb(pb));
     entity = Group.ofProjectReaders();
     assertEquals("projectReaders", entity.getIdentifier());
+    pb = entity.toPb();
+    assertEquals(entity, Entity.fromPb(pb));
     entity = Group.ofProjectOwners();
     assertEquals("projectOwners", entity.getIdentifier());
+    pb = entity.toPb();
+    assertEquals(entity, Entity.fromPb(pb));
   }
 
   @Test
@@ -80,6 +103,24 @@ public class AclTest {
   }
 
   @Test
+  public void testRoutineEntity() {
+    RoutineId routineId = RoutineId.of("project", "dataset", "routine");
+    Acl.Routine entity = new Acl.Routine(routineId);
+    assertEquals(routineId, entity.getId());
+    assertEquals(Type.ROUTINE, entity.getType());
+    Dataset.Access pb = entity.toPb();
+    assertEquals(entity, Entity.fromPb(pb));
+  }
+
+  @Test
+  public void testIamMemberEntity() {
+    IamMember entity = new IamMember("member1");
+    assertEquals("member1", entity.getIamMember());
+    Dataset.Access pb = entity.toPb();
+    assertEquals(entity, Entity.fromPb(pb));
+  }
+
+  @Test
   public void testOf() {
     Acl acl = Acl.of(Group.ofAllAuthenticatedUsers(), Role.READER);
     assertEquals(Group.ofAllAuthenticatedUsers(), acl.getEntity());
@@ -89,6 +130,10 @@ public class AclTest {
     View view = new View(TableId.of("project", "dataset", "view"));
     acl = Acl.of(view);
     assertEquals(view, acl.getEntity());
+    assertEquals(null, acl.getRole());
+    Acl.Routine routine = new Acl.Routine(RoutineId.of("project", "dataset", "routine"));
+    acl = Acl.of(routine);
+    assertEquals(routine, acl.getEntity());
     assertEquals(null, acl.getRole());
   }
 }

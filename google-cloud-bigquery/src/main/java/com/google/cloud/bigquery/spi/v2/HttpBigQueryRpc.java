@@ -30,13 +30,15 @@ import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.core.InternalApi;
 import com.google.api.core.InternalExtensionOnly;
 import com.google.api.services.bigquery.Bigquery;
 import com.google.api.services.bigquery.model.Dataset;
 import com.google.api.services.bigquery.model.DatasetList;
 import com.google.api.services.bigquery.model.DatasetReference;
+import com.google.api.services.bigquery.model.GetIamPolicyRequest;
+import com.google.api.services.bigquery.model.GetPolicyOptions;
 import com.google.api.services.bigquery.model.GetQueryResultsResponse;
 import com.google.api.services.bigquery.model.Job;
 import com.google.api.services.bigquery.model.JobList;
@@ -45,14 +47,20 @@ import com.google.api.services.bigquery.model.ListModelsResponse;
 import com.google.api.services.bigquery.model.ListRoutinesResponse;
 import com.google.api.services.bigquery.model.Model;
 import com.google.api.services.bigquery.model.ModelReference;
+import com.google.api.services.bigquery.model.Policy;
+import com.google.api.services.bigquery.model.QueryRequest;
+import com.google.api.services.bigquery.model.QueryResponse;
 import com.google.api.services.bigquery.model.Routine;
 import com.google.api.services.bigquery.model.RoutineReference;
+import com.google.api.services.bigquery.model.SetIamPolicyRequest;
 import com.google.api.services.bigquery.model.Table;
 import com.google.api.services.bigquery.model.TableDataInsertAllRequest;
 import com.google.api.services.bigquery.model.TableDataInsertAllResponse;
 import com.google.api.services.bigquery.model.TableDataList;
 import com.google.api.services.bigquery.model.TableList;
 import com.google.api.services.bigquery.model.TableReference;
+import com.google.api.services.bigquery.model.TestIamPermissionsRequest;
+import com.google.api.services.bigquery.model.TestIamPermissionsResponse;
 import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
@@ -69,9 +77,9 @@ import java.util.Map;
 public class HttpBigQueryRpc implements BigQueryRpc {
 
   public static final String DEFAULT_PROJECTION = "full";
-  private static final String BASE_RESUMABLE_URI =
-      "https://www.googleapis.com/upload/bigquery/v2/projects/";
-  // see: https://cloud.google.com/bigquery/loading-data-post-request#resume-upload
+  private static final String BASE_RESUMABLE_URI = "upload/bigquery/v2/projects/";
+  // see:
+  // https://cloud.google.com/bigquery/loading-data-post-request#resume-upload
   private static final int HTTP_RESUME_INCOMPLETE = 308;
   private final BigQueryOptions options;
   private final Bigquery bigquery;
@@ -96,7 +104,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
     HttpRequestInitializer initializer = transportOptions.getHttpRequestInitializer(options);
     this.options = options;
     bigquery =
-        new Bigquery.Builder(transport, new JacksonFactory(), initializer)
+        new Bigquery.Builder(transport, new GsonFactory(), initializer)
             .setRootUrl(options.getHost())
             .setApplicationName(options.getApplicationName())
             .build();
@@ -113,6 +121,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
           .datasets()
           .get(projectId, datasetId)
           .setFields(Option.FIELDS.getString(options))
+          .setPrettyPrint(false)
           .execute();
     } catch (IOException ex) {
       BigQueryException serviceException = translate(ex);
@@ -130,10 +139,10 @@ public class HttpBigQueryRpc implements BigQueryRpc {
           bigquery
               .datasets()
               .list(projectId)
+              .setPrettyPrint(false)
               .setAll(Option.ALL_DATASETS.getBoolean(options))
               .setFilter(Option.LABEL_FILTER.getString(options))
               .setMaxResults(Option.MAX_RESULTS.getLong(options))
-              .setPageToken(Option.PAGE_TOKEN.getString(options))
               .setPageToken(Option.PAGE_TOKEN.getString(options))
               .execute();
       Iterable<DatasetList.Datasets> datasets = datasetsList.getDatasets();
@@ -153,6 +162,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       return bigquery
           .datasets()
           .insert(dataset.getDatasetReference().getProjectId(), dataset)
+          .setPrettyPrint(false)
           .setFields(Option.FIELDS.getString(options))
           .execute();
     } catch (IOException ex) {
@@ -169,6 +179,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       return bigquery
           .tables()
           .insert(reference.getProjectId(), reference.getDatasetId(), table)
+          .setPrettyPrint(false)
           .setFields(Option.FIELDS.getString(options))
           .execute();
     } catch (IOException ex) {
@@ -183,6 +194,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       return bigquery
           .routines()
           .insert(reference.getProjectId(), reference.getDatasetId(), routine)
+          .setPrettyPrint(false)
           .setFields(Option.FIELDS.getString(options))
           .execute();
     } catch (IOException ex) {
@@ -200,8 +212,22 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       return bigquery
           .jobs()
           .insert(projectId, job)
+          .setPrettyPrint(false)
           .setFields(Option.FIELDS.getString(options))
           .execute();
+    } catch (IOException ex) {
+      throw translate(ex);
+    }
+  }
+
+  @Override
+  public Job createJobForQuery(Job job) {
+    try {
+      String projectId =
+          job.getJobReference() != null
+              ? job.getJobReference().getProjectId()
+              : this.options.getProjectId();
+      return bigquery.jobs().insert(projectId, job).setPrettyPrint(false).execute();
     } catch (IOException ex) {
       throw translate(ex);
     }
@@ -213,6 +239,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       bigquery
           .datasets()
           .delete(projectId, datasetId)
+          .setPrettyPrint(false)
           .setDeleteContents(Option.DELETE_CONTENTS.getBoolean(options))
           .execute();
       return true;
@@ -232,6 +259,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       return bigquery
           .datasets()
           .patch(reference.getProjectId(), reference.getDatasetId(), dataset)
+          .setPrettyPrint(false)
           .setFields(Option.FIELDS.getString(options))
           .execute();
     } catch (IOException ex) {
@@ -248,7 +276,9 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       return bigquery
           .tables()
           .patch(reference.getProjectId(), reference.getDatasetId(), reference.getTableId(), table)
+          .setPrettyPrint(false)
           .setFields(Option.FIELDS.getString(options))
+          .setAutodetectSchema(BigQueryRpc.Option.AUTODETECT_SCHEMA.getBoolean(options))
           .execute();
     } catch (IOException ex) {
       throw translate(ex);
@@ -262,7 +292,9 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       return bigquery
           .tables()
           .get(projectId, datasetId, tableId)
+          .setPrettyPrint(false)
           .setFields(Option.FIELDS.getString(options))
+          .setView(getTableMetadataOption(options))
           .execute();
     } catch (IOException ex) {
       BigQueryException serviceException = translate(ex);
@@ -273,6 +305,13 @@ public class HttpBigQueryRpc implements BigQueryRpc {
     }
   }
 
+  private String getTableMetadataOption(Map<Option, ?> options) {
+    if (options.containsKey(Option.TABLE_METADATA_VIEW)) {
+      return options.get(Option.TABLE_METADATA_VIEW).toString();
+    }
+    return "STORAGE_STATS";
+  }
+
   @Override
   public Tuple<String, Iterable<Table>> listTables(
       String projectId, String datasetId, Map<Option, ?> options) {
@@ -281,6 +320,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
           bigquery
               .tables()
               .list(projectId, datasetId)
+              .setPrettyPrint(false)
               .setMaxResults(Option.MAX_RESULTS.getLong(options))
               .setPageToken(Option.PAGE_TOKEN.getString(options))
               .execute();
@@ -330,6 +370,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       return bigquery
           .models()
           .patch(reference.getProjectId(), reference.getDatasetId(), reference.getModelId(), model)
+          .setPrettyPrint(false)
           .setFields(Option.FIELDS.getString(options))
           .execute();
     } catch (IOException ex) {
@@ -344,6 +385,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       return bigquery
           .models()
           .get(projectId, datasetId, modelId)
+          .setPrettyPrint(false)
           .setFields(Option.FIELDS.getString(options))
           .execute();
     } catch (IOException ex) {
@@ -363,10 +405,12 @@ public class HttpBigQueryRpc implements BigQueryRpc {
           bigquery
               .models()
               .list(projectId, datasetId)
+              .setPrettyPrint(false)
               .setMaxResults(Option.MAX_RESULTS.getLong(options))
               .setPageToken(Option.PAGE_TOKEN.getString(options))
               .execute();
-      Iterable<Model> models = modelList.getModels();
+      Iterable<Model> models =
+          modelList.getModels() != null ? modelList.getModels() : ImmutableList.<Model>of();
       return Tuple.of(modelList.getNextPageToken(), models);
     } catch (IOException ex) {
       throw translate(ex);
@@ -395,6 +439,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
           .routines()
           .update(
               reference.getProjectId(), reference.getDatasetId(), reference.getRoutineId(), routine)
+          .setPrettyPrint(false)
           .setFields(Option.FIELDS.getString(options))
           .execute();
     } catch (IOException ex) {
@@ -409,6 +454,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       return bigquery
           .routines()
           .get(projectId, datasetId, routineId)
+          .setPrettyPrint(false)
           .setFields(Option.FIELDS.getString(options))
           .execute();
     } catch (IOException ex) {
@@ -428,10 +474,14 @@ public class HttpBigQueryRpc implements BigQueryRpc {
           bigquery
               .routines()
               .list(projectId, datasetId)
+              .setPrettyPrint(false)
               .setMaxResults(Option.MAX_RESULTS.getLong(options))
               .setPageToken(Option.PAGE_TOKEN.getString(options))
               .execute();
-      Iterable<Routine> routines = routineList.getRoutines();
+      Iterable<Routine> routines =
+          routineList.getRoutines() != null
+              ? routineList.getRoutines()
+              : ImmutableList.<Routine>of();
       return Tuple.of(routineList.getNextPageToken(), routines);
     } catch (IOException ex) {
       throw translate(ex);
@@ -456,7 +506,11 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   public TableDataInsertAllResponse insertAll(
       String projectId, String datasetId, String tableId, TableDataInsertAllRequest request) {
     try {
-      return bigquery.tabledata().insertAll(projectId, datasetId, tableId, request).execute();
+      return bigquery
+          .tabledata()
+          .insertAll(projectId, datasetId, tableId, request)
+          .setPrettyPrint(false)
+          .execute();
     } catch (IOException ex) {
       throw translate(ex);
     }
@@ -469,6 +523,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       return bigquery
           .tabledata()
           .list(projectId, datasetId, tableId)
+          .setPrettyPrint(false)
           .setMaxResults(Option.MAX_RESULTS.getLong(options))
           .setPageToken(Option.PAGE_TOKEN.getString(options))
           .setStartIndex(
@@ -482,13 +537,52 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @Override
+  public TableDataList listTableDataWithRowLimit(
+      String projectId,
+      String datasetId,
+      String tableId,
+      Integer maxResultPerPage,
+      String pageToken) {
+    try {
+      return bigquery
+          .tabledata()
+          .list(projectId, datasetId, tableId)
+          .setPrettyPrint(false)
+          .setMaxResults(Long.valueOf(maxResultPerPage))
+          .setPageToken(pageToken)
+          .execute();
+    } catch (IOException ex) {
+      throw translate(ex);
+    }
+  }
+
+  @Override
   public Job getJob(String projectId, String jobId, String location, Map<Option, ?> options) {
     try {
       return bigquery
           .jobs()
           .get(projectId, jobId)
+          .setPrettyPrint(false)
           .setLocation(location)
           .setFields(Option.FIELDS.getString(options))
+          .execute();
+    } catch (IOException ex) {
+      BigQueryException serviceException = translate(ex);
+      if (serviceException.getCode() == HTTP_NOT_FOUND) {
+        return null;
+      }
+      throw serviceException;
+    }
+  }
+
+  @Override
+  public Job getQueryJob(String projectId, String jobId, String location) {
+    try {
+      return bigquery
+          .jobs()
+          .get(projectId, jobId)
+          .setPrettyPrint(false)
+          .setLocation(location)
           .execute();
     } catch (IOException ex) {
       BigQueryException serviceException = translate(ex);
@@ -506,6 +600,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
           bigquery
               .jobs()
               .list(projectId)
+              .setPrettyPrint(false)
               .setAllUsers(Option.ALL_USERS.getBoolean(options))
               .setFields(Option.FIELDS.getString(options))
               .setStateFilter(Option.STATE_FILTER.<List<String>>get(options))
@@ -555,7 +650,12 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   @Override
   public boolean cancel(String projectId, String jobId, String location) {
     try {
-      bigquery.jobs().cancel(projectId, jobId).setLocation(location).execute();
+      bigquery
+          .jobs()
+          .cancel(projectId, jobId)
+          .setLocation(location)
+          .setPrettyPrint(false)
+          .execute();
       return true;
     } catch (IOException ex) {
       BigQueryException serviceException = translate(ex);
@@ -567,12 +667,28 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @Override
+  public boolean deleteJob(String projectId, String jobName, String location) {
+    try {
+      bigquery
+          .jobs()
+          .delete(projectId, jobName)
+          .setLocation(location)
+          .setPrettyPrint(false)
+          .execute();
+      return true;
+    } catch (IOException ex) {
+      throw translate(ex);
+    }
+  }
+
+  @Override
   public GetQueryResultsResponse getQueryResults(
       String projectId, String jobId, String location, Map<Option, ?> options) {
     try {
       return bigquery
           .jobs()
           .getQueryResults(projectId, jobId)
+          .setPrettyPrint(false)
           .setLocation(location)
           .setMaxResults(Option.MAX_RESULTS.getLong(options))
           .setPageToken(Option.PAGE_TOKEN.getString(options))
@@ -588,9 +704,39 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @Override
+  public GetQueryResultsResponse getQueryResultsWithRowLimit(
+      String projectId, String jobId, String location, Integer maxResultPerPage, Long timeoutMs) {
+    try {
+      return bigquery
+          .jobs()
+          .getQueryResults(projectId, jobId)
+          .setPrettyPrint(false)
+          .setLocation(location)
+          .setMaxResults(Long.valueOf(maxResultPerPage))
+          .setTimeoutMs(timeoutMs)
+          .execute();
+    } catch (IOException ex) {
+      throw translate(ex);
+    }
+  }
+
+  @Override
+  public QueryResponse queryRpc(String projectId, QueryRequest content) {
+    try {
+      return bigquery.jobs().query(projectId, content).execute();
+    } catch (IOException ex) {
+      throw translate(ex);
+    }
+  }
+
+  @Override
   public String open(Job loadJob) {
     try {
-      String builder = BASE_RESUMABLE_URI + options.getProjectId() + "/jobs";
+      String builder = options.getHost();
+      if (!builder.endsWith("/")) {
+        builder += "/";
+      }
+      builder += BASE_RESUMABLE_URI + options.getProjectId() + "/jobs";
       GenericUrl url = new GenericUrl(builder);
       url.set("uploadType", "resumable");
       JsonFactory jsonFactory = bigquery.getJsonFactory();
@@ -653,6 +799,57 @@ public class HttpBigQueryRpc implements BigQueryRpc {
         throw new BigQueryException(code, message);
       }
       return last && response != null ? response.parseAs(Job.class) : null;
+    } catch (IOException ex) {
+      throw translate(ex);
+    }
+  }
+
+  @Override
+  public Policy getIamPolicy(String resourceId, Map<Option, ?> options) {
+    try {
+      GetIamPolicyRequest policyRequest = new GetIamPolicyRequest();
+      if (null != Option.REQUESTED_POLICY_VERSION.getLong(options)) {
+        policyRequest =
+            policyRequest.setOptions(
+                new GetPolicyOptions()
+                    .setRequestedPolicyVersion(
+                        Option.REQUESTED_POLICY_VERSION.getLong(options).intValue()));
+      }
+      return bigquery
+          .tables()
+          .getIamPolicy(resourceId, policyRequest)
+          .setPrettyPrint(false)
+          .execute();
+    } catch (IOException ex) {
+      throw translate(ex);
+    }
+  }
+
+  @Override
+  public Policy setIamPolicy(String resourceId, Policy policy, Map<Option, ?> options) {
+    try {
+      SetIamPolicyRequest policyRequest = new SetIamPolicyRequest().setPolicy(policy);
+      return bigquery
+          .tables()
+          .setIamPolicy(resourceId, policyRequest)
+          .setPrettyPrint(false)
+          .execute();
+    } catch (IOException ex) {
+      throw translate(ex);
+    }
+  }
+
+  @Override
+  public TestIamPermissionsResponse testIamPermissions(
+      String resourceId, List<String> permissions, Map<Option, ?> options) {
+    try {
+      TestIamPermissionsRequest permissionsRequest =
+          new TestIamPermissionsRequest().setPermissions(permissions);
+      return bigquery
+          .tables()
+          .testIamPermissions(resourceId, permissionsRequest)
+          .setPrettyPrint(false)
+          .execute();
     } catch (IOException ex) {
       throw translate(ex);
     }

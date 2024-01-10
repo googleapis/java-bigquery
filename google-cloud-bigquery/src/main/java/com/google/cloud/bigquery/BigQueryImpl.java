@@ -13,17 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.cloud.bigquery;
 
 import static com.google.cloud.RetryHelper.runWithRetries;
+import static com.google.cloud.bigquery.PolicyHelper.convertFromApiPolicy;
+import static com.google.cloud.bigquery.PolicyHelper.convertToApiPolicy;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
+import com.google.api.core.BetaApi;
 import com.google.api.core.InternalApi;
 import com.google.api.gax.paging.Page;
 import com.google.api.services.bigquery.model.ErrorProto;
 import com.google.api.services.bigquery.model.GetQueryResultsResponse;
+import com.google.api.services.bigquery.model.QueryRequest;
 import com.google.api.services.bigquery.model.TableDataInsertAllRequest;
 import com.google.api.services.bigquery.model.TableDataInsertAllRequest.Rows;
 import com.google.api.services.bigquery.model.TableDataInsertAllResponse;
@@ -33,10 +36,12 @@ import com.google.api.services.bigquery.model.TableSchema;
 import com.google.cloud.BaseService;
 import com.google.cloud.PageImpl;
 import com.google.cloud.PageImpl.NextPageFetcher;
+import com.google.cloud.Policy;
 import com.google.cloud.RetryHelper;
 import com.google.cloud.RetryHelper.RetryHelperException;
 import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.InsertAllRequest.RowToInsert;
+import com.google.cloud.bigquery.QueryJobConfiguration.JobCreationMode;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -45,11 +50,17 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.threeten.bp.Instant;
+import org.threeten.bp.temporal.ChronoUnit;
 
 final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuery {
 
@@ -174,9 +185,11 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     private final Map<BigQueryRpc.Option, ?> requestOptions;
     private final BigQueryOptions serviceOptions;
     private final TableId table;
+    private final Schema schema;
 
     TableDataPageFetcher(
         TableId table,
+        Schema schema,
         BigQueryOptions serviceOptions,
         String cursor,
         Map<BigQueryRpc.Option, ?> optionMap) {
@@ -184,15 +197,59 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           PageImpl.nextRequestOptions(BigQueryRpc.Option.PAGE_TOKEN, cursor, optionMap);
       this.serviceOptions = serviceOptions;
       this.table = table;
+      this.schema = schema;
     }
 
     @Override
     public Page<FieldValueList> getNextPage() {
-      return listTableData(table, serviceOptions, requestOptions).x();
+      return listTableData(table, schema, serviceOptions, requestOptions).x();
+    }
+  }
+
+  private class QueryPageFetcher extends Thread implements NextPageFetcher<FieldValueList> {
+
+    private static final long serialVersionUID = -8501991114794410114L;
+    private final Map<BigQueryRpc.Option, ?> requestOptions;
+    private final BigQueryOptions serviceOptions;
+    private Job job;
+    private final TableId table;
+    private final Schema schema;
+
+    QueryPageFetcher(
+        JobId jobId,
+        Schema schema,
+        BigQueryOptions serviceOptions,
+        String cursor,
+        Map<BigQueryRpc.Option, ?> optionMap) {
+      this.requestOptions =
+          PageImpl.nextRequestOptions(BigQueryRpc.Option.PAGE_TOKEN, cursor, optionMap);
+      this.serviceOptions = serviceOptions;
+      this.job = getJob(jobId);
+      this.table = ((QueryJobConfiguration) job.getConfiguration()).getDestinationTable();
+      this.schema = schema;
+    }
+
+    @Override
+    public Page<FieldValueList> getNextPage() {
+      while (!JobStatus.State.DONE.equals(job.getStatus().getState())) {
+        try {
+          sleep(5000);
+        } catch (InterruptedException ex) {
+          throw new RuntimeException(ex.getMessage());
+        }
+        job = job.reload();
+      }
+      return listTableData(table, schema, serviceOptions, requestOptions).x();
     }
   }
 
   private final BigQueryRpc bigQueryRpc;
+  private static final BigQueryRetryConfig DEFAULT_RETRY_CONFIG =
+      BigQueryRetryConfig.newBuilder()
+          .retryOnMessage(BigQueryErrorMessages.RATE_LIMIT_EXCEEDED_MSG)
+          .retryOnMessage(BigQueryErrorMessages.JOB_RATE_LIMIT_EXCEEDED_MSG)
+          .retryOnRegEx(BigQueryErrorMessages.RetryRegExPatterns.RATE_LIMIT_EXCEEDED_REGEX)
+          .build(); // retry config with Error Messages and RegEx for RateLimitExceeded Error
 
   BigQueryImpl(BigQueryOptions options) {
     super(options);
@@ -220,7 +277,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               getOptions().getRetrySettings(),
-              EXCEPTION_HANDLER,
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock()));
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
@@ -236,6 +293,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                     ? getOptions().getProjectId()
                     : tableInfo.getTableId().getProject())
             .toPb();
+    handleExternalTableSchema(tablePb);
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
     try {
       return Table.fromPb(
@@ -248,10 +306,20 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               getOptions().getRetrySettings(),
-              EXCEPTION_HANDLER,
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock()));
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    }
+  }
+
+  private void handleExternalTableSchema(
+      final com.google.api.services.bigquery.model.Table tablePb) {
+    // Set schema on the Table for permanent external table
+    if (tablePb.getExternalDataConfiguration() != null) {
+      tablePb.setSchema(tablePb.getExternalDataConfiguration().getSchema());
+      // clear table schema on ExternalDataConfiguration
+      tablePb.getExternalDataConfiguration().setSchema(null);
     }
   }
 
@@ -276,7 +344,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               getOptions().getRetrySettings(),
-              EXCEPTION_HANDLER,
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock()));
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
@@ -295,17 +363,26 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     return create(jobInfo, idProvider, options);
   }
 
+  @Override
+  @BetaApi
+  public Connection createConnection(@NonNull ConnectionSettings connectionSettings)
+      throws BigQueryException {
+    return new ConnectionImpl(connectionSettings, getOptions(), bigQueryRpc, DEFAULT_RETRY_CONFIG);
+  }
+
+  @Override
+  @BetaApi
+  public Connection createConnection() throws BigQueryException {
+    ConnectionSettings defaultConnectionSettings = ConnectionSettings.newBuilder().build();
+    return new ConnectionImpl(
+        defaultConnectionSettings, getOptions(), bigQueryRpc, DEFAULT_RETRY_CONFIG);
+  }
+
   @InternalApi("visible for testing")
   Job create(JobInfo jobInfo, Supplier<JobId> idProvider, JobOption... options) {
-    boolean idRandom = false;
-    if (jobInfo.getJobId() == null) {
-      jobInfo = jobInfo.toBuilder().setJobId(idProvider.get()).build();
-      idRandom = true;
-    }
-    final com.google.api.services.bigquery.model.Job jobPb =
-        jobInfo.setProjectId(getOptions().getProjectId()).toPb();
-    final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
+    final boolean idRandom = (jobInfo.getJobId() == null);
 
+    final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
     BigQueryException createException;
     // NOTE(pongad): This double-try structure is admittedly odd.
     // translateAndThrow itself throws, and pretends to return an exception only
@@ -313,21 +390,36 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     // This makes it difficult to translate without throwing.
     // Fixing this entails some work on BaseServiceException.translate.
     // Since that affects a bunch of APIs, we should fix this as a separate change.
+    final JobId[] finalJobId = new JobId[1];
     try {
       try {
         return Job.fromPb(
             this,
-            runWithRetries(
+            BigQueryRetryHelper.runWithRetries(
                 new Callable<com.google.api.services.bigquery.model.Job>() {
                   @Override
                   public com.google.api.services.bigquery.model.Job call() {
-                    return bigQueryRpc.create(jobPb, optionsMap);
+                    if (idRandom) {
+                      // re-generate a new random job with the same jobInfo when jobId is not
+                      // provided by the user
+                      JobInfo recreatedJobInfo =
+                          jobInfo.toBuilder().setJobId(idProvider.get()).build();
+                      com.google.api.services.bigquery.model.Job newJobPb =
+                          recreatedJobInfo.setProjectId(getOptions().getProjectId()).toPb();
+                      finalJobId[0] = recreatedJobInfo.getJobId();
+                      return bigQueryRpc.create(newJobPb, optionsMap);
+                    } else {
+                      com.google.api.services.bigquery.model.Job jobPb =
+                          jobInfo.setProjectId(getOptions().getProjectId()).toPb();
+                      return bigQueryRpc.create(jobPb, optionsMap);
+                    }
                   }
                 },
                 getOptions().getRetrySettings(),
-                EXCEPTION_HANDLER,
-                getOptions().getClock()));
-      } catch (RetryHelper.RetryHelperException e) {
+                BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
+                getOptions().getClock(),
+                DEFAULT_RETRY_CONFIG));
+      } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
         throw BigQueryException.translateAndThrow(e);
       }
     } catch (BigQueryException e) {
@@ -335,16 +427,41 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     }
 
     if (!idRandom) {
+      if (createException instanceof BigQueryException && createException.getCause() != null) {
+
+        /*GoogleJsonResponseException createExceptionCause =
+        (GoogleJsonResponseException) createException.getCause();*/
+
+        Pattern pattern = Pattern.compile(".*Already.*Exists:.*Job.*", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(createException.getCause().getMessage());
+
+        if (matcher.find()) {
+          // If the Job ALREADY EXISTS, retrieve it.
+          Job job = this.getJob(jobInfo.getJobId(), JobOption.fields(JobField.STATISTICS));
+
+          long jobCreationTime = job.getStatistics().getCreationTime();
+          long jobMinStaleTime = System.currentTimeMillis();
+          long jobMaxStaleTime =
+              Instant.ofEpochMilli(jobMinStaleTime).minus(1, ChronoUnit.DAYS).toEpochMilli();
+
+          // Only return the job if it has been created in the past 24 hours.
+          // This is assuming any job older than 24 hours is a valid duplicate JobID
+          // and not a false positive like b/290419183
+          if (jobCreationTime >= jobMaxStaleTime && jobCreationTime <= jobMinStaleTime) {
+            return job;
+          }
+        }
+      }
       throw createException;
     }
 
-    // If create RPC fails, it's still possible that the job has been successfully created,
-    // and get might work.
-    // We can only do this if we randomly generated the ID. Otherwise we might mistakenly
-    // fetch a job created by someone else.
+    // If create RPC fails, it's still possible that the job has been successfully
+    // created, and get might work.
+    // We can only do this if we randomly generated the ID. Otherwise we might
+    // mistakenly fetch a job created by someone else.
     Job job;
     try {
-      job = getJob(jobInfo.getJobId());
+      job = getJob(finalJobId[0]);
     } catch (BigQueryException e) {
       throw createException;
     }
@@ -374,7 +491,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               getOptions().getRetrySettings(),
-              EXCEPTION_HANDLER,
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock());
       if (getOptions().getThrowNotFound() && answer == null) {
         throw new BigQueryException(HTTP_NOT_FOUND, "Dataset not found");
@@ -411,7 +528,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               serviceOptions.getRetrySettings(),
-              EXCEPTION_HANDLER,
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               serviceOptions.getClock());
       String cursor = result.x();
       return new PageImpl<>(
@@ -449,7 +566,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             }
           },
           getOptions().getRetrySettings(),
-          EXCEPTION_HANDLER,
+          BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
           getOptions().getClock());
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
@@ -480,7 +597,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             }
           },
           getOptions().getRetrySettings(),
-          EXCEPTION_HANDLER,
+          BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
           getOptions().getClock());
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
@@ -506,7 +623,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             }
           },
           getOptions().getRetrySettings(),
-          EXCEPTION_HANDLER,
+          BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
           getOptions().getClock());
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
@@ -532,7 +649,31 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             }
           },
           getOptions().getRetrySettings(),
-          EXCEPTION_HANDLER,
+          BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
+          getOptions().getClock());
+    } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    }
+  }
+
+  @Override
+  public boolean delete(JobId jobId) {
+    final JobId completeJobId =
+        jobId.setProjectId(
+            Strings.isNullOrEmpty(jobId.getProject())
+                ? getOptions().getProjectId()
+                : jobId.getProject());
+    try {
+      return runWithRetries(
+          new Callable<Boolean>() {
+            @Override
+            public Boolean call() {
+              return bigQueryRpc.deleteJob(
+                  completeJobId.getProject(), completeJobId.getJob(), completeJobId.getLocation());
+            }
+          },
+          getOptions().getRetrySettings(),
+          BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
           getOptions().getClock());
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
@@ -555,7 +696,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               getOptions().getRetrySettings(),
-              EXCEPTION_HANDLER,
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock()));
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
@@ -571,6 +712,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                     ? getOptions().getProjectId()
                     : tableInfo.getTableId().getProject())
             .toPb();
+    handleExternalTableSchema(tablePb);
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
     try {
       return Table.fromPb(
@@ -583,7 +725,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               getOptions().getRetrySettings(),
-              EXCEPTION_HANDLER,
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock()));
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
@@ -611,7 +753,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               getOptions().getRetrySettings(),
-              EXCEPTION_HANDLER,
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock()));
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
@@ -639,7 +781,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               getOptions().getRetrySettings(),
-              EXCEPTION_HANDLER,
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock()));
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
@@ -653,7 +795,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   @Override
   public Table getTable(TableId tableId, TableOption... options) {
-    // More context about why this: https://github.com/googleapis/google-cloud-java/issues/3808
+    // More context about why this:
+    // https://github.com/googleapis/google-cloud-java/issues/3808
     final TableId completeTableId =
         tableId.setProjectId(
             Strings.isNullOrEmpty(tableId.getProject())
@@ -674,7 +817,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               getOptions().getRetrySettings(),
-              EXCEPTION_HANDLER,
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock());
       if (getOptions().getThrowNotFound() && answer == null) {
         throw new BigQueryException(HTTP_NOT_FOUND, "Table not found");
@@ -712,7 +855,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               getOptions().getRetrySettings(),
-              EXCEPTION_HANDLER,
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock());
       if (getOptions().getThrowNotFound() && answer == null) {
         throw new BigQueryException(HTTP_NOT_FOUND, "Model not found");
@@ -750,7 +893,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               getOptions().getRetrySettings(),
-              EXCEPTION_HANDLER,
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock());
       if (getOptions().getThrowNotFound() && answer == null) {
         throw new BigQueryException(HTTP_NOT_FOUND, "Routine not found");
@@ -800,8 +943,12 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   @Override
   public List<String> listPartitions(TableId tableId) {
     List<String> partitions = new ArrayList<String>();
-    Table metaTable =
-        getTable(TableId.of(tableId.getDataset(), tableId.getTable() + "$__PARTITIONS_SUMMARY__"));
+    String partitionsTable = tableId.getTable() + "$__PARTITIONS_SUMMARY__";
+    TableId metaTableId =
+        tableId.getProject() == null
+            ? TableId.of(tableId.getDataset(), partitionsTable)
+            : TableId.of(tableId.getProject(), tableId.getDataset(), partitionsTable);
+    Table metaTable = getTable(metaTableId);
     Schema metaSchema = metaTable.getDefinition().getSchema();
     String partition_id = null;
     for (Field field : metaSchema.getFields()) {
@@ -835,7 +982,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               serviceOptions.getRetrySettings(),
-              EXCEPTION_HANDLER,
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               serviceOptions.getClock());
       String cursor = result.x();
       Iterable<Table> tables =
@@ -872,7 +1019,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               serviceOptions.getRetrySettings(),
-              EXCEPTION_HANDLER,
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               serviceOptions.getClock());
       String cursor = result.x();
       Iterable<Model> models =
@@ -909,7 +1056,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               serviceOptions.getRetrySettings(),
-              EXCEPTION_HANDLER,
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               serviceOptions.getClock());
       String cursor = result.x();
       Iterable<Routine> routines =
@@ -941,7 +1088,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     requestPb.setIgnoreUnknownValues(request.ignoreUnknownValues());
     requestPb.setSkipInvalidRows(request.skipInvalidRows());
     requestPb.setTemplateSuffix(request.getTemplateSuffix());
-    // Using an array of size 1 here to have a mutable boolean variable, which can be modified in
+    // Using an array of size 1 here to have a mutable boolean variable, which can
+    // be modified in
     // an anonymous inner class.
     final boolean[] allInsertIdsSet = {true};
     List<Rows> rowsPb =
@@ -973,7 +1121,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                   }
                 },
                 getOptions().getRetrySettings(),
-                EXCEPTION_HANDLER,
+                BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
                 getOptions().getClock());
       } catch (RetryHelperException e) {
         throw BigQueryException.translateAndThrow(e);
@@ -1007,12 +1155,13 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   @Override
   public TableResult listTableData(TableId tableId, Schema schema, TableDataListOption... options) {
     Tuple<? extends Page<FieldValueList>, Long> data =
-        listTableData(tableId, getOptions(), optionMap(options));
+        listTableData(tableId, schema, getOptions(), optionMap(options));
     return new TableResult(schema, data.y(), data.x());
   }
 
   private static Tuple<? extends Page<FieldValueList>, Long> listTableData(
       final TableId tableId,
+      final Schema schema,
       final BigQueryOptions serviceOptions,
       final Map<BigQueryRpc.Option, ?> optionsMap) {
     try {
@@ -1036,28 +1185,33 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               serviceOptions.getRetrySettings(),
-              EXCEPTION_HANDLER,
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               serviceOptions.getClock());
       String cursor = result.getPageToken();
+      Map<BigQueryRpc.Option, ?> pageOptionMap =
+          Strings.isNullOrEmpty(cursor) ? optionsMap : optionMap(TableDataListOption.startIndex(0));
       return Tuple.of(
           new PageImpl<>(
-              new TableDataPageFetcher(tableId, serviceOptions, cursor, optionsMap),
+              new TableDataPageFetcher(tableId, schema, serviceOptions, cursor, pageOptionMap),
               cursor,
-              transformTableData(result.getRows())),
+              transformTableData(result.getRows(), schema)),
           result.getTotalRows());
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
     }
   }
 
-  private static Iterable<FieldValueList> transformTableData(Iterable<TableRow> tableDataPb) {
+  private static Iterable<FieldValueList> transformTableData(
+      Iterable<TableRow> tableDataPb, final Schema schema) {
     return ImmutableList.copyOf(
         Iterables.transform(
             tableDataPb != null ? tableDataPb : ImmutableList.<TableRow>of(),
             new Function<TableRow, FieldValueList>() {
+              FieldList fields = schema != null ? schema.getFields() : null;
+
               @Override
               public FieldValueList apply(TableRow rowPb) {
-                return FieldValueList.fromPb(rowPb.getF(), null);
+                return FieldValueList.fromPb(rowPb.getF(), fields);
               }
             }));
   }
@@ -1091,7 +1245,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               getOptions().getRetrySettings(),
-              EXCEPTION_HANDLER,
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock());
       if (getOptions().getThrowNotFound() && answer == null) {
         throw new BigQueryException(HTTP_NOT_FOUND, "Job not found");
@@ -1120,7 +1274,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               }
             },
             serviceOptions.getRetrySettings(),
-            EXCEPTION_HANDLER,
+            BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
             serviceOptions.getClock());
     String cursor = result.x();
     Iterable<Job> jobs =
@@ -1159,7 +1313,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             }
           },
           getOptions().getRetrySettings(),
-          EXCEPTION_HANDLER,
+          BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
           getOptions().getClock());
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
@@ -1170,13 +1324,134 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   public TableResult query(QueryJobConfiguration configuration, JobOption... options)
       throws InterruptedException, JobException {
     Job.checkNotDryRun(configuration, "query");
+
+    if (getOptions().isQueryPreviewEnabled()) {
+      configuration =
+          configuration
+              .toBuilder()
+              .setJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL)
+              .build();
+    }
+
+    // If all parameters passed in configuration are supported by the query() method on the backend,
+    // put on fast path
+    QueryRequestInfo requestInfo = new QueryRequestInfo(configuration);
+    if (requestInfo.isFastQuerySupported(null)) {
+      String projectId = getOptions().getProjectId();
+      QueryRequest content = requestInfo.toPb();
+      if (getOptions().getLocation() != null) {
+        content.setLocation(getOptions().getLocation());
+      }
+      return queryRpc(projectId, content, options);
+    }
+    // Otherwise, fall back to the existing create query job logic
     return create(JobInfo.of(configuration), options).getQueryResults();
+  }
+
+  private TableResult queryRpc(
+      final String projectId, final QueryRequest content, JobOption... options)
+      throws InterruptedException {
+    com.google.api.services.bigquery.model.QueryResponse results;
+    try {
+      results =
+          BigQueryRetryHelper.runWithRetries(
+              new Callable<com.google.api.services.bigquery.model.QueryResponse>() {
+                @Override
+                public com.google.api.services.bigquery.model.QueryResponse call() {
+                  return bigQueryRpc.queryRpc(projectId, content);
+                }
+              },
+              getOptions().getRetrySettings(),
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
+              getOptions().getClock(),
+              DEFAULT_RETRY_CONFIG);
+    } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    }
+
+    if (results.getErrors() != null) {
+      List<BigQueryError> bigQueryErrors =
+          Lists.transform(results.getErrors(), BigQueryError.FROM_PB_FUNCTION);
+      // Throwing BigQueryException since there may be no JobId and we want to stay consistent
+      // with the case where there is an HTTP error
+      throw new BigQueryException(bigQueryErrors);
+    }
+
+    long numRows;
+    Schema schema;
+    if (results.getJobComplete() && results.getSchema() != null) {
+      schema = Schema.fromPb(results.getSchema());
+      if (results.getNumDmlAffectedRows() == null && results.getTotalRows() == null) {
+        numRows = 0L;
+      } else if (results.getNumDmlAffectedRows() != null) {
+        numRows = results.getNumDmlAffectedRows();
+      } else {
+        numRows = results.getTotalRows().longValue();
+      }
+    } else {
+      // Query is long running (> 10s) and hasn't completed yet, or query completed but didn't
+      // return the schema, fallback. Some operations don't return the schema and can be optimized
+      // here, but this is left as future work.
+      JobId jobId = JobId.fromPb(results.getJobReference());
+      Job job = getJob(jobId, options);
+      return job.getQueryResults();
+    }
+
+    if (results.getPageToken() != null) {
+      JobId jobId = JobId.fromPb(results.getJobReference());
+      String cursor = results.getPageToken();
+      return new TableResult(
+          schema,
+          numRows,
+          new PageImpl<>(
+              // fetch next pages of results
+              new QueryPageFetcher(jobId, schema, getOptions(), cursor, optionMap(options)),
+              cursor,
+              // cache first page of result
+              transformTableData(results.getRows(), schema)),
+          // Return the JobID of the successful job
+          jobId);
+    }
+    // only 1 page of result
+    return new TableResult(
+        schema,
+        numRows,
+        new PageImpl<>(
+            new TableDataPageFetcher(null, schema, getOptions(), null, optionMap(options)),
+            null,
+            transformTableData(results.getRows(), schema)),
+        // Return the JobID of the successful job
+        results.getJobReference() != null ? JobId.fromPb(results.getJobReference()) : null);
   }
 
   @Override
   public TableResult query(QueryJobConfiguration configuration, JobId jobId, JobOption... options)
       throws InterruptedException, JobException {
     Job.checkNotDryRun(configuration, "query");
+
+    // If all parameters passed in configuration are supported by the query() method on the backend,
+    // put on fast path
+    QueryRequestInfo requestInfo = new QueryRequestInfo(configuration);
+    if (requestInfo.isFastQuerySupported(jobId)) {
+      // Be careful when setting the projectID in JobId, if a projectID is specified in the JobId,
+      // the job created by the query method will use that project. This may cause the query to
+      // fail with "Access denied" if the project do not have enough permissions to run the job.
+
+      String projectId =
+          jobId.getProject() != null ? jobId.getProject() : getOptions().getProjectId();
+      QueryRequest content = requestInfo.toPb();
+      // Be careful when setting the location, if a location is specified in the BigQueryOption or
+      // JobId the job created by the query method will be in that location, even if the table to be
+      // queried is in a different location. This may cause the query to fail with
+      // "BigQueryException: Not found"
+      if (jobId.getLocation() != null) {
+        content.setLocation(jobId.getLocation());
+      } else if (getOptions().getLocation() != null) {
+        content.setLocation(getOptions().getLocation());
+      }
+
+      return queryRpc(projectId, content, options);
+    }
     return create(JobInfo.of(jobId, configuration), options).getQueryResults();
   }
 
@@ -1199,7 +1474,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                     : jobId.getLocation());
     try {
       GetQueryResultsResponse results =
-          runWithRetries(
+          BigQueryRetryHelper.runWithRetries(
               new Callable<GetQueryResultsResponse>() {
                 @Override
                 public GetQueryResultsResponse call() {
@@ -1213,8 +1488,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               serviceOptions.getRetrySettings(),
-              EXCEPTION_HANDLER,
-              serviceOptions.getClock());
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
+              serviceOptions.getClock(),
+              DEFAULT_RETRY_CONFIG);
+
       TableSchema schemaPb = results.getSchema();
 
       ImmutableList.Builder<BigQueryError> errors = ImmutableList.builder();
@@ -1230,7 +1507,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           .setTotalRows(results.getTotalRows() == null ? 0 : results.getTotalRows().longValue())
           .setErrors(errors.build())
           .build();
-    } catch (RetryHelper.RetryHelperException e) {
+    } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
     }
   }
@@ -1247,6 +1524,88 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         getOptions(),
         jobId.setProjectId(getOptions().getProjectId()),
         writeChannelConfiguration.setProjectId(getOptions().getProjectId()));
+  }
+
+  @Override
+  public Policy getIamPolicy(TableId tableId, IAMOption... options) {
+    final TableId completeTableId =
+        tableId.setProjectId(
+            Strings.isNullOrEmpty(tableId.getProject())
+                ? getOptions().getProjectId()
+                : tableId.getProject());
+
+    try {
+      final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
+      return convertFromApiPolicy(
+          runWithRetries(
+              new Callable<com.google.api.services.bigquery.model.Policy>() {
+                @Override
+                public com.google.api.services.bigquery.model.Policy call() {
+                  return bigQueryRpc.getIamPolicy(completeTableId.getIAMResourceName(), optionsMap);
+                }
+              },
+              getOptions().getRetrySettings(),
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
+              getOptions().getClock()));
+    } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    }
+  }
+
+  @Override
+  public Policy setIamPolicy(TableId tableId, final Policy policy, IAMOption... options) {
+    final TableId completeTableId =
+        tableId.setProjectId(
+            Strings.isNullOrEmpty(tableId.getProject())
+                ? getOptions().getProjectId()
+                : tableId.getProject());
+    try {
+      final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
+      return convertFromApiPolicy(
+          runWithRetries(
+              new Callable<com.google.api.services.bigquery.model.Policy>() {
+                @Override
+                public com.google.api.services.bigquery.model.Policy call() {
+                  return bigQueryRpc.setIamPolicy(
+                      completeTableId.getIAMResourceName(), convertToApiPolicy(policy), optionsMap);
+                }
+              },
+              getOptions().getRetrySettings(),
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
+              getOptions().getClock()));
+    } catch (RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    }
+  }
+
+  @Override
+  public List<String> testIamPermissions(
+      TableId tableId, final List<String> permissions, IAMOption... options) {
+    final TableId completeTableId =
+        tableId.setProjectId(
+            Strings.isNullOrEmpty(tableId.getProject())
+                ? getOptions().getProjectId()
+                : tableId.getProject());
+    try {
+      final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
+      com.google.api.services.bigquery.model.TestIamPermissionsResponse response =
+          runWithRetries(
+              new Callable<com.google.api.services.bigquery.model.TestIamPermissionsResponse>() {
+                @Override
+                public com.google.api.services.bigquery.model.TestIamPermissionsResponse call() {
+                  return bigQueryRpc.testIamPermissions(
+                      completeTableId.getIAMResourceName(), permissions, optionsMap);
+                }
+              },
+              getOptions().getRetrySettings(),
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
+              getOptions().getClock());
+      return response.getPermissions() == null
+          ? ImmutableList.of()
+          : ImmutableList.copyOf(response.getPermissions());
+    } catch (RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    }
   }
 
   @VisibleForTesting

@@ -24,18 +24,21 @@ import com.google.cloud.bigquery.spi.BigQueryRpcFactory;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
 import com.google.cloud.bigquery.spi.v2.HttpBigQueryRpc;
 import com.google.cloud.http.HttpTransportOptions;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 
 public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
 
   private static final String API_SHORT_NAME = "BigQuery";
+  private static final int DEFAULT_READ_API_TIME_OUT = 60000;
   private static final String BIGQUERY_SCOPE = "https://www.googleapis.com/auth/bigquery";
   private static final Set<String> SCOPES = ImmutableSet.of(BIGQUERY_SCOPE);
   private static final long serialVersionUID = -2437598817433266049L;
   private final String location;
   // set the option ThrowNotFound when you want to throw the exception when the value not found
   private boolean setThrowNotFound;
+  private String queryPreviewEnabled = System.getenv("QUERY_PREVIEW_ENABLED");
 
   public static class DefaultBigQueryFactory implements BigQueryFactory {
 
@@ -94,6 +97,8 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
 
   private static class BigQueryDefaults implements ServiceDefaults<BigQuery, BigQueryOptions> {
 
+    private static final long serialVersionUID = -4551722608999107711L;
+
     @Override
     public BigQueryFactory getDefaultServiceFactory() {
       return DefaultBigQueryFactory.INSTANCE;
@@ -111,7 +116,7 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
   }
 
   public static HttpTransportOptions getDefaultHttpTransportOptions() {
-    return HttpTransportOptions.newBuilder().build();
+    return HttpTransportOptions.newBuilder().setReadTimeout(DEFAULT_READ_API_TIME_OUT).build();
   }
 
   @Override
@@ -127,8 +132,17 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
     return location;
   }
 
+  public boolean isQueryPreviewEnabled() {
+    return queryPreviewEnabled != null && queryPreviewEnabled.equalsIgnoreCase("TRUE");
+  }
+
   public void setThrowNotFound(boolean setThrowNotFound) {
     this.setThrowNotFound = setThrowNotFound;
+  }
+
+  @VisibleForTesting
+  public void setQueryPreviewEnabled(String queryPreviewEnabled) {
+    this.queryPreviewEnabled = queryPreviewEnabled;
   }
 
   public boolean getThrowNotFound() {

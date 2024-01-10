@@ -61,6 +61,11 @@ public final class LegacySQLTypeName extends StringEnumValue {
    */
   public static final LegacySQLTypeName NUMERIC =
       type.createAndRegister("NUMERIC").setStandardType(StandardSQLTypeName.NUMERIC);
+  /**
+   * A decimal value with 76+ digits of precision (the 77th digit is partial) and 38 digits of scale
+   */
+  public static final LegacySQLTypeName BIGNUMERIC =
+      type.createAndRegister("BIGNUMERIC").setStandardType(StandardSQLTypeName.BIGNUMERIC);
   /** A Boolean value (true or false). */
   public static final LegacySQLTypeName BOOLEAN =
       type.createAndRegister("BOOLEAN").setStandardType(StandardSQLTypeName.BOOL);
@@ -88,6 +93,16 @@ public final class LegacySQLTypeName extends StringEnumValue {
   /** A record type with a nested schema. */
   public static final LegacySQLTypeName RECORD =
       type.createAndRegister("RECORD").setStandardType(StandardSQLTypeName.STRUCT);
+  /** Represents JSON data */
+  public static final LegacySQLTypeName JSON =
+      type.createAndRegister("JSON").setStandardType(StandardSQLTypeName.JSON);
+  /** Represents duration or amount of time. */
+  public static final LegacySQLTypeName INTERVAL =
+      type.createAndRegister("INTERVAL").setStandardType(StandardSQLTypeName.INTERVAL);
+
+  /** Represents a contiguous range of values. */
+  public static final LegacySQLTypeName RANGE =
+      type.createAndRegister("RANGE").setStandardType(StandardSQLTypeName.RANGE);
 
   private static Map<StandardSQLTypeName, LegacySQLTypeName> standardToLegacyMap = new HashMap<>();
 

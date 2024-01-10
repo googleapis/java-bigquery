@@ -27,14 +27,20 @@ import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TableInsertRowsIT {
+
+  private final Logger log = Logger.getLogger(this.getClass().getName());
+  private String tableName;
   private ByteArrayOutputStream bout;
   private PrintStream out;
+  private PrintStream originalPrintStream;
 
   private static final String BIGQUERY_DATASET_NAME = System.getenv("BIGQUERY_DATASET_NAME");
 
@@ -53,17 +59,10 @@ public class TableInsertRowsIT {
   public void setUp() {
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
+    originalPrintStream = System.out;
     System.setOut(out);
-  }
 
-  @After
-  public void tearDown() {
-    System.setOut(null);
-  }
-
-  @Test
-  public void testTableInsertRows() {
-    String tableName = "InsertRowsTestTable_" + UUID.randomUUID().toString().replace('-', '_');
+    tableName = "INSERT_ROW_INTO_TABLE_TEST" + UUID.randomUUID().toString().substring(0, 8);
     Schema schema =
         Schema.of(
             Field.of("booleanField", LegacySQLTypeName.BOOLEAN),
@@ -71,17 +70,27 @@ public class TableInsertRowsIT {
 
     // Create table in dataset for testing
     CreateTable.createTable(BIGQUERY_DATASET_NAME, tableName, schema);
+  }
 
+  @After
+  public void tearDown() {
+    // Clean up
+    DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, tableName);
+    // restores print statements in the original method
+    System.out.flush();
+    System.setOut(originalPrintStream);
+    log.log(Level.INFO, "\n" + bout.toString());
+  }
+
+  @Test
+  public void testTableInsertRows() {
     // Create a row to insert
     Map<String, Object> rowContent = new HashMap<>();
     rowContent.put("booleanField", true);
     rowContent.put("numericField", "3.14");
-
+    String rowId = "ROW_ID";
     // Testing
-    TableInsertRows.tableInsertRows(BIGQUERY_DATASET_NAME, tableName, rowContent);
+    TableInsertRows.tableInsertRows(BIGQUERY_DATASET_NAME, tableName, rowId, rowContent);
     assertThat(bout.toString()).contains("Rows successfully inserted into table");
-
-    // Clean up
-    DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, tableName);
   }
 }

@@ -10,6 +10,7 @@
     ":maintainLockFilesDisabled",
     ":autodetectPinVersions"
   ],
+  "ignorePaths": [".kokoro/requirements.txt"],
   "packageRules": [
     {
       "packagePatterns": [
@@ -19,25 +20,8 @@
     },
     {
       "packagePatterns": [
-        "^com.google.api:gax",
-        "^com.google.auth:",
-        "^com.google.cloud:google-cloud-core",
-        "^io.grpc:",
-        "^com.google.guava:"
-      ],
-      "groupName": "core dependencies"
-    },
-    {
-      "packagePatterns": [
-        "^com.google.http-client:",
-        "^com.google.oauth-client:",
-        "^com.google.api-client:"
-      ],
-      "groupName": "core transport dependencies"
-    },
-    {
-      "packagePatterns": [
-        "*"
+        "*",
+        "^com.google.cloud:google-cloud-bigquerystorage"
       ],
       "semanticCommitType": "deps",
       "semanticCommitScope": null
@@ -57,10 +41,22 @@
     {
       "packagePatterns": [
         "^com.google.cloud:google-cloud-bigquery",
+        "^com.google.cloud:google-cloud-bigtable",
         "^com.google.cloud:libraries-bom",
         "^com.google.cloud.samples:shared-configuration"
       ],
       "semanticCommitType": "chore",
+      "semanticCommitScope": "deps"
+    },
+    {
+      "packagePatterns": [
+        "^junit:junit",
+        "^com.google.truth:truth",
+        "^org.mockito:mockito-core",
+        "^org.objenesis:objenesis",
+        "^com.google.cloud:google-cloud-storage"
+      ],
+      "semanticCommitType": "test",
       "semanticCommitScope": "deps"
     },
     {
@@ -77,5 +73,8 @@
     }
   ],
   "semanticCommits": true,
-  "masterIssue": true
+  "dependencyDashboard": true,
+  "dependencyDashboardLabels": [
+    "type: process"
+  ]
 }

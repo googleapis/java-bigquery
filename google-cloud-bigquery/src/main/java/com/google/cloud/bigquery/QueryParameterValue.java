@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.BaseEncoding;
+import com.google.gson.JsonObject;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -42,6 +43,7 @@ import org.threeten.bp.ZoneOffset;
 import org.threeten.bp.format.DateTimeFormatter;
 import org.threeten.bp.format.DateTimeFormatterBuilder;
 import org.threeten.bp.format.DateTimeParseException;
+import org.threeten.extra.PeriodDuration;
 
 /**
  * A value for a QueryParameter along with its type.
@@ -49,8 +51,6 @@ import org.threeten.bp.format.DateTimeParseException;
  * <p>A static factory method is provided for each of the possible types (e.g. {@link #int64(Long)}
  * for StandardSQLTypeName.INT64). Alternatively, an instance can be constructed by calling {@link
  * #of(Object, Class)} with the value and a Class object, which will use these mappings:
- *
- * <p>
  *
  * <ul>
  *   <li>Boolean: StandardSQLTypeName.BOOL
@@ -60,6 +60,9 @@ import org.threeten.bp.format.DateTimeParseException;
  *   <li>Double: StandardSQLTypeName.FLOAT64
  *   <li>Float: StandardSQLTypeName.FLOAT64
  *   <li>BigDecimal: StandardSQLTypeName.NUMERIC
+ *   <li>BigNumeric: StandardSQLTypeName.BIGNUMERIC
+ *   <li>JSON: StandardSQLTypeName.JSON
+ *   <li>INTERVAL: StandardSQLTypeName.INTERVAL
  * </ul>
  *
  * <p>No other types are supported through that entry point. The other types can be created by
@@ -197,7 +200,10 @@ public abstract class QueryParameterValue implements Serializable {
   @Nullable
   abstract Map<String, QueryParameterValue> getStructTypesInner();
 
-  /** Creates a {@code QueryParameterValue} object with the given value and type. */
+  /**
+   * Creates a {@code QueryParameterValue} object with the given value and type. Note: this does not
+   * support BigNumeric
+   */
   public static <T> QueryParameterValue of(T value, Class<T> type) {
     return of(value, classToType(type));
   }
@@ -240,9 +246,35 @@ public abstract class QueryParameterValue implements Serializable {
     return of(value, StandardSQLTypeName.NUMERIC);
   }
 
+  /** Creates a {@code QueryParameterValue} object with a type of BIGNUMERIC. */
+  public static QueryParameterValue bigNumeric(BigDecimal value) {
+    return of(value, StandardSQLTypeName.BIGNUMERIC);
+  }
+
   /** Creates a {@code QueryParameterValue} object with a type of STRING. */
   public static QueryParameterValue string(String value) {
     return of(value, StandardSQLTypeName.STRING);
+  }
+
+  /** Creates a {@code QueryParameterValue} object with a type of GEOGRAPHY. */
+  public static QueryParameterValue geography(String value) {
+    return of(value, StandardSQLTypeName.GEOGRAPHY);
+  }
+
+  /**
+   * Creates a {@code QueryParameterValue} object with a type of JSON. Currently, this is only
+   * supported in INSERT, not in query as a filter
+   */
+  public static QueryParameterValue json(String value) {
+    return of(value, StandardSQLTypeName.JSON);
+  }
+
+  /**
+   * Creates a {@code QueryParameterValue} object with a type of JSON. Currently, this is only
+   * supported in INSERT, not in query as a filter
+   */
+  public static QueryParameterValue json(JsonObject value) {
+    return of(value, StandardSQLTypeName.JSON);
   }
 
   /** Creates a {@code QueryParameterValue} object with a type of BYTES. */
@@ -281,10 +313,24 @@ public abstract class QueryParameterValue implements Serializable {
 
   /**
    * Creates a {@code QueryParameterValue} object with a type of DATETIME. Must be in the format
-   * "yyyy-MM-dd HH:mm:ss.SSSSSS", e.g. ""2014-08-19 12:41:35.220000".
+   * "yyyy-MM-dd HH:mm:ss.SSSSSS", e.g. "2014-08-19 12:41:35.220000".
    */
   public static QueryParameterValue dateTime(String value) {
     return of(value, StandardSQLTypeName.DATETIME);
+  }
+
+  /**
+   * Creates a {@code QueryParameterValue} object with a type of INTERVAL. Must be in the canonical
+   * format "[sign]Y-M [sign]D [sign]H:M:S[.F]", e.g. "123-7 -19 0:24:12.000006" or ISO 8601
+   * duration format, e.g. "P123Y7M-19DT0H24M12.000006S"
+   */
+  public static QueryParameterValue interval(String value) {
+    return of(value, StandardSQLTypeName.INTERVAL);
+  }
+
+  /** Creates a {@code QueryParameterValue} object with a type of INTERVAL. */
+  public static QueryParameterValue interval(PeriodDuration value) {
+    return of(value, StandardSQLTypeName.INTERVAL);
   }
 
   /**
@@ -301,7 +347,11 @@ public abstract class QueryParameterValue implements Serializable {
   public static <T> QueryParameterValue array(T[] array, StandardSQLTypeName type) {
     List<QueryParameterValue> listValues = new ArrayList<>();
     for (T obj : array) {
-      listValues.add(QueryParameterValue.of(obj, type));
+      if (type == StandardSQLTypeName.STRUCT) {
+        listValues.add((QueryParameterValue) obj);
+      } else {
+        listValues.add(QueryParameterValue.of(obj, type));
+      }
     }
     return QueryParameterValue.newBuilder()
         .setArrayValues(listValues)
@@ -326,6 +376,8 @@ public abstract class QueryParameterValue implements Serializable {
       return StandardSQLTypeName.BOOL;
     } else if (String.class.isAssignableFrom(type)) {
       return StandardSQLTypeName.STRING;
+    } else if (String.class.isAssignableFrom(type)) {
+      return StandardSQLTypeName.GEOGRAPHY;
     } else if (Integer.class.isAssignableFrom(type)) {
       return StandardSQLTypeName.INT64;
     } else if (Long.class.isAssignableFrom(type)) {
@@ -338,6 +390,10 @@ public abstract class QueryParameterValue implements Serializable {
       return StandardSQLTypeName.NUMERIC;
     } else if (Date.class.isAssignableFrom(type)) {
       return StandardSQLTypeName.DATE;
+    } else if (String.class.isAssignableFrom(type)) {
+      return StandardSQLTypeName.JSON;
+    } else if (JsonObject.class.isAssignableFrom(type)) {
+      return StandardSQLTypeName.JSON;
     }
     throw new IllegalArgumentException("Unsupported object type for QueryParameter: " + type);
   }
@@ -363,6 +419,7 @@ public abstract class QueryParameterValue implements Serializable {
         }
         break;
       case NUMERIC:
+      case BIGNUMERIC:
         if (value instanceof BigDecimal) {
           return value.toString();
         }
@@ -374,6 +431,13 @@ public abstract class QueryParameterValue implements Serializable {
         break;
       case STRING:
         return value.toString();
+      case GEOGRAPHY:
+        return value.toString();
+      case JSON:
+        if (value instanceof String || value instanceof JsonObject) return value.toString();
+      case INTERVAL:
+        if (value instanceof String || value instanceof PeriodDuration) return value.toString();
+        break;
       case STRUCT:
         throw new IllegalArgumentException("Cannot convert STRUCT to String value");
       case ARRAY:
@@ -460,9 +524,15 @@ public abstract class QueryParameterValue implements Serializable {
     QueryParameterType typePb = new QueryParameterType();
     typePb.setType(getType().toString());
     if (getArrayType() != null) {
-      QueryParameterType arrayTypePb = new QueryParameterType();
-      arrayTypePb.setType(getArrayType().toString());
-      typePb.setArrayType(arrayTypePb);
+      List<QueryParameterValue> values = getArrayValues();
+      if (getArrayType() == StandardSQLTypeName.STRUCT && values != null && values.size() != 0) {
+        QueryParameterType structType = values.get(0).toTypePb();
+        typePb.setArrayType(structType);
+      } else {
+        QueryParameterType arrayTypePb = new QueryParameterType();
+        arrayTypePb.setType(getArrayType().toString());
+        typePb.setArrayType(arrayTypePb);
+      }
     }
     if (getStructTypes() != null) {
       List<QueryParameterType.StructTypes> structTypes = new ArrayList<>();

@@ -23,10 +23,12 @@ import static org.junit.Assert.assertNull;
 import com.google.cloud.bigquery.JobInfo.CreateDisposition;
 import com.google.cloud.bigquery.JobInfo.SchemaUpdateOption;
 import com.google.cloud.bigquery.JobInfo.WriteDisposition;
+import com.google.cloud.bigquery.QueryJobConfiguration.JobCreationMode;
 import com.google.cloud.bigquery.QueryJobConfiguration.Priority;
 import com.google.cloud.bigquery.TimePartitioning.Type;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
@@ -77,6 +79,7 @@ public class QueryJobConfigurationTest {
   private static final Priority PRIORITY = Priority.BATCH;
   private static final boolean ALLOW_LARGE_RESULTS = true;
   private static final boolean USE_QUERY_CACHE = false;
+  private static final boolean CREATE_SESSION = true;
   private static final boolean FLATTEN_RESULTS = true;
   private static final boolean USE_LEGACY_SQL = true;
   private static final Integer MAX_BILLING_TIER = 123;
@@ -101,10 +104,14 @@ public class QueryJobConfigurationTest {
       QueryParameterValue.string("stringValue");
   private static final QueryParameterValue TIMESTAMP_PARAMETER =
       QueryParameterValue.timestamp("2014-01-01 07:00:00.000000+00:00");
+  private static final QueryParameterValue BIGNUMERIC_PARAMETER =
+      QueryParameterValue.bigNumeric(new BigDecimal(1 / 3));
   private static final List<QueryParameterValue> POSITIONAL_PARAMETER =
-      ImmutableList.of(STRING_PARAMETER, TIMESTAMP_PARAMETER);
+      ImmutableList.of(STRING_PARAMETER, TIMESTAMP_PARAMETER, BIGNUMERIC_PARAMETER);
   private static final Map<String, QueryParameterValue> NAME_PARAMETER =
       ImmutableMap.of("string", STRING_PARAMETER, "timestamp", TIMESTAMP_PARAMETER);
+  private static final String PARAMETER_MODE = "POSITIONAL";
+  private static final JobCreationMode JOB_CREATION_MODE = JobCreationMode.JOB_CREATION_OPTIONAL;
   private static final QueryJobConfiguration QUERY_JOB_CONFIGURATION =
       QueryJobConfiguration.newBuilder(QUERY)
           .setUseQueryCache(USE_QUERY_CACHE)
@@ -115,6 +122,7 @@ public class QueryJobConfigurationTest {
           .setDestinationTable(TABLE_ID)
           .setWriteDisposition(WRITE_DISPOSITION)
           .setPriority(PRIORITY)
+          .setCreateSession(CREATE_SESSION)
           .setFlattenResults(FLATTEN_RESULTS)
           .setUserDefinedFunctions(USER_DEFINED_FUNCTIONS)
           .setDryRun(true)
@@ -130,6 +138,7 @@ public class QueryJobConfigurationTest {
           .setRangePartitioning(RANGE_PARTITIONING)
           .setConnectionProperties(CONNECTION_PROPERTIES)
           .setPositionalParameters(POSITIONAL_PARAMETER)
+          .setParameterMode(PARAMETER_MODE)
           .build();
   private static final QueryJobConfiguration QUERY_JOB_CONFIGURATION_ADD_POSITIONAL_PARAMETER =
       QUERY_JOB_CONFIGURATION
@@ -143,6 +152,8 @@ public class QueryJobConfigurationTest {
           .setPositionalParameters(ImmutableList.<QueryParameterValue>of())
           .setNamedParameters(NAME_PARAMETER)
           .build();
+  private static final QueryJobConfiguration QUERY_JOB_CONFIGURATION_SET_JOB_CREATION_MODE =
+      QUERY_JOB_CONFIGURATION.toBuilder().setJobCreationMode(JOB_CREATION_MODE).build();
 
   @Test
   public void testToBuilder() {
@@ -223,6 +234,13 @@ public class QueryJobConfigurationTest {
         QUERY_JOB_CONFIGURATION_SET_NAME_PARAMETER.toBuilder().build());
   }
 
+  @Test
+  public void testJobCreationMode() {
+    compareQueryJobConfiguration(
+        QUERY_JOB_CONFIGURATION_SET_JOB_CREATION_MODE,
+        QUERY_JOB_CONFIGURATION_SET_JOB_CREATION_MODE.toBuilder().build());
+  }
+
   private void compareQueryJobConfiguration(
       QueryJobConfiguration expected, QueryJobConfiguration value) {
     assertEquals(expected, value);
@@ -233,6 +251,7 @@ public class QueryJobConfigurationTest {
     assertEquals(expected.getCreateDisposition(), value.getCreateDisposition());
     assertEquals(expected.getDefaultDataset(), value.getDefaultDataset());
     assertEquals(expected.getDestinationTable(), value.getDestinationTable());
+    assertEquals(expected.createSession(), value.createSession());
     assertEquals(expected.flattenResults(), value.flattenResults());
     assertEquals(expected.getPriority(), value.getPriority());
     assertEquals(expected.getQuery(), value.getQuery());

@@ -73,6 +73,10 @@ public class Job extends JobInfo {
 
   private final BigQueryOptions options;
   private transient BigQuery bigquery;
+  private static final BigQueryRetryConfig DEFAULT_RETRY_CONFIG =
+      BigQueryRetryConfig.newBuilder()
+          .retryOnMessage(BigQueryErrorMessages.RATE_LIMIT_EXCEEDED_MSG)
+          .build(); // retry config with Error Message for RateLimitExceeded Error
 
   /** A builder for {@code Job} objects. */
   public static final class Builder extends JobInfo.Builder {
@@ -297,24 +301,34 @@ public class Job extends JobInfo {
       job = reload();
     }
     if (job.getStatus() != null && job.getStatus().getError() != null) {
-      throw new JobException(
-          getJobId(), ImmutableList.copyOf(job.getStatus().getExecutionErrors()));
+      throw new BigQueryException(
+          job.getStatus().getExecutionErrors() == null
+              ? ImmutableList.of(job.getStatus().getError())
+              : ImmutableList.copyOf(job.getStatus().getExecutionErrors()));
     }
 
     // If there are no rows in the result, this may have been a DDL query.
     // Listing table data might fail, such as with CREATE VIEW queries.
     // Avoid a tabledata.list API request by returning an empty TableResult.
     if (response.getTotalRows() == 0) {
-      return new EmptyTableResult(response.getSchema());
+      TableResult emptyTableResult = new EmptyTableResult(response.getSchema());
+      emptyTableResult.setJobId(job.getJobId());
+      return emptyTableResult;
     }
 
-    TableId table = ((QueryJobConfiguration) getConfiguration()).getDestinationTable();
-    return bigquery.listTableData(
-        table, response.getSchema(), listOptions.toArray(new TableDataListOption[0]));
+    TableId table =
+        ((QueryJobConfiguration) getConfiguration()).getDestinationTable() == null
+            ? ((QueryJobConfiguration) job.getConfiguration()).getDestinationTable()
+            : ((QueryJobConfiguration) getConfiguration()).getDestinationTable();
+    TableResult tableResult =
+        bigquery.listTableData(
+            table, response.getSchema(), listOptions.toArray(new TableDataListOption[0]));
+    tableResult.setJobId(job.getJobId());
+    return tableResult;
   }
 
   private QueryResponse waitForQueryResults(
-      RetrySettings waitSettings, final QueryResultsOption... resultsOptions)
+      RetrySettings retrySettings, final QueryResultsOption... resultsOptions)
       throws InterruptedException {
     if (getConfiguration().getType() != Type.QUERY) {
       throw new UnsupportedOperationException(
@@ -322,22 +336,26 @@ public class Job extends JobInfo {
     }
 
     try {
-      return RetryHelper.poll(
+      return BigQueryRetryHelper.runWithRetries(
           new Callable<QueryResponse>() {
             @Override
             public QueryResponse call() {
               return bigquery.getQueryResults(getJobId(), resultsOptions);
             }
           },
-          waitSettings,
+          retrySettings,
           new BasicResultRetryAlgorithm<QueryResponse>() {
             @Override
-            public boolean shouldRetry(Throwable prevThrowable, QueryResponse prevResponse) {
+            public boolean shouldRetry(
+                Throwable prevThrowable,
+                QueryResponse
+                    prevResponse) { // Used by BigQueryRetryAlgorithm.shouldRetryBasedOnResult
               return prevResponse != null && !prevResponse.getCompleted();
             }
           },
-          options.getClock());
-    } catch (ExecutionException e) {
+          options.getClock(),
+          DEFAULT_RETRY_CONFIG);
+    } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
     }
   }
@@ -398,7 +416,14 @@ public class Job extends JobInfo {
    */
   public Job reload(JobOption... options) {
     checkNotDryRun("reload");
-    return bigquery.getJob(getJobId(), options);
+    Job job = bigquery.getJob(getJobId(), options);
+    if (job != null && job.getStatus().getError() != null) {
+      throw new BigQueryException(
+          job.getStatus().getExecutionErrors() == null
+              ? ImmutableList.of(job.getStatus().getError())
+              : ImmutableList.copyOf(job.getStatus().getExecutionErrors()));
+    }
+    return job;
   }
 
   /**

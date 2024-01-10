@@ -28,9 +28,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+// Sample to inserting rows into a table without running a load job.
 public class TableInsertRows {
 
-  public static void runTableInsertRows() {
+  public static void main(String[] args) {
     // TODO(developer): Replace these variables before running the sample.
     String datasetName = "MY_DATASET_NAME";
     String tableName = "MY_TABLE_NAME";
@@ -38,12 +39,13 @@ public class TableInsertRows {
     Map<String, Object> rowContent = new HashMap<>();
     rowContent.put("booleanField", true);
     rowContent.put("numericField", "3.14");
-
-    tableInsertRows(datasetName, tableName, rowContent);
+    // TODO(developer): Replace the row id with a unique value for each row.
+    String rowId = "ROW_ID";
+    tableInsertRows(datasetName, tableName, rowId, rowContent);
   }
 
   public static void tableInsertRows(
-      String datasetName, String tableName, Map<String, Object> rowContent) {
+      String datasetName, String tableName, String rowId, Map<String, Object> rowContent) {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
@@ -54,7 +56,12 @@ public class TableInsertRows {
 
       // Inserts rowContent into datasetName:tableId.
       InsertAllResponse response =
-          bigquery.insertAll(InsertAllRequest.newBuilder(tableId).addRow(rowContent).build());
+          bigquery.insertAll(
+              InsertAllRequest.newBuilder(tableId)
+                  // More rows can be added in the same RPC by invoking .addRow() on the builder.
+                  // You can omit the unique row ids to disable de-duplication.
+                  .addRow(rowId, rowContent)
+                  .build());
 
       if (response.hasErrors()) {
         // If any of the insertions failed, this lets you inspect the errors

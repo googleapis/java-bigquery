@@ -132,6 +132,20 @@ public abstract class StandardTableDefinition extends TableDefinition {
 
     public abstract Builder setNumLongTermBytes(Long numLongTermBytes);
 
+    public abstract Builder setNumTimeTravelPhysicalBytes(Long numTimeTravelPhysicalBytes);
+
+    public abstract Builder setNumTotalLogicalBytes(Long numTotalLogicalBytes);
+
+    public abstract Builder setNumActiveLogicalBytes(Long numActiveLogicalBytes);
+
+    public abstract Builder setNumLongTermLogicalBytes(Long numLongTermLogicalBytes);
+
+    public abstract Builder setNumTotalPhysicalBytes(Long numTotalPhysicalBytes);
+
+    public abstract Builder setNumActivePhysicalBytes(Long numActivePhysicalBytes);
+
+    public abstract Builder setNumLongTermPhysicalBytes(Long numLongTermPhysicalBytes);
+
     public abstract Builder setNumRows(Long numRows);
 
     public abstract Builder setLocation(String location);
@@ -157,9 +171,17 @@ public abstract class StandardTableDefinition extends TableDefinition {
 
     /**
      * Set the clustering configuration for the table. If not set, the table is not clustered.
-     * Clustering is only available for partitioned tables.
+     * BigQuery supports clustering for both partitioned and non-partitioned tables.
      */
     public abstract Builder setClustering(Clustering clustering);
+
+    public abstract Builder setTableConstraints(TableConstraints tableConstraints);
+
+    /**
+     * Set the configuration of a BigLake managed table. If not set, the table is not a BigLake
+     * managed table.
+     */
+    public abstract Builder setBigLakeConfiguration(BigLakeConfiguration biglakeConfiguration);
 
     /** Creates a {@code StandardTableDefinition} object. */
     public abstract StandardTableDefinition build();
@@ -177,6 +199,62 @@ public abstract class StandardTableDefinition extends TableDefinition {
    */
   @Nullable
   public abstract Long getNumLongTermBytes();
+
+  /**
+   * Returns the number of time travel physical bytes.
+   *
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
+   */
+  @Nullable
+  public abstract Long getNumTimeTravelPhysicalBytes();
+
+  /**
+   * Returns the number of total logical bytes.
+   *
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
+   */
+  @Nullable
+  public abstract Long getNumTotalLogicalBytes();
+
+  /**
+   * Returns the number of active logical bytes.
+   *
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
+   */
+  @Nullable
+  public abstract Long getNumActiveLogicalBytes();
+
+  /**
+   * Returns the number of long term logical bytes.
+   *
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
+   */
+  @Nullable
+  public abstract Long getNumLongTermLogicalBytes();
+
+  /**
+   * Returns the number of total physical bytes.
+   *
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
+   */
+  @Nullable
+  public abstract Long getNumTotalPhysicalBytes();
+
+  /**
+   * Returns the number of active physical bytes.
+   *
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
+   */
+  @Nullable
+  public abstract Long getNumActivePhysicalBytes();
+
+  /**
+   * Returns the number of long term physical bytes.
+   *
+   * @see <a href="https://cloud.google.com/bigquery/pricing#storage">Storage Pricing</a>
+   */
+  @Nullable
+  public abstract Long getNumLongTermPhysicalBytes();
 
   /** Returns the number of rows in this table, excluding any data in the streaming buffer. */
   @Nullable
@@ -221,6 +299,20 @@ public abstract class StandardTableDefinition extends TableDefinition {
   @Nullable
   public abstract Clustering getClustering();
 
+  /**
+   * Returns the table constraints for this table. Returns {@code null} if no table constraints are
+   * set for this table.
+   */
+  @Nullable
+  public abstract TableConstraints getTableConstraints();
+
+  /**
+   * [Optional] Specifies the configuration of a BigLake managed table. The value may be {@code
+   * null}.
+   */
+  @Nullable
+  public abstract BigLakeConfiguration getBigLakeConfiguration();
+
   /** Returns a builder for a BigQuery standard table definition. */
   public static Builder newBuilder() {
     return new AutoValue_StandardTableDefinition.Builder().setType(Type.TABLE);
@@ -246,6 +338,13 @@ public abstract class StandardTableDefinition extends TableDefinition {
     }
     tablePb.setNumBytes(getNumBytes());
     tablePb.setNumLongTermBytes(getNumLongTermBytes());
+    tablePb.setNumTimeTravelPhysicalBytes(getNumTimeTravelPhysicalBytes());
+    tablePb.setNumTotalLogicalBytes(getNumTotalLogicalBytes());
+    tablePb.setNumActiveLogicalBytes(getNumActiveLogicalBytes());
+    tablePb.setNumLongTermLogicalBytes(getNumLongTermLogicalBytes());
+    tablePb.setNumTotalPhysicalBytes(getNumTotalPhysicalBytes());
+    tablePb.setNumActivePhysicalBytes(getNumActivePhysicalBytes());
+    tablePb.setNumLongTermPhysicalBytes(getNumLongTermPhysicalBytes());
     tablePb.setLocation(getLocation());
     if (getStreamingBuffer() != null) {
       tablePb.setStreamingBuffer(getStreamingBuffer().toPb());
@@ -258,6 +357,12 @@ public abstract class StandardTableDefinition extends TableDefinition {
     }
     if (getClustering() != null) {
       tablePb.setClustering(getClustering().toPb());
+    }
+    if (getTableConstraints() != null) {
+      tablePb.setTableConstraints(getTableConstraints().toPb());
+    }
+    if (getBigLakeConfiguration() != null) {
+      tablePb.setBiglakeConfiguration(getBigLakeConfiguration().toPb());
     }
     return tablePb;
   }
@@ -296,6 +401,35 @@ public abstract class StandardTableDefinition extends TableDefinition {
     if (tablePb.getNumLongTermBytes() != null) {
       builder.setNumLongTermBytes(tablePb.getNumLongTermBytes());
     }
+    if (tablePb.getNumTimeTravelPhysicalBytes() != null) {
+      builder.setNumTimeTravelPhysicalBytes(tablePb.getNumTimeTravelPhysicalBytes());
+    }
+    if (tablePb.getNumTotalLogicalBytes() != null) {
+      builder.setNumTotalLogicalBytes(tablePb.getNumTotalLogicalBytes());
+    }
+    if (tablePb.getNumActiveLogicalBytes() != null) {
+      builder.setNumActiveLogicalBytes(tablePb.getNumActiveLogicalBytes());
+    }
+    if (tablePb.getNumLongTermLogicalBytes() != null) {
+      builder.setNumLongTermLogicalBytes(tablePb.getNumLongTermLogicalBytes());
+    }
+    if (tablePb.getNumTotalPhysicalBytes() != null) {
+      builder.setNumTotalPhysicalBytes(tablePb.getNumTotalPhysicalBytes());
+    }
+    if (tablePb.getNumActivePhysicalBytes() != null) {
+      builder.setNumActivePhysicalBytes(tablePb.getNumActivePhysicalBytes());
+    }
+    if (tablePb.getNumLongTermPhysicalBytes() != null) {
+      builder.setNumLongTermPhysicalBytes(tablePb.getNumLongTermPhysicalBytes());
+    }
+    if (tablePb.getTableConstraints() != null) {
+      builder.setTableConstraints(TableConstraints.fromPb(tablePb.getTableConstraints()));
+    }
+    if (tablePb.getBiglakeConfiguration() != null) {
+      builder.setBigLakeConfiguration(
+          BigLakeConfiguration.fromPb(tablePb.getBiglakeConfiguration()));
+    }
+
     return builder.setNumBytes(tablePb.getNumBytes()).setLocation(tablePb.getLocation()).build();
   }
 }

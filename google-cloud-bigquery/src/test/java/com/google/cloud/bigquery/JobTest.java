@@ -21,9 +21,11 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -33,11 +35,12 @@ import static org.mockito.Mockito.when;
 
 import com.google.api.core.CurrentMillisClock;
 import com.google.api.gax.paging.Page;
+import com.google.api.gax.paging.Pages;
 import com.google.cloud.RetryOption;
 import com.google.cloud.bigquery.JobStatistics.CopyStatistics;
 import com.google.cloud.bigquery.JobStatistics.QueryStatistics;
+import com.google.cloud.bigquery.JobStatus.State;
 import com.google.common.collect.ImmutableList;
-import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -301,39 +304,11 @@ public class JobTest {
             .setStatus(JOB_STATUS)
             .build();
 
-    JobStatus status = mock(JobStatus.class);
     when(bigquery.getOptions()).thenReturn(mockOptions);
     when(mockOptions.getClock()).thenReturn(CurrentMillisClock.getDefaultClock());
     Job completedJob =
         expectedJob.toBuilder().setStatus(new JobStatus(JobStatus.State.RUNNING)).build();
-    // TODO(pongad): remove when we bump gax to 1.15.
-    Page<FieldValueList> singlePage =
-        new Page<FieldValueList>() {
-          @Override
-          public boolean hasNextPage() {
-            return false;
-          }
-
-          @Override
-          public String getNextPageToken() {
-            return "";
-          }
-
-          @Override
-          public Page<FieldValueList> getNextPage() {
-            return null;
-          }
-
-          @Override
-          public Iterable<FieldValueList> iterateAll() {
-            return Collections.emptyList();
-          }
-
-          @Override
-          public Iterable<FieldValueList> getValues() {
-            return Collections.emptyList();
-          }
-        };
+    Page<FieldValueList> singlePage = Pages.empty();
     TableResult result = new TableResult(Schema.of(), 1, singlePage);
     QueryResponse completedQuery =
         QueryResponse.newBuilder()
@@ -434,6 +409,24 @@ public class JobTest {
     Job updatedJob = job.reload();
     compareJob(expectedJob, updatedJob);
     verify(bigquery).getJob(JOB_INFO.getJobId());
+  }
+
+  @Test
+  public void testReloadJobException() {
+    JobInfo updatedInfo = JOB_INFO.toBuilder().setEtag("etag").build();
+    Job expectedJob = new Job(bigquery, new JobInfo.BuilderImpl(updatedInfo));
+    BigQueryError bigQueryError = new BigQueryError("invalidQuery", "US", "invalidQuery");
+    expectedJob =
+        expectedJob.toBuilder().setStatus(new JobStatus(State.DONE, bigQueryError, null)).build();
+    ImmutableList<BigQueryError> bigQueryErrorList = ImmutableList.of(bigQueryError);
+    BigQueryException bigQueryException = new BigQueryException(bigQueryErrorList);
+    when(bigquery.getJob(JOB_INFO.getJobId())).thenReturn(expectedJob).thenThrow(bigQueryException);
+    try {
+      job.reload();
+      fail("JobException expected");
+    } catch (BigQueryException e) {
+      assertNotNull(e.getErrors());
+    }
   }
 
   @Test

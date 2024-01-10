@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.cloud</groupId>
   <artifactId>google-cloud-bigquery</artifactId>
-  <version>1.116.2-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
+  <version>2.35.1-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
   <packaging>jar</packaging>
   <name>BigQuery</name>
   <url>https://github.com/googleapis/java-bigquery</url>
@@ -11,7 +11,7 @@
   <parent>
     <groupId>com.google.cloud</groupId>
     <artifactId>google-cloud-bigquery-parent</artifactId>
-    <version>1.116.2-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
+    <version>2.35.1-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
   </parent>
   <properties>
     <site.installationModule>google-cloud-bigquery</site.installationModule>
@@ -26,12 +26,12 @@
       <artifactId>google-cloud-core-http</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.google.cloud</groupId>
-      <artifactId>google-cloud-storage</artifactId>
+      <groupId>com.google.http-client</groupId>
+      <artifactId>google-http-client-gson</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.google.http-client</groupId>
-      <artifactId>google-http-client-jackson2</artifactId>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-storage</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.auto.value</groupId>
@@ -45,6 +45,10 @@
     <dependency>
       <groupId>org.checkerframework</groupId>
       <artifactId>checker-compat-qual</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.checkerframework</groupId>
+      <artifactId>checker-qual</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.auth</groupId>
@@ -81,8 +85,67 @@
       <groupId>org.threeten</groupId>
       <artifactId>threetenbp</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.threeten</groupId>
+      <artifactId>threeten-extra</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-bigquerystorage</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.api.grpc</groupId>
+      <artifactId>proto-google-cloud-bigquerystorage-v1</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.arrow</groupId>
+      <artifactId>arrow-vector</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.arrow</groupId>
+      <artifactId>arrow-memory-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.arrow</groupId>
+      <artifactId>arrow-memory-netty</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <!-- auto-value creates a class that uses an annotation from error_prone_annotations -->
+    <dependency>
+      <groupId>com.google.errorprone</groupId>
+      <artifactId>error_prone_annotations</artifactId>
+    </dependency>
 
     <!-- Test dependencies -->
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-datacatalog</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-bigqueryconnection</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.api.grpc</groupId>
+      <artifactId>proto-google-cloud-bigqueryconnection-v1</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-storage</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -91,10 +154,21 @@
     <dependency>
       <groupId>com.google.truth</groupId>
       <artifactId>truth</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-datacatalog</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.api.grpc</groupId>
+      <artifactId>proto-google-cloud-datacatalog-v1</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -113,7 +187,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
-        <version>3.1.0</version>
+        <version>3.5.0</version>
         <executions>
           <execution>
             <id>add-source</id>
@@ -135,4 +209,32 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>java17</id>
+      <activation>
+        <jdk>[17,)</jdk>
+        <property>
+          <!--
+          In Java 8 unit tests where we run tests in Java 8 after building
+          bytecode on Java 17, we don't want to add the argLine
+          -->
+          <name>!jvm</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <argLine>--add-opens=java.base/java.nio=ALL-UNNAMED</argLine>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+
+    </profile>
+  </profiles>
 </project>

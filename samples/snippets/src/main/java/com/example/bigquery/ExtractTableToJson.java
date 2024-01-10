@@ -29,7 +29,7 @@ import org.threeten.bp.Duration;
 
 public class ExtractTableToJson {
 
-  public static void runExtractTableToJson() {
+  public static void main(String[] args) {
     // TODO(developer): Replace these variables before running the sample.
     String projectId = "bigquery-public-data";
     String datasetName = "samples";
@@ -43,7 +43,7 @@ public class ExtractTableToJson {
 
     // Note that FormatOptions.json().toString() is not "JSON" but "NEWLINE_DELIMITED_JSON"
     // Using FormatOptions Enum for this will prevent problems with unexpected format names.
-    String dataFormat = FormatOptions.json().toString();
+    String dataFormat = FormatOptions.json().getType();
 
     extractTableToJson(projectId, datasetName, tableName, destinationUri, dataFormat);
   }

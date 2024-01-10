@@ -32,6 +32,10 @@ public enum StandardSQLTypeName {
   FLOAT64,
   /** A decimal value with 38 digits of precision and 9 digits of scale. */
   NUMERIC,
+  /**
+   * A decimal value with 76+ digits of precision (the 77th digit is partial) and 38 digits of scale
+   */
+  BIGNUMERIC,
   /** Variable-length character (Unicode) data. */
   STRING,
   /** Variable-length binary data. */
@@ -52,5 +56,11 @@ public enum StandardSQLTypeName {
   /** Represents a year, month, day, hour, minute, second, and subsecond (microsecond precision). */
   DATETIME,
   /** Represents a set of geographic points, represented as a Well Known Text (WKT) string. */
-  GEOGRAPHY
+  GEOGRAPHY,
+  /** Represents JSON data. */
+  JSON,
+  /** Represents duration or amount of time. */
+  INTERVAL,
+  /** Represents a contiguous range of values. */
+  RANGE
 }

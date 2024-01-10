@@ -23,15 +23,29 @@ import com.google.cloud.bigquery.JobStatistics.CopyStatistics;
 import com.google.cloud.bigquery.JobStatistics.ExtractStatistics;
 import com.google.cloud.bigquery.JobStatistics.LoadStatistics;
 import com.google.cloud.bigquery.JobStatistics.QueryStatistics;
+import com.google.cloud.bigquery.JobStatistics.ReservationUsage;
 import com.google.cloud.bigquery.JobStatistics.ScriptStatistics;
 import com.google.cloud.bigquery.JobStatistics.ScriptStatistics.ScriptStackFrame;
+import com.google.cloud.bigquery.JobStatistics.SessionInfo;
+import com.google.cloud.bigquery.JobStatistics.TransactionInfo;
 import com.google.cloud.bigquery.QueryStage.QueryStep;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
+import java.util.UUID;
 import org.junit.Test;
 
 public class JobStatisticsTest {
 
+  private static final BiEngineReason BI_ENGINE_REASON =
+      BiEngineReason.newBuilder()
+          .setMessage("Detected unsupported join type")
+          .setCode("UNSUPPORTED_SQL_TEXT")
+          .build();
+  private static final BiEngineStats BI_ENGINE_STATS =
+      BiEngineStats.newBuilder()
+          .setBiEngineReasons(ImmutableList.of(BI_ENGINE_REASON))
+          .setBiEngineMode("DISABLED")
+          .build();
   private static final Integer BILLING_TIER = 42;
   private static final Boolean CACHE_HIT = true;
   private static final String DDL_OPERATION_PERFORMED = "SKIP";
@@ -41,6 +55,15 @@ public class JobStatisticsTest {
   private static final RoutineId DDL_TARGET_ROUTINE = RoutineId.of("alpha", "beta", "gamma");
   private static final Long ESTIMATE_BYTES_PROCESSED = 101L;
   private static final Long NUM_DML_AFFECTED_ROWS = 88L;
+  private static final Long DELETED_ROW_COUNT = 10L;
+  private static final Long INSERTED_ROW_COUNT = 20L;
+  private static final Long UPDATED_ROW_COUNT = 30L;
+  private static final DmlStats DML_STATS =
+      DmlStats.newBuilder()
+          .setDeletedRowCount(DELETED_ROW_COUNT)
+          .setInsertedRowCount(INSERTED_ROW_COUNT)
+          .setUpdatedRowCount(UPDATED_ROW_COUNT)
+          .build();
   private static final QueryStatistics.StatementType STATEMENT_TYPE =
       QueryStatistics.StatementType.SELECT;
   private static final Long TOTAL_BYTES_BILLED = 24L;
@@ -58,6 +81,10 @@ public class JobStatisticsTest {
   private static final Long CREATION_TIME = 10L;
   private static final Long END_TIME = 20L;
   private static final Long START_TIME = 15L;
+  private static final String NAME = "reservation-name";
+  private static final Long SLOTMS = 12545L;
+  private static final String TRANSACTION_ID = UUID.randomUUID().toString().substring(0, 8);
+  private static final String SESSION_ID = UUID.randomUUID().toString().substring(0, 8);
   private static final CopyStatistics COPY_STATISTICS =
       CopyStatistics.newBuilder()
           .setCreationTimestamp(CREATION_TIME)
@@ -70,6 +97,7 @@ public class JobStatisticsTest {
           .setEndTime(END_TIME)
           .setStartTime(START_TIME)
           .setDestinationUriFileCounts(FILE_COUNT)
+          .setInputBytes(INPUT_BYTES)
           .build();
   private static final LoadStatistics LOAD_STATISTICS =
       LoadStatistics.newBuilder()
@@ -132,11 +160,15 @@ public class JobStatisticsTest {
       ImmutableList.of(TIMELINE_SAMPLE1, TIMELINE_SAMPLE2);
   private static final List<QueryStage> QUERY_PLAN = ImmutableList.of(QUERY_STAGE);
   private static final Schema SCHEMA = Schema.of(Field.of("column", LegacySQLTypeName.DATETIME));
+  private static final String UNUSED_INDEX_USAGE_MODE = "UNUSED";
+  private static final SearchStats SEARCH_STATS =
+      SearchStats.newBuilder().setIndexUsageMode(UNUSED_INDEX_USAGE_MODE).build();
   private static final QueryStatistics QUERY_STATISTICS =
       QueryStatistics.newBuilder()
           .setCreationTimestamp(CREATION_TIME)
           .setEndTime(END_TIME)
           .setStartTime(START_TIME)
+          .setBiEngineStats(BI_ENGINE_STATS)
           .setBillingTier(BILLING_TIER)
           .setCacheHit(CACHE_HIT)
           .setDDLOperationPerformed(DDL_OPERATION_PERFORMED)
@@ -144,6 +176,7 @@ public class JobStatisticsTest {
           .setDDLTargetRoutine(DDL_TARGET_ROUTINE)
           .setEstimatedBytesProcessed(ESTIMATE_BYTES_PROCESSED)
           .setNumDmlAffectedRows(NUM_DML_AFFECTED_ROWS)
+          .setDmlStats(DML_STATS)
           .setReferenceTables(REFERENCED_TABLES)
           .setStatementType(STATEMENT_TYPE)
           .setTotalBytesBilled(TOTAL_BYTES_BILLED)
@@ -153,6 +186,7 @@ public class JobStatisticsTest {
           .setQueryPlan(QUERY_PLAN)
           .setTimeline(TIMELINE)
           .setSchema(SCHEMA)
+          .setSearchStats(SEARCH_STATS)
           .build();
   private static final QueryStatistics QUERY_STATISTICS_INCOMPLETE =
       QueryStatistics.newBuilder()
@@ -161,6 +195,7 @@ public class JobStatisticsTest {
           .setStartTime(START_TIME)
           .setBillingTier(BILLING_TIER)
           .setCacheHit(CACHE_HIT)
+          .setSearchStats(SEARCH_STATS)
           .build();
   private static final ScriptStackFrame STATEMENT_STACK_FRAME =
       ScriptStackFrame.newBuilder()
@@ -200,6 +235,14 @@ public class JobStatisticsTest {
           .setEvaluationKind(EVALUATIONKIND_TYPE_EXPRESSION)
           .setStackFrames(ImmutableList.of(EXPRESSION_STACK_FRAME))
           .build();
+  private static final ReservationUsage RESERVATION_USAGE =
+      ReservationUsage.newBuilder().setName(NAME).setSlotMs(SLOTMS).build();
+
+  private static final TransactionInfo TRANSACTION_INFO =
+      TransactionInfo.newbuilder().setTransactionId(TRANSACTION_ID).build();
+
+  private static final SessionInfo SESSION_INFO =
+      SessionInfo.newBuilder().setSessionId(SESSION_ID).build();
 
   @Test
   public void testBuilder() {
@@ -207,6 +250,7 @@ public class JobStatisticsTest {
     assertEquals(START_TIME, EXTRACT_STATISTICS.getStartTime());
     assertEquals(END_TIME, EXTRACT_STATISTICS.getEndTime());
     assertEquals(FILE_COUNT, EXTRACT_STATISTICS.getDestinationUriFileCounts());
+    assertEquals(INPUT_BYTES, EXTRACT_STATISTICS.getInputBytes());
 
     assertEquals(CREATION_TIME, LOAD_STATISTICS.getCreationTime());
     assertEquals(START_TIME, LOAD_STATISTICS.getStartTime());
@@ -220,6 +264,7 @@ public class JobStatisticsTest {
     assertEquals(CREATION_TIME, QUERY_STATISTICS.getCreationTime());
     assertEquals(START_TIME, QUERY_STATISTICS.getStartTime());
     assertEquals(END_TIME, QUERY_STATISTICS.getEndTime());
+    assertEquals(BI_ENGINE_STATS, QUERY_STATISTICS.getBiEngineStats());
     assertEquals(BILLING_TIER, QUERY_STATISTICS.getBillingTier());
     assertEquals(CACHE_HIT, QUERY_STATISTICS.getCacheHit());
     assertEquals(DDL_OPERATION_PERFORMED, QUERY_STATISTICS.getDdlOperationPerformed());
@@ -227,6 +272,7 @@ public class JobStatisticsTest {
     assertEquals(DDL_TARGET_ROUTINE, QUERY_STATISTICS.getDdlTargetRoutine());
     assertEquals(ESTIMATE_BYTES_PROCESSED, QUERY_STATISTICS.getEstimatedBytesProcessed());
     assertEquals(NUM_DML_AFFECTED_ROWS, QUERY_STATISTICS.getNumDmlAffectedRows());
+    assertEquals(DML_STATS, QUERY_STATISTICS.getDmlStats());
     assertEquals(REFERENCED_TABLES, QUERY_STATISTICS.getReferencedTables());
     assertEquals(STATEMENT_TYPE, QUERY_STATISTICS.getStatementType());
     assertEquals(TOTAL_BYTES_BILLED, QUERY_STATISTICS.getTotalBytesBilled());
@@ -268,6 +314,10 @@ public class JobStatisticsTest {
     assertEquals(EVALUATIONKIND_TYPE_EXPRESSION, EXPRESSION_SCRIPT_STATISTICS.getEvaluationKind());
     assertEquals(
         ImmutableList.of(EXPRESSION_STACK_FRAME), EXPRESSION_SCRIPT_STATISTICS.getStackFrames());
+    assertEquals(NAME, RESERVATION_USAGE.getName());
+    assertEquals(SLOTMS, RESERVATION_USAGE.getSlotMs());
+    assertEquals(TRANSACTION_ID, TRANSACTION_INFO.getTransactionId());
+    assertEquals(SESSION_ID, SESSION_INFO.getSessionId());
   }
 
   @Test
@@ -292,6 +342,9 @@ public class JobStatisticsTest {
     for (ScriptStackFrame stackFrame : EXPRESSION_SCRIPT_STATISTICS.getStackFrames()) {
       compareStackFrames(stackFrame, ScriptStackFrame.fromPb(stackFrame.toPb()));
     }
+    compareReservation(RESERVATION_USAGE, ReservationUsage.fromPb(RESERVATION_USAGE.toPb()));
+    compareTransactionInfo(TRANSACTION_INFO, TransactionInfo.fromPb(TRANSACTION_INFO.toPb()));
+    compareSessionInfo(SESSION_INFO, SessionInfo.fromPb(SESSION_INFO.toPb()));
   }
 
   @Test
@@ -303,32 +356,38 @@ public class JobStatisticsTest {
                 new com.google.api.services.bigquery.model.JobStatistics()
                     .setCreationTime(1234L)
                     .setStartTime(5678L));
+    JobStatistics jobStatistics;
 
     job.setConfiguration(
         new com.google.api.services.bigquery.model.JobConfiguration()
             .setCopy(new com.google.api.services.bigquery.model.JobConfigurationTableCopy()));
-    assertThat(JobStatistics.fromPb(job)).isInstanceOf(CopyStatistics.class);
+    jobStatistics = JobStatistics.fromPb(job);
+    assertThat(jobStatistics).isInstanceOf(CopyStatistics.class);
 
     job.setConfiguration(
         new com.google.api.services.bigquery.model.JobConfiguration()
             .setLoad(new com.google.api.services.bigquery.model.JobConfigurationLoad()));
-    assertThat(JobStatistics.fromPb(job)).isInstanceOf(LoadStatistics.class);
+    jobStatistics = JobStatistics.fromPb(job);
+    assertThat(jobStatistics).isInstanceOf(LoadStatistics.class);
 
     job.setConfiguration(
         new com.google.api.services.bigquery.model.JobConfiguration()
             .setExtract(new com.google.api.services.bigquery.model.JobConfigurationExtract()));
-    assertThat(JobStatistics.fromPb(job)).isInstanceOf(ExtractStatistics.class);
+    jobStatistics = JobStatistics.fromPb(job);
+    assertThat(jobStatistics).isInstanceOf(ExtractStatistics.class);
 
     job.setConfiguration(
         new com.google.api.services.bigquery.model.JobConfiguration()
             .setQuery(new com.google.api.services.bigquery.model.JobConfigurationQuery()));
-    assertThat(JobStatistics.fromPb(job)).isInstanceOf(QueryStatistics.class);
+    jobStatistics = JobStatistics.fromPb(job);
+    assertThat(jobStatistics).isInstanceOf(QueryStatistics.class);
   }
 
   private void compareExtractStatistics(ExtractStatistics expected, ExtractStatistics value) {
     assertEquals(expected, value);
     compareStatistics(expected, value);
     assertEquals(expected.getDestinationUriFileCounts(), value.getDestinationUriFileCounts());
+    assertEquals(expected.getInputBytes(), value.getInputBytes());
   }
 
   private void compareLoadStatistics(LoadStatistics expected, LoadStatistics value) {
@@ -356,6 +415,8 @@ public class JobStatisticsTest {
     assertEquals(expected.getQueryPlan(), value.getQueryPlan());
     assertEquals(expected.getReferencedTables(), value.getReferencedTables());
     assertEquals(expected.getSchema(), value.getSchema());
+    assertEquals(
+        expected.getSearchStats().getIndexUsageMode(), value.getSearchStats().getIndexUsageMode());
     assertEquals(expected.getStatementType(), value.getStatementType());
     assertEquals(expected.getTimeline(), value.getTimeline());
   }
@@ -391,5 +452,30 @@ public class JobStatisticsTest {
     assertEquals(expected.getStartColumn(), value.getStartColumn());
     assertEquals(expected.getStartLine(), value.getStartLine());
     assertEquals(expected.getText(), value.getText());
+  }
+
+  private void compareReservation(ReservationUsage expected, ReservationUsage value) {
+    assertEquals(expected, value);
+    assertEquals(expected.hashCode(), value.hashCode());
+    assertEquals(expected.toString(), value.toString());
+    assertEquals(expected.toPb(), value.toPb());
+    assertEquals(expected.getName(), value.getName());
+    assertEquals(expected.getSlotMs(), value.getSlotMs());
+  }
+
+  private void compareTransactionInfo(TransactionInfo expected, TransactionInfo value) {
+    assertEquals(expected, value);
+    assertEquals(expected.hashCode(), value.hashCode());
+    assertEquals(expected.toString(), value.toString());
+    assertEquals(expected.toPb(), value.toPb());
+    assertEquals(expected.getTransactionId(), value.getTransactionId());
+  }
+
+  private void compareSessionInfo(SessionInfo expected, SessionInfo value) {
+    assertEquals(expected, value);
+    assertEquals(expected.hashCode(), value.hashCode());
+    assertEquals(expected.toString(), value.toString());
+    assertEquals(expected.toPb(), value.toPb());
+    assertEquals(expected.getSessionId(), value.getSessionId());
   }
 }

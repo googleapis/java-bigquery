@@ -25,6 +25,7 @@ import com.google.cloud.bigquery.JobInfo.SchemaUpdateOption;
 import com.google.cloud.bigquery.JobInfo.WriteDisposition;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 import java.io.Serializable;
 import java.util.List;
@@ -55,9 +56,12 @@ public final class WriteChannelConfiguration implements LoadConfiguration, Seria
   private final Clustering clustering;
   private final Boolean useAvroLogicalTypes;
   private final Map<String, String> labels;
+  private List<String> decimalTargetTypes;
+  private final List<ConnectionProperty> connectionProperties;
+
+  private final Boolean createSession;
 
   public static final class Builder implements LoadConfiguration.Builder {
-
     private TableId destinationTable;
     private CreateDisposition createDisposition;
     private WriteDisposition writeDisposition;
@@ -73,6 +77,10 @@ public final class WriteChannelConfiguration implements LoadConfiguration, Seria
     private Clustering clustering;
     private Boolean useAvroLogicalTypes;
     private Map<String, String> labels;
+    private List<String> decimalTargetTypes;
+    private List<ConnectionProperty> connectionProperties;
+
+    private Boolean createSession;
 
     private Builder() {}
 
@@ -93,6 +101,9 @@ public final class WriteChannelConfiguration implements LoadConfiguration, Seria
       this.clustering = writeChannelConfiguration.clustering;
       this.useAvroLogicalTypes = writeChannelConfiguration.useAvroLogicalTypes;
       this.labels = writeChannelConfiguration.labels;
+      this.decimalTargetTypes = writeChannelConfiguration.decimalTargetTypes;
+      this.connectionProperties = writeChannelConfiguration.connectionProperties;
+      this.createSession = writeChannelConfiguration.createSession;
     }
 
     private Builder(com.google.api.services.bigquery.model.JobConfiguration configurationPb) {
@@ -169,6 +180,16 @@ public final class WriteChannelConfiguration implements LoadConfiguration, Seria
       if (configurationPb.getLabels() != null) {
         this.labels = configurationPb.getLabels();
       }
+      if (loadConfigurationPb.getDecimalTargetTypes() != null) {
+        this.decimalTargetTypes = loadConfigurationPb.getDecimalTargetTypes();
+      }
+      if (loadConfigurationPb.getConnectionProperties() != null) {
+
+        this.connectionProperties =
+            Lists.transform(
+                loadConfigurationPb.getConnectionProperties(), ConnectionProperty.FROM_PB_FUNCTION);
+      }
+      createSession = loadConfigurationPb.getCreateSession();
     }
 
     @Override
@@ -263,6 +284,22 @@ public final class WriteChannelConfiguration implements LoadConfiguration, Seria
     }
 
     @Override
+    public Builder setDecimalTargetTypes(List<String> decimalTargetTypes) {
+      this.decimalTargetTypes = decimalTargetTypes;
+      return this;
+    }
+
+    public Builder setConnectionProperties(List<ConnectionProperty> connectionProperties) {
+      this.connectionProperties = ImmutableList.copyOf(connectionProperties);
+      return this;
+    }
+
+    public Builder setCreateSession(Boolean createSession) {
+      this.createSession = createSession;
+      return this;
+    }
+
+    @Override
     public WriteChannelConfiguration build() {
       return new WriteChannelConfiguration(this);
     }
@@ -284,6 +321,9 @@ public final class WriteChannelConfiguration implements LoadConfiguration, Seria
     this.clustering = builder.clustering;
     this.useAvroLogicalTypes = builder.useAvroLogicalTypes;
     this.labels = builder.labels;
+    this.decimalTargetTypes = builder.decimalTargetTypes;
+    this.connectionProperties = builder.connectionProperties;
+    this.createSession = builder.createSession;
   }
 
   @Override
@@ -373,6 +413,19 @@ public final class WriteChannelConfiguration implements LoadConfiguration, Seria
   }
 
   @Override
+  public List<String> getDecimalTargetTypes() {
+    return decimalTargetTypes;
+  }
+
+  public List<ConnectionProperty> getConnectionProperties() {
+    return connectionProperties;
+  }
+
+  public Boolean getCreateSession() {
+    return createSession;
+  }
+
+  @Override
   public Builder toBuilder() {
     return new Builder(this);
   }
@@ -393,7 +446,10 @@ public final class WriteChannelConfiguration implements LoadConfiguration, Seria
         .add("timePartitioning", timePartitioning)
         .add("clustering", clustering)
         .add("useAvroLogicalTypes", useAvroLogicalTypes)
-        .add("labels", labels);
+        .add("labels", labels)
+        .add("decimalTargetTypes", decimalTargetTypes)
+        .add("connectionProperties", connectionProperties)
+        .add("createSession", createSession);
   }
 
   @Override
@@ -424,7 +480,10 @@ public final class WriteChannelConfiguration implements LoadConfiguration, Seria
         timePartitioning,
         clustering,
         useAvroLogicalTypes,
-        labels);
+        labels,
+        decimalTargetTypes,
+        connectionProperties,
+        createSession);
   }
 
   WriteChannelConfiguration setProjectId(String projectId) {
@@ -455,7 +514,8 @@ public final class WriteChannelConfiguration implements LoadConfiguration, Seria
           .setAllowJaggedRows(csvOptions.allowJaggedRows())
           .setAllowQuotedNewlines(csvOptions.allowQuotedNewLines())
           .setEncoding(csvOptions.getEncoding())
-          .setQuote(csvOptions.getQuote());
+          .setQuote(csvOptions.getQuote())
+          .setPreserveAsciiControlCharacters(csvOptions.getPreserveAsciiControlCharacters());
       if (csvOptions.getSkipLeadingRows() != null) {
         // todo(mziccard) remove checked cast or comment when #1044 is closed
         loadConfigurationPb.setSkipLeadingRows(Ints.checkedCast(csvOptions.getSkipLeadingRows()));
@@ -494,6 +554,16 @@ public final class WriteChannelConfiguration implements LoadConfiguration, Seria
     loadConfigurationPb.setUseAvroLogicalTypes(useAvroLogicalTypes);
     if (labels != null) {
       jobConfiguration.setLabels(labels);
+    }
+    if (decimalTargetTypes != null) {
+      loadConfigurationPb.setDecimalTargetTypes(decimalTargetTypes);
+    }
+    if (connectionProperties != null) {
+      loadConfigurationPb.setConnectionProperties(
+          Lists.transform(connectionProperties, ConnectionProperty.TO_PB_FUNCTION));
+    }
+    if (createSession != null) {
+      loadConfigurationPb.setCreateSession(createSession);
     }
     jobConfiguration.setLoad(loadConfigurationPb);
     return jobConfiguration;

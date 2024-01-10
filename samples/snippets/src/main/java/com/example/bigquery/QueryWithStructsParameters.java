@@ -28,6 +28,10 @@ import java.util.Map;
 
 public class QueryWithStructsParameters {
 
+  public static void main(String[] args) {
+    queryWithStructsParameters();
+  }
+
   public static void queryWithStructsParameters() {
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
@@ -36,15 +40,13 @@ public class QueryWithStructsParameters {
 
       // Create struct
       Map<String, QueryParameterValue> struct = new HashMap<>();
-      struct.put("booleanField", QueryParameterValue.bool(true));
-      struct.put("integerField", QueryParameterValue.string("test-stringField"));
-      struct.put("stringField", QueryParameterValue.int64(10));
+      struct.put("x", QueryParameterValue.int64(1));
+      struct.put("y", QueryParameterValue.string("foo"));
       QueryParameterValue recordValue = QueryParameterValue.struct(struct);
 
-      String query = "SELECT STRUCT(@recordField) AS record";
+      String query = "SELECT STRUCT(@recordField) AS s";
       QueryJobConfiguration queryConfig =
           QueryJobConfiguration.newBuilder(query)
-              .setUseLegacySql(false)
               .addNamedParameter("recordField", recordValue)
               .build();
 

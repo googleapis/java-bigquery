@@ -21,6 +21,7 @@ import com.google.api.services.bigquery.model.JobConfiguration;
 import com.google.api.services.bigquery.model.JobStatistics2;
 import com.google.api.services.bigquery.model.JobStatistics3;
 import com.google.api.services.bigquery.model.JobStatistics4;
+import com.google.api.services.bigquery.model.QueryParameter;
 import com.google.cloud.StringEnumType;
 import com.google.cloud.StringEnumValue;
 import com.google.common.base.Function;
@@ -43,6 +44,9 @@ public abstract class JobStatistics implements Serializable {
   private final Long numChildJobs;
   private final String parentJobId;
   private final ScriptStatistics scriptStatistics;
+  private final List<ReservationUsage> reservationUsage;
+  private final TransactionInfo transactionInfo;
+  private final SessionInfo sessionInfo;
 
   /** A Google BigQuery Copy Job statistics. */
   public static class CopyStatistics extends JobStatistics {
@@ -97,9 +101,13 @@ public abstract class JobStatistics implements Serializable {
 
     private final List<Long> destinationUriFileCounts;
 
+    private final Long inputBytes;
+
     static final class Builder extends JobStatistics.Builder<ExtractStatistics, Builder> {
 
       private List<Long> destinationUriFileCounts;
+
+      private Long inputBytes;
 
       private Builder() {}
 
@@ -107,11 +115,17 @@ public abstract class JobStatistics implements Serializable {
         super(statisticsPb);
         if (statisticsPb.getExtract() != null) {
           this.destinationUriFileCounts = statisticsPb.getExtract().getDestinationUriFileCounts();
+          this.inputBytes = statisticsPb.getExtract().getInputBytes();
         }
       }
 
       Builder setDestinationUriFileCounts(List<Long> destinationUriFileCounts) {
         this.destinationUriFileCounts = destinationUriFileCounts;
+        return self();
+      }
+
+      Builder setInputBytes(Long inputBytes) {
+        this.inputBytes = inputBytes;
         return self();
       }
 
@@ -124,6 +138,7 @@ public abstract class JobStatistics implements Serializable {
     private ExtractStatistics(Builder builder) {
       super(builder);
       this.destinationUriFileCounts = builder.destinationUriFileCounts;
+      this.inputBytes = builder.inputBytes;
     }
 
     /**
@@ -133,6 +148,11 @@ public abstract class JobStatistics implements Serializable {
      */
     public List<Long> getDestinationUriFileCounts() {
       return destinationUriFileCounts;
+    }
+
+    /** Returns number of user bytes extracted into the result. */
+    public Long getInputBytes() {
+      return inputBytes;
     }
 
     @Override
@@ -155,9 +175,10 @@ public abstract class JobStatistics implements Serializable {
 
     @Override
     com.google.api.services.bigquery.model.JobStatistics toPb() {
-      com.google.api.services.bigquery.model.JobStatistics statisticsPb = super.toPb();
-      return statisticsPb.setExtract(
-          new JobStatistics4().setDestinationUriFileCounts(destinationUriFileCounts));
+      JobStatistics4 extractStatisticsPb = new JobStatistics4();
+      extractStatisticsPb.setDestinationUriFileCounts(destinationUriFileCounts);
+      extractStatisticsPb.setInputBytes(inputBytes);
+      return super.toPb().setExtract(extractStatisticsPb);
     }
 
     static Builder newBuilder() {
@@ -318,6 +339,7 @@ public abstract class JobStatistics implements Serializable {
 
     private static final long serialVersionUID = 7539354109226732353L;
 
+    private final BiEngineStats biEngineStats;
     private final Integer billingTier;
     private final Boolean cacheHit;
     private final String ddlOperationPerformed;
@@ -325,6 +347,7 @@ public abstract class JobStatistics implements Serializable {
     private final RoutineId ddlTargetRoutine;
     private final Long estimatedBytesProcessed;
     private final Long numDmlAffectedRows;
+    private final DmlStats dmlStats;
     private final List<TableId> referencedTables;
     private final StatementType statementType;
     private final Long totalBytesBilled;
@@ -334,6 +357,8 @@ public abstract class JobStatistics implements Serializable {
     private final List<QueryStage> queryPlan;
     private final List<TimelineSample> timeline;
     private final Schema schema;
+    private final SearchStats searchStats;
+    private final List<QueryParameter> queryParameters;
 
     /**
      * StatementType represents possible types of SQL statements reported as part of the
@@ -398,6 +423,7 @@ public abstract class JobStatistics implements Serializable {
 
     static final class Builder extends JobStatistics.Builder<QueryStatistics, Builder> {
 
+      private BiEngineStats biEngineStats;
       private Integer billingTier;
       private Boolean cacheHit;
       private String ddlOperationPerformed;
@@ -405,6 +431,7 @@ public abstract class JobStatistics implements Serializable {
       private RoutineId ddlTargetRoutine;
       private Long estimatedBytesProcessed;
       private Long numDmlAffectedRows;
+      private DmlStats dmlStats;
       private List<TableId> referencedTables;
       private StatementType statementType;
       private Long totalBytesBilled;
@@ -414,12 +441,18 @@ public abstract class JobStatistics implements Serializable {
       private List<QueryStage> queryPlan;
       private List<TimelineSample> timeline;
       private Schema schema;
+      private List<QueryParameter> queryParameters;
+      private SearchStats searchStats;
 
       private Builder() {}
 
       private Builder(com.google.api.services.bigquery.model.JobStatistics statisticsPb) {
         super(statisticsPb);
         if (statisticsPb.getQuery() != null) {
+          if (statisticsPb.getQuery().getBiEngineStatistics() != null) {
+            this.biEngineStats =
+                BiEngineStats.fromPb(statisticsPb.getQuery().getBiEngineStatistics());
+          }
           this.billingTier = statisticsPb.getQuery().getBillingTier();
           this.cacheHit = statisticsPb.getQuery().getCacheHit();
           this.ddlOperationPerformed = statisticsPb.getQuery().getDdlOperationPerformed();
@@ -457,7 +490,18 @@ public abstract class JobStatistics implements Serializable {
           if (statisticsPb.getQuery().getSchema() != null) {
             this.schema = Schema.fromPb(statisticsPb.getQuery().getSchema());
           }
+          if (statisticsPb.getQuery().getSearchStatistics() != null) {
+            this.searchStats = SearchStats.fromPb(statisticsPb.getQuery().getSearchStatistics());
+          }
+          if (statisticsPb.getQuery().getDmlStats() != null) {
+            this.dmlStats = DmlStats.fromPb(statisticsPb.getQuery().getDmlStats());
+          }
         }
+      }
+
+      Builder setBiEngineStats(BiEngineStats biEngineStats) {
+        this.biEngineStats = biEngineStats;
+        return self();
       }
 
       Builder setBillingTier(Integer billingTier) {
@@ -492,6 +536,11 @@ public abstract class JobStatistics implements Serializable {
 
       Builder setNumDmlAffectedRows(Long numDmlAffectedRows) {
         this.numDmlAffectedRows = numDmlAffectedRows;
+        return self();
+      }
+
+      Builder setDmlStats(DmlStats dmlStats) {
+        this.dmlStats = dmlStats;
         return self();
       }
 
@@ -545,6 +594,16 @@ public abstract class JobStatistics implements Serializable {
         return self();
       }
 
+      Builder setSearchStats(SearchStats searchStats) {
+        this.searchStats = searchStats;
+        return self();
+      }
+
+      Builder setQueryParameters(List<QueryParameter> queryParameters) {
+        this.queryParameters = queryParameters;
+        return self();
+      }
+
       @Override
       QueryStatistics build() {
         return new QueryStatistics(this);
@@ -553,6 +612,7 @@ public abstract class JobStatistics implements Serializable {
 
     private QueryStatistics(Builder builder) {
       super(builder);
+      this.biEngineStats = builder.biEngineStats;
       this.billingTier = builder.billingTier;
       this.cacheHit = builder.cacheHit;
       this.ddlOperationPerformed = builder.ddlOperationPerformed;
@@ -560,6 +620,7 @@ public abstract class JobStatistics implements Serializable {
       this.ddlTargetRoutine = builder.ddlTargetRoutine;
       this.estimatedBytesProcessed = builder.estimatedBytesProcessed;
       this.numDmlAffectedRows = builder.numDmlAffectedRows;
+      this.dmlStats = builder.dmlStats;
       this.referencedTables = builder.referencedTables;
       this.statementType = builder.statementType;
       this.totalBytesBilled = builder.totalBytesBilled;
@@ -569,6 +630,13 @@ public abstract class JobStatistics implements Serializable {
       this.queryPlan = builder.queryPlan;
       this.timeline = builder.timeline;
       this.schema = builder.schema;
+      this.searchStats = builder.searchStats;
+      this.queryParameters = builder.queryParameters;
+    }
+
+    /** Returns query statistics specific to the use of BI Engine. */
+    public BiEngineStats getBiEngineStats() {
+      return biEngineStats;
     }
 
     /** Returns the billing tier for the job. */
@@ -611,6 +679,11 @@ public abstract class JobStatistics implements Serializable {
      */
     public Long getNumDmlAffectedRows() {
       return numDmlAffectedRows;
+    }
+
+    /** Detailed statistics for DML statements. */
+    public DmlStats getDmlStats() {
+      return dmlStats;
     }
 
     /**
@@ -679,16 +752,36 @@ public abstract class JobStatistics implements Serializable {
       return schema;
     }
 
+    /**
+     * Statistics for a search query. Populated as part of JobStatistics2. Provides information
+     * about how indexes are used in search queries. If an index is not used, you can retrieve
+     * debugging information about the reason why.
+     */
+    public SearchStats getSearchStats() {
+      return searchStats;
+    }
+
+    /**
+     * Standard SQL only: Returns a list of undeclared query parameters detected during a dry run
+     * validation.
+     */
+    public List<QueryParameter> getQueryParameters() {
+      return queryParameters;
+    }
+
     @Override
     ToStringHelper toStringHelper() {
       return super.toStringHelper()
+          .add("biEngineStats", biEngineStats)
           .add("billingTier", billingTier)
           .add("cacheHit", cacheHit)
           .add("totalBytesBilled", totalBytesBilled)
           .add("totalBytesProcessed", totalBytesProcessed)
           .add("queryPlan", queryPlan)
           .add("timeline", timeline)
-          .add("schema", schema);
+          .add("schema", schema)
+          .add("searchStats", searchStats)
+          .add("queryParameters", queryParameters);
     }
 
     @Override
@@ -703,17 +796,23 @@ public abstract class JobStatistics implements Serializable {
     public final int hashCode() {
       return Objects.hash(
           baseHashCode(),
+          biEngineStats,
           billingTier,
           cacheHit,
           totalBytesBilled,
           totalBytesProcessed,
           queryPlan,
-          schema);
+          schema,
+          searchStats,
+          queryParameters);
     }
 
     @Override
     com.google.api.services.bigquery.model.JobStatistics toPb() {
       JobStatistics2 queryStatisticsPb = new JobStatistics2();
+      if (biEngineStats != null) {
+        queryStatisticsPb.setBiEngineStatistics(biEngineStats.toPb());
+      }
       queryStatisticsPb.setBillingTier(billingTier);
       queryStatisticsPb.setCacheHit(cacheHit);
       queryStatisticsPb.setDdlOperationPerformed(ddlOperationPerformed);
@@ -728,7 +827,9 @@ public abstract class JobStatistics implements Serializable {
       if (ddlTargetRoutine != null) {
         queryStatisticsPb.setDdlTargetRoutine(ddlTargetRoutine.toPb());
       }
-
+      if (dmlStats != null) {
+        queryStatisticsPb.setDmlStats(dmlStats.toPb());
+      }
       if (referencedTables != null) {
         queryStatisticsPb.setReferencedTables(
             Lists.transform(referencedTables, TableId.TO_PB_FUNCTION));
@@ -744,6 +845,12 @@ public abstract class JobStatistics implements Serializable {
       }
       if (schema != null) {
         queryStatisticsPb.setSchema(schema.toPb());
+      }
+      if (searchStats != null) {
+        queryStatisticsPb.setSearchStatistics(searchStats.toPb());
+      }
+      if (queryParameters != null) {
+        queryStatisticsPb.setUndeclaredQueryParameters(queryParameters);
       }
       return super.toPb().setQuery(queryStatisticsPb);
     }
@@ -1047,6 +1154,260 @@ public abstract class JobStatistics implements Serializable {
     }
   }
 
+  /** ReservationUsage contains information about a job's usage of a single reservation. */
+  public static class ReservationUsage {
+
+    static final Function<
+            com.google.api.services.bigquery.model.JobStatistics.ReservationUsage, ReservationUsage>
+        FROM_PB_FUNCTION =
+            new Function<
+                com.google.api.services.bigquery.model.JobStatistics.ReservationUsage,
+                ReservationUsage>() {
+              @Override
+              public ReservationUsage apply(
+                  com.google.api.services.bigquery.model.JobStatistics.ReservationUsage usage) {
+                return ReservationUsage.fromPb(usage);
+              }
+            };
+
+    static final Function<
+            ReservationUsage, com.google.api.services.bigquery.model.JobStatistics.ReservationUsage>
+        TO_PB_FUNCTION =
+            new Function<
+                ReservationUsage,
+                com.google.api.services.bigquery.model.JobStatistics.ReservationUsage>() {
+              @Override
+              public com.google.api.services.bigquery.model.JobStatistics.ReservationUsage apply(
+                  ReservationUsage usage) {
+                return usage.toPb();
+              }
+            };
+
+    private final String name;
+    private final Long slotMs;
+
+    public static class Builder {
+
+      private String name;
+      private Long slotMs;
+
+      private Builder() {};
+
+      Builder setName(String name) {
+        this.name = name;
+        return this;
+      }
+
+      Builder setSlotMs(Long slotMs) {
+        this.slotMs = slotMs;
+        return this;
+      }
+
+      ReservationUsage build() {
+        return new ReservationUsage(this);
+      }
+    }
+
+    private ReservationUsage(Builder builder) {
+      this.name = builder.name;
+      this.slotMs = builder.slotMs;
+    }
+
+    // Return mame indicates the utilized reservation name, or "unreserved" for ondemand usage.
+    public String getName() {
+      return name;
+    }
+
+    // Returns slotMs reports the slot milliseconds utilized within in the given reservation.
+    public Long getSlotMs() {
+      return slotMs;
+    }
+
+    static Builder newBuilder() {
+      return new Builder();
+    }
+
+    ToStringHelper toStringHelper() {
+      return MoreObjects.toStringHelper(this).add("name", name).add("slotMs", slotMs);
+    }
+
+    @Override
+    public String toString() {
+      return toStringHelper().toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      return obj == this
+          || obj != null
+              && obj.getClass().equals(ReservationUsage.class)
+              && Objects.equals(toPb(), ((ReservationUsage) obj).toPb());
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(name, slotMs);
+    }
+
+    com.google.api.services.bigquery.model.JobStatistics.ReservationUsage toPb() {
+      com.google.api.services.bigquery.model.JobStatistics.ReservationUsage usage =
+          new com.google.api.services.bigquery.model.JobStatistics.ReservationUsage();
+      usage.setName(name);
+      usage.setSlotMs(slotMs);
+      return usage;
+    }
+
+    static ReservationUsage fromPb(
+        com.google.api.services.bigquery.model.JobStatistics.ReservationUsage usage) {
+      Builder builder = newBuilder();
+      builder.setName(usage.getName());
+      builder.setSlotMs(usage.getSlotMs());
+      return builder.build();
+    }
+  }
+
+  // TransactionInfo contains information about a multi-statement transaction that may have
+  // associated with a job.
+  public static class TransactionInfo {
+
+    // TransactionID is the system-generated identifier for the transaction.
+    private final String transactionId;
+
+    public static class Builder {
+
+      private String transactionId;
+
+      private Builder() {};
+
+      Builder setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
+        return this;
+      }
+
+      TransactionInfo build() {
+        return new TransactionInfo(this);
+      }
+    }
+
+    private TransactionInfo(Builder builder) {
+      this.transactionId = builder.transactionId;
+    }
+
+    public String getTransactionId() {
+      return transactionId;
+    }
+
+    static Builder newbuilder() {
+      return new Builder();
+    }
+
+    ToStringHelper toStringHelper() {
+      return MoreObjects.toStringHelper(this).add("transactionId", transactionId);
+    }
+
+    @Override
+    public String toString() {
+      return toStringHelper().toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      return obj == this
+          || obj != null
+              && obj.getClass().equals(TransactionInfo.class)
+              && Objects.equals(toPb(), ((TransactionInfo) obj).toPb());
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(transactionId);
+    }
+
+    com.google.api.services.bigquery.model.TransactionInfo toPb() {
+      com.google.api.services.bigquery.model.TransactionInfo transactionInfo =
+          new com.google.api.services.bigquery.model.TransactionInfo();
+      transactionInfo.setTransactionId(transactionId);
+      return transactionInfo;
+    }
+
+    static TransactionInfo fromPb(
+        com.google.api.services.bigquery.model.TransactionInfo transactionInfo) {
+      Builder builder = newbuilder();
+      builder.setTransactionId(transactionInfo.getTransactionId());
+      return builder.build();
+    }
+  }
+
+  // SessionInfo contains information about the session if this job is part of one.
+  public static class SessionInfo {
+
+    // Id of the session
+    private final String sessionId;
+
+    public static class Builder {
+
+      private String sessionId;
+
+      private Builder() {};
+
+      Builder setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+        return this;
+      }
+
+      SessionInfo build() {
+        return new SessionInfo(this);
+      }
+    }
+
+    private SessionInfo(Builder builder) {
+      this.sessionId = builder.sessionId;
+    }
+
+    public String getSessionId() {
+      return sessionId;
+    }
+
+    static Builder newBuilder() {
+      return new Builder();
+    }
+
+    ToStringHelper toStringHelper() {
+      return MoreObjects.toStringHelper(this).add("sessionId", sessionId);
+    }
+
+    @Override
+    public String toString() {
+      return toStringHelper().toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      return obj == this
+          || obj != null
+              && obj.getClass().equals(SessionInfo.class)
+              && Objects.equals(toPb(), ((SessionInfo) obj).toPb());
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(sessionId);
+    }
+
+    com.google.api.services.bigquery.model.SessionInfo toPb() {
+      com.google.api.services.bigquery.model.SessionInfo sessionInfo =
+          new com.google.api.services.bigquery.model.SessionInfo();
+      sessionInfo.setSessionId(sessionId);
+      return sessionInfo;
+    }
+
+    static SessionInfo fromPb(com.google.api.services.bigquery.model.SessionInfo sessionInfo) {
+      SessionInfo.Builder builder = newBuilder();
+      builder.setSessionId(sessionInfo.getSessionId());
+      return builder.build();
+    }
+  }
+
   abstract static class Builder<T extends JobStatistics, B extends Builder<T, B>> {
 
     private Long creationTime;
@@ -1055,6 +1416,9 @@ public abstract class JobStatistics implements Serializable {
     private Long numChildJobs;
     private String parentJobId;
     private ScriptStatistics scriptStatistics;
+    private List<ReservationUsage> reservationUsage;
+    private TransactionInfo transactionInfo;
+    private SessionInfo sessionInfo;
 
     protected Builder() {}
 
@@ -1066,6 +1430,16 @@ public abstract class JobStatistics implements Serializable {
       this.parentJobId = statisticsPb.getParentJobId();
       if (statisticsPb.getScriptStatistics() != null) {
         this.scriptStatistics = ScriptStatistics.fromPb(statisticsPb.getScriptStatistics());
+      }
+      if (reservationUsage != null) {
+        this.reservationUsage =
+            Lists.transform(statisticsPb.getReservationUsage(), ReservationUsage.FROM_PB_FUNCTION);
+      }
+      if (statisticsPb.getTransactionInfo() != null) {
+        this.transactionInfo = TransactionInfo.fromPb(statisticsPb.getTransactionInfo());
+      }
+      if (statisticsPb.getSessionInfo() != null) {
+        this.sessionInfo = SessionInfo.fromPb(statisticsPb.getSessionInfo());
       }
     }
 
@@ -1099,6 +1473,9 @@ public abstract class JobStatistics implements Serializable {
     this.numChildJobs = builder.numChildJobs;
     this.parentJobId = builder.parentJobId;
     this.scriptStatistics = builder.scriptStatistics;
+    this.reservationUsage = builder.reservationUsage;
+    this.transactionInfo = builder.transactionInfo;
+    this.sessionInfo = builder.sessionInfo;
   }
 
   /** Returns the creation time of the job in milliseconds since epoch. */
@@ -1137,6 +1514,21 @@ public abstract class JobStatistics implements Serializable {
     return scriptStatistics;
   }
 
+  /** ReservationUsage contains information about a job's usage of a single reservation. */
+  public List<ReservationUsage> getReservationUsage() {
+    return reservationUsage;
+  }
+
+  /** Info indicates the transaction ID associated with the job, if any. */
+  public TransactionInfo getTransactionInfo() {
+    return transactionInfo;
+  }
+
+  /** Info of the session if this job is part of one. */
+  public SessionInfo getSessionInfo() {
+    return sessionInfo;
+  }
+
   ToStringHelper toStringHelper() {
     return MoreObjects.toStringHelper(this)
         .add("creationTime", creationTime)
@@ -1144,7 +1536,10 @@ public abstract class JobStatistics implements Serializable {
         .add("startTime", startTime)
         .add("numChildJobs", numChildJobs)
         .add("parentJobId", parentJobId)
-        .add("scriptStatistics", scriptStatistics);
+        .add("scriptStatistics", scriptStatistics)
+        .add("reservationUsage", reservationUsage)
+        .add("transactionInfo", transactionInfo)
+        .add("sessionInfo", sessionInfo);
   }
 
   @Override
@@ -1154,7 +1549,15 @@ public abstract class JobStatistics implements Serializable {
 
   final int baseHashCode() {
     return Objects.hash(
-        creationTime, endTime, startTime, numChildJobs, parentJobId, scriptStatistics);
+        creationTime,
+        endTime,
+        startTime,
+        numChildJobs,
+        parentJobId,
+        scriptStatistics,
+        reservationUsage,
+        transactionInfo,
+        sessionInfo);
   }
 
   final boolean baseEquals(JobStatistics jobStatistics) {
@@ -1171,6 +1574,16 @@ public abstract class JobStatistics implements Serializable {
     statistics.setParentJobId(parentJobId);
     if (scriptStatistics != null) {
       statistics.setScriptStatistics(scriptStatistics.toPb());
+    }
+    if (reservationUsage != null) {
+      statistics.setReservationUsage(
+          Lists.transform(reservationUsage, ReservationUsage.TO_PB_FUNCTION));
+    }
+    if (transactionInfo != null) {
+      statistics.setTransactionInfo(transactionInfo.toPb());
+    }
+    if (sessionInfo != null) {
+      statistics.setSessionInfo(sessionInfo.toPb());
     }
     return statistics;
   }

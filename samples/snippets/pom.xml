@@ -1,3 +1,4 @@
+<?xml version='1.0' encoding='UTF-8'?>
 <!--
   ~ Copyright 2020 Google LLC
   ~
@@ -13,7 +14,9 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<project>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.example.bigquery</groupId>
   <artifactId>bigquery-google-cloud-samples</artifactId>
@@ -26,7 +29,7 @@
   <parent>
     <groupId>com.google.cloud.samples</groupId>
     <artifactId>shared-configuration</artifactId>
-    <version>1.0.17</version>
+    <version>1.2.0</version>
   </parent>
 
   <properties>
@@ -44,7 +47,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>libraries-bom</artifactId>
-        <version>5.5.0</version>
+        <version>26.20.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -59,27 +62,54 @@
     <!-- [END bigquery_java_dependencies] -->
     <!-- [END bigquery_install_with_bom] -->
 
+    <!-- [START bigquery-enduser-installed-packages] -->
+    <dependency>
+      <groupId>com.google.oauth-client</groupId>
+      <artifactId>google-oauth-client-java6</artifactId>
+      <version>1.34.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.oauth-client</groupId>
+      <artifactId>google-oauth-client-jetty</artifactId>
+      <version>1.34.1</version>
+    </dependency>
+    <!-- [END bigquery-enduser-installed-packages] -->
+
     <!-- Test dependencies -->
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-bigtable</artifactId>
+      <version>2.30.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-bigqueryconnection</artifactId>
+      <version>2.34.0</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.13</version>
+      <version>4.13.2</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.google.truth</groupId>
       <artifactId>truth</artifactId>
-      <version>1.0.1</version>
+      <version>1.2.0</version>
       <scope>test</scope>
     </dependency>
+  <!-- [START bigquery_install_with_bom] -->
   </dependencies>
+  <!-- [END bigquery_install_with_bom] -->
 
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-deploy-plugin</artifactId>
-        <version>2.8.2</version>
+        <version>3.1.1</version>
         <configuration>
           <skip>true</skip>
         </configuration>
@@ -87,7 +117,7 @@
       <plugin>
         <groupId>org.sonatype.plugins</groupId>
         <artifactId>nexus-staging-maven-plugin</artifactId>
-        <version>1.6.8</version>
+        <version>1.6.13</version>
         <configuration>
           <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
         </configuration>

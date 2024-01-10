@@ -27,6 +27,8 @@ import org.junit.Test;
 public class ExternalTableDefinitionTest {
 
   private static final List<String> SOURCE_URIS = ImmutableList.of("uri1", "uri2");
+  private static final List<String> DECIMAL_TARGET_TYPES =
+      ImmutableList.of("NUMERIC", "BIGNUMERIC", "STRING");
   private static final Field FIELD_SCHEMA1 =
       Field.newBuilder("StringField", LegacySQLTypeName.STRING)
           .setMode(Field.Mode.NULLABLE)
@@ -46,8 +48,11 @@ public class ExternalTableDefinitionTest {
   private static final Integer MAX_BAD_RECORDS = 42;
   private static final Boolean IGNORE_UNKNOWN_VALUES = true;
   private static final String COMPRESSION = "GZIP";
+  private static final String CONNECTION_ID = "123456789";
   private static final Boolean AUTODETECT = true;
+  private static final AvroOptions AVRO_OPTIONS = AvroOptions.newBuilder().build();
   private static final CsvOptions CSV_OPTIONS = CsvOptions.newBuilder().build();
+  private static final ParquetOptions PARQUET_OPTIONS = ParquetOptions.newBuilder().build();
   private static final HivePartitioningOptions HIVE_PARTITIONING_OPTIONS =
       HivePartitioningOptions.newBuilder()
           .setMode("AUTO")
@@ -55,22 +60,40 @@ public class ExternalTableDefinitionTest {
           .build();
   private static final ExternalTableDefinition EXTERNAL_TABLE_DEFINITION =
       ExternalTableDefinition.newBuilder(SOURCE_URIS, TABLE_SCHEMA, CSV_OPTIONS)
+          .setFileSetSpecType("FILE_SET_SPEC_TYPE_FILE_SYSTEM_MATCH")
+          .setDecimalTargetTypes(DECIMAL_TARGET_TYPES)
           .setCompression(COMPRESSION)
+          .setConnectionId(CONNECTION_ID)
           .setIgnoreUnknownValues(IGNORE_UNKNOWN_VALUES)
           .setMaxBadRecords(MAX_BAD_RECORDS)
           .setAutodetect(AUTODETECT)
           .setHivePartitioningOptions(HIVE_PARTITIONING_OPTIONS)
           .build();
 
+  private static final ExternalTableDefinition EXTERNAL_TABLE_DEFINITION_AVRO =
+      ExternalTableDefinition.newBuilder(SOURCE_URIS, TABLE_SCHEMA, AVRO_OPTIONS).build();
+
+  private static final ExternalTableDefinition EXTERNAL_TABLE_DEFINITION_PARQUET =
+      ExternalTableDefinition.newBuilder(SOURCE_URIS, TABLE_SCHEMA, PARQUET_OPTIONS).build();
+
   @Test
   public void testToBuilder() {
     compareExternalTableDefinition(
         EXTERNAL_TABLE_DEFINITION, EXTERNAL_TABLE_DEFINITION.toBuilder().build());
     ExternalTableDefinition externalTableDefinition =
-        EXTERNAL_TABLE_DEFINITION.toBuilder().setCompression("NONE").build();
+        EXTERNAL_TABLE_DEFINITION
+            .toBuilder()
+            .setCompression("NONE")
+            .setConnectionId("00000")
+            .build();
     assertEquals("NONE", externalTableDefinition.getCompression());
+    assertEquals("00000", externalTableDefinition.getConnectionId());
     externalTableDefinition =
-        externalTableDefinition.toBuilder().setCompression(COMPRESSION).build();
+        externalTableDefinition
+            .toBuilder()
+            .setCompression(COMPRESSION)
+            .setConnectionId(CONNECTION_ID)
+            .build();
     compareExternalTableDefinition(EXTERNAL_TABLE_DEFINITION, externalTableDefinition);
   }
 
@@ -94,11 +117,14 @@ public class ExternalTableDefinitionTest {
   public void testBuilder() {
     assertEquals(TableDefinition.Type.EXTERNAL, EXTERNAL_TABLE_DEFINITION.getType());
     assertEquals(COMPRESSION, EXTERNAL_TABLE_DEFINITION.getCompression());
+    assertEquals(CONNECTION_ID, EXTERNAL_TABLE_DEFINITION.getConnectionId());
+    assertEquals(AVRO_OPTIONS, EXTERNAL_TABLE_DEFINITION_AVRO.getFormatOptions());
     assertEquals(CSV_OPTIONS, EXTERNAL_TABLE_DEFINITION.getFormatOptions());
     assertEquals(IGNORE_UNKNOWN_VALUES, EXTERNAL_TABLE_DEFINITION.ignoreUnknownValues());
     assertEquals(MAX_BAD_RECORDS, EXTERNAL_TABLE_DEFINITION.getMaxBadRecords());
     assertEquals(TABLE_SCHEMA, EXTERNAL_TABLE_DEFINITION.getSchema());
     assertEquals(SOURCE_URIS, EXTERNAL_TABLE_DEFINITION.getSourceUris());
+    assertEquals(DECIMAL_TARGET_TYPES, EXTERNAL_TABLE_DEFINITION.getDecimalTargetTypes());
     assertEquals(AUTODETECT, EXTERNAL_TABLE_DEFINITION.getAutodetect());
     assertEquals(HIVE_PARTITIONING_OPTIONS, EXTERNAL_TABLE_DEFINITION.getHivePartitioningOptions());
     assertNotEquals(EXTERNAL_TABLE_DEFINITION, TableDefinition.Type.EXTERNAL);
@@ -115,10 +141,24 @@ public class ExternalTableDefinitionTest {
         externalTableDefinition, ExternalTableDefinition.fromPb(externalTableDefinition.toPb()));
   }
 
+  @Test
+  public void testToAndFromPbParquet() {
+    compareExternalTableDefinition(
+        EXTERNAL_TABLE_DEFINITION_PARQUET,
+        ExternalTableDefinition.fromPb(EXTERNAL_TABLE_DEFINITION_PARQUET.toPb()));
+    ExternalTableDefinition externalTableDefinition =
+        ExternalTableDefinition.newBuilder(SOURCE_URIS, TABLE_SCHEMA, PARQUET_OPTIONS).build();
+    compareExternalTableDefinition(
+        externalTableDefinition, ExternalTableDefinition.fromPb(externalTableDefinition.toPb()));
+  }
+
   private void compareExternalTableDefinition(
       ExternalTableDefinition expected, ExternalTableDefinition value) {
     assertEquals(expected, value);
+    assertEquals(expected.getFileSetSpecType(), value.getFileSetSpecType());
+    assertEquals(expected.getDecimalTargetTypes(), value.getDecimalTargetTypes());
     assertEquals(expected.getCompression(), value.getCompression());
+    assertEquals(expected.getConnectionId(), value.getConnectionId());
     assertEquals(expected.getFormatOptions(), value.getFormatOptions());
     assertEquals(expected.ignoreUnknownValues(), value.ignoreUnknownValues());
     assertEquals(expected.getMaxBadRecords(), value.getMaxBadRecords());

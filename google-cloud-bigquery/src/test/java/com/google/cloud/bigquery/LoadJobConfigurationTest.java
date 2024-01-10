@@ -50,11 +50,15 @@ public class LoadJobConfigurationTest {
           .setDescription("FieldDescription")
           .build();
   private static final List<String> SOURCE_URIS = ImmutableList.of("uri1", "uri2");
+  private static final List<String> DECIMAL_TARGET_TYPES =
+      ImmutableList.of("NUMERIC", "BIGNUMERIC", "STRING");
   private static final List<SchemaUpdateOption> SCHEMA_UPDATE_OPTIONS =
       ImmutableList.of(SchemaUpdateOption.ALLOW_FIELD_ADDITION);
   private static final Schema TABLE_SCHEMA = Schema.of(FIELD_SCHEMA);
   private static final Boolean AUTODETECT = true;
-  private static final Boolean USERAVROLOGICALTYPES = true;
+  private static final Boolean USE_AVRO_LOGICAL_TYPES = true;
+
+  private static final boolean CREATE_SESSION = true;
   private static final EncryptionConfiguration JOB_ENCRYPTION_CONFIGURATION =
       EncryptionConfiguration.newBuilder().setKmsKeyName("KMS_KEY_1").build();
   private static final TimePartitioning TIME_PARTITIONING = TimePartitioning.of(Type.DAY);
@@ -69,6 +73,13 @@ public class LoadJobConfigurationTest {
       RangePartitioning.newBuilder().setField("IntegerField").setRange(RANGE).build();
   private static final String MODE = "STRING";
   private static final String SOURCE_URI_PREFIX = "gs://bucket/path_to_table";
+
+  private static final String KEY = "session_id";
+  private static final String VALUE = "session_id_1234567890";
+  private static final ConnectionProperty CONNECTION_PROPERTY =
+      ConnectionProperty.newBuilder().setKey(KEY).setValue(VALUE).build();
+  private static final List<ConnectionProperty> CONNECTION_PROPERTIES =
+      ImmutableList.of(CONNECTION_PROPERTY);
   private static final HivePartitioningOptions HIVE_PARTITIONING_OPTIONS =
       HivePartitioningOptions.newBuilder()
           .setMode(MODE)
@@ -76,9 +87,11 @@ public class LoadJobConfigurationTest {
           .build();
   private static final LoadJobConfiguration LOAD_CONFIGURATION_CSV =
       LoadJobConfiguration.newBuilder(TABLE_ID, SOURCE_URIS)
+          .setDecimalTargetTypes(DECIMAL_TARGET_TYPES)
           .setCreateDisposition(CREATE_DISPOSITION)
           .setWriteDisposition(WRITE_DISPOSITION)
           .setFormatOptions(CSV_OPTIONS)
+          .setFileSetSpecType("FILE_SET_SPEC_TYPE_FILE_SYSTEM_MATCH")
           .setIgnoreUnknownValues(IGNORE_UNKNOWN_VALUES)
           .setMaxBadRecords(MAX_BAD_RECORDS)
           .setSchema(TABLE_SCHEMA)
@@ -92,6 +105,8 @@ public class LoadJobConfigurationTest {
           .setRangePartitioning(RANGE_PARTITIONING)
           .setNullMarker("nullMarker")
           .setHivePartitioningOptions(HIVE_PARTITIONING_OPTIONS)
+          .setConnectionProperties(CONNECTION_PROPERTIES)
+          .setCreateSession(CREATE_SESSION)
           .build();
 
   private static final DatastoreBackupOptions BACKUP_OPTIONS =
@@ -125,7 +140,7 @@ public class LoadJobConfigurationTest {
           .setDestinationEncryptionConfiguration(JOB_ENCRYPTION_CONFIGURATION)
           .setTimePartitioning(TIME_PARTITIONING)
           .setClustering(CLUSTERING)
-          .setUseAvroLogicalTypes(USERAVROLOGICALTYPES)
+          .setUseAvroLogicalTypes(USE_AVRO_LOGICAL_TYPES)
           .setLabels(LABELS)
           .setJobTimeoutMs(TIMEOUT)
           .setRangePartitioning(RANGE_PARTITIONING)
@@ -226,8 +241,10 @@ public class LoadJobConfigurationTest {
       LoadJobConfiguration expected, LoadJobConfiguration value) {
     assertEquals(expected, value);
     assertEquals(expected.hashCode(), value.hashCode());
+    assertEquals(expected.getFileSetSpecType(), value.getFileSetSpecType());
     assertEquals(expected.toString(), value.toString());
     assertEquals(expected.getDestinationTable(), value.getDestinationTable());
+    assertEquals(expected.getDecimalTargetTypes(), value.getDecimalTargetTypes());
     assertEquals(expected.getCreateDisposition(), value.getCreateDisposition());
     assertEquals(expected.getWriteDisposition(), value.getWriteDisposition());
     assertEquals(expected.getCsvOptions(), value.getCsvOptions());
@@ -249,5 +266,7 @@ public class LoadJobConfigurationTest {
     assertEquals(expected.getRangePartitioning(), value.getRangePartitioning());
     assertEquals(expected.getNullMarker(), value.getNullMarker());
     assertEquals(expected.getHivePartitioningOptions(), value.getHivePartitioningOptions());
+    assertEquals(expected.getConnectionProperties(), value.getConnectionProperties());
+    assertEquals(expected.getCreateSession(), value.getCreateSession());
   }
 }

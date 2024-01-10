@@ -24,8 +24,11 @@ import static org.threeten.bp.temporal.ChronoField.SECOND_OF_MINUTE;
 
 import com.google.api.services.bigquery.model.QueryParameterType;
 import com.google.common.collect.ImmutableMap;
+import com.google.gson.JsonObject;
 import java.math.BigDecimal;
 import java.text.ParseException;
+import java.time.Period;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +40,7 @@ import org.threeten.bp.ZoneOffset;
 import org.threeten.bp.format.DateTimeFormatter;
 import org.threeten.bp.format.DateTimeFormatterBuilder;
 import org.threeten.bp.jdk8.Jdk8Methods;
+import org.threeten.extra.PeriodDuration;
 
 public class QueryParameterValueTest {
 
@@ -142,12 +146,100 @@ public class QueryParameterValueTest {
   }
 
   @Test
+  public void testBigNumeric() {
+    QueryParameterValue value =
+        QueryParameterValue.bigNumeric(new BigDecimal("0.33333333333333333333333333333333333333"));
+    QueryParameterValue value1 =
+        QueryParameterValue.bigNumeric(new BigDecimal("0.50000000000000000000000000000000000000"));
+    QueryParameterValue value2 =
+        QueryParameterValue.bigNumeric(new BigDecimal("0.00000000500000000000000000000000000000"));
+    QueryParameterValue value3 =
+        QueryParameterValue.bigNumeric(new BigDecimal("-0.00000000500000000000000000000000000000"));
+    QueryParameterValue value4 =
+        QueryParameterValue.bigNumeric(
+            new BigDecimal("0.33333333333333333333333333333333333333888888888888888"));
+    QueryParameterValue value5 = QueryParameterValue.bigNumeric(new BigDecimal("1e-38"));
+    QueryParameterValue value6 = QueryParameterValue.bigNumeric(new BigDecimal("-1e38"));
+    QueryParameterValue value7 =
+        QueryParameterValue.bigNumeric(
+            new BigDecimal(
+                "578960446186580977117854925043439539266.34992332820282019728792003956564819967"));
+    QueryParameterValue value8 =
+        QueryParameterValue.bigNumeric(
+            new BigDecimal(
+                "-578960446186580977117854925043439539266.34992332820282019728792003956564819968"));
+
+    assertThat(value.getValue()).isEqualTo("0.33333333333333333333333333333333333333");
+    assertThat(value1.getValue()).isEqualTo("0.50000000000000000000000000000000000000");
+    assertThat(value2.getValue()).isEqualTo("5.00000000000000000000000000000E-9");
+    assertThat(value3.getValue()).isEqualTo("-5.00000000000000000000000000000E-9");
+    assertThat(value4.getValue())
+        .isEqualTo("0.33333333333333333333333333333333333333888888888888888");
+    assertThat(value5.getValue()).isEqualTo("1E-38");
+    assertThat(value6.getValue()).isEqualTo("-1E+38");
+    assertThat(value7.getValue())
+        .isEqualTo(
+            "578960446186580977117854925043439539266.34992332820282019728792003956564819967");
+    assertThat(value8.getValue())
+        .isEqualTo(
+            "-578960446186580977117854925043439539266.34992332820282019728792003956564819968");
+    assertThat(value.getType()).isEqualTo(StandardSQLTypeName.BIGNUMERIC);
+    assertThat(value.getArrayType()).isNull();
+    assertThat(value.getArrayValues()).isNull();
+  }
+
+  @Test
   public void testString() {
     QueryParameterValue value = QueryParameterValue.string("foo");
     assertThat(value.getValue()).isEqualTo("foo");
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.STRING);
     assertThat(value.getArrayType()).isNull();
     assertThat(value.getArrayValues()).isNull();
+  }
+
+  @Test
+  public void testGeography() {
+    QueryParameterValue value = QueryParameterValue.geography("POINT(-122.350220 47.649154)");
+    assertThat(value.getValue()).isEqualTo("POINT(-122.350220 47.649154)");
+    assertThat(value.getType()).isEqualTo(StandardSQLTypeName.GEOGRAPHY);
+    assertThat(value.getArrayType()).isNull();
+    assertThat(value.getArrayValues()).isNull();
+  }
+
+  @Test
+  public void testJson() {
+    QueryParameterValue value =
+        QueryParameterValue.json("{\"class\" : {\"students\" : [{\"name\" : \"Jane\"}]}}");
+    JsonObject jsonObject = new JsonObject();
+    jsonObject.addProperty("class", "student");
+    QueryParameterValue value1 = QueryParameterValue.json(jsonObject);
+    assertThat(value.getValue())
+        .isEqualTo("{\"class\" : {\"students\" : [{\"name\" : \"Jane\"}]}}");
+    assertThat(value1.getValue()).isEqualTo("{\"class\":\"student\"}");
+    assertThat(value.getType()).isEqualTo(StandardSQLTypeName.JSON);
+    assertThat(value1.getType()).isEqualTo(StandardSQLTypeName.JSON);
+    assertThat(value.getArrayType()).isNull();
+    assertThat(value1.getArrayType()).isNull();
+    assertThat(value.getArrayValues()).isNull();
+    assertThat(value1.getArrayType()).isNull();
+  }
+
+  @Test
+  public void testInterval() {
+    QueryParameterValue value = QueryParameterValue.interval("123-7 -19 0:24:12.000006");
+    QueryParameterValue value1 = QueryParameterValue.interval("P123Y7M-19DT0H24M12.000006S");
+    QueryParameterValue value2 =
+        QueryParameterValue.interval(
+            PeriodDuration.of(Period.of(1, 2, 25), java.time.Duration.ofHours(8)));
+    assertThat(value.getValue()).isEqualTo("123-7 -19 0:24:12.000006");
+    assertThat(value1.getValue()).isEqualTo("P123Y7M-19DT0H24M12.000006S");
+    assertThat(value2.getValue()).isEqualTo("P1Y2M25DT8H");
+    assertThat(value.getType()).isEqualTo(StandardSQLTypeName.INTERVAL);
+    assertThat(value1.getType()).isEqualTo(StandardSQLTypeName.INTERVAL);
+    assertThat(value2.getType()).isEqualTo(StandardSQLTypeName.INTERVAL);
+    assertThat(value.getArrayType()).isNull();
+    assertThat(value1.getArrayType()).isNull();
+    assertThat(value2.getArrayType()).isNull();
   }
 
   @Test
@@ -470,6 +562,48 @@ public class QueryParameterValueTest {
         .containsAtLeastEntriesIn(recordField.getStructValues());
     assertThat(nestedRecordField.getStructTypes().size()).isEqualTo(structValue.size());
     assertThat(nestedRecordField.getStructValues().size()).isEqualTo(structValue.size());
+  }
+
+  @Test
+  public void testStructArray() {
+    Boolean[] boolValues = new Boolean[] {true, false};
+    Integer[] intValues = new Integer[] {15, 20};
+    String[] stringValues = new String[] {"test-string", "test-string2"};
+    List<ImmutableMap<String, QueryParameterValue>> fieldMaps = new ArrayList<>();
+    List<QueryParameterValue> tuples = new ArrayList<>();
+    for (int i = 0; i < 2; i++) {
+      QueryParameterValue booleanField = QueryParameterValue.bool(boolValues[i]);
+      QueryParameterValue integerField = QueryParameterValue.int64(intValues[i]);
+      QueryParameterValue stringField = QueryParameterValue.string(stringValues[i]);
+      ImmutableMap<String, QueryParameterValue> fieldMap =
+          ImmutableMap.of(
+              "booleanField",
+              booleanField,
+              "integerField",
+              integerField,
+              "stringField",
+              stringField);
+      fieldMaps.add(fieldMap);
+      QueryParameterValue recordField = QueryParameterValue.struct(fieldMap);
+      tuples.add(recordField);
+    }
+    QueryParameterValue repeatedRecordField =
+        QueryParameterValue.array(tuples.toArray(), StandardSQLTypeName.STRUCT);
+    com.google.api.services.bigquery.model.QueryParameterValue parameterValue =
+        repeatedRecordField.toValuePb();
+    QueryParameterType parameterType = repeatedRecordField.toTypePb();
+    QueryParameterValue queryParameterValue =
+        QueryParameterValue.fromPb(parameterValue, parameterType);
+    assertThat(queryParameterValue.getValue()).isNull();
+    assertThat(queryParameterValue.getType()).isEqualTo(StandardSQLTypeName.ARRAY);
+    assertThat(queryParameterValue.getArrayType()).isEqualTo(StandardSQLTypeName.STRUCT);
+    assertThat(queryParameterValue.getArrayValues().size()).isEqualTo(2);
+    for (int i = 0; i < 2; i++) {
+      QueryParameterValue record = queryParameterValue.getArrayValues().get(i);
+      assertThat(record.getType()).isEqualTo(StandardSQLTypeName.STRUCT);
+      assertThat(record.getStructTypes()).isNotNull();
+      assertThat(record.getStructValues()).isEqualTo(fieldMaps.get(i));
+    }
   }
 
   private static void assertArrayDataEquals(

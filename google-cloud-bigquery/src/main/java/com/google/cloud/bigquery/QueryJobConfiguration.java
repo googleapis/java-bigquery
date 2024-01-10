@@ -47,6 +47,7 @@ public final class QueryJobConfiguration extends JobConfiguration {
   private final String query;
   private final ImmutableList<QueryParameterValue> positionalParameters;
   private final ImmutableMap<String, QueryParameterValue> namedParameters;
+  private final String parameterMode;
   private final TableId destinationTable;
   private final Map<String, ExternalTableDefinition> tableDefinitions;
   private final List<UserDefinedFunction> userDefinedFunctions;
@@ -55,6 +56,7 @@ public final class QueryJobConfiguration extends JobConfiguration {
   private final DatasetId defaultDataset;
   private final Priority priority;
   private final Boolean allowLargeResults;
+  private final Boolean createSession;
   private final Boolean useQueryCache;
   private final Boolean flattenResults;
   private final Boolean dryRun;
@@ -69,6 +71,9 @@ public final class QueryJobConfiguration extends JobConfiguration {
   private final Map<String, String> labels;
   private final RangePartitioning rangePartitioning;
   private final List<ConnectionProperty> connectionProperties;
+  // maxResults is only used for fast query path
+  private final Long maxResults;
+  private final JobCreationMode jobCreationMode;
 
   /**
    * Priority levels for a query. If not specified the priority is assumed to be {@link
@@ -90,12 +95,28 @@ public final class QueryJobConfiguration extends JobConfiguration {
     BATCH
   }
 
+  /** Job Creation Mode provides different options on job creation. */
+  enum JobCreationMode {
+    /** Unspecified JobCreationMode, defaults to JOB_CREATION_REQUIRED. */
+    JOB_CREATION_MODE_UNSPECIFIED,
+    /** Default. Job creation is always required. */
+    JOB_CREATION_REQUIRED,
+    /**
+     * Job creation is optional. Returning immediate results is prioritized. BigQuery will
+     * automatically determine if a Job needs to be created. The conditions under which BigQuery can
+     * decide to not create a Job are subject to change. If Job creation is required,
+     * JOB_CREATION_REQUIRED mode should be used, which is the default.
+     */
+    JOB_CREATION_OPTIONAL,
+  }
+
   public static final class Builder
       extends JobConfiguration.Builder<QueryJobConfiguration, Builder> {
 
     private String query;
     private List<QueryParameterValue> positionalParameters = Lists.newArrayList();
     private Map<String, QueryParameterValue> namedParameters = Maps.newHashMap();
+    private String parameterMode;
     private TableId destinationTable;
     private Map<String, ExternalTableDefinition> tableDefinitions;
     private List<UserDefinedFunction> userDefinedFunctions;
@@ -104,6 +125,7 @@ public final class QueryJobConfiguration extends JobConfiguration {
     private DatasetId defaultDataset;
     private Priority priority;
     private Boolean allowLargeResults;
+    private Boolean createSession;
     private Boolean useQueryCache;
     private Boolean flattenResults;
     private Boolean dryRun;
@@ -118,6 +140,8 @@ public final class QueryJobConfiguration extends JobConfiguration {
     private Map<String, String> labels;
     private RangePartitioning rangePartitioning;
     private List<ConnectionProperty> connectionProperties;
+    private Long maxResults;
+    private JobCreationMode jobCreationMode;
 
     private Builder() {
       super(Type.QUERY);
@@ -128,6 +152,7 @@ public final class QueryJobConfiguration extends JobConfiguration {
       this.query = jobConfiguration.query;
       this.namedParameters = jobConfiguration.namedParameters;
       this.positionalParameters = jobConfiguration.positionalParameters;
+      this.parameterMode = jobConfiguration.parameterMode;
       this.destinationTable = jobConfiguration.destinationTable;
       this.tableDefinitions = jobConfiguration.tableDefinitions;
       this.userDefinedFunctions = jobConfiguration.userDefinedFunctions;
@@ -136,6 +161,7 @@ public final class QueryJobConfiguration extends JobConfiguration {
       this.defaultDataset = jobConfiguration.defaultDataset;
       this.priority = jobConfiguration.priority;
       this.allowLargeResults = jobConfiguration.allowLargeResults;
+      this.createSession = jobConfiguration.createSession;
       this.useQueryCache = jobConfiguration.useQueryCache;
       this.flattenResults = jobConfiguration.flattenResults;
       this.dryRun = jobConfiguration.dryRun;
@@ -150,20 +176,29 @@ public final class QueryJobConfiguration extends JobConfiguration {
       this.labels = jobConfiguration.labels;
       this.rangePartitioning = jobConfiguration.rangePartitioning;
       this.connectionProperties = jobConfiguration.connectionProperties;
+      this.maxResults = jobConfiguration.maxResults;
+      this.jobCreationMode = jobConfiguration.jobCreationMode;
     }
 
     private Builder(com.google.api.services.bigquery.model.JobConfiguration configurationPb) {
       this();
       JobConfigurationQuery queryConfigurationPb = configurationPb.getQuery();
       this.query = queryConfigurationPb.getQuery();
+      // Allows to get undeclaredqueryparameters in jobstatistics2
+      if (queryConfigurationPb.getQueryParameters() == null
+          && queryConfigurationPb.getParameterMode() != null) {
+        parameterMode = queryConfigurationPb.getParameterMode();
+      }
       if (queryConfigurationPb.getQueryParameters() != null
           && !queryConfigurationPb.getQueryParameters().isEmpty()) {
         if (queryConfigurationPb.getQueryParameters().get(0).getName() == null) {
+          parameterMode = "POSITIONAL";
           setPositionalParameters(
               Lists.transform(
                   queryConfigurationPb.getQueryParameters(),
                   POSITIONAL_PARAMETER_FROM_PB_FUNCTION));
         } else {
+          parameterMode = "NAMED";
           Map<String, QueryParameterValue> values = Maps.newHashMap();
           for (QueryParameter queryParameterPb : queryConfigurationPb.getQueryParameters()) {
             checkNotNull(queryParameterPb.getName());
@@ -176,6 +211,7 @@ public final class QueryJobConfiguration extends JobConfiguration {
         }
       }
       allowLargeResults = queryConfigurationPb.getAllowLargeResults();
+      createSession = queryConfigurationPb.getCreateSession();
       useQueryCache = queryConfigurationPb.getUseQueryCache();
       flattenResults = queryConfigurationPb.getFlattenResults();
       useLegacySql = queryConfigurationPb.getUseLegacySql();
@@ -270,6 +306,16 @@ public final class QueryJobConfiguration extends JobConfiguration {
             "Positional parameters can't be combined with named parameters");
       }
       positionalParameters.add(value);
+      return this;
+    }
+
+    /**
+     * Standard SQL only. Set to POSITIONAL to use positional (?) query parameters or to NAMED to
+     * use named (@myparam) query parameters in this query.
+     */
+    public Builder setParameterMode(String parameterMode) {
+      checkNotNull(parameterMode);
+      this.parameterMode = parameterMode;
       return this;
     }
 
@@ -442,6 +488,16 @@ public final class QueryJobConfiguration extends JobConfiguration {
     }
 
     /**
+     * Sets whether to create a new session. If {@code true} a random session id will be generated
+     * by BigQuery. If false, runs query with an existing session_id passed in ConnectionProperty,
+     * otherwise runs query in non-session mode."
+     */
+    public Builder setCreateSession(Boolean createSession) {
+      this.createSession = createSession;
+      return this;
+    }
+
+    /**
      * Sets whether the job is enabled to create arbitrarily large results. If {@code true} the
      * query is allowed to create large results at a slight cost in performance. If {@code true}
      * {@link Builder#setDestinationTable(TableId)} must be provided.
@@ -603,6 +659,29 @@ public final class QueryJobConfiguration extends JobConfiguration {
       return this;
     }
 
+    /**
+     * This is only supported in the fast query path [Optional] The maximum number of rows of data
+     * to return per page of results. Setting this flag to a small value such as 1000 and then
+     * paging through results might improve reliability when the query result set is large. In
+     * addition to this limit, responses are also limited to 10 MB. By default, there is no maximum
+     * row count, and only the byte limit applies.
+     *
+     * @param maxResults maxResults or {@code null} for none
+     */
+    public Builder setMaxResults(Long maxResults) {
+      this.maxResults = maxResults;
+      return this;
+    }
+
+    /**
+     * Provides different options on job creation. If not specified the job creation mode is assumed
+     * to be {@link JobCreationMode#JOB_CREATION_REQUIRED}.
+     */
+    Builder setJobCreationMode(JobCreationMode jobCreationMode) {
+      this.jobCreationMode = jobCreationMode;
+      return this;
+    }
+
     public QueryJobConfiguration build() {
       return new QueryJobConfiguration(this);
     }
@@ -621,7 +700,9 @@ public final class QueryJobConfiguration extends JobConfiguration {
     }
     positionalParameters = ImmutableList.copyOf(builder.positionalParameters);
     namedParameters = ImmutableMap.copyOf(builder.namedParameters);
+    this.parameterMode = builder.parameterMode;
     this.allowLargeResults = builder.allowLargeResults;
+    this.createSession = builder.createSession;
     this.createDisposition = builder.createDisposition;
     this.defaultDataset = builder.defaultDataset;
     this.destinationTable = builder.destinationTable;
@@ -644,6 +725,8 @@ public final class QueryJobConfiguration extends JobConfiguration {
     this.labels = builder.labels;
     this.rangePartitioning = builder.rangePartitioning;
     this.connectionProperties = builder.connectionProperties;
+    this.maxResults = builder.maxResults;
+    this.jobCreationMode = builder.jobCreationMode;
   }
 
   /**
@@ -656,6 +739,15 @@ public final class QueryJobConfiguration extends JobConfiguration {
    */
   public Boolean allowLargeResults() {
     return allowLargeResults;
+  }
+
+  /**
+   * Returns whether to create a new session.
+   *
+   * @see <a href="https://cloud.google.com/bigquery/docs/sessions-create">Create Sessions</a>
+   */
+  public Boolean createSession() {
+    return createSession;
   }
 
   /**
@@ -833,6 +925,24 @@ public final class QueryJobConfiguration extends JobConfiguration {
     return connectionProperties;
   }
 
+  /**
+   * This is only supported in the fast query path [Optional] The maximum number of rows of data to
+   * return per page of results. Setting this flag to a small value such as 1000 and then paging
+   * through results might improve reliability when the query result set is large. In addition to
+   * this limit, responses are also limited to 10 MB. By default, there is no maximum row count, and
+   * only the byte limit applies.
+   *
+   * @return value or {@code null} for none
+   */
+  public Long getMaxResults() {
+    return maxResults;
+  }
+
+  /** Returns the job creation mode. */
+  JobCreationMode getJobCreationMode() {
+    return jobCreationMode;
+  }
+
   @Override
   public Builder toBuilder() {
     return new Builder(this);
@@ -844,14 +954,16 @@ public final class QueryJobConfiguration extends JobConfiguration {
         .add("query", query)
         .add("positionalParameters", positionalParameters)
         .add("namedParameters", namedParameters)
+        .add("parameterMode", parameterMode)
         .add("destinationTable", destinationTable)
         .add("destinationEncryptionConfiguration", destinationEncryptionConfiguration)
         .add("defaultDataset", defaultDataset)
         .add("allowLargeResults", allowLargeResults)
+        .add("createSession", createSession)
         .add("flattenResults", flattenResults)
         .add("priority", priority)
         .add("tableDefinitions", tableDefinitions)
-        .add("userQueryCache", useQueryCache)
+        .add("useQueryCache", useQueryCache)
         .add("userDefinedFunctions", userDefinedFunctions)
         .add("createDisposition", createDisposition)
         .add("writeDisposition", writeDisposition)
@@ -865,7 +977,8 @@ public final class QueryJobConfiguration extends JobConfiguration {
         .add("jobTimeoutMs", jobTimeoutMs)
         .add("labels", labels)
         .add("rangePartitioning", rangePartitioning)
-        .add("connectionProperties", connectionProperties);
+        .add("connectionProperties", connectionProperties)
+        .add("jobCreationMode", jobCreationMode);
   }
 
   @Override
@@ -879,6 +992,7 @@ public final class QueryJobConfiguration extends JobConfiguration {
     return Objects.hash(
         baseHashCode(),
         allowLargeResults,
+        createSession,
         createDisposition,
         destinationTable,
         defaultDataset,
@@ -887,6 +1001,7 @@ public final class QueryJobConfiguration extends JobConfiguration {
         query,
         positionalParameters,
         namedParameters,
+        parameterMode,
         tableDefinitions,
         useQueryCache,
         userDefinedFunctions,
@@ -931,9 +1046,15 @@ public final class QueryJobConfiguration extends JobConfiguration {
           Lists.transform(namedParameters.entrySet().asList(), NAMED_PARAMETER_TO_PB_FUNCTION);
       queryConfigurationPb.setQueryParameters(queryParametersPb);
     }
+    if (parameterMode != null) {
+      queryConfigurationPb.setParameterMode(parameterMode);
+    }
     configurationPb.setDryRun(dryRun());
     if (allowLargeResults != null) {
       queryConfigurationPb.setAllowLargeResults(allowLargeResults);
+    }
+    if (createSession != null) {
+      queryConfigurationPb.setCreateSession(createSession);
     }
     if (createDisposition != null) {
       queryConfigurationPb.setCreateDisposition(createDisposition.toString());

@@ -49,7 +49,8 @@ public class DatasetTest {
   private static final List<Acl> ACCESS_RULES =
       ImmutableList.of(
           Acl.of(Acl.Group.ofAllAuthenticatedUsers(), Acl.Role.READER),
-          Acl.of(new Acl.View(TableId.of("dataset", "table"))));
+          Acl.of(new Acl.View(TableId.of("dataset", "table"))),
+          Acl.of(new Acl.Routine(RoutineId.of("dataset", "routine"))));
   private static final Map<String, String> LABELS =
       ImmutableMap.of(
           "example-label1", "example-value1",
@@ -65,6 +66,7 @@ public class DatasetTest {
   private static final String SELF_LINK = "http://bigquery/p/d";
   private static final DatasetInfo DATASET_INFO = DatasetInfo.newBuilder(DATASET_ID).build();
   private static final Field FIELD = Field.of("FieldName", LegacySQLTypeName.INTEGER);
+  private static final String STORAGE_BILLING_MODEL = "LOGICAL";
   private static final StandardTableDefinition TABLE_DEFINITION =
       StandardTableDefinition.of(Schema.of(FIELD));
   private static final ViewDefinition VIEW_DEFINITION = ViewDefinition.of("QUERY");
@@ -76,6 +78,17 @@ public class DatasetTest {
       TableInfo.newBuilder(TableId.of("dataset", "table2"), VIEW_DEFINITION).build();
   private static final TableInfo TABLE_INFO3 =
       TableInfo.newBuilder(TableId.of("dataset", "table3"), EXTERNAL_TABLE_DEFINITION).build();
+  private static final String NEW_PROJECT_ID = "projectId2";
+  private static final TableId TABLE_ID1 = TableId.of(NEW_PROJECT_ID, "dataset", "table3");
+  private static final TableInfo TABLE_INFO4 =
+      TableInfo.newBuilder(
+              TableId.of(NEW_PROJECT_ID, "dataset", "table3"), EXTERNAL_TABLE_DEFINITION)
+          .build();
+  private static final ExternalDatasetReference EXTERNAL_DATASET_REFERENCE =
+      ExternalDatasetReference.newBuilder()
+          .setExternalSource("source")
+          .setConnection("connection")
+          .build();
 
   @Rule public MockitoRule rule;
 
@@ -108,6 +121,7 @@ public class DatasetTest {
             .setLocation(LOCATION)
             .setSelfLink(SELF_LINK)
             .setLabels(LABELS)
+            .setStorageBillingModel(STORAGE_BILLING_MODEL)
             .build();
     assertEquals(DATASET_ID, builtDataset.getDatasetId());
     assertEquals(ACCESS_RULES, builtDataset.getAcl());
@@ -121,6 +135,7 @@ public class DatasetTest {
     assertEquals(LOCATION, builtDataset.getLocation());
     assertEquals(SELF_LINK, builtDataset.getSelfLink());
     assertEquals(LABELS, builtDataset.getLabels());
+    assertEquals(STORAGE_BILLING_MODEL, builtDataset.getStorageBillingModel());
   }
 
   @Test
@@ -255,6 +270,16 @@ public class DatasetTest {
   }
 
   @Test
+  public void testGetTableWithNewProjectId() {
+    Table expectedTable = new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO4));
+    when(bigquery.getTable(TABLE_ID1, null)).thenReturn(expectedTable);
+    Table table = bigquery.getTable(TABLE_ID1, null);
+    assertNotNull(table);
+    assertEquals(table.getTableId().getProject(), NEW_PROJECT_ID);
+    verify(bigquery).getTable(TABLE_ID1, null);
+  }
+
+  @Test
   public void testGetNull() {
     when(bigquery.getTable(TABLE_INFO1.getTableId())).thenReturn(null);
     assertNull(dataset.get(TABLE_INFO1.getTableId().getTable()));
@@ -302,6 +327,32 @@ public class DatasetTest {
     compareDataset(expectedDataset, Dataset.fromPb(bigquery, expectedDataset.toPb()));
   }
 
+  @Test
+  public void testExternalDatasetReference() {
+    Dataset datasetWithExternalDatasetReference =
+        new Dataset.Builder(bigquery, DATASET_ID)
+            .setAcl(ACCESS_RULES)
+            .setCreationTime(CREATION_TIME)
+            .setDefaultTableLifetime(DEFAULT_TABLE_EXPIRATION)
+            .setDescription(DESCRIPTION)
+            .setEtag(ETAG)
+            .setFriendlyName(FRIENDLY_NAME)
+            .setGeneratedId(GENERATED_ID)
+            .setLastModified(LAST_MODIFIED)
+            .setLocation(LOCATION)
+            .setSelfLink(SELF_LINK)
+            .setLabels(LABELS)
+            .setExternalDatasetReference(EXTERNAL_DATASET_REFERENCE)
+            .setStorageBillingModel(STORAGE_BILLING_MODEL)
+            .build();
+    assertEquals(
+        EXTERNAL_DATASET_REFERENCE,
+        datasetWithExternalDatasetReference.getExternalDatasetReference());
+    compareDataset(
+        datasetWithExternalDatasetReference,
+        datasetWithExternalDatasetReference.toBuilder().build());
+  }
+
   private void compareDataset(Dataset expected, Dataset value) {
     assertEquals(expected, value);
     compareDatasetInfo(expected, value);
@@ -321,5 +372,7 @@ public class DatasetTest {
     assertEquals(expected.getCreationTime(), value.getCreationTime());
     assertEquals(expected.getDefaultTableLifetime(), value.getDefaultTableLifetime());
     assertEquals(expected.getLastModified(), value.getLastModified());
+    assertEquals(expected.getExternalDatasetReference(), value.getExternalDatasetReference());
+    assertEquals(expected.getStorageBillingModel(), value.getStorageBillingModel());
   }
 }

@@ -22,6 +22,7 @@ import com.google.api.services.bigquery.model.JobConfigurationLoad;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +38,9 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
   private static final long serialVersionUID = -2673554846792429829L;
 
   private final List<String> sourceUris;
+  private final String fileSetSpecType;
   private final TableId destinationTable;
+  private final List<String> decimalTargetTypes;
   private final EncryptionConfiguration destinationEncryptionConfiguration;
   private final JobInfo.CreateDisposition createDisposition;
   private final JobInfo.WriteDisposition writeDisposition;
@@ -55,12 +58,19 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
   private final Long jobTimeoutMs;
   private final RangePartitioning rangePartitioning;
   private final HivePartitioningOptions hivePartitioningOptions;
+  private final String referenceFileSchemaUri;
+
+  private final List<ConnectionProperty> connectionProperties;
+
+  private final Boolean createSession;
 
   public static final class Builder extends JobConfiguration.Builder<LoadJobConfiguration, Builder>
       implements LoadConfiguration.Builder {
 
     private List<String> sourceUris;
+    private String fileSetSpecType;
     private TableId destinationTable;
+    private List<String> decimalTargetTypes;
     private EncryptionConfiguration destinationEncryptionConfiguration;
     private JobInfo.CreateDisposition createDisposition;
     private JobInfo.WriteDisposition writeDisposition;
@@ -79,6 +89,9 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
     private Long jobTimeoutMs;
     private RangePartitioning rangePartitioning;
     private HivePartitioningOptions hivePartitioningOptions;
+    private String referenceFileSchemaUri;
+    private List<ConnectionProperty> connectionProperties;
+    private Boolean createSession;
 
     private Builder() {
       super(Type.LOAD);
@@ -87,6 +100,7 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
     private Builder(LoadJobConfiguration loadConfiguration) {
       this();
       this.destinationTable = loadConfiguration.destinationTable;
+      this.decimalTargetTypes = loadConfiguration.decimalTargetTypes;
       this.createDisposition = loadConfiguration.createDisposition;
       this.writeDisposition = loadConfiguration.writeDisposition;
       this.formatOptions = loadConfiguration.formatOptions;
@@ -95,6 +109,7 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
       this.schema = loadConfiguration.schema;
       this.ignoreUnknownValues = loadConfiguration.ignoreUnknownValues;
       this.sourceUris = loadConfiguration.sourceUris;
+      this.fileSetSpecType = loadConfiguration.fileSetSpecType;
       this.schemaUpdateOptions = loadConfiguration.schemaUpdateOptions;
       this.autodetect = loadConfiguration.autodetect;
       this.destinationEncryptionConfiguration =
@@ -106,12 +121,18 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
       this.jobTimeoutMs = loadConfiguration.jobTimeoutMs;
       this.rangePartitioning = loadConfiguration.rangePartitioning;
       this.hivePartitioningOptions = loadConfiguration.hivePartitioningOptions;
+      this.referenceFileSchemaUri = loadConfiguration.referenceFileSchemaUri;
+      this.connectionProperties = loadConfiguration.connectionProperties;
+      this.createSession = loadConfiguration.createSession;
     }
 
     private Builder(com.google.api.services.bigquery.model.JobConfiguration configurationPb) {
       this();
       JobConfigurationLoad loadConfigurationPb = configurationPb.getLoad();
       this.destinationTable = TableId.fromPb(loadConfigurationPb.getDestinationTable());
+      if (loadConfigurationPb.getDecimalTargetTypes() != null) {
+        this.decimalTargetTypes = ImmutableList.copyOf(loadConfigurationPb.getDecimalTargetTypes());
+      }
       if (loadConfigurationPb.getCreateDisposition() != null) {
         this.createDisposition =
             JobInfo.CreateDisposition.valueOf(loadConfigurationPb.getCreateDisposition());
@@ -157,6 +178,9 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
       if (loadConfigurationPb.getSourceUris() != null) {
         this.sourceUris = ImmutableList.copyOf(configurationPb.getLoad().getSourceUris());
       }
+      if (loadConfigurationPb.getFileSetSpecType() != null) {
+        this.fileSetSpecType = loadConfigurationPb.getFileSetSpecType();
+      }
       if (loadConfigurationPb.getSchemaUpdateOptions() != null) {
         ImmutableList.Builder<JobInfo.SchemaUpdateOption> schemaUpdateOptionsBuilder =
             new ImmutableList.Builder<>();
@@ -193,6 +217,16 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
         this.hivePartitioningOptions =
             HivePartitioningOptions.fromPb(loadConfigurationPb.getHivePartitioningOptions());
       }
+      if (loadConfigurationPb.getReferenceFileSchemaUri() != null) {
+        this.referenceFileSchemaUri = loadConfigurationPb.getReferenceFileSchemaUri();
+      }
+      if (loadConfigurationPb.getConnectionProperties() != null) {
+
+        this.connectionProperties =
+            Lists.transform(
+                loadConfigurationPb.getConnectionProperties(), ConnectionProperty.FROM_PB_FUNCTION);
+      }
+      createSession = loadConfigurationPb.getCreateSession();
     }
 
     @Override
@@ -278,6 +312,31 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
       return this;
     }
 
+    /**
+     * Defines how to interpret files denoted by URIs. By default the files are assumed to be data
+     * files (this can be specified explicitly via FILE_SET_SPEC_TYPE_FILE_SYSTEM_MATCH). A second
+     * option is "FILE_SET_SPEC_TYPE_NEW_LINE_DELIMITED_MANIFEST" which interprets each file as a
+     * manifest file, where each line is a reference to a file.
+     */
+    public Builder setFileSetSpecType(String fileSetSpecType) {
+      this.fileSetSpecType = fileSetSpecType;
+      return this;
+    }
+
+    /**
+     * Defines the list of possible SQL data types to which the source decimal values are converted.
+     * This list and the precision and the scale parameters of the decimal field determine the
+     * target type. In the order of NUMERIC, BIGNUMERIC, and STRING, a type is picked if it is in
+     * the specified list and if it supports the precision and the scale. STRING supports all
+     * precision and scale values.
+     *
+     * @param decimalTargetTypes decimalTargetType or {@code null} for none
+     */
+    public Builder setDecimalTargetTypes(List<String> decimalTargetTypes) {
+      this.decimalTargetTypes = decimalTargetTypes;
+      return this;
+    }
+
     public Builder setAutodetect(Boolean autodetect) {
       this.autodetect = autodetect;
       return this;
@@ -331,6 +390,27 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
       return this;
     }
 
+    /**
+     * When creating an external table, the user can provide a reference file with the table schema.
+     * This is enabled for the following formats: AVRO, PARQUET, ORC.
+     *
+     * @param referenceFileSchemaUri or {@code null} for none
+     */
+    public Builder setReferenceFileSchemaUri(String referenceFileSchemaUri) {
+      this.referenceFileSchemaUri = referenceFileSchemaUri;
+      return this;
+    }
+
+    public Builder setConnectionProperties(List<ConnectionProperty> connectionProperties) {
+      this.connectionProperties = ImmutableList.copyOf(connectionProperties);
+      return this;
+    }
+
+    public Builder setCreateSession(Boolean createSession) {
+      this.createSession = createSession;
+      return this;
+    }
+
     @Override
     public LoadJobConfiguration build() {
       return new LoadJobConfiguration(this);
@@ -340,7 +420,9 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
   private LoadJobConfiguration(Builder builder) {
     super(builder);
     this.sourceUris = builder.sourceUris;
+    this.fileSetSpecType = builder.fileSetSpecType;
     this.destinationTable = builder.destinationTable;
+    this.decimalTargetTypes = builder.decimalTargetTypes;
     this.createDisposition = builder.createDisposition;
     this.writeDisposition = builder.writeDisposition;
     this.formatOptions = builder.formatOptions;
@@ -358,6 +440,9 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
     this.jobTimeoutMs = builder.jobTimeoutMs;
     this.rangePartitioning = builder.rangePartitioning;
     this.hivePartitioningOptions = builder.hivePartitioningOptions;
+    this.referenceFileSchemaUri = builder.referenceFileSchemaUri;
+    this.connectionProperties = builder.connectionProperties;
+    this.createSession = builder.createSession;
   }
 
   @Override
@@ -388,6 +473,10 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
   @Override
   public CsvOptions getCsvOptions() {
     return formatOptions instanceof CsvOptions ? (CsvOptions) formatOptions : null;
+  }
+
+  public ParquetOptions getParquetOptions() {
+    return formatOptions instanceof ParquetOptions ? (ParquetOptions) formatOptions : null;
   }
 
   @Override
@@ -424,6 +513,14 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
    */
   public List<String> getSourceUris() {
     return sourceUris;
+  }
+
+  public String getFileSetSpecType() {
+    return fileSetSpecType;
+  }
+
+  public List<String> getDecimalTargetTypes() {
+    return decimalTargetTypes;
   }
 
   public Boolean getAutodetect() {
@@ -469,6 +566,18 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
     return hivePartitioningOptions;
   }
 
+  public String getReferenceFileSchemaUri() {
+    return referenceFileSchemaUri;
+  }
+
+  public List<ConnectionProperty> getConnectionProperties() {
+    return connectionProperties;
+  }
+
+  public Boolean getCreateSession() {
+    return createSession;
+  }
+
   @Override
   public Builder toBuilder() {
     return new Builder(this);
@@ -478,6 +587,7 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
   ToStringHelper toStringHelper() {
     return super.toStringHelper()
         .add("destinationTable", destinationTable)
+        .add("decimalTargetTypes", decimalTargetTypes)
         .add("destinationEncryptionConfiguration", destinationEncryptionConfiguration)
         .add("createDisposition", createDisposition)
         .add("writeDisposition", writeDisposition)
@@ -487,6 +597,7 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
         .add("schema", schema)
         .add("ignoreUnknownValue", ignoreUnknownValues)
         .add("sourceUris", sourceUris)
+        .add("fileSetSpecType", fileSetSpecType)
         .add("schemaUpdateOptions", schemaUpdateOptions)
         .add("autodetect", autodetect)
         .add("timePartitioning", timePartitioning)
@@ -495,7 +606,10 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
         .add("labels", labels)
         .add("jobTimeoutMs", jobTimeoutMs)
         .add("rangePartitioning", rangePartitioning)
-        .add("hivePartitioningOptions", hivePartitioningOptions);
+        .add("hivePartitioningOptions", hivePartitioningOptions)
+        .add("referenceFileSchemaUri", referenceFileSchemaUri)
+        .add("connectionProperties", connectionProperties)
+        .add("createSession", createSession);
   }
 
   @Override
@@ -545,6 +659,10 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
         loadConfigurationPb.setSkipLeadingRows(Ints.checkedCast(csvOptions.getSkipLeadingRows()));
       }
     }
+    if (getParquetOptions() != null) {
+      ParquetOptions parquetOptions = getParquetOptions();
+      loadConfigurationPb.setParquetOptions(parquetOptions.toPb());
+    }
     if (schema != null) {
       loadConfigurationPb.setSchema(schema.toPb());
     }
@@ -559,6 +677,12 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
     }
     if (sourceUris != null) {
       loadConfigurationPb.setSourceUris(ImmutableList.copyOf(sourceUris));
+    }
+    if (fileSetSpecType != null) {
+      loadConfigurationPb.setFileSetSpecType(fileSetSpecType);
+    }
+    if (decimalTargetTypes != null) {
+      loadConfigurationPb.setDecimalTargetTypes(ImmutableList.copyOf(decimalTargetTypes));
     }
     if (schemaUpdateOptions != null) {
       ImmutableList.Builder<String> schemaUpdateOptionsBuilder = new ImmutableList.Builder<>();
@@ -591,6 +715,17 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
     if (hivePartitioningOptions != null) {
       loadConfigurationPb.setHivePartitioningOptions(hivePartitioningOptions.toPb());
     }
+    if (referenceFileSchemaUri != null) {
+      loadConfigurationPb.setReferenceFileSchemaUri(referenceFileSchemaUri);
+    }
+    if (connectionProperties != null) {
+      loadConfigurationPb.setConnectionProperties(
+          Lists.transform(connectionProperties, ConnectionProperty.TO_PB_FUNCTION));
+    }
+    if (createSession != null) {
+      loadConfigurationPb.setCreateSession(createSession);
+    }
+
     jobConfiguration.setLoad(loadConfigurationPb);
     return jobConfiguration;
   }

@@ -39,12 +39,12 @@ public class SimpleApp {
     // [START bigquery_simple_app_query]
     QueryJobConfiguration queryConfig =
         QueryJobConfiguration.newBuilder(
-                "SELECT "
-                    + "CONCAT('https://stackoverflow.com/questions/', CAST(id as STRING)) as url, "
-                    + "view_count "
+                "SELECT CONCAT('https://stackoverflow.com/questions/', "
+                    + "CAST(id as STRING)) as url, view_count "
                     + "FROM `bigquery-public-data.stackoverflow.posts_questions` "
                     + "WHERE tags like '%google-bigquery%' "
-                    + "ORDER BY favorite_count DESC LIMIT 10")
+                    + "ORDER BY view_count DESC "
+                    + "LIMIT 10")
             // Use standard SQL syntax for queries.
             // See: https://cloud.google.com/bigquery/sql-reference/
             .setUseLegacySql(false)
@@ -73,9 +73,10 @@ public class SimpleApp {
 
     // Print all pages of the results.
     for (FieldValueList row : result.iterateAll()) {
+      // String type
       String url = row.get("url").getStringValue();
-      long viewCount = row.get("view_count").getLongValue();
-      System.out.printf("url: %s views: %d%n", url, viewCount);
+      String viewCount = row.get("view_count").getStringValue();
+      System.out.printf("%s : %s views\n", url, viewCount);
     }
     // [END bigquery_simple_app_print]
   }

@@ -79,7 +79,19 @@ public abstract class ExternalTableDefinition extends TableDefinition {
       return setSourceUrisImmut(ImmutableList.copyOf(sourceUris));
     }
 
+    abstract Builder setFileSetSpecTypeInner(String spec);
+
     abstract Builder setSourceUrisImmut(ImmutableList<String> sourceUris);
+
+    /**
+     * Defines how to interpret files denoted by URIs. By default the files are assumed to be data
+     * files (this can be specified explicitly via FILE_SET_SPEC_TYPE_FILE_SYSTEM_MATCH). A second
+     * option is "FILE_SET_SPEC_TYPE_NEW_LINE_DELIMITED_MANIFEST" which interprets each file as a
+     * manifest file, where each line is a reference to a file.
+     */
+    public Builder setFileSetSpecType(String fileSetSpecType) {
+      return setFileSetSpecTypeInner(fileSetSpecType);
+    }
 
     /**
      * Sets the source format, and possibly some parsing options, of the external data. Supported
@@ -92,6 +104,17 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     public Builder setFormatOptions(FormatOptions formatOptions) {
       return setFormatOptionsInner(formatOptions);
     }
+
+    /**
+     * Defines the list of possible SQL data types to which the source decimal values are converted.
+     * This list and the precision and the scale parameters of the decimal field determine the
+     * target type. In the order of NUMERIC, BIGNUMERIC, and STRING, a type is picked if it is in
+     * the specified list and if it supports the precision and the scale. STRING supports all
+     * precision and scale values.
+     *
+     * @param decimalTargetTypes decimalTargetType or {@code null} for none
+     */
+    public abstract Builder setDecimalTargetTypes(List<String> decimalTargetTypes);
 
     abstract Builder setFormatOptionsInner(FormatOptions formatOptions);
 
@@ -125,6 +148,12 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     public abstract Builder setCompression(String compression);
 
     /**
+     * [Optional, Trusted Tester] connectionId for external data source. The value may be {@code
+     * null}.
+     */
+    public abstract Builder setConnectionId(String connectionId);
+
+    /**
      * [Experimental] Sets detection of schema and format options automatically. Any option
      * specified explicitly will be honored.
      */
@@ -139,6 +168,14 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     public Builder setHivePartitioningOptions(HivePartitioningOptions hivePartitioningOptions) {
       return setHivePartitioningOptionsInner(hivePartitioningOptions);
     };
+
+    /**
+     * When creating an external table, the user can provide a reference file with the table schema.
+     * This is enabled for the following formats: AVRO, PARQUET, ORC.
+     *
+     * @param referenceFileSchemaUri or {@code null} for none
+     */
+    public abstract Builder setReferenceFileSchemaUri(String referenceFileSchemaUri);
 
     abstract Builder setHivePartitioningOptionsInner(
         HivePartitioningOptions hivePartitioningOptions);
@@ -157,6 +194,16 @@ public abstract class ExternalTableDefinition extends TableDefinition {
    */
   @Nullable
   public abstract String getCompression();
+
+  /**
+   * Returns the connection ID used to connect to external data source.
+   *
+   * @see <a
+   *     href="https://cloud.google.com/bigquery/docs/reference/v2/tables#externalDataConfiguration">
+   *     ConnectionId</a>
+   */
+  @Nullable
+  public abstract String getConnectionId();
 
   /**
    * Returns whether BigQuery should allow extra values that are not represented in the table
@@ -198,6 +245,14 @@ public abstract class ExternalTableDefinition extends TableDefinition {
   }
 
   @Nullable
+  public String getFileSetSpecType() {
+    return getFileSetSpecTypeInner();
+  }
+
+  @Nullable
+  abstract String getFileSetSpecTypeInner();
+
+  @Nullable
   public abstract ImmutableList<String> getSourceUrisImmut();
 
   /**
@@ -213,12 +268,18 @@ public abstract class ExternalTableDefinition extends TableDefinition {
   @Nullable
   abstract FormatOptions getFormatOptionsInner();
 
+  @Nullable
+  public abstract ImmutableList<String> getDecimalTargetTypes();
+
   /**
    * [Experimental] Returns whether automatic detection of schema and format options should be
    * performed.
    */
   @Nullable
   public abstract Boolean getAutodetect();
+
+  @Nullable
+  public abstract String getReferenceFileSchemaUri();
 
   /**
    * [Experimental] Returns the HivePartitioningOptions when the data layout follows Hive
@@ -249,6 +310,9 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     if (getCompression() != null) {
       externalConfigurationPb.setCompression(getCompression());
     }
+    if (getConnectionId() != null) {
+      externalConfigurationPb.setConnectionId(getConnectionId());
+    }
     if (ignoreUnknownValues() != null) {
       externalConfigurationPb.setIgnoreUnknownValues(ignoreUnknownValues());
     }
@@ -264,6 +328,15 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     if (getSourceUris() != null) {
       externalConfigurationPb.setSourceUris(getSourceUris());
     }
+    if (getDecimalTargetTypes() != null) {
+      externalConfigurationPb.setDecimalTargetTypes(getDecimalTargetTypes());
+    }
+    if (getFormatOptions() != null && FormatOptions.PARQUET.equals(getFormatOptions().getType())) {
+      externalConfigurationPb.setParquetOptions(((ParquetOptions) getFormatOptions()).toPb());
+    }
+    if (getFormatOptions() != null && FormatOptions.AVRO.equals(getFormatOptions().getType())) {
+      externalConfigurationPb.setAvroOptions(((AvroOptions) getFormatOptions()).toPb());
+    }
     if (getFormatOptions() != null && FormatOptions.CSV.equals(getFormatOptions().getType())) {
       externalConfigurationPb.setCsvOptions(((CsvOptions) getFormatOptions()).toPb());
     }
@@ -278,9 +351,17 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     if (getAutodetect() != null) {
       externalConfigurationPb.setAutodetect(getAutodetect());
     }
+    if (getReferenceFileSchemaUri() != null) {
+      externalConfigurationPb.setReferenceFileSchemaUri(getReferenceFileSchemaUri());
+    }
+
     if (getHivePartitioningOptions() != null) {
       externalConfigurationPb.setHivePartitioningOptions(getHivePartitioningOptions().toPb());
     }
+    if (getFileSetSpecType() != null) {
+      externalConfigurationPb.setFileSetSpecType(getFileSetSpecType());
+    }
+
     return externalConfigurationPb;
   }
 
@@ -411,11 +492,21 @@ public abstract class ExternalTableDefinition extends TableDefinition {
       if (externalDataConfiguration.getSourceUris() != null) {
         builder.setSourceUris(ImmutableList.copyOf(externalDataConfiguration.getSourceUris()));
       }
+      if (externalDataConfiguration.getDecimalTargetTypes() != null) {
+        builder.setDecimalTargetTypes(
+            ImmutableList.copyOf(externalDataConfiguration.getDecimalTargetTypes()));
+      }
       if (externalDataConfiguration.getSourceFormat() != null) {
         builder.setFormatOptions(FormatOptions.of(externalDataConfiguration.getSourceFormat()));
       }
       builder.setCompression(externalDataConfiguration.getCompression());
+      if (externalDataConfiguration.getConnectionId() != null) {
+        builder.setConnectionId(externalDataConfiguration.getConnectionId());
+      }
       builder.setIgnoreUnknownValues(externalDataConfiguration.getIgnoreUnknownValues());
+      if (externalDataConfiguration.getAvroOptions() != null) {
+        builder.setFormatOptions(AvroOptions.fromPb(externalDataConfiguration.getAvroOptions()));
+      }
       if (externalDataConfiguration.getCsvOptions() != null) {
         builder.setFormatOptions(CsvOptions.fromPb(externalDataConfiguration.getCsvOptions()));
       }
@@ -427,11 +518,21 @@ public abstract class ExternalTableDefinition extends TableDefinition {
         builder.setFormatOptions(
             BigtableOptions.fromPb(externalDataConfiguration.getBigtableOptions()));
       }
+      if (externalDataConfiguration.getParquetOptions() != null) {
+        builder.setFormatOptions(
+            ParquetOptions.fromPb(externalDataConfiguration.getParquetOptions()));
+      }
       builder.setMaxBadRecords(externalDataConfiguration.getMaxBadRecords());
       builder.setAutodetect(externalDataConfiguration.getAutodetect());
       if (externalDataConfiguration.getHivePartitioningOptions() != null) {
         builder.setHivePartitioningOptions(
             HivePartitioningOptions.fromPb(externalDataConfiguration.getHivePartitioningOptions()));
+      }
+      if (externalDataConfiguration.getReferenceFileSchemaUri() != null) {
+        builder.setReferenceFileSchemaUri(externalDataConfiguration.getReferenceFileSchemaUri());
+      }
+      if (externalDataConfiguration.getFileSetSpecType() != null) {
+        builder.setFileSetSpecType(externalDataConfiguration.getFileSetSpecType());
       }
     }
     return builder.build();
@@ -443,6 +544,9 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     if (externalDataConfiguration.getSourceUris() != null) {
       builder.setSourceUris(externalDataConfiguration.getSourceUris());
     }
+    if (externalDataConfiguration.getDecimalTargetTypes() != null) {
+      builder.setDecimalTargetTypes(externalDataConfiguration.getDecimalTargetTypes());
+    }
     if (externalDataConfiguration.getSchema() != null) {
       builder.setSchema(Schema.fromPb(externalDataConfiguration.getSchema()));
     }
@@ -452,8 +556,14 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     if (externalDataConfiguration.getCompression() != null) {
       builder.setCompression(externalDataConfiguration.getCompression());
     }
+    if (externalDataConfiguration.getConnectionId() != null) {
+      builder.setConnectionId(externalDataConfiguration.getConnectionId());
+    }
     if (externalDataConfiguration.getIgnoreUnknownValues() != null) {
       builder.setIgnoreUnknownValues(externalDataConfiguration.getIgnoreUnknownValues());
+    }
+    if (externalDataConfiguration.getAvroOptions() != null) {
+      builder.setFormatOptions(AvroOptions.fromPb(externalDataConfiguration.getAvroOptions()));
     }
     if (externalDataConfiguration.getCsvOptions() != null) {
       builder.setFormatOptions(CsvOptions.fromPb(externalDataConfiguration.getCsvOptions()));
@@ -466,16 +576,27 @@ public abstract class ExternalTableDefinition extends TableDefinition {
       builder.setFormatOptions(
           BigtableOptions.fromPb(externalDataConfiguration.getBigtableOptions()));
     }
+    if (externalDataConfiguration.getParquetOptions() != null) {
+      builder.setFormatOptions(
+          ParquetOptions.fromPb(externalDataConfiguration.getParquetOptions()));
+    }
     if (externalDataConfiguration.getMaxBadRecords() != null) {
       builder.setMaxBadRecords(externalDataConfiguration.getMaxBadRecords());
     }
     if (externalDataConfiguration.getAutodetect() != null) {
       builder.setAutodetect(externalDataConfiguration.getAutodetect());
     }
+    if (externalDataConfiguration.getReferenceFileSchemaUri() != null) {
+      builder.setReferenceFileSchemaUri(externalDataConfiguration.getReferenceFileSchemaUri());
+    }
     if (externalDataConfiguration.getHivePartitioningOptions() != null) {
       builder.setHivePartitioningOptions(
           HivePartitioningOptions.fromPb(externalDataConfiguration.getHivePartitioningOptions()));
     }
+    if (externalDataConfiguration.getFileSetSpecType() != null) {
+      builder.setFileSetSpecType(externalDataConfiguration.getFileSetSpecType());
+    }
+
     return builder.build();
   }
 }

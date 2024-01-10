@@ -59,6 +59,16 @@ public class WriteChannelConfigurationTest {
       Clustering.newBuilder().setFields(ImmutableList.of("Foo", "Bar")).build();
   private static final Map<String, String> LABELS =
       ImmutableMap.of("test-job-name", "test-write-channel");
+  private static final List<String> DECIMAL_TARGET_TYPES =
+      ImmutableList.of("NUMERIC", "BIGNUMERIC");
+
+  private static final boolean CREATE_SESSION = true;
+  private static final String KEY = "session_id";
+  private static final String VALUE = "session_id_1234567890";
+  private static final ConnectionProperty CONNECTION_PROPERTY =
+      ConnectionProperty.newBuilder().setKey(KEY).setValue(VALUE).build();
+  private static final List<ConnectionProperty> CONNECTION_PROPERTIES =
+      ImmutableList.of(CONNECTION_PROPERTY);
   private static final WriteChannelConfiguration LOAD_CONFIGURATION_CSV =
       WriteChannelConfiguration.newBuilder(TABLE_ID)
           .setCreateDisposition(CREATE_DISPOSITION)
@@ -73,6 +83,9 @@ public class WriteChannelConfigurationTest {
           .setTimePartitioning(TIME_PARTITIONING)
           .setClustering(CLUSTERING)
           .setLabels(LABELS)
+          .setDecimalTargetTypes(DECIMAL_TARGET_TYPES)
+          .setConnectionProperties(CONNECTION_PROPERTIES)
+          .setCreateSession(CREATE_SESSION)
           .build();
 
   private static final DatastoreBackupOptions BACKUP_OPTIONS =
@@ -104,6 +117,7 @@ public class WriteChannelConfigurationTest {
           .setTimePartitioning(TIME_PARTITIONING)
           .setClustering(CLUSTERING)
           .setUseAvroLogicalTypes(USERAVROLOGICALTYPES)
+          .setDecimalTargetTypes(DECIMAL_TARGET_TYPES)
           .build();
 
   @Test
@@ -169,7 +183,8 @@ public class WriteChannelConfigurationTest {
             .setMaxBadRecords(MAX_BAD_RECORDS)
             .setSchemaUpdateOptions(SCHEMA_UPDATE_OPTIONS)
             .setSchema(TABLE_SCHEMA)
-            .setAutodetect(AUTODETECT);
+            .setAutodetect(AUTODETECT)
+            .setDecimalTargetTypes(DECIMAL_TARGET_TYPES);
     WriteChannelConfiguration loadConfigurationCSV = builder.build();
     assertEquals(TABLE_ID, loadConfigurationCSV.getDestinationTable());
     assertEquals(CREATE_DISPOSITION, loadConfigurationCSV.getCreateDisposition());
@@ -182,6 +197,7 @@ public class WriteChannelConfigurationTest {
     assertEquals(TABLE_SCHEMA, loadConfigurationCSV.getSchema());
     assertEquals(SCHEMA_UPDATE_OPTIONS, loadConfigurationCSV.getSchemaUpdateOptions());
     assertEquals(AUTODETECT, loadConfigurationCSV.getAutodetect());
+    assertEquals(DECIMAL_TARGET_TYPES, loadConfigurationCSV.getDecimalTargetTypes());
     builder.setFormatOptions(BACKUP_OPTIONS);
     WriteChannelConfiguration loadConfigurationBackup = builder.build();
     assertEquals(BACKUP_OPTIONS, loadConfigurationBackup.getDatastoreBackupOptions());
@@ -225,5 +241,8 @@ public class WriteChannelConfigurationTest {
     assertEquals(expected.getClustering(), value.getClustering());
     assertEquals(expected.getUseAvroLogicalTypes(), value.getUseAvroLogicalTypes());
     assertEquals(expected.getLabels(), value.getLabels());
+    assertEquals(expected.getDecimalTargetTypes(), value.getDecimalTargetTypes());
+    assertEquals(expected.getConnectionProperties(), value.getConnectionProperties());
+    assertEquals(expected.getCreateSession(), value.getCreateSession());
   }
 }

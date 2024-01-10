@@ -19,20 +19,28 @@ package com.example.bigquery;
 import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertNotNull;
 
+import com.google.cloud.bigquery.Field;
+import com.google.cloud.bigquery.LegacySQLTypeName;
+import com.google.cloud.bigquery.Schema;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class AddEmptyColumnIT {
+
+  private final Logger log = Logger.getLogger(this.getClass().getName());
+  private String tableName;
   private ByteArrayOutputStream bout;
   private PrintStream out;
+  private PrintStream originalPrintStream;
 
   private static final String BIGQUERY_DATASET_NAME = System.getenv("BIGQUERY_DATASET_NAME");
-  private static final String BIGQUERY_TEST_TABLE = System.getenv("BIGQUERY_TEST_TABLE");
 
   private static void requireEnvVar(String varName) {
     assertNotNull(
@@ -43,25 +51,39 @@ public class AddEmptyColumnIT {
   @BeforeClass
   public static void checkRequirements() {
     requireEnvVar("BIGQUERY_DATASET_NAME");
-    requireEnvVar("BIGQUERY_TEST_TABLE");
   }
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
+    originalPrintStream = System.out;
     System.setOut(out);
+
+    tableName = "AddEmptyColumnTestTable_" + UUID.randomUUID().toString().replace('-', '_');
+    Schema schema =
+        Schema.of(
+            Field.of("booleanField", LegacySQLTypeName.BOOLEAN),
+            Field.of("numericField", LegacySQLTypeName.NUMERIC));
+
+    // Create table in dataset for testing
+    CreateTable.createTable(BIGQUERY_DATASET_NAME, tableName, schema);
   }
 
   @After
   public void tearDown() {
-    System.setOut(null);
+    // clean up
+    DeleteTable.deleteTable(BIGQUERY_DATASET_NAME, tableName);
+    // restores print statements in the original method
+    System.out.flush();
+    System.setOut(originalPrintStream);
+    log.log(Level.INFO, "\n" + bout.toString());
   }
 
   @Test
   public void addEmptyColumn() {
     String randomColumnName = "new_" + UUID.randomUUID().toString().replace('-', '_');
-    AddEmptyColumn.addEmptyColumn(randomColumnName, BIGQUERY_DATASET_NAME, BIGQUERY_TEST_TABLE);
+    AddEmptyColumn.addEmptyColumn(randomColumnName, BIGQUERY_DATASET_NAME, tableName);
     assertThat(bout.toString()).contains("Empty column successfully added to table");
   }
 }

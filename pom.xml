@@ -4,7 +4,7 @@
   <groupId>com.google.cloud</groupId>
   <artifactId>google-cloud-bigquery-parent</artifactId>
   <packaging>pom</packaging>
-  <version>1.116.2-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
+  <version>2.35.1-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
   <name>BigQuery Parent</name>
   <url>https://github.com/googleapis/java-bigquery</url>
   <description>
@@ -14,7 +14,7 @@
   <parent>
     <groupId>com.google.cloud</groupId>
     <artifactId>google-cloud-shared-config</artifactId>
-    <version>0.6.0</version>
+    <version>1.7.1</version>
   </parent>
 
   <developers>
@@ -31,7 +31,8 @@
   <organization>
     <name>Google LLC</name>
   </organization>
-  <scm>
+  <scm child.scm.connection.inherit.append.path="false"  child.scm.developerConnection.inherit.append.path="false"
+       child.scm.url.inherit.append.path="false">
     <connection>scm:git:git@github.com:googleapis/java-bigquery.git</connection>
     <developerConnection>scm:git:git@github.com:googleapis/java-bigquery.git</developerConnection>
     <url>https://github.com/googleapis/java-bigquery</url>
@@ -41,16 +42,6 @@
     <url>https://github.com/googleapis/java-bigquery/issues</url>
     <system>GitHub Issues</system>
   </issueManagement>
-  <distributionManagement>
-    <snapshotRepository>
-      <id>sonatype-nexus-snapshots</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-    </snapshotRepository>
-    <repository>
-      <id>sonatype-nexus-staging</id>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-    </repository>
-  </distributionManagement>
   <licenses>
     <license>
       <name>Apache-2.0</name>
@@ -63,8 +54,9 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <github.global.server>github</github.global.server>
     <site.installationModule>google-cloud-bigquery-parent</site.installationModule>
-    <google-api-services-bigquery.version>v2-rev20200523-1.30.9
-    </google-api-services-bigquery.version>
+    <google-api-services-bigquery.version>v2-rev20231111-2.0.0</google-api-services-bigquery.version>
+    <google.cloud.shared-dependencies.version>3.21.0</google.cloud.shared-dependencies.version>
+    <arrow.version>14.0.2</arrow.version>
   </properties>
 
   <dependencyManagement>
@@ -72,7 +64,40 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-shared-dependencies</artifactId>
-        <version>0.7.0</version>
+        <version>${google.cloud.shared-dependencies.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <!-- Used for BQ Storage APIs -->
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-bigquerystorage-bom</artifactId>
+        <version>2.47.0</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.arrow</groupId>
+        <artifactId>arrow-vector</artifactId>
+        <version>${arrow.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.arrow</groupId>
+        <artifactId>arrow-memory-core</artifactId>
+        <version>${arrow.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.arrow</groupId>
+        <artifactId>arrow-memory-netty</artifactId>
+        <version>${arrow.version}</version>
+        <scope>runtime</scope>
+      </dependency>
+      
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-datacatalog-bom</artifactId>
+        <version>1.36.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -80,13 +105,13 @@
       <dependency>
         <groupId>org.checkerframework</groupId>
         <artifactId>checker-compat-qual</artifactId>
-        <version>2.5.5</version>
+        <version>2.5.6</version>
       </dependency>
 
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-bigquery</artifactId>
-        <version>1.116.2-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
+        <version>2.35.1-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
       </dependency>
 
       <dependency>
@@ -94,56 +119,85 @@
         <artifactId>google-api-services-bigquery</artifactId>
         <version>${google-api-services-bigquery.version}</version>
       </dependency>
+      
+      <!-- Used for Interval and Range types -->
+      <dependency>
+        <groupId>org.threeten</groupId>
+        <artifactId>threeten-extra</artifactId>
+        <version>1.7.2</version>
+      </dependency>
 
       <!-- Test dependencies -->
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
-        <version>4.13</version>
+        <version>4.13.2</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>com.google.truth</groupId>
         <artifactId>truth</artifactId>
-        <version>1.0.1</version>
+        <version>1.2.0</version>
         <scope>test</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.checkerframework</groupId>
+            <artifactId>checker-qual</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>2.28.2</version>
+        <version>4.11.0</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-storage</artifactId>
-        <version>1.108.0</version>
+        <version>2.31.0</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-bigqueryconnection</artifactId>
+        <version>2.34.0</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.google.api.grpc</groupId>
+        <artifactId>proto-google-cloud-bigqueryconnection-v1</artifactId>
+        <version>2.34.0</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
 
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-dependency-plugin</artifactId>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
-
   <modules>
     <module>google-cloud-bigquery</module>
   </modules>
+
+  <build>
+    <plugins>
+      <!-- This is actually a used dependency -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <configuration>
+          <ignoredUnusedDeclaredDependencies>
+            <ignoredUnusedDeclaredDependency>org.apache.arrow:arrow-memory-netty</ignoredUnusedDeclaredDependency>
+          </ignoredUnusedDeclaredDependencies>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
   <reporting>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-project-info-reports-plugin</artifactId>
-        <version>3.1.0</version>
+        <version>3.5.0</version>
         <reportSets>
           <reportSet>
             <reports>
@@ -170,7 +224,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.2.0</version>
         <reportSets>
           <reportSet>
             <id>html</id>
@@ -215,5 +268,12 @@
         <module>samples</module>
       </modules>
     </profile>
+    <profile>
+      <id>benchmark</id>
+      <modules>
+        <module>benchmark</module>
+      </modules>
+    </profile>
   </profiles>
 </project>
+

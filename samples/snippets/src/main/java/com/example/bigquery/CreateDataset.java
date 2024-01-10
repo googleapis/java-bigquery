@@ -25,7 +25,7 @@ import com.google.cloud.bigquery.DatasetInfo;
 
 public class CreateDataset {
 
-  public static void runCreateDataset() {
+  public static void main(String[] args) {
     // TODO(developer): Replace these variables before running the sample.
     String datasetName = "MY_DATASET_NAME";
     createDataset(datasetName);
@@ -37,7 +37,9 @@ public class CreateDataset {
       // once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
-      DatasetInfo datasetInfo = DatasetInfo.newBuilder(datasetName).build();
+      String location = "US";
+
+      DatasetInfo datasetInfo = DatasetInfo.newBuilder(datasetName).setLocation(location).build();
 
       Dataset newDataset = bigquery.create(datasetInfo);
       String newDatasetName = newDataset.getDatasetId().getDataset();
