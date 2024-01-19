@@ -336,7 +336,8 @@ public class Job extends JobInfo {
     }
 
     try {
-      return BigQueryRetryHelper.runWithRetries(
+      return BigQueryRetryHelper.validateAndRunWithRetries(
+          options,
           new Callable<QueryResponse>() {
             @Override
             public QueryResponse call() {
@@ -356,6 +357,9 @@ public class Job extends JobInfo {
           options.getClock(),
           DEFAULT_RETRY_CONFIG);
     } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
   }

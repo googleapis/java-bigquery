@@ -54,6 +54,7 @@ import com.google.cloud.bigquery.BigQuery.TableOption;
 import com.google.cloud.bigquery.BigQueryDryRunResult;
 import com.google.cloud.bigquery.BigQueryError;
 import com.google.cloud.bigquery.BigQueryException;
+import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.BigQueryResult;
 import com.google.cloud.bigquery.BigQuerySQLException;
 import com.google.cloud.bigquery.CloneDefinition;
@@ -6322,5 +6323,15 @@ public class ITBigQueryTest {
     } finally {
       bigQuery.delete(dataset.getDatasetId(), DatasetDeleteOption.deleteContents());
     }
+  }
+
+  @Test
+  public void testUniverseDomain() throws Exception {
+    // This test validates BigQueryOption location is used for stateless query by verifying that the
+    // stateless query fails when the BigQueryOption location does not match the dataset location.
+
+    RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
+    BigQueryOptions bigQueryOptions = bigqueryHelper.getOptions();
+    BigQuery bigQuery = bigQueryOptions.getService();
   }
 }

@@ -16,7 +16,6 @@
 
 package com.google.cloud.bigquery;
 
-import static com.google.cloud.RetryHelper.runWithRetries;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
 import com.google.api.core.BetaApi;
@@ -449,13 +448,17 @@ class ConnectionImpl implements Connection {
     com.google.api.services.bigquery.model.QueryResponse results;
     try {
       results =
-          BigQueryRetryHelper.runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              bigQueryOptions,
               () -> bigQueryRpc.queryRpc(projectId, queryRequest),
               bigQueryOptions.getRetrySettings(),
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               bigQueryOptions.getClock(),
               retryConfig);
     } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
 
@@ -891,7 +894,8 @@ class ConnectionImpl implements Connection {
     com.google.api.services.bigquery.model.Job jobPb;
     try {
       jobPb =
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              bigQueryOptions,
               () ->
                   bigQueryRpc.getQueryJob(
                       completeJobId.getProject(),
@@ -904,6 +908,9 @@ class ConnectionImpl implements Connection {
         throw new BigQueryException(HTTP_NOT_FOUND, "Query job not found");
       }
     } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
     return Job.fromPb(bigQueryOptions.getService(), jobPb);
@@ -925,7 +932,8 @@ class ConnectionImpl implements Connection {
                   ? bigQueryOptions.getProjectId()
                   : destinationTable.getProject());
       TableDataList results =
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              bigQueryOptions,
               () ->
                   bigQueryOptions
                       .getBigQueryRpcV2()
@@ -941,6 +949,9 @@ class ConnectionImpl implements Connection {
 
       return results;
     } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
   }
@@ -1146,7 +1157,8 @@ class ConnectionImpl implements Connection {
     while (!jobComplete) {
       try {
         results =
-            BigQueryRetryHelper.runWithRetries(
+            BigQueryRetryHelper.validateAndRunWithRetries(
+                bigQueryOptions,
                 () ->
                     bigQueryRpc.getQueryResultsWithRowLimit(
                         completeJobId.getProject(),
@@ -1170,6 +1182,9 @@ class ConnectionImpl implements Connection {
         }
       } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
         logger.log(Level.WARNING, "\n Error occurred while calling getQueryResultsWithRowLimit", e);
+        throw BigQueryException.translateAndThrow(e);
+      } catch (IllegalArgumentException | IOException e) {
+        // Invalid universe domain exceptions.
         throw BigQueryException.translateAndThrow(e);
       }
       jobComplete = results.getJobComplete();
@@ -1412,7 +1427,8 @@ class ConnectionImpl implements Connection {
     com.google.api.services.bigquery.model.Job queryJob;
     try {
       queryJob =
-          BigQueryRetryHelper.runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              bigQueryOptions,
               () -> bigQueryRpc.createJobForQuery(jobPb),
               bigQueryOptions.getRetrySettings(),
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
@@ -1420,6 +1436,9 @@ class ConnectionImpl implements Connection {
               retryConfig);
     } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
       logger.log(Level.WARNING, "\n Error occurred while calling createJobForQuery", e);
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
     logger.log(Level.INFO, "\n Query job created");
@@ -1452,13 +1471,17 @@ class ConnectionImpl implements Connection {
     com.google.api.services.bigquery.model.Job dryRunJob;
     try {
       dryRunJob =
-          BigQueryRetryHelper.runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              bigQueryOptions,
               () -> bigQueryRpc.createJobForQuery(jobPb),
               bigQueryOptions.getRetrySettings(),
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               bigQueryOptions.getClock(),
               retryConfig);
     } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
     return dryRunJob;

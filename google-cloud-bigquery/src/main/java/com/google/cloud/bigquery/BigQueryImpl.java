@@ -52,6 +52,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -269,7 +270,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     try {
       return Dataset.fromPb(
           this,
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              getOptions(),
               new Callable<com.google.api.services.bigquery.model.Dataset>() {
                 @Override
                 public com.google.api.services.bigquery.model.Dataset call() {
@@ -280,6 +282,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock()));
     } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
   }
@@ -298,7 +303,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     try {
       return Table.fromPb(
           this,
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              getOptions(),
               new Callable<com.google.api.services.bigquery.model.Table>() {
                 @Override
                 public com.google.api.services.bigquery.model.Table call() {
@@ -309,6 +315,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock()));
     } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
   }
@@ -336,7 +345,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     try {
       return Routine.fromPb(
           this,
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              getOptions(),
               new Callable<com.google.api.services.bigquery.model.Routine>() {
                 @Override
                 public com.google.api.services.bigquery.model.Routine call() {
@@ -347,6 +357,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock()));
     } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
   }
@@ -395,7 +408,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       try {
         return Job.fromPb(
             this,
-            BigQueryRetryHelper.runWithRetries(
+            BigQueryRetryHelper.validateAndRunWithRetries(
+                getOptions(),
                 new Callable<com.google.api.services.bigquery.model.Job>() {
                   @Override
                   public com.google.api.services.bigquery.model.Job call() {
@@ -420,6 +434,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 getOptions().getClock(),
                 DEFAULT_RETRY_CONFIG));
       } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
+        throw BigQueryException.translateAndThrow(e);
+      } catch (IllegalArgumentException | IOException e) {
+        // Invalid universe domain exceptions.
         throw BigQueryException.translateAndThrow(e);
       }
     } catch (BigQueryException e) {
@@ -482,7 +499,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
     try {
       com.google.api.services.bigquery.model.Dataset answer =
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              getOptions(),
               new Callable<com.google.api.services.bigquery.model.Dataset>() {
                 @Override
                 public com.google.api.services.bigquery.model.Dataset call() {
@@ -498,6 +516,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       }
       return answer == null ? null : Dataset.fromPb(this, answer);
     } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
   }
@@ -518,7 +539,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       final Map<BigQueryRpc.Option, ?> optionsMap) {
     try {
       Tuple<String, Iterable<com.google.api.services.bigquery.model.Dataset>> result =
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              serviceOptions,
               new Callable<
                   Tuple<String, Iterable<com.google.api.services.bigquery.model.Dataset>>>() {
                 @Override
@@ -544,6 +566,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               }));
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
+      throw BigQueryException.translateAndThrow(e);
     }
   }
 
@@ -557,7 +582,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     final DatasetId completeDatasetId = datasetId.setProjectId(getOptions().getProjectId());
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
     try {
-      return runWithRetries(
+      return BigQueryRetryHelper.validateAndRunWithRetries(
+          getOptions(),
           new Callable<Boolean>() {
             @Override
             public Boolean call() {
@@ -569,6 +595,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
           getOptions().getClock());
     } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
   }
@@ -586,7 +615,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 ? getOptions().getProjectId()
                 : tableId.getProject());
     try {
-      return runWithRetries(
+      return BigQueryRetryHelper.validateAndRunWithRetries(
+          getOptions(),
           new Callable<Boolean>() {
             @Override
             public Boolean call() {
@@ -601,6 +631,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           getOptions().getClock());
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
+      throw BigQueryException.translateAndThrow(e);
     }
   }
 
@@ -612,7 +645,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 ? getOptions().getProjectId()
                 : modelId.getProject());
     try {
-      return runWithRetries(
+      return BigQueryRetryHelper.validateAndRunWithRetries(
+          getOptions(),
           new Callable<Boolean>() {
             @Override
             public Boolean call() {
@@ -627,6 +661,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           getOptions().getClock());
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
+      throw BigQueryException.translateAndThrow(e);
     }
   }
 
@@ -638,7 +675,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 ? getOptions().getProjectId()
                 : routineId.getProject());
     try {
-      return runWithRetries(
+      return BigQueryRetryHelper.validateAndRunWithRetries(
+          getOptions(),
           new Callable<Boolean>() {
             @Override
             public Boolean call() {
@@ -653,6 +691,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           getOptions().getClock());
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
+      throw BigQueryException.translateAndThrow(e);
     }
   }
 
@@ -664,7 +705,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 ? getOptions().getProjectId()
                 : jobId.getProject());
     try {
-      return runWithRetries(
+      return BigQueryRetryHelper.validateAndRunWithRetries(
+          getOptions(),
           new Callable<Boolean>() {
             @Override
             public Boolean call() {
@@ -677,6 +719,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           getOptions().getClock());
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
+      throw BigQueryException.translateAndThrow(e);
     }
   }
 
@@ -688,7 +733,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     try {
       return Dataset.fromPb(
           this,
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              getOptions(),
               new Callable<com.google.api.services.bigquery.model.Dataset>() {
                 @Override
                 public com.google.api.services.bigquery.model.Dataset call() {
@@ -699,6 +745,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock()));
     } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
   }
@@ -717,7 +766,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     try {
       return Table.fromPb(
           this,
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              getOptions(),
               new Callable<com.google.api.services.bigquery.model.Table>() {
                 @Override
                 public com.google.api.services.bigquery.model.Table call() {
@@ -728,6 +778,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock()));
     } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
   }
@@ -745,7 +798,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     try {
       return Model.fromPb(
           this,
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              getOptions(),
               new Callable<com.google.api.services.bigquery.model.Model>() {
                 @Override
                 public com.google.api.services.bigquery.model.Model call() {
@@ -756,6 +810,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock()));
     } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
   }
@@ -773,7 +830,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     try {
       return Routine.fromPb(
           this,
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              getOptions(),
               new Callable<com.google.api.services.bigquery.model.Routine>() {
                 @Override
                 public com.google.api.services.bigquery.model.Routine call() {
@@ -784,6 +842,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock()));
     } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
   }
@@ -805,7 +866,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
     try {
       com.google.api.services.bigquery.model.Table answer =
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              getOptions(),
               new Callable<com.google.api.services.bigquery.model.Table>() {
                 @Override
                 public com.google.api.services.bigquery.model.Table call() {
@@ -825,6 +887,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       return answer == null ? null : Table.fromPb(this, answer);
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
+      throw BigQueryException.translateAndThrow(e);
     }
   }
 
@@ -843,7 +908,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
     try {
       com.google.api.services.bigquery.model.Model answer =
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              getOptions(),
               new Callable<com.google.api.services.bigquery.model.Model>() {
                 @Override
                 public com.google.api.services.bigquery.model.Model call() {
@@ -863,6 +929,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       return answer == null ? null : Model.fromPb(this, answer);
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
+      throw BigQueryException.translateAndThrow(e);
     }
   }
 
@@ -881,7 +950,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
     try {
       com.google.api.services.bigquery.model.Routine answer =
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              getOptions(),
               new Callable<com.google.api.services.bigquery.model.Routine>() {
                 @Override
                 public com.google.api.services.bigquery.model.Routine call() {
@@ -900,6 +970,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       }
       return answer == null ? null : Routine.fromPb(this, answer);
     } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
   }
@@ -970,7 +1043,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       final Map<BigQueryRpc.Option, ?> optionsMap) {
     try {
       Tuple<String, Iterable<com.google.api.services.bigquery.model.Table>> result =
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              serviceOptions,
               new Callable<
                   Tuple<String, Iterable<com.google.api.services.bigquery.model.Table>>>() {
                 @Override
@@ -998,6 +1072,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           new TablePageFetcher(datasetId, serviceOptions, cursor, optionsMap), cursor, tables);
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
+      throw BigQueryException.translateAndThrow(e);
     }
   }
 
@@ -1007,7 +1084,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       final Map<BigQueryRpc.Option, ?> optionsMap) {
     try {
       Tuple<String, Iterable<com.google.api.services.bigquery.model.Model>> result =
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              serviceOptions,
               new Callable<
                   Tuple<String, Iterable<com.google.api.services.bigquery.model.Model>>>() {
                 @Override
@@ -1035,6 +1113,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           new ModelPageFetcher(datasetId, serviceOptions, cursor, optionsMap), cursor, models);
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
+      throw BigQueryException.translateAndThrow(e);
     }
   }
 
@@ -1044,7 +1125,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       final Map<BigQueryRpc.Option, ?> optionsMap) {
     try {
       Tuple<String, Iterable<com.google.api.services.bigquery.model.Routine>> result =
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              serviceOptions,
               new Callable<
                   Tuple<String, Iterable<com.google.api.services.bigquery.model.Routine>>>() {
                 @Override
@@ -1071,6 +1153,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       return new PageImpl<>(
           new RoutinePageFetcher(datasetId, serviceOptions, cursor, optionsMap), cursor, routines);
     } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
   }
@@ -1112,7 +1197,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       // allowing retries only if all row insertIds are set (used for deduplication)
       try {
         responsePb =
-            runWithRetries(
+            BigQueryRetryHelper.validateAndRunWithRetries(
+                getOptions(),
                 new Callable<TableDataInsertAllResponse>() {
                   @Override
                   public TableDataInsertAllResponse call() throws Exception {
@@ -1125,8 +1211,20 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 getOptions().getClock());
       } catch (RetryHelperException e) {
         throw BigQueryException.translateAndThrow(e);
+      } catch (IllegalArgumentException | IOException e) {
+        // Invalid universe domain exceptions.
+        throw BigQueryException.translateAndThrow(e);
       }
     } else {
+      // This calls the backend without the retry wrapper so first validate the universe domain.
+      try {
+        if (!getOptions().hasValidUniverseDomain()) {
+          throw BigQueryException.translateAndThrow(
+              new IllegalArgumentException("universe domain options is not valid"));
+        }
+      } catch (IOException e) {
+        throw BigQueryException.translateAndThrow(e);
+      }
       responsePb =
           bigQueryRpc.insertAll(
               tableId.getProject(), tableId.getDataset(), tableId.getTable(), requestPb);
@@ -1171,7 +1269,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                   ? serviceOptions.getProjectId()
                   : tableId.getProject());
       TableDataList result =
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              serviceOptions,
               new Callable<TableDataList>() {
                 @Override
                 public TableDataList call() {
@@ -1197,6 +1296,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               transformTableData(result.getRows(), schema)),
           result.getTotalRows());
     } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
   }
@@ -1233,7 +1335,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                     : jobId.getLocation());
     try {
       com.google.api.services.bigquery.model.Job answer =
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              getOptions(),
               new Callable<com.google.api.services.bigquery.model.Job>() {
                 @Override
                 public com.google.api.services.bigquery.model.Job call() {
@@ -1253,6 +1356,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       return answer == null ? null : Job.fromPb(this, answer);
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
+      throw BigQueryException.translateAndThrow(e);
     }
   }
 
@@ -1263,6 +1369,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   private static Page<Job> listJobs(
       final BigQueryOptions serviceOptions, final Map<BigQueryRpc.Option, ?> optionsMap) {
+    // TODO(NOW): Why no try/catch?
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Job>> result =
         runWithRetries(
             new Callable<Tuple<String, Iterable<com.google.api.services.bigquery.model.Job>>>() {
@@ -1304,7 +1411,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                     ? getOptions().getLocation()
                     : jobId.getLocation());
     try {
-      return runWithRetries(
+      return BigQueryRetryHelper.validateAndRunWithRetries(
+          getOptions(),
           new Callable<Boolean>() {
             @Override
             public Boolean call() {
@@ -1316,6 +1424,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
           getOptions().getClock());
     } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
   }
@@ -1354,7 +1465,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     com.google.api.services.bigquery.model.QueryResponse results;
     try {
       results =
-          BigQueryRetryHelper.runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              getOptions(),
               new Callable<com.google.api.services.bigquery.model.QueryResponse>() {
                 @Override
                 public com.google.api.services.bigquery.model.QueryResponse call() {
@@ -1366,6 +1478,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               getOptions().getClock(),
               DEFAULT_RETRY_CONFIG);
     } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
 
@@ -1474,7 +1589,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                     : jobId.getLocation());
     try {
       GetQueryResultsResponse results =
-          BigQueryRetryHelper.runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              serviceOptions,
               new Callable<GetQueryResultsResponse>() {
                 @Override
                 public GetQueryResultsResponse call() {
@@ -1509,6 +1625,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           .build();
     } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
+      throw BigQueryException.translateAndThrow(e);
     }
   }
 
@@ -1537,7 +1656,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     try {
       final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
       return convertFromApiPolicy(
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              getOptions(),
               new Callable<com.google.api.services.bigquery.model.Policy>() {
                 @Override
                 public com.google.api.services.bigquery.model.Policy call() {
@@ -1548,6 +1668,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock()));
     } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
   }
@@ -1562,7 +1685,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     try {
       final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
       return convertFromApiPolicy(
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              getOptions(),
               new Callable<com.google.api.services.bigquery.model.Policy>() {
                 @Override
                 public com.google.api.services.bigquery.model.Policy call() {
@@ -1574,6 +1698,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock()));
     } catch (RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
   }
@@ -1589,7 +1716,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     try {
       final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
       com.google.api.services.bigquery.model.TestIamPermissionsResponse response =
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              getOptions(),
               new Callable<com.google.api.services.bigquery.model.TestIamPermissionsResponse>() {
                 @Override
                 public com.google.api.services.bigquery.model.TestIamPermissionsResponse call() {
@@ -1604,6 +1732,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           ? ImmutableList.of()
           : ImmutableList.copyOf(response.getPermissions());
     } catch (RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
   }

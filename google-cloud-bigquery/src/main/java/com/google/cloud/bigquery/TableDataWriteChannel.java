@@ -16,12 +16,11 @@
 
 package com.google.cloud.bigquery;
 
-import static com.google.cloud.RetryHelper.runWithRetries;
-
 import com.google.cloud.BaseWriteChannel;
 import com.google.cloud.RestorableState;
 import com.google.cloud.RetryHelper;
 import com.google.cloud.WriteChannel;
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
@@ -50,7 +49,8 @@ public class TableDataWriteChannel
   protected void flushBuffer(final int length, final boolean last) {
     try {
       com.google.api.services.bigquery.model.Job jobPb =
-          runWithRetries(
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              getOptions(),
               new Callable<com.google.api.services.bigquery.model.Job>() {
                 @Override
                 public com.google.api.services.bigquery.model.Job call() {
@@ -65,6 +65,9 @@ public class TableDataWriteChannel
       job = jobPb != null ? Job.fromPb(getOptions().getService(), jobPb) : null;
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
+      throw BigQueryException.translateAndThrow(e);
     }
   }
 
@@ -78,7 +81,8 @@ public class TableDataWriteChannel
       final JobId jobId,
       final WriteChannelConfiguration writeChannelConfiguration) {
     try {
-      return runWithRetries(
+      return BigQueryRetryHelper.validateAndRunWithRetries(
+          options,
           new Callable<String>() {
             @Override
             public String call() {
@@ -94,6 +98,9 @@ public class TableDataWriteChannel
           BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
           options.getClock());
     } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
       throw BigQueryException.translateAndThrow(e);
     }
   }

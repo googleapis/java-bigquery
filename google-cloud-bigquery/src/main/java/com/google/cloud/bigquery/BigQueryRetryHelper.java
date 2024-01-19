@@ -25,6 +25,7 @@ import com.google.api.gax.retrying.RetryingExecutor;
 import com.google.api.gax.retrying.RetryingFuture;
 import com.google.api.gax.retrying.TimedRetryAlgorithm;
 import com.google.cloud.RetryHelper;
+import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -34,13 +35,17 @@ public class BigQueryRetryHelper extends RetryHelper {
 
   private static final Logger LOG = Logger.getLogger(BigQueryRetryHelper.class.getName());
 
-  public static <V> V runWithRetries(
+  public static <V> V validateAndRunWithRetries(
+      BigQueryOptions bigQueryOptions,
       Callable<V> callable,
       RetrySettings retrySettings,
       ResultRetryAlgorithm<?> resultRetryAlgorithm,
       ApiClock clock,
       BigQueryRetryConfig bigQueryRetryConfig)
-      throws RetryHelperException {
+      throws RetryHelperException, IOException, IllegalArgumentException {
+    if (!bigQueryOptions.hasValidUniverseDomain()) {
+      throw new IllegalArgumentException("universe domain options is not valid");
+    }
     try {
       // Suppressing should be ok as a workaraund. Current and only ResultRetryAlgorithm
       // implementation does not use response at all, so ignoring its type is ok.
@@ -85,6 +90,19 @@ public class BigQueryRetryHelper extends RetryHelper {
     RetryingFuture<V> retryingFuture = executor.createFuture(callable);
     executor.submit(retryingFuture);
     return retryingFuture.get();
+  }
+
+  public static <V> V validateAndRunWithRetries(
+      BigQueryOptions bigQueryOptions,
+      Callable<V> callable,
+      com.google.api.gax.retrying.RetrySettings retrySettings,
+      com.google.api.gax.retrying.ResultRetryAlgorithm<?> resultRetryAlgorithm,
+      com.google.api.core.ApiClock clock)
+      throws RetryHelperException, IOException, IllegalArgumentException {
+    if (!bigQueryOptions.hasValidUniverseDomain()) {
+      throw new IllegalArgumentException("universe domain options is not valid");
+    }
+    return runWithRetries(callable, retrySettings, resultRetryAlgorithm, clock);
   }
 
   public static class BigQueryRetryHelperException extends RuntimeException {
