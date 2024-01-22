@@ -154,6 +154,7 @@ public class ConnectionImplTest {
     }
     return null;
   }
+
   private static List<TableRow> TABLE_ROWS =
       ImmutableList.of(
           new TableRow()
