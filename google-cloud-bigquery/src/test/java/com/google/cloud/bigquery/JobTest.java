@@ -41,6 +41,7 @@ import com.google.cloud.bigquery.JobStatistics.CopyStatistics;
 import com.google.cloud.bigquery.JobStatistics.QueryStatistics;
 import com.google.cloud.bigquery.JobStatus.State;
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -190,7 +191,7 @@ public class JobTest {
   }
 
   @Test
-  public void testWaitForAndGetQueryResultsEmpty() throws InterruptedException {
+  public void testWaitForAndGetQueryResultsEmpty() throws InterruptedException, IOException {
     QueryJobConfiguration jobConfig =
         QueryJobConfiguration.newBuilder("CREATE VIEW").setDestinationTable(TABLE_ID1).build();
     QueryStatistics jobStatistics =
@@ -228,6 +229,7 @@ public class JobTest {
     when(bigquery.getQueryResults(jobInfo.getJobId(), Job.DEFAULT_QUERY_WAIT_OPTIONS))
         .thenReturn(completedQuery);
     when(bigquery.getJob(JOB_INFO.getJobId())).thenReturn(completedJob);
+    when(mockOptions.hasValidUniverseDomain()).thenReturn(Boolean.TRUE);
     job = this.job.toBuilder().setConfiguration(jobConfig).build();
     assertThat(job.waitFor(TEST_RETRY_OPTIONS)).isSameInstanceAs(completedJob);
     assertThat(job.getQueryResults().iterateAll()).isEmpty();
@@ -236,7 +238,8 @@ public class JobTest {
   }
 
   @Test
-  public void testWaitForAndGetQueryResultsEmptyWithSchema() throws InterruptedException {
+  public void testWaitForAndGetQueryResultsEmptyWithSchema()
+      throws InterruptedException, IOException {
     QueryJobConfiguration jobConfig =
         QueryJobConfiguration.newBuilder("CREATE VIEW").setDestinationTable(TABLE_ID1).build();
     QueryStatistics jobStatistics =
@@ -274,6 +277,7 @@ public class JobTest {
     when(bigquery.getJob(JOB_INFO.getJobId())).thenReturn(completedJob);
     when(bigquery.getQueryResults(jobInfo.getJobId(), Job.DEFAULT_QUERY_WAIT_OPTIONS))
         .thenReturn(completedQuery);
+    when(mockOptions.hasValidUniverseDomain()).thenReturn(Boolean.TRUE);
     job = this.job.toBuilder().setConfiguration(jobConfig).build();
     assertThat(job.waitFor(TEST_RETRY_OPTIONS)).isSameInstanceAs(completedJob);
     assertThat(job.getQueryResults().getSchema())
@@ -283,7 +287,7 @@ public class JobTest {
   }
 
   @Test
-  public void testWaitForAndGetQueryResults() throws InterruptedException {
+  public void testWaitForAndGetQueryResults() throws InterruptedException, IOException {
     QueryJobConfiguration jobConfig =
         QueryJobConfiguration.newBuilder("SELECT 1").setDestinationTable(TABLE_ID1).build();
     QueryStatistics jobStatistics =
@@ -324,6 +328,7 @@ public class JobTest {
     when(bigquery.getQueryResults(jobInfo.getJobId(), Job.DEFAULT_QUERY_WAIT_OPTIONS))
         .thenReturn(completedQuery);
     when(bigquery.listTableData(eq(TABLE_ID1), any(Schema.class))).thenReturn(result);
+    when(mockOptions.hasValidUniverseDomain()).thenReturn(Boolean.TRUE);
     job = this.job.toBuilder().setConfiguration(jobConfig).build();
     assertThat(job.waitFor(TEST_RETRY_OPTIONS)).isSameInstanceAs(completedJob);
     assertThat(job.getQueryResults().iterateAll()).hasSize(0);
