@@ -1369,31 +1369,36 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   private static Page<Job> listJobs(
       final BigQueryOptions serviceOptions, final Map<BigQueryRpc.Option, ?> optionsMap) {
-    // TODO(NOW): Why no try/catch?
-    Tuple<String, Iterable<com.google.api.services.bigquery.model.Job>> result =
-        runWithRetries(
-            new Callable<Tuple<String, Iterable<com.google.api.services.bigquery.model.Job>>>() {
-              @Override
-              public Tuple<String, Iterable<com.google.api.services.bigquery.model.Job>> call() {
-                return serviceOptions
-                    .getBigQueryRpcV2()
-                    .listJobs(serviceOptions.getProjectId(), optionsMap);
-              }
-            },
-            serviceOptions.getRetrySettings(),
-            BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
-            serviceOptions.getClock());
-    String cursor = result.x();
-    Iterable<Job> jobs =
-        Iterables.transform(
-            result.y(),
-            new Function<com.google.api.services.bigquery.model.Job, Job>() {
-              @Override
-              public Job apply(com.google.api.services.bigquery.model.Job job) {
-                return Job.fromPb(serviceOptions.getService(), job);
-              }
-            });
-    return new PageImpl<>(new JobPageFetcher(serviceOptions, cursor, optionsMap), cursor, jobs);
+    try {
+      Tuple<String, Iterable<com.google.api.services.bigquery.model.Job>> result =
+          BigQueryRetryHelper.validateAndRunWithRetries(
+              serviceOptions,
+              new Callable<Tuple<String, Iterable<com.google.api.services.bigquery.model.Job>>>() {
+                @Override
+                public Tuple<String, Iterable<com.google.api.services.bigquery.model.Job>> call() {
+                  return serviceOptions
+                      .getBigQueryRpcV2()
+                      .listJobs(serviceOptions.getProjectId(), optionsMap);
+                }
+              },
+              serviceOptions.getRetrySettings(),
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
+              serviceOptions.getClock());
+      String cursor = result.x();
+      Iterable<Job> jobs =
+          Iterables.transform(
+              result.y(),
+              new Function<com.google.api.services.bigquery.model.Job, Job>() {
+                @Override
+                public Job apply(com.google.api.services.bigquery.model.Job job) {
+                  return Job.fromPb(serviceOptions.getService(), job);
+                }
+              });
+      return new PageImpl<>(new JobPageFetcher(serviceOptions, cursor, optionsMap), cursor, jobs);
+    } catch (IllegalArgumentException | IOException e) {
+      // Invalid universe domain exceptions.
+      throw BigQueryException.translateAndThrow(e);
+    }
   }
 
   @Override
