@@ -6423,9 +6423,28 @@ public class ITBigQueryTest {
       bigQuery.listDatasets("bigquery-public-data");
       fail("RPCs to invalid universe domain should fail");
     } catch (BigQueryException e) {
-      System.out.println(e.getMessage());
       assertNotNull(e.getMessage());
       assertThat((e.getMessage().contains("Invalid universe domain"))).isTrue();
+    }
+  }
+
+  @Test
+  public void testUniverseDomainWithMatchingDomain() {
+    // Test a valid domain using the default credentials and Google default universe domain.
+    RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
+    BigQueryOptions bigQueryOptions =
+        bigqueryHelper.getOptions().toBuilder().setUniverseDomain("googleapis.com").build();
+    BigQuery bigQuery = bigQueryOptions.getService();
+
+    // Verify that all is well by listing a dataset.
+    Page<Dataset> datasets = bigQuery.listDatasets("bigquery-public-data");
+    Iterator<Dataset> iterator = datasets.iterateAll().iterator();
+    Set<String> datasetNames = new HashSet<>();
+    while (iterator.hasNext()) {
+      datasetNames.add(iterator.next().getDatasetId().getDataset());
+    }
+    for (String type : PUBLIC_DATASETS) {
+      assertTrue(datasetNames.contains(type));
     }
   }
 
