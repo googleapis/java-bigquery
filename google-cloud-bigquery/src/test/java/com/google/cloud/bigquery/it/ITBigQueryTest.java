@@ -6314,19 +6314,27 @@ public class ITBigQueryTest {
 
     // simulate setting the QUERY_PREVIEW_ENABLED environment variable
     bigQuery.getOptions().setQueryPreviewEnabled("TRUE");
-    assertNull(executeSimpleQuery(bigQuery).getJobId());
+    TableResult tableResult = executeSimpleQuery(bigQuery);
+    assertNotNull(tableResult.getQueryId());
+    assertNull(tableResult.getJobId());
 
     // the flag should be case-insensitive
     bigQuery.getOptions().setQueryPreviewEnabled("tRuE");
-    assertNull(executeSimpleQuery(bigQuery).getJobId());
+    tableResult = executeSimpleQuery(bigQuery);
+    assertNotNull(tableResult.getQueryId());
+    assertNull(tableResult.getJobId());
 
     // any other values won't enable optional job creation mode
     bigQuery.getOptions().setQueryPreviewEnabled("test_value");
-    assertNotNull(executeSimpleQuery(bigQuery).getJobId());
+    tableResult = executeSimpleQuery(bigQuery);
+    assertNotNull(tableResult.getQueryId());
+    assertNotNull(tableResult.getJobId());
 
     // reset the flag
     bigQuery.getOptions().setQueryPreviewEnabled(null);
-    assertNotNull(executeSimpleQuery(bigQuery).getJobId());
+    tableResult = executeSimpleQuery(bigQuery);
+    assertNotNull(tableResult.getQueryId());
+    assertNotNull(tableResult.getJobId());
   }
 
   private TableResult executeSimpleQuery(BigQuery bigQuery) throws InterruptedException {
