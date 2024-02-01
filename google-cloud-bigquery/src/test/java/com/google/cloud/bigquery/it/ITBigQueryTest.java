@@ -6367,13 +6367,13 @@ public class ITBigQueryTest {
     // Test scenario 2 by failing stateless check by setting job timeout.
     QueryJobConfiguration configQueryWithJob =
         QueryJobConfiguration.newBuilder(query).setJobTimeoutMs(1L).build();
-    result = bigquery.query(configQueryWithJob);
+    result = bigQuery.query(configQueryWithJob);
     assertNotNull(result.getJobId());
     assertNull(result.getQueryId());
 
     // Test scenario 3.
     QueryJobConfiguration configWithJob = QueryJobConfiguration.newBuilder(query).build();
-    Job job = bigquery.create(JobInfo.of(JobId.of(), configWithJob));
+    Job job = bigQuery.create(JobInfo.of(JobId.of(), configWithJob));
     result = job.getQueryResults();
     assertNotNull(result.getJobId());
     assertNull(result.getQueryId());
