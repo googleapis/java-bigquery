@@ -1882,7 +1882,7 @@ public class ITBigQueryTest {
       rowCount++;
     }
     assertEquals(4, rowCount);
-    // assertTrue(remoteTable.delete());
+    assertTrue(remoteTable.delete());
   }
 
   @Test

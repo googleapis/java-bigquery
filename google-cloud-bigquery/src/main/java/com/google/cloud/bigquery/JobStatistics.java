@@ -358,9 +358,7 @@ public abstract class JobStatistics implements Serializable {
     private final List<TimelineSample> timeline;
     private final Schema schema;
     private final SearchStats searchStats;
-
     private final MetadataCacheStats metadataCacheStats;
-
     private final List<QueryParameter> queryParameters;
 
     /**
