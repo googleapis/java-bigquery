@@ -23,7 +23,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
-/** Represents statistics for metadata caching in BigLake tables. */
+/**
+ * Represents statistics for metadata caching in BigLake tables.
+ *
+ * @see <a href="https://cloud.google.com/bigquery/docs/biglake-intro">BigLake Tables</a>
+ */
 @AutoValue
 public abstract class MetadataCacheStats implements Serializable {
 
