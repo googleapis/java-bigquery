@@ -22,4 +22,4 @@ jobs:
           # java-bigquery does not produce a BOM. Fortunately the root pom.xml
           # defines google-cloud-bigquery in dependencyManagement section. So
           # we can treat this as the BOM to run with the check.
-          bom-path: ./pom.xml
+          bom-path: ./google-cloud-bigquery-bom/pom.xml
