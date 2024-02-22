@@ -35,7 +35,6 @@ public abstract class TableResult implements Page<FieldValueList>, Serializable 
 
   @AutoValue.Builder
   public abstract static class Builder {
-    /** Sets the free form human-readable reason metadata caching was unused for the job. */
     public abstract TableResult.Builder setSchema(Schema schema);
 
     /**
