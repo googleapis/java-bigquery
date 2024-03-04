@@ -94,6 +94,7 @@ samples)
           [[ -f "$FILE" ]] || continue
           source "$FILE"
         done
+        echo "BIGQUERY_DATASET_NAME: ${BIGQUERY_DATASET_NAME}"
 
         pushd ${SAMPLES_DIR}
         mvn -B \
