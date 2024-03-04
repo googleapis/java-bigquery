@@ -14,12 +14,28 @@ steps:
 - name: gcr.io/cloud-devrel-public-resources/java8
   entrypoint: pwd
 - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+  entrypoint: printenv
+- name: gcr.io/cloud-devrel-public-resources/java8
+  entrypoint: printenv
+- name: gcr.io/google.com/cloudsdktool/cloud-sdk
+  entrypoint: gcloud
+  args: [
+    'config',
+    'list'
+  ]
+- name: gcr.io/google.com/cloudsdktool/cloud-sdk
   entrypoint: gcloud
   args: [
     'config',
     'set',
     'account',
     'build-runner@cloud-java-ci-sample.iam.gserviceaccount.com'
+  ]
+- name: gcr.io/google.com/cloudsdktool/cloud-sdk
+  entrypoint: gcloud
+  args: [
+    'config',
+    'list',
   ]
 - name: gcr.io/cloud-devrel-public-resources/java8
   entrypoint: bash
