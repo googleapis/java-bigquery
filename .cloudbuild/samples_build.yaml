@@ -37,6 +37,12 @@ steps:
     'config',
     'list',
   ]
+- name: gcr.io/google.com/cloudsdktool/cloud-sdk
+  entrypoint: /bin/bash
+  args: [
+    '-c',
+    'mkdir /workspace/secret_manager; gcloud secrets versions access latest --project cloud-devrel-kokoro-resources --secret java-docs-samples-service-account > /workspace/secret_manager/java-docs-samples-service-account'
+  ]
 - name: gcr.io/cloud-devrel-public-resources/java8
   entrypoint: bash
   args: [
