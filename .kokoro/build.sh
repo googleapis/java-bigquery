@@ -94,7 +94,6 @@ samples)
           [[ -f "$FILE" ]] || continue
           source "$FILE"
         done
-        printenv
 
         pushd ${SAMPLES_DIR}
         mvn -B \
