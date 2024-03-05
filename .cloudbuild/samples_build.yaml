@@ -37,18 +37,19 @@ steps:
     'config',
     'list',
   ]
-- name: gcr.io/google.com/cloudsdktool/cloud-sdk
-  entrypoint: /bin/bash
-  args: [
-    '-c',
-    'mkdir /workspace/secret_manager; gcloud secrets versions access latest --project cloud-devrel-kokoro-resources --secret java-bigquery-samples-secrets > /workspace/secret_manager/java-bigquery-samples-secrets'
-  ]
-- name: gcr.io/cloud-devrel-public-resources/java8
-  entrypoint: ls
-  args: [
-    '-alt',
-    '/workspace/secret_manager'
-  ]
+#- name: gcr.io/google.com/cloudsdktool/cloud-sdk
+#  entrypoint: /bin/bash
+#  args: [
+#    '-c',
+#    'mkdir /workspace/secret_manager; gcloud secrets versions access latest --project cloud-devrel-kokoro-resources --secret java-bigquery-samples-secrets > /workspace/secret_manager/java-bigquery-samples-secrets'
+#  ]
+#- name: gcr.io/cloud-devrel-public-resources/java8
+#  entrypoint: ls
+#  args: [
+#    '-alt',
+#    '/workspace/secret_manager'
+#  ]
+
 #- name: gcr.io/cloud-devrel-public-resources/java8
 #  entrypoint: bash
 #  args: [
@@ -67,6 +68,7 @@ steps:
   env:
   - 'JOB_TYPE=samples'
   - 'GOOGLE_CLOUD_PROJECT=cloud-java-ci-sample'
+  - 'BIGQUERY_DATASET_NAME=bigquery_test_dataset'
   - 'KOKORO_GFILE_DIR=/workspace'
 - name: gcr.io/cloud-devrel-public-resources/java8
   entrypoint: echo
