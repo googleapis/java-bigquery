@@ -25,6 +25,8 @@ steps:
   - 'GCS_BUCKET=java-samples-bigquery'
   - 'BIGQUERY_TEST_TABLE=test_table'
   - 'BIGQUERY_MODEL_NAME=natality_model'
+  - 'BIGQUERY_MODEL_TEST_PROJECT_ID=bigquery-public-data'
+  - 'OMNI_PROJECT_ID=sunlit-ace-276222'
   - 'OMNI_EXTERNAL_TABLE_NAME=devrel_test_table'
   - 'BIGQUERY_TABLE2=table2'
   - 'BIGQUERY_TABLE1=table1'
