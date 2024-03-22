@@ -90,6 +90,7 @@ import com.google.cloud.bigquery.JobConfiguration;
 import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.JobStatistics;
+import com.google.cloud.bigquery.JobStatistics.CopyStatistics;
 import com.google.cloud.bigquery.JobStatistics.ExtractStatistics;
 import com.google.cloud.bigquery.JobStatistics.LoadStatistics;
 import com.google.cloud.bigquery.JobStatistics.QueryStatistics;
@@ -5042,11 +5043,18 @@ public class ITBigQueryTest {
     assertNotNull(createdTable);
     assertEquals(DATASET, createdTable.getTableId().getDataset());
     assertEquals(sourceTableName, createdTable.getTableId().getTable());
+
     TableId destinationTable = TableId.of(DATASET, destinationTableName);
     CopyJobConfiguration configuration = CopyJobConfiguration.of(destinationTable, sourceTable);
     Job remoteJob = bigquery.create(JobInfo.of(configuration));
     remoteJob = remoteJob.waitFor();
     assertNull(remoteJob.getStatus().getError());
+
+    CopyStatistics copyStatistics = remoteJob.getStatistics();
+    assertNotNull(copyStatistics);
+    assertEquals(0, copyStatistics.getCopiedRows().longValue());
+    assertEquals(0, copyStatistics.getCopiedRows().longValue());
+
     Table remoteTable = bigquery.getTable(DATASET, destinationTableName);
     assertNotNull(remoteTable);
     assertEquals(destinationTable.getDataset(), remoteTable.getTableId().getDataset());
