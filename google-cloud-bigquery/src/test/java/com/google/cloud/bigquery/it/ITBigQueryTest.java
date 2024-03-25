@@ -5065,6 +5065,37 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testCopyJobStatistics() throws InterruptedException, TimeoutException {
+    String sourceTableName = "test_copy_job_statistics_source_table";
+    String destinationTableName = "test_copy_job_statistics_destination_table";
+
+    QueryJobConfiguration createTable =
+        QueryJobConfiguration.newBuilder(
+                String.format(
+                    "CREATE TABLE %s AS SELECT num FROM UNNEST(GENERATE_ARRAY(0,5)) as num",
+                    sourceTableName))
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .setUseLegacySql(false)
+            .build();
+    bigquery.query(createTable);
+
+    // Copy the created table.
+    TableId sourceTable = TableId.of(DATASET, sourceTableName);
+    TableId destinationTable = TableId.of(DATASET, destinationTableName);
+    CopyJobConfiguration configuration = CopyJobConfiguration.of(destinationTable, sourceTable);
+    Job remoteJob = bigquery.create(JobInfo.of(configuration));
+    remoteJob = remoteJob.waitFor();
+    assertNull(remoteJob.getStatus().getError());
+
+    CopyStatistics copyStatistics = remoteJob.getStatistics();
+    assertNotNull(copyStatistics);
+    assertEquals(6, copyStatistics.getCopiedRows().longValue());
+    // Assert != 0 since copied logical bytes is may return non-deterministic value due to how the
+    // data is represented.
+    assertNotEquals(0, copyStatistics.getCopiedLogicalBytes().longValue());
+  }
+
+  @Test
   public void testSnapshotTableCopyJob() throws InterruptedException {
     String sourceTableName = "test_copy_job_base_table";
     String ddlTableName = TABLE_ID_DDL.getTable();
