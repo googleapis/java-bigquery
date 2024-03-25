@@ -5053,7 +5053,7 @@ public class ITBigQueryTest {
     CopyStatistics copyStatistics = remoteJob.getStatistics();
     assertNotNull(copyStatistics);
     assertEquals(0, copyStatistics.getCopiedRows().longValue());
-    assertEquals(0, copyStatistics.getCopiedRows().longValue());
+    assertEquals(0, copyStatistics.getCopiedLogicalBytes().longValue());
 
     Table remoteTable = bigquery.getTable(DATASET, destinationTableName);
     assertNotNull(remoteTable);
