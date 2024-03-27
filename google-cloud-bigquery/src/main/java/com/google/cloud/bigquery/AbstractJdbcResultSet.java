@@ -33,12 +33,6 @@ abstract class AbstractJdbcResultSet implements ResultSet {
   }
 
   @Override
-  public void close() throws SQLException {
-    // TODO: Implement the logic
-    throw new RuntimeException("Not implemented");
-  }
-
-  @Override
   public boolean wasNull() throws SQLException {
     // TODO: Implement the logic
     throw new RuntimeException("Not implemented");

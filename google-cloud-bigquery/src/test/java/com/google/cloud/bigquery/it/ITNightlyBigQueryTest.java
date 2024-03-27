@@ -272,6 +272,7 @@ public class ITNightlyBigQueryTest {
     }
     assertEquals(LIMIT_RECS, cnt); // all the records were retrieved
     connection.close();
+    rs.close();  // assert close method does not throw an exception
   }
 
   /*
@@ -336,6 +337,7 @@ public class ITNightlyBigQueryTest {
     }
     assertEquals(LIMIT_RECS, cnt); // all the records were retrieved
     assertTrue(connection.close());
+    rs.close();  // assert close method does not throw an exception
   }
 
   /*
@@ -361,6 +363,7 @@ public class ITNightlyBigQueryTest {
     // to be retrieved
     // as a number of records should have been already buffered. less than
     // LIMIT_RECS should be retrieved
+    rs.close();  // assert close method does not throw an exception
   }
 
   @Test
@@ -449,6 +452,7 @@ public class ITNightlyBigQueryTest {
       ++cnt;
     }
     connection.close();
+    rs.close();  // assert close method does not throw an exception
     totalCnt += cnt;
     assertEquals(MULTI_LIMIT_RECS * 2, totalCnt);
   }
@@ -484,6 +488,7 @@ public class ITNightlyBigQueryTest {
       ++cnt;
     }
     connection.close();
+    rs.close();  // assert close method does not throw an exception
     assertEquals(MULTI_LIMIT_RECS, cnt);
   }
 
@@ -537,13 +542,14 @@ public class ITNightlyBigQueryTest {
 
   // this iterated through all the rows (just reads the title column)
   private Long getResultHashWiki(BigQueryResult bigQueryResultSet) throws SQLException {
-    ResultSet rs = bigQueryResultSet.getResultSet();
-    long hash = 0L;
-    System.out.print("\n Running");
-    while (rs.next()) {
-      hash += rs.getString("title") == null ? 0 : rs.getString("title").hashCode();
+    try (ResultSet rs = bigQueryResultSet.getResultSet()) {
+      long hash = 0L;
+      System.out.print("\n Running");
+      while (rs.next()) {
+        hash += rs.getString("title") == null ? 0 : rs.getString("title").hashCode();
+      }
+      return hash;
     }
-    return hash;
   }
 
   // asserts the value of each row
