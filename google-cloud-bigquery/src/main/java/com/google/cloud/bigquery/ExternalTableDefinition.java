@@ -180,6 +180,8 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     abstract Builder setHivePartitioningOptionsInner(
         HivePartitioningOptions hivePartitioningOptions);
 
+    abstract Builder setObjectMetadata(String objectMetadata);
+
     /** Creates an {@code ExternalTableDefinition} object. */
     @Override
     public abstract ExternalTableDefinition build();
@@ -254,6 +256,16 @@ public abstract class ExternalTableDefinition extends TableDefinition {
 
   @Nullable
   public abstract ImmutableList<String> getSourceUrisImmut();
+
+  /**
+   * Returns the object metadata.
+   *
+   * @see <a
+   *     href="https://cloud.google.com/bigquery/docs/reference/v2/tables#externalDataConfiguration">
+   *     ObjectMetadata</a>
+   */
+  @Nullable
+  public abstract String getObjectMetadata();
 
   /**
    * Returns the source format, and possibly some parsing options, of the external data. Supported
@@ -360,6 +372,10 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     }
     if (getFileSetSpecType() != null) {
       externalConfigurationPb.setFileSetSpecType(getFileSetSpecType());
+    }
+
+    if (getObjectMetadata() != null) {
+      externalConfigurationPb.setObjectMetadata(getObjectMetadata());
     }
 
     return externalConfigurationPb;
@@ -534,6 +550,9 @@ public abstract class ExternalTableDefinition extends TableDefinition {
       if (externalDataConfiguration.getFileSetSpecType() != null) {
         builder.setFileSetSpecType(externalDataConfiguration.getFileSetSpecType());
       }
+      if (externalDataConfiguration.getObjectMetadata() != null) {
+        builder.setObjectMetadata(externalDataConfiguration.getObjectMetadata());
+      }
     }
     return builder.build();
   }
@@ -595,6 +614,10 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     }
     if (externalDataConfiguration.getFileSetSpecType() != null) {
       builder.setFileSetSpecType(externalDataConfiguration.getFileSetSpecType());
+    }
+
+    if (externalDataConfiguration.getObjectMetadata() != null) {
+      builder.setObjectMetadata(externalDataConfiguration.getObjectMetadata());
     }
 
     return builder.build();
