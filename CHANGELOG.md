@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.39.0](https://github.com/googleapis/java-bigquery/compare/v2.38.2...v2.39.0) (2024-03-28)
+
+
+### Features
+
+* Add new fields to copy job statistics ([#3205](https://github.com/googleapis/java-bigquery/issues/3205)) ([64bdda8](https://github.com/googleapis/java-bigquery/commit/64bdda84fe06726042a41f2a89ac5c067f9bc949))
+
+
+### Dependencies
+
+* Update dependency com.google.api.grpc:proto-google-cloud-bigqueryconnection-v1 to v2.40.0 ([#3210](https://github.com/googleapis/java-bigquery/issues/3210)) ([bf7e97e](https://github.com/googleapis/java-bigquery/commit/bf7e97e1c936a419a34529a316c4f538872dd20b))
+* Update dependency com.google.cloud:google-cloud-datacatalog-bom to v1.44.0 ([#3211](https://github.com/googleapis/java-bigquery/issues/3211)) ([6993b51](https://github.com/googleapis/java-bigquery/commit/6993b51f8722466b846a7dd3912acbd81e04126c))
+* Update dependency com.google.cloud:sdk-platform-java-config to v3.28.1 ([#3207](https://github.com/googleapis/java-bigquery/issues/3207)) ([6204331](https://github.com/googleapis/java-bigquery/commit/6204331953b3922f5ecb1ac0c1868cb6579dd73b))
+* Update github/codeql-action action to v2.24.9 ([#3204](https://github.com/googleapis/java-bigquery/issues/3204)) ([7a24d3e](https://github.com/googleapis/java-bigquery/commit/7a24d3e29f32db58475c1e02ab1c13ee8941c27d))
+
 ## [2.38.2](https://github.com/googleapis/java-bigquery/compare/v2.38.1...v2.38.2) (2024-03-21)
 
 
