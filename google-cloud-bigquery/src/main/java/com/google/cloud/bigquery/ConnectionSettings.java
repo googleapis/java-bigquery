@@ -221,8 +221,7 @@ public abstract class ConnectionSettings {
      *
      * @param useReadAPI or {@code true} for none
      */
-    @Nullable
-    public abstract Builder setUseReadAPI(Boolean useReadAPI);
+    public abstract Builder setUseReadAPI(@Nullable Boolean useReadAPI);
 
     /**
      * Sets how long to wait for the query to complete, in milliseconds, before the request times
