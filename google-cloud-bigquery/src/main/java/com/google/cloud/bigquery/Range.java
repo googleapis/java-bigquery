@@ -38,7 +38,7 @@ public abstract class Range implements Serializable {
   public abstract StandardSQLTypeName getType();
 
   public abstract Range.Builder toBuilder();
-  
+
   @AutoValue.Builder
   public abstract static class Builder {
     public abstract Range.Builder setStart(String start);
