@@ -1312,8 +1312,8 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testRangeType() throws InterruptedException {
-    String tableName = "test_create_table_rangetype";
+  public void testRangeCreateTable() throws InterruptedException {
+    String tableName = "test_range_create_table";
     TableId tableId = TableId.of(DATASET, tableName);
     Field rangeFieldWithDate =
         Field.newBuilder("rangeFieldDate", StandardSQLTypeName.RANGE)
@@ -1348,8 +1348,9 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testRangeQueryParameterTable() throws InterruptedException {
-    String tableName = "test_range_query_parameter_table";
+  public void testRangeType() throws InterruptedException {
+    // TODO: Combine testRangeType test with testRangeCreateTable test.
+    String tableName = "test_range_type_table";
     QueryJobConfiguration createTable =
         QueryJobConfiguration.newBuilder(
                 String.format(
@@ -1389,6 +1390,8 @@ public class ITBigQueryTest {
             .setStart("2014-01-01 07:00:00.000000+00:00")
             .setEnd("2015-01-01 07:00:00.000000+00:00")
             .build();
+
+    // Test Query Parameter.
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query)
             .setDefaultDataset(DatasetId.of(DATASET))
@@ -1397,6 +1400,20 @@ public class ITBigQueryTest {
             .addNamedParameter("timestampParam", QueryParameterValue.range(timestampRange))
             .build();
     TableResult result = bigquery.query(config);
+    assertEquals(1, Iterables.size(result.getValues()));
+    for (FieldValueList values : result.iterateAll()) {
+      assertEquals(dateRange.getStart(), values.get("date").getRangeValue().getStart());
+      assertEquals(dateRange.getEnd(), values.get("date").getRangeValue().getEnd());
+      assertEquals(datetimeRange.getStart(), values.get("datetime").getRangeValue().getStart());
+      assertEquals(datetimeRange.getEnd(), values.get("datetime").getRangeValue().getEnd());
+      // timestamps are returned as seconds since epoch
+      assertEquals("1388559600.000000", values.get("timestamp").getRangeValue().getStart());
+      assertEquals("1420095600.000000", values.get("timestamp").getRangeValue().getEnd());
+    }
+
+    // Test listTableData.
+    Schema schema = result.getSchema();
+    result = bigquery.listTableData(DATASET, tableName, schema);
     assertEquals(1, Iterables.size(result.getValues()));
     for (FieldValueList values : result.iterateAll()) {
       assertEquals(dateRange.getStart(), values.get("date").getRangeValue().getStart());
