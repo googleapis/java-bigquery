@@ -108,6 +108,7 @@ import com.google.cloud.bigquery.PolicyTags;
 import com.google.cloud.bigquery.PrimaryKey;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.QueryParameterValue;
+import com.google.cloud.bigquery.Range;
 import com.google.cloud.bigquery.RangePartitioning;
 import com.google.cloud.bigquery.Routine;
 import com.google.cloud.bigquery.RoutineArgument;
@@ -1314,11 +1315,28 @@ public class ITBigQueryTest {
   public void testRangeType() throws InterruptedException {
     String tableName = "test_create_table_rangetype";
     TableId tableId = TableId.of(DATASET, tableName);
-    Schema schema =
-        Schema.of(
-            Field.newBuilder("rangeField", StandardSQLTypeName.RANGE)
-                .setRangeElementType(FieldElementType.newBuilder().setType("DATETIME").build())
-                .build());
+    Field rangeFieldWithDate =
+        Field.newBuilder("rangeFieldDate", StandardSQLTypeName.RANGE)
+            .setMode(Field.Mode.NULLABLE)
+            .setDescription("Range field with DATE")
+            .setRangeElementType(FieldElementType.newBuilder().setType("DATE").build())
+            .build();
+
+    Field rangeFieldWithDatetime =
+        Field.newBuilder("rangeFieldDatetime", StandardSQLTypeName.RANGE)
+            .setMode(Field.Mode.NULLABLE)
+            .setDescription("Range field with DATETIME")
+            .setRangeElementType(FieldElementType.newBuilder().setType("DATETIME").build())
+            .build();
+
+    Field rangeFieldWithTimestamp =
+        Field.newBuilder("rangeFieldTimestamp", StandardSQLTypeName.RANGE)
+            .setMode(Field.Mode.NULLABLE)
+            .setDescription("Range field with TIMESTAMP")
+            .setRangeElementType(FieldElementType.newBuilder().setType("TIMESTAMP").build())
+            .build();
+
+    Schema schema = Schema.of(rangeFieldWithDate, rangeFieldWithDatetime, rangeFieldWithTimestamp);
     StandardTableDefinition standardTableDefinition = StandardTableDefinition.of(schema);
     try {
       // Create a table with a RANGE column.
@@ -1326,6 +1344,68 @@ public class ITBigQueryTest {
       assertNotNull(createdTable);
     } finally {
       assertTrue(bigquery.delete(tableId));
+    }
+  }
+
+  @Test
+  public void testRangeQueryParameterTable() throws InterruptedException {
+    String tableName = "test_range_query_parameter_table";
+    QueryJobConfiguration createTable =
+        QueryJobConfiguration.newBuilder(
+                String.format(
+                    "CREATE TABLE %s AS SELECT RANGE(DATE '2020-01-01', DATE '2020-12-31') as date, \n"
+                        + "RANGE(DATETIME '2020-01-01T12:00:00', DATETIME '2020-12-31T12:00:00') as datetime, \n"
+                        + "RANGE(TIMESTAMP '2014-01-01 07:00:00.000000+00:00', TIMESTAMP '2015-01-01 07:00:00.000000+00:00') as timestamp",
+                    tableName))
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .setUseLegacySql(false)
+            .build();
+    bigquery.query(createTable);
+
+    String query =
+        String.format(
+            "SELECT date, datetime, timestamp\n"
+                + "FROM %s.%s\n"
+                + "WHERE date = @dateParam\n"
+                + "AND datetime = @datetimeParam\n"
+                + "AND timestamp = @timestampParam",
+            DATASET, tableName);
+
+    Range dateRange =
+        Range.newBuilder()
+            .setType(StandardSQLTypeName.DATE)
+            .setStart("2020-01-01")
+            .setEnd("2020-12-31")
+            .build();
+    Range datetimeRange =
+        Range.newBuilder()
+            .setType(StandardSQLTypeName.DATETIME)
+            .setStart("2020-01-01T12:00:00")
+            .setEnd("2020-12-31T12:00:00")
+            .build();
+    Range timestampRange =
+        Range.newBuilder()
+            .setType(StandardSQLTypeName.TIMESTAMP)
+            .setStart("2014-01-01 07:00:00.000000+00:00")
+            .setEnd("2015-01-01 07:00:00.000000+00:00")
+            .build();
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query)
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .addNamedParameter("dateParam", QueryParameterValue.range(dateRange))
+            .addNamedParameter("datetimeParam", QueryParameterValue.range(datetimeRange))
+            .addNamedParameter("timestampParam", QueryParameterValue.range(timestampRange))
+            .build();
+    TableResult result = bigquery.query(config);
+    assertEquals(1, Iterables.size(result.getValues()));
+    for (FieldValueList values : result.iterateAll()) {
+      assertEquals(dateRange.getStart(), values.get("date").getRangeValue().getStart());
+      assertEquals(dateRange.getEnd(), values.get("date").getRangeValue().getEnd());
+      assertEquals(datetimeRange.getStart(), values.get("datetime").getRangeValue().getStart());
+      assertEquals(datetimeRange.getEnd(), values.get("datetime").getRangeValue().getEnd());
+      // timestamps are returned as seconds since epoch
+      assertEquals("1388559600.000000", values.get("timestamp").getRangeValue().getStart());
+      assertEquals("1420095600.000000", values.get("timestamp").getRangeValue().getEnd());
     }
   }
 

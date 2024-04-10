@@ -619,4 +619,46 @@ public class QueryParameterValueTest {
       assertThat(value.getArrayValues()).isNull();
     }
   }
+
+  @Test
+  public void testRange() {
+    testRangeDataEquals(null, null, StandardSQLTypeName.DATE);
+    testRangeDataEquals(null, "1971-02-03", StandardSQLTypeName.DATE);
+    testRangeDataEquals("1970-01-02", null, StandardSQLTypeName.DATE);
+    testRangeDataEquals("1970-01-02", "1971-02-03", StandardSQLTypeName.DATE);
+
+    testRangeDataEquals(null, null, StandardSQLTypeName.DATETIME);
+    testRangeDataEquals(null, "2015-09-20 06:41:35.220000", StandardSQLTypeName.DATETIME);
+    testRangeDataEquals("2014-08-19 05:41:35.220000", null, StandardSQLTypeName.DATETIME);
+    testRangeDataEquals(
+        "2014-08-19 05:41:35.220000", "2015-09-20 06:41:35.220000", StandardSQLTypeName.DATETIME);
+
+    testRangeDataEquals(null, null, StandardSQLTypeName.TIMESTAMP);
+    testRangeDataEquals(null, "2015-09-20 13:41:35.220000+01:00", StandardSQLTypeName.TIMESTAMP);
+    testRangeDataEquals("2014-08-19 12:41:35.220000+00:00", null, StandardSQLTypeName.TIMESTAMP);
+    testRangeDataEquals(
+        "2014-08-19 12:41:35.220000+00:00",
+        "2015-09-20 13:41:35.220000+01:00",
+        StandardSQLTypeName.TIMESTAMP);
+  }
+
+  /** Helper method to test range QueryParameterValue and its permutations. */
+  private static void testRangeDataEquals(String start, String end, StandardSQLTypeName type) {
+    QueryParameterValue rangeField =
+        QueryParameterValue.range(
+            Range.newBuilder().setType(type).setStart(start).setEnd(end).build());
+    QueryParameterType parameterType = rangeField.toTypePb();
+    com.google.api.services.bigquery.model.QueryParameterValue parameterValue =
+        rangeField.toValuePb();
+    QueryParameterValue queryParameterValue =
+        QueryParameterValue.fromPb(parameterValue, parameterType);
+
+    assertThat(queryParameterValue.getType()).isEqualTo(StandardSQLTypeName.RANGE);
+    assertThat(queryParameterValue.getRangeValues().getStart()).isEqualTo(start);
+    assertThat(queryParameterValue.getRangeValues().getEnd()).isEqualTo(end);
+    assertThat(queryParameterValue.getRangeValues().getType()).isEqualTo(type);
+    assertThat(queryParameterValue.getArrayValues()).isNull();
+    assertThat(queryParameterValue.getStructValues()).isNull();
+    assertThat(queryParameterValue.getValue()).isNull();
+  }
 }
