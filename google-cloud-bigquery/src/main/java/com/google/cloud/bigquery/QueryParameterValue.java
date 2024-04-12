@@ -549,13 +549,13 @@ public abstract class QueryParameterValue implements Serializable {
       if (getRangeValues().getStart() != null) {
         com.google.api.services.bigquery.model.QueryParameterValue startValue =
             new com.google.api.services.bigquery.model.QueryParameterValue();
-        startValue.setValue(getRangeValues().getStart());
+        startValue.setValue(getRangeValues().getStart().getStringValue());
         rangeValue.setStart(startValue);
       }
       if (getRangeValues().getEnd() != null) {
         com.google.api.services.bigquery.model.QueryParameterValue endValue =
             new com.google.api.services.bigquery.model.QueryParameterValue();
-        endValue.setValue(getRangeValues().getEnd());
+        endValue.setValue(getRangeValues().getEnd().getStringValue());
         rangeValue.setEnd(endValue);
       }
       valuePb.setRangeValue(rangeValue);

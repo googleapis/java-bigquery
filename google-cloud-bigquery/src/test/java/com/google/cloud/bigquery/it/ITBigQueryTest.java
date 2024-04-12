@@ -1407,8 +1407,11 @@ public class ITBigQueryTest {
       assertEquals(datetimeRange.getStart(), values.get("datetime").getRangeValue().getStart());
       assertEquals(datetimeRange.getEnd(), values.get("datetime").getRangeValue().getEnd());
       // timestamps are returned as seconds since epoch
-      assertEquals("1388559600.000000", values.get("timestamp").getRangeValue().getStart());
-      assertEquals("1420095600.000000", values.get("timestamp").getRangeValue().getEnd());
+      assertEquals(
+          1388559600000000L,
+          values.get("timestamp").getRangeValue().getStart().getTimestampValue());
+      assertEquals(
+          1420095600000000L, values.get("timestamp").getRangeValue().getEnd().getTimestampValue());
     }
 
     // Test listTableData.
@@ -1421,8 +1424,11 @@ public class ITBigQueryTest {
       assertEquals(datetimeRange.getStart(), values.get("datetime").getRangeValue().getStart());
       assertEquals(datetimeRange.getEnd(), values.get("datetime").getRangeValue().getEnd());
       // timestamps are returned as seconds since epoch
-      assertEquals("1388559600.000000", values.get("timestamp").getRangeValue().getStart());
-      assertEquals("1420095600.000000", values.get("timestamp").getRangeValue().getEnd());
+      assertEquals(
+          1388559600000000L,
+          values.get("timestamp").getRangeValue().getStart().getTimestampValue());
+      assertEquals(
+          1420095600000000L, values.get("timestamp").getRangeValue().getEnd().getTimestampValue());
     }
   }
 

@@ -18,6 +18,7 @@ package com.google.cloud.bigquery;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.auto.value.AutoValue;
+import com.google.cloud.bigquery.FieldValue.Attribute;
 import java.io.Serializable;
 import javax.annotation.Nullable;
 
@@ -26,12 +27,22 @@ public abstract class Range implements Serializable {
   private static final long serialVersionUID = 1L;
 
   /** Returns the start value of the range. A null value represents an unbounded start. */
+  public FieldValue getStart() {
+    // The supported Range types [DATE, TIME, TIMESTAMP] are all Attribute.PRIMITIVE.
+    return FieldValue.of(Attribute.PRIMITIVE, getStartInner());
+  }
+
   @Nullable
-  public abstract String getStart();
+  abstract String getStartInner();
 
   /** Returns the end value of the range. A null value represents an unbounded end. */
+  public FieldValue getEnd() {
+    // The supported Range types [DATE, TIME, TIMESTAMP] are all Attribute.PRIMITIVE.
+    return FieldValue.of(Attribute.PRIMITIVE, getEndInner());
+  }
+
   @Nullable
-  public abstract String getEnd();
+  abstract String getEndInner();
 
   @Nullable
   /** Returns the type of the range. */
@@ -41,9 +52,18 @@ public abstract class Range implements Serializable {
 
   @AutoValue.Builder
   public abstract static class Builder {
-    public abstract Range.Builder setStart(String start);
 
-    public abstract Range.Builder setEnd(String end);
+    public Range.Builder setStart(String start) {
+      return setStartInner(start);
+    }
+
+    abstract Range.Builder setStartInner(String start);
+
+    public Range.Builder setEnd(String end) {
+      return setEndInner(end);
+    }
+
+    abstract Range.Builder setEndInner(String end);
 
     public abstract Range.Builder setType(StandardSQLTypeName type);
 

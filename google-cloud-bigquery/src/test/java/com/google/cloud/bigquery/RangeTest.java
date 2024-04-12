@@ -16,6 +16,7 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -54,16 +55,16 @@ public class RangeTest {
 
   @Test
   public void testBuilder() {
-    assertEquals("1970-01-02", RANGE_DATE.getStart());
-    assertEquals("1970-03-04", RANGE_DATE.getEnd());
+    assertEquals("1970-01-02", RANGE_DATE.getStart().getStringValue());
+    assertEquals("1970-03-04", RANGE_DATE.getEnd().getStringValue());
     assertEquals(StandardSQLTypeName.DATE, RANGE_DATE.getType());
 
-    assertEquals("2014-08-19 05:41:35.220000", RANGE_DATETIME.getStart());
-    assertEquals("2015-09-20 06:41:35.220000", RANGE_DATETIME.getEnd());
+    assertEquals("2014-08-19 05:41:35.220000", RANGE_DATETIME.getStart().getStringValue());
+    assertEquals("2015-09-20 06:41:35.220000", RANGE_DATETIME.getEnd().getStringValue());
     assertEquals(StandardSQLTypeName.DATETIME, RANGE_DATETIME.getType());
 
-    assertEquals("2014-08-19 12:41:35.220000+00:00", RANGE_TIMESTAMP.getStart());
-    assertEquals("2015-09-20 13:41:35.220000+01:00", RANGE_TIMESTAMP.getEnd());
+    assertEquals("2014-08-19 12:41:35.220000+00:00", RANGE_TIMESTAMP.getStart().getStringValue());
+    assertEquals("2015-09-20 13:41:35.220000+01:00", RANGE_TIMESTAMP.getEnd().getStringValue());
     assertEquals(StandardSQLTypeName.TIMESTAMP, RANGE_TIMESTAMP.getType());
   }
 
@@ -83,7 +84,15 @@ public class RangeTest {
   }
 
   private static void compareRange(String expectedStart, String expectedEnd, Range range) {
-    assertEquals(expectedStart, range.getStart());
-    assertEquals(expectedEnd, range.getEnd());
+    if (expectedStart == null) {
+      assertTrue(range.getStart().isNull());
+    } else {
+      assertEquals(expectedStart, range.getStart().getStringValue());
+    }
+    if (expectedEnd == null) {
+      assertTrue(range.getEnd().isNull());
+    } else {
+      assertEquals(expectedEnd, range.getEnd().getStringValue());
+    }
   }
 }
