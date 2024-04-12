@@ -654,8 +654,16 @@ public class QueryParameterValueTest {
         QueryParameterValue.fromPb(parameterValue, parameterType);
 
     assertThat(queryParameterValue.getType()).isEqualTo(StandardSQLTypeName.RANGE);
-    assertThat(queryParameterValue.getRangeValues().getStart()).isEqualTo(start);
-    assertThat(queryParameterValue.getRangeValues().getEnd()).isEqualTo(end);
+    if (start == null) {
+      assertThat(queryParameterValue.getRangeValues().getStart().isNull()).isTrue();
+    } else {
+      assertThat(queryParameterValue.getRangeValues().getStart().getStringValue()).isEqualTo(start);
+    }
+    if (end == null) {
+      assertThat(queryParameterValue.getRangeValues().getEnd().isNull()).isTrue();
+    } else {
+      assertThat(queryParameterValue.getRangeValues().getEnd().getStringValue()).isEqualTo(end);
+    }
     assertThat(queryParameterValue.getRangeValues().getType()).isEqualTo(type);
     assertThat(queryParameterValue.getArrayValues()).isNull();
     assertThat(queryParameterValue.getStructValues()).isNull();
