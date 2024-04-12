@@ -23,21 +23,21 @@ import org.junit.Test;
 public class RangeTest {
   private static final Range RANGE_DATE =
       Range.newBuilder()
-          .setType(StandardSQLTypeName.DATE)
+          .setType(FieldElementType.newBuilder().setType("DATE").build())
           .setStart("1970-01-02")
           .setEnd("1970-03-04")
           .build();
 
   private static final Range RANGE_DATETIME =
       Range.newBuilder()
-          .setType(StandardSQLTypeName.DATETIME)
+          .setType(FieldElementType.newBuilder().setType("DATETIME").build())
           .setStart("2014-08-19 05:41:35.220000")
           .setEnd("2015-09-20 06:41:35.220000")
           .build();
 
   private static final Range RANGE_TIMESTAMP =
       Range.newBuilder()
-          .setType(StandardSQLTypeName.TIMESTAMP)
+          .setType(FieldElementType.newBuilder().setType("TIMESTAMP").build())
           .setStart("2014-08-19 12:41:35.220000+00:00")
           .setEnd("2015-09-20 13:41:35.220000+01:00")
           .build();
@@ -57,15 +57,17 @@ public class RangeTest {
   public void testBuilder() {
     assertEquals("1970-01-02", RANGE_DATE.getStart().getStringValue());
     assertEquals("1970-03-04", RANGE_DATE.getEnd().getStringValue());
-    assertEquals(StandardSQLTypeName.DATE, RANGE_DATE.getType());
+    assertEquals(FieldElementType.newBuilder().setType("DATE").build(), RANGE_DATE.getType());
 
     assertEquals("2014-08-19 05:41:35.220000", RANGE_DATETIME.getStart().getStringValue());
     assertEquals("2015-09-20 06:41:35.220000", RANGE_DATETIME.getEnd().getStringValue());
-    assertEquals(StandardSQLTypeName.DATETIME, RANGE_DATETIME.getType());
+    assertEquals(
+        FieldElementType.newBuilder().setType("DATETIME").build(), RANGE_DATETIME.getType());
 
     assertEquals("2014-08-19 12:41:35.220000+00:00", RANGE_TIMESTAMP.getStart().getStringValue());
     assertEquals("2015-09-20 13:41:35.220000+01:00", RANGE_TIMESTAMP.getEnd().getStringValue());
-    assertEquals(StandardSQLTypeName.TIMESTAMP, RANGE_TIMESTAMP.getType());
+    assertEquals(
+        FieldElementType.newBuilder().setType("TIMESTAMP").build(), RANGE_TIMESTAMP.getType());
   }
 
   @Test

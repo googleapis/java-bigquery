@@ -622,28 +622,43 @@ public class QueryParameterValueTest {
 
   @Test
   public void testRange() {
-    testRangeDataEquals(null, null, StandardSQLTypeName.DATE);
-    testRangeDataEquals(null, "1971-02-03", StandardSQLTypeName.DATE);
-    testRangeDataEquals("1970-01-02", null, StandardSQLTypeName.DATE);
-    testRangeDataEquals("1970-01-02", "1971-02-03", StandardSQLTypeName.DATE);
-
-    testRangeDataEquals(null, null, StandardSQLTypeName.DATETIME);
-    testRangeDataEquals(null, "2015-09-20 06:41:35.220000", StandardSQLTypeName.DATETIME);
-    testRangeDataEquals("2014-08-19 05:41:35.220000", null, StandardSQLTypeName.DATETIME);
+    testRangeDataEquals(null, null, FieldElementType.newBuilder().setType("DATE").build());
+    testRangeDataEquals(null, "1971-02-03", FieldElementType.newBuilder().setType("DATE").build());
+    testRangeDataEquals("1970-01-02", null, FieldElementType.newBuilder().setType("DATE").build());
     testRangeDataEquals(
-        "2014-08-19 05:41:35.220000", "2015-09-20 06:41:35.220000", StandardSQLTypeName.DATETIME);
+        "1970-01-02", "1971-02-03", FieldElementType.newBuilder().setType("DATE").build());
 
-    testRangeDataEquals(null, null, StandardSQLTypeName.TIMESTAMP);
-    testRangeDataEquals(null, "2015-09-20 13:41:35.220000+01:00", StandardSQLTypeName.TIMESTAMP);
-    testRangeDataEquals("2014-08-19 12:41:35.220000+00:00", null, StandardSQLTypeName.TIMESTAMP);
+    testRangeDataEquals(null, null, FieldElementType.newBuilder().setType("DATETIME").build());
+    testRangeDataEquals(
+        null,
+        "2015-09-20 06:41:35.220000",
+        FieldElementType.newBuilder().setType("DATETIME").build());
+    testRangeDataEquals(
+        "2014-08-19 05:41:35.220000",
+        null,
+        FieldElementType.newBuilder().setType("DATETIME").build());
+    testRangeDataEquals(
+        "2014-08-19 05:41:35.220000",
+        "2015-09-20 06:41:35.220000",
+        FieldElementType.newBuilder().setType("DATETIME").build());
+
+    testRangeDataEquals(null, null, FieldElementType.newBuilder().setType("TIMESTAMP").build());
+    testRangeDataEquals(
+        null,
+        "2015-09-20 13:41:35.220000+01:00",
+        FieldElementType.newBuilder().setType("TIMESTAMP").build());
+    testRangeDataEquals(
+        "2014-08-19 12:41:35.220000+00:00",
+        null,
+        FieldElementType.newBuilder().setType("TIMESTAMP").build());
     testRangeDataEquals(
         "2014-08-19 12:41:35.220000+00:00",
         "2015-09-20 13:41:35.220000+01:00",
-        StandardSQLTypeName.TIMESTAMP);
+        FieldElementType.newBuilder().setType("TIMESTAMP").build());
   }
 
   /** Helper method to test range QueryParameterValue and its permutations. */
-  private static void testRangeDataEquals(String start, String end, StandardSQLTypeName type) {
+  private static void testRangeDataEquals(String start, String end, FieldElementType type) {
     QueryParameterValue rangeField =
         QueryParameterValue.range(
             Range.newBuilder().setType(type).setStart(start).setEnd(end).build());

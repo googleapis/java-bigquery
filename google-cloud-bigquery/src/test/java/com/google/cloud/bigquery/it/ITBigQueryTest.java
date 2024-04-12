@@ -1374,19 +1374,19 @@ public class ITBigQueryTest {
 
     Range dateRange =
         Range.newBuilder()
-            .setType(StandardSQLTypeName.DATE)
+            .setType(FieldElementType.newBuilder().setType("DATE").build())
             .setStart("2020-01-01")
             .setEnd("2020-12-31")
             .build();
     Range datetimeRange =
         Range.newBuilder()
-            .setType(StandardSQLTypeName.DATETIME)
+            .setType(FieldElementType.newBuilder().setType("DATETIME").build())
             .setStart("2020-01-01T12:00:00")
             .setEnd("2020-12-31T12:00:00")
             .build();
     Range timestampRange =
         Range.newBuilder()
-            .setType(StandardSQLTypeName.TIMESTAMP)
+            .setType(FieldElementType.newBuilder().setType("TIMESTAMP").build())
             .setStart("2014-01-01 07:00:00.000000+00:00")
             .setEnd("2015-01-01 07:00:00.000000+00:00")
             .build();

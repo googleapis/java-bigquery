@@ -591,7 +591,7 @@ public abstract class QueryParameterValue implements Serializable {
         && getRangeValues() != null
         && getRangeValues().getType() != null) {
       QueryParameterType rangeTypePb = new QueryParameterType();
-      rangeTypePb.setType(getRangeValues().getType().toString());
+      rangeTypePb.setType(getRangeValues().getType().getType());
       typePb.setRangeElementType(rangeTypePb);
     }
     return typePb;
@@ -654,7 +654,7 @@ public abstract class QueryParameterValue implements Serializable {
         }
       }
       if (typePb.getRangeElementType() != null && typePb.getRangeElementType().getType() != null) {
-        range.setType(StandardSQLTypeName.valueOf(typePb.getRangeElementType().getType()));
+        range.setType(FieldElementType.fromPb(typePb));
       }
       valueBuilder.setRangeValues(range.build());
     } else {

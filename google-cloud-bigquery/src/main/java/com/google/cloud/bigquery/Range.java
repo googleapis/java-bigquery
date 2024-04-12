@@ -44,9 +44,9 @@ public abstract class Range implements Serializable {
   @Nullable
   abstract String getEndInner();
 
-  @Nullable
   /** Returns the type of the range. */
-  public abstract StandardSQLTypeName getType();
+  @Nullable
+  public abstract FieldElementType getType();
 
   public abstract Range.Builder toBuilder();
 
@@ -65,7 +65,7 @@ public abstract class Range implements Serializable {
 
     abstract Range.Builder setEndInner(String end);
 
-    public abstract Range.Builder setType(StandardSQLTypeName type);
+    public abstract Range.Builder setType(FieldElementType type);
 
     public abstract Range build();
   }
@@ -75,15 +75,22 @@ public abstract class Range implements Serializable {
     return new AutoValue_Range.Builder();
   }
 
+  public static Range of(String value) throws IllegalArgumentException {
+    return of(value, null);
+  }
+
   /**
    * Creates an instance of {@code Range} from a string representation.
    *
    * <p>The expected string format is: "[start, end)", where start and end are string format of
    * [DATE, TIME, TIMESTAMP].
    */
-  public static Range of(String value) throws IllegalArgumentException {
+  public static Range of(String value, FieldElementType type) throws IllegalArgumentException {
     checkNotNull(value);
     Range.Builder builder = newBuilder();
+    if (type != null) {
+      builder.setType(type);
+    }
     String[] startEnd = value.split(", ", 2); // Expect an extra space after ','.
     if (startEnd.length != 2) {
       throw new IllegalArgumentException(

@@ -67,7 +67,10 @@ public class FieldValue implements Serializable {
     REPEATED,
 
     /** A {@code FieldValue} for a field of type {@link LegacySQLTypeName#RECORD}. */
-    RECORD
+    RECORD,
+
+    /** A {@code FieldValue} for a field of type {@link LegacySQLTypeName#RANGE}. */
+    RANGE
   }
 
   private FieldValue(Attribute attribute, Object value) {
@@ -239,6 +242,10 @@ public class FieldValue implements Serializable {
    */
   @SuppressWarnings("unchecked")
   public Range getRangeValue() {
+    if (attribute == Attribute.RANGE) {
+      return (Range) value;
+    }
+    // Provide best effort to convert value to Range object.
     return Range.of(getStringValue());
   }
 
@@ -345,6 +352,12 @@ public class FieldValue implements Serializable {
       return FieldValue.of(Attribute.PRIMITIVE, null);
     }
     if (cellPb instanceof String) {
+      if ((recordSchema != null)
+          && (recordSchema.getType() == LegacySQLTypeName.RANGE)
+          && (recordSchema.getRangeElementType() != null)) {
+        return FieldValue.of(
+            Attribute.RANGE, Range.of((String) cellPb, recordSchema.getRangeElementType()));
+      }
       return FieldValue.of(Attribute.PRIMITIVE, cellPb);
     }
     if (cellPb instanceof List) {
