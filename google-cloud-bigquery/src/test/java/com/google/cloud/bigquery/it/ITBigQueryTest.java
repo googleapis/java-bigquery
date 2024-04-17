@@ -1492,7 +1492,7 @@ public class ITBigQueryTest {
 
       // Test listTableData
       TableResult result = bigquery.listTableData(DATASET, tableName, RANGE_SCHEMA);
-      assertEquals(4, Iterables.size(result.getValues()));
+      assertEquals(RANGE_TEST_VALUES_DATES.size(), Iterables.size(result.getValues()));
       for (FieldValueList values : result.iterateAll()) {
         String name = values.get("name").getStringValue();
         assertEquals(RANGE_TEST_VALUES_DATES.get(name), values.get("date").getRangeValue());
