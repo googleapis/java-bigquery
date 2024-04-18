@@ -3026,6 +3026,7 @@ public class ITBigQueryTest {
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
     Job job = bigquery.create(JobInfo.of(JobId.of(), config));
+    job = job.waitFor();
 
     TableResult result = job.getQueryResults();
     assertNotNull(result.getJobId());
