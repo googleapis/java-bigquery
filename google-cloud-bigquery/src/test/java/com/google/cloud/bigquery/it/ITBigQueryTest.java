@@ -3051,6 +3051,7 @@ public class ITBigQueryTest {
     Job job2 = bigquery.getJob(job.getJobId());
     JobStatistics.QueryStatistics statistics = job2.getStatistics();
     assertNotNull(statistics.getQueryPlan());
+    assertThat(statistics.getTotalSlotMs()).isGreaterThan(0L);
   }
 
   @Test
@@ -4322,6 +4323,7 @@ public class ITBigQueryTest {
 
     Job loadJob = bigquery.getJob(job.getJobId());
     JobStatistics.LoadStatistics statistics = loadJob.getStatistics();
+    assertThat(statistics.getTotalSlotMs()).isGreaterThan(0L);
     String sessionId = statistics.getSessionInfo().getSessionId();
     assertNotNull(sessionId);
 
@@ -5571,6 +5573,7 @@ public class ITBigQueryTest {
     assertEquals(1L, extractStatistics.getDestinationUriFileCounts().size());
     assertEquals(
         loadStatistics.getOutputBytes().longValue(), extractStatistics.getInputBytes().longValue());
+    assertThat(extractStatistics.getTotalSlotMs()).isGreaterThan(0L);
 
     String extractedCsv =
         new String(storage.readAllBytes(BUCKET, EXTRACT_FILE), StandardCharsets.UTF_8);
