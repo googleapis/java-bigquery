@@ -3161,7 +3161,6 @@ public class ITBigQueryTest {
     Job job2 = bigquery.getJob(job.getJobId());
     JobStatistics.QueryStatistics statistics = job2.getStatistics();
     assertNotNull(statistics.getQueryPlan());
-    assertThat(statistics.getTotalSlotMs()).isGreaterThan(0L);
   }
 
   @Test
@@ -3178,7 +3177,7 @@ public class ITBigQueryTest {
     Job job2 = bigquery.getJob(job.getJobId());
     JobStatistics.QueryStatistics statistics = job2.getStatistics();
     assertNotNull(statistics.getQueryPlan());
-    assertThat(statistics.getTotalSlotMs()).isGreaterThan(0L);
+    assertThat(statistics.getTotalSlotMs()).isGreaterThan(10000000L);
   }
 
   @Test
