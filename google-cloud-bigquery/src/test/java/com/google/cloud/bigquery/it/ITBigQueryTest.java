@@ -3026,7 +3026,6 @@ public class ITBigQueryTest {
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
     Job job = bigquery.create(JobInfo.of(JobId.of(), config));
-    job = job.waitFor();
 
     TableResult result = job.getQueryResults();
     assertNotNull(result.getJobId());
@@ -3051,6 +3050,22 @@ public class ITBigQueryTest {
 
     Job job2 = bigquery.getJob(job.getJobId());
     JobStatistics.QueryStatistics statistics = job2.getStatistics();
+    assertNotNull(statistics.getQueryPlan());
+  }
+
+  @Test
+  public void testQueryStatistics() throws InterruptedException {
+    // Use CURRENT_TIMESTAMP to avoid potential caching.
+    String query = "SELECT CURRENT_TIMESTAMP() AS ts";
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query)
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .setUseQueryCache(false)
+            .build();
+    Job job = bigquery.create(JobInfo.of(JobId.of(), config));
+    job = job.waitFor();
+
+    JobStatistics.QueryStatistics statistics = job.getStatistics();
     assertNotNull(statistics.getQueryPlan());
     assertThat(statistics.getTotalSlotMs()).isGreaterThan(0L);
   }
