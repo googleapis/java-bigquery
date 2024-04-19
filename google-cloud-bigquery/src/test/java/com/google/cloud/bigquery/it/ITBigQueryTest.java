@@ -3131,7 +3131,10 @@ public class ITBigQueryTest {
   public void testQuery() throws InterruptedException {
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     QueryJobConfiguration config =
-        QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
+        QueryJobConfiguration.newBuilder(query)
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .setUseQueryCache(false)
+            .build();
     Job job = bigquery.create(JobInfo.of(JobId.of(), config));
 
     TableResult result = job.getQueryResults();
@@ -3154,6 +3157,23 @@ public class ITBigQueryTest {
       rowCount++;
     }
     assertEquals(2, rowCount);
+
+    Job job2 = bigquery.getJob(job.getJobId());
+    JobStatistics.QueryStatistics statistics = job2.getStatistics();
+    assertNotNull(statistics.getQueryPlan());
+    assertThat(statistics.getTotalSlotMs()).isGreaterThan(0L);
+  }
+
+  @Test
+  public void testDONOTMERGE() throws InterruptedException {
+    String query = "SELECT CURRENT_TIMESTAMP() AS ts";
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query)
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .setUseQueryCache(false)
+            .build();
+    Job job = bigquery.create(JobInfo.of(JobId.of(), config));
+    job.waitFor();
 
     Job job2 = bigquery.getJob(job.getJobId());
     JobStatistics.QueryStatistics statistics = job2.getStatistics();
