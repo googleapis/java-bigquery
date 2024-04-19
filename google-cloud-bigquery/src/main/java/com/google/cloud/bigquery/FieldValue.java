@@ -125,7 +125,7 @@ public class FieldValue implements Serializable {
 
   /**
    * Returns this field's value as a {@link String}, or defaultValue if {@link #isNull()} returns
-   * {@code true}. See {@link #getStringValue()} for more details .
+   * {@code true}. See {@link #getStringValue()} for more details.
    *
    * @throws ClassCastException if the field is not a primitive type
    */
