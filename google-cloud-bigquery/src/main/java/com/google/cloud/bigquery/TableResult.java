@@ -16,7 +16,6 @@
 
 package com.google.cloud.bigquery;
 
-import com.google.api.core.InternalApi;
 import com.google.api.gax.paging.Page;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Function;
