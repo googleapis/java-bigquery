@@ -36,8 +36,7 @@ public abstract class ConnectionSettings {
    * Returns useReadAPI flag, enabled by default. Read API will be used if the underlying conditions
    * are satisfied and this flag is enabled
    */
-  @Nullable
-  public abstract Boolean getUseReadAPI();
+  public abstract boolean getUseReadAPI();
 
   /** Returns the synchronous response timeoutMs associated with this query */
   @Nullable
@@ -221,7 +220,7 @@ public abstract class ConnectionSettings {
      *
      * @param useReadAPI or {@code true} for none
      */
-    public abstract Builder setUseReadAPI(@Nullable Boolean useReadAPI);
+    public abstract Builder setUseReadAPI(boolean useReadAPI);
 
     /**
      * Sets how long to wait for the query to complete, in milliseconds, before the request times
