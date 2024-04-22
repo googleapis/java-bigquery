@@ -27,7 +27,6 @@ import java.io.Serializable;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
-@InternalApi
 @AutoValue
 public abstract class TableResult implements Page<FieldValueList>, Serializable {
 
