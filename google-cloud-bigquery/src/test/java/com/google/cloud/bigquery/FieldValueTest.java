@@ -120,6 +120,7 @@ public class FieldValueTest {
     assertEquals(FieldValue.fromPb(TIMESTAMP_FIELD), value.getRepeatedValue().get(1));
     value = FieldValue.fromPb(NULL_FIELD);
     assertTrue(value.isNull());
+    assertEquals(null, value.getStringValueOrDefault(null));
     assertEquals("defaultValue", value.getStringValueOrDefault("defaultValue"));
   }
 
