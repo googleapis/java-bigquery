@@ -20,6 +20,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import com.google.api.client.util.Data;
 import com.google.api.services.bigquery.model.TableCell;
@@ -27,8 +28,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.BaseEncoding;
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Period;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.junit.Test;
+import org.threeten.extra.PeriodDuration;
 
 public class FieldValueTest {
 
@@ -43,9 +49,16 @@ public class FieldValueTest {
       ImmutableMap.of("v", "123456789.123456789");
   private static final Map<String, String> STRING_FIELD = ImmutableMap.of("v", "string");
   private static final Map<String, String> TIMESTAMP_FIELD = ImmutableMap.of("v", "42");
+  private static final Map<String, String> INTERVAL_FIELD_1 =
+      ImmutableMap.of("v", "P3Y2M1DT12H34M56.789S");
+  private static final Map<String, String> INTERVAL_FIELD_2 =
+      ImmutableMap.of("v", "3-2 1 12:34:56.789");
   private static final Map<String, String> BYTES_FIELD = ImmutableMap.of("v", BYTES_BASE64);
   private static final Map<String, String> NULL_FIELD =
       ImmutableMap.of("v", Data.nullOf(String.class));
+
+  private static final Map<String, String> RANGE_FIELD = ImmutableMap.of("v", "[start, end)");
+
   private static final Map<String, Object> REPEATED_FIELD =
       ImmutableMap.<String, Object>of("v", ImmutableList.<Object>of(INTEGER_FIELD, INTEGER_FIELD));
   private static final Map<String, Object> RECORD_FIELD =
@@ -65,20 +78,38 @@ public class FieldValueTest {
     value = FieldValue.fromPb(GEOGRAPHY_FIELD);
     assertEquals(FieldValue.Attribute.PRIMITIVE, value.getAttribute());
     assertEquals("POINT(-122.350220 47.649154)", value.getStringValue());
+    assertEquals("POINT(-122.350220 47.649154)", value.getStringValueOrDefault(null));
     value = FieldValue.fromPb(NUMERIC_FIELD);
     assertEquals(FieldValue.Attribute.PRIMITIVE, value.getAttribute());
     assertEquals(new BigDecimal("123456789.123456789"), value.getNumericValue());
     value = FieldValue.fromPb(STRING_FIELD);
     assertEquals(FieldValue.Attribute.PRIMITIVE, value.getAttribute());
     assertEquals("string", value.getStringValue());
+    assertEquals("string", value.getStringValueOrDefault(null));
     value = FieldValue.fromPb(TIMESTAMP_FIELD);
     assertEquals(FieldValue.Attribute.PRIMITIVE, value.getAttribute());
     assertEquals(42000000, value.getTimestampValue());
+    value = FieldValue.fromPb(INTERVAL_FIELD_1);
+    assertEquals(FieldValue.Attribute.PRIMITIVE, value.getAttribute());
+    PeriodDuration periodDuration =
+        PeriodDuration.of(Period.of(3, 2, 1), Duration.parse("PT12H34M56.789S"));
+    assertEquals(periodDuration, value.getPeriodDuration());
+    assertEquals("P3Y2M1DT12H34M56.789S", value.getStringValue());
+    assertEquals("P3Y2M1DT12H34M56.789S", value.getStringValueOrDefault(null));
+    value = FieldValue.fromPb(INTERVAL_FIELD_2);
+    assertEquals(FieldValue.Attribute.PRIMITIVE, value.getAttribute());
+    periodDuration = PeriodDuration.of(Period.of(3, 2, 1), Duration.parse("PT12H34M56.789S"));
+    assertEquals(periodDuration, value.getPeriodDuration());
+    assertEquals("3-2 1 12:34:56.789", value.getStringValue());
+    assertEquals("3-2 1 12:34:56.789", value.getStringValueOrDefault(null));
     value = FieldValue.fromPb(BYTES_FIELD);
     assertEquals(FieldValue.Attribute.PRIMITIVE, value.getAttribute());
     assertArrayEquals(BYTES, value.getBytesValue());
     value = FieldValue.fromPb(NULL_FIELD);
     assertNull(value.getValue());
+    value = FieldValue.fromPb(RANGE_FIELD);
+    assertEquals(FieldValue.Attribute.PRIMITIVE, value.getAttribute());
+    assertEquals(Range.of(RANGE_FIELD.get("v")), value.getRangeValue());
     value = FieldValue.fromPb(REPEATED_FIELD);
     assertEquals(FieldValue.Attribute.REPEATED, value.getAttribute());
     assertEquals(FieldValue.fromPb(INTEGER_FIELD), value.getRepeatedValue().get(0));
@@ -87,6 +118,10 @@ public class FieldValueTest {
     assertEquals(FieldValue.Attribute.RECORD, value.getAttribute());
     assertEquals(FieldValue.fromPb(FLOAT_FIELD), value.getRepeatedValue().get(0));
     assertEquals(FieldValue.fromPb(TIMESTAMP_FIELD), value.getRepeatedValue().get(1));
+    value = FieldValue.fromPb(NULL_FIELD);
+    assertTrue(value.isNull());
+    assertEquals(null, value.getStringValueOrDefault(null));
+    assertEquals("defaultValue", value.getStringValueOrDefault("defaultValue"));
   }
 
   @Test
@@ -136,6 +171,10 @@ public class FieldValueTest {
     assertEquals(nullValue, FieldValue.fromPb(NULL_FIELD));
     assertEquals(nullValue.hashCode(), FieldValue.fromPb(NULL_FIELD).hashCode());
 
+    FieldValue rangeValue = FieldValue.of(FieldValue.Attribute.PRIMITIVE, "[start, end)");
+    assertEquals(rangeValue, FieldValue.fromPb(RANGE_FIELD));
+    assertEquals(rangeValue.hashCode(), FieldValue.fromPb(RANGE_FIELD).hashCode());
+
     FieldValue repeatedValue =
         FieldValue.of(FieldValue.Attribute.REPEATED, ImmutableList.of(integerValue, integerValue));
     assertEquals(repeatedValue, FieldValue.fromPb(REPEATED_FIELD));
@@ -145,5 +184,23 @@ public class FieldValueTest {
         FieldValue.of(FieldValue.Attribute.RECORD, ImmutableList.of(floatValue, timestampValue));
     assertEquals(recordValue, FieldValue.fromPb(RECORD_FIELD));
     assertEquals(recordValue.hashCode(), FieldValue.fromPb(RECORD_FIELD).hashCode());
+  }
+
+  @Test
+  public void testParseCanonicalInterval() {
+    Map<String, PeriodDuration> intervalToPeriodDuration = new LinkedHashMap<>();
+    intervalToPeriodDuration.put(
+        "125-7 -19 -0:24:12.001", PeriodDuration.parse("P125Y7M-19DT0H-24M-12.001S"));
+    intervalToPeriodDuration.put("-15-6 23 23:14:05", PeriodDuration.parse("P-15Y-6M23DT23H14M5S"));
+    intervalToPeriodDuration.put(
+        "06-01 06 01:01:00.123456", PeriodDuration.parse("P6Y1M6DT1H1M0.123456S"));
+    intervalToPeriodDuration.put("-0-0 -0 -0:0:0", PeriodDuration.parse("P0Y0M0DT0H0M0S"));
+    intervalToPeriodDuration.put(
+        "-99999-99999 9999 999:999:999.999999999",
+        PeriodDuration.parse("P-99999Y-99999M9999DT999H999M999.999999999S"));
+    for (Entry<String, PeriodDuration> entry : intervalToPeriodDuration.entrySet()) {
+      assertEquals(FieldValue.parseCanonicalInterval(entry.getKey()), entry.getValue());
+      System.out.println(FieldValue.parseCanonicalInterval(entry.getKey()));
+    }
   }
 }

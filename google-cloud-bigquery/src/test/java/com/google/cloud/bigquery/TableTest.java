@@ -248,9 +248,19 @@ public class TableTest {
   @Test
   public void testList() {
     Page<FieldValueList> page = new PageImpl<>(null, "c", ROWS);
-    when(bigquery.listTableData(TABLE_ID1)).thenReturn(new TableResult(null, ROWS.size(), page));
+    when(bigquery.listTableData(TABLE_ID1))
+        .thenReturn(
+            TableResult.newBuilder()
+                .setTotalRows((long) ROWS.size())
+                .setPageNoSchema(page)
+                .build());
     when(bigquery.listTableData(TABLE_ID1, SCHEMA))
-        .thenReturn(new TableResult(SCHEMA, ROWS.size(), page));
+        .thenReturn(
+            TableResult.newBuilder()
+                .setSchema(SCHEMA)
+                .setTotalRows((long) ROWS.size())
+                .setPageNoSchema(page)
+                .build());
     Page<FieldValueList> dataPage = table.list();
     assertThat(dataPage.getValues()).containsExactlyElementsIn(ROWS).inOrder();
     dataPage = table.list(SCHEMA);
@@ -263,9 +273,18 @@ public class TableTest {
   public void testListWithOptions() {
     Page<FieldValueList> page = new PageImpl<>(null, "c", ROWS);
     when(bigquery.listTableData(TABLE_ID1, BigQuery.TableDataListOption.pageSize(10L)))
-        .thenReturn(new TableResult(null, ROWS.size(), page));
+        .thenReturn(
+            TableResult.newBuilder()
+                .setTotalRows((long) ROWS.size())
+                .setPageNoSchema(page)
+                .build());
     when(bigquery.listTableData(TABLE_ID1, SCHEMA, BigQuery.TableDataListOption.pageSize(10L)))
-        .thenReturn(new TableResult(SCHEMA, ROWS.size(), page));
+        .thenReturn(
+            TableResult.newBuilder()
+                .setSchema(SCHEMA)
+                .setTotalRows((long) ROWS.size())
+                .setPageNoSchema(page)
+                .build());
     Page<FieldValueList> dataPage = table.list(BigQuery.TableDataListOption.pageSize(10L));
     assertThat(dataPage.getValues()).containsExactlyElementsIn(ROWS).inOrder();
 

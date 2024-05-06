@@ -19,6 +19,7 @@ package com.google.cloud.bigquery.it;
 import static com.google.cloud.bigquery.JobStatus.State.DONE;
 import static com.google.common.truth.Truth.assertThat;
 import static java.lang.System.currentTimeMillis;
+import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -54,6 +55,7 @@ import com.google.cloud.bigquery.BigQuery.TableOption;
 import com.google.cloud.bigquery.BigQueryDryRunResult;
 import com.google.cloud.bigquery.BigQueryError;
 import com.google.cloud.bigquery.BigQueryException;
+import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.BigQueryResult;
 import com.google.cloud.bigquery.BigQuerySQLException;
 import com.google.cloud.bigquery.CloneDefinition;
@@ -72,6 +74,7 @@ import com.google.cloud.bigquery.ExternalTableDefinition;
 import com.google.cloud.bigquery.ExtractJobConfiguration;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Field.Mode;
+import com.google.cloud.bigquery.FieldElementType;
 import com.google.cloud.bigquery.FieldList;
 import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.FieldValue.Attribute;
@@ -87,6 +90,8 @@ import com.google.cloud.bigquery.JobConfiguration;
 import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.JobStatistics;
+import com.google.cloud.bigquery.JobStatistics.CopyStatistics;
+import com.google.cloud.bigquery.JobStatistics.ExtractStatistics;
 import com.google.cloud.bigquery.JobStatistics.LoadStatistics;
 import com.google.cloud.bigquery.JobStatistics.QueryStatistics;
 import com.google.cloud.bigquery.JobStatistics.QueryStatistics.StatementType;
@@ -104,6 +109,7 @@ import com.google.cloud.bigquery.PolicyTags;
 import com.google.cloud.bigquery.PrimaryKey;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.QueryParameterValue;
+import com.google.cloud.bigquery.Range;
 import com.google.cloud.bigquery.RangePartitioning;
 import com.google.cloud.bigquery.Routine;
 import com.google.cloud.bigquery.RoutineArgument;
@@ -122,6 +128,7 @@ import com.google.cloud.bigquery.TableDataWriteChannel;
 import com.google.cloud.bigquery.TableDefinition;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableInfo;
+import com.google.cloud.bigquery.TableMetadataCacheUsage.UnusedReason;
 import com.google.cloud.bigquery.TableResult;
 import com.google.cloud.bigquery.TimePartitioning;
 import com.google.cloud.bigquery.TimePartitioning.Type;
@@ -147,6 +154,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonObject;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -202,6 +210,7 @@ public class ITBigQueryTest {
   private static final String ROUTINE_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
   private static final String RANDOM_ID = UUID.randomUUID().toString().substring(0, 8);
+  private static final String STORAGE_BILLING_MODEL = "LOGICAL";
   private static final String CLOUD_SAMPLES_DATA =
       Optional.fromNullable(System.getenv("CLOUD_SAMPLES_DATA_BUCKET")).or("cloud-samples-data");
   private static final Map<String, String> LABELS =
@@ -766,9 +775,233 @@ public class ITBigQueryTest {
 
   private static final Set<String> PUBLIC_DATASETS =
       ImmutableSet.of("github_repos", "hacker_news", "noaa_gsod", "samples", "usa_names");
+  private static final Map<String, String> PUBLIC_DATASETS_LOCATION =
+      ImmutableMap.<String, String>builder()
+          .put("github_repos", "US")
+          .put("hacker_news", "US")
+          .put("noaa_gsod", "US")
+          .put("samples", "US")
+          .put("usa_names", "US")
+          // Dataset url:
+          // https://console.cloud.google.com/bigquery?project=bigquery-public-data&ws=!1m4!1m3!3m2!1sbigquery-public-data!2sgnomAD_asiane1
+          .put("gnomAD_asiane1", "asia-northeast1")
+          // Dataset url:
+          // https://console.cloud.google.com/bigquery?project=bigquery-public-data&ws=!1m4!1m3!3m2!1sbigquery-public-data!2sgnomAD_eu
+          .put("gnomAD_eu", "EU")
+          .build();
 
   private static final String PUBLIC_PROJECT = "bigquery-public-data";
   private static final String PUBLIC_DATASET = "census_bureau_international";
+
+  private static final String FAKE_JSON_CRED_WITH_GOOGLE_DOMAIN =
+      "{\n"
+          + "  \"private_key_id\": \"somekeyid\",\n"
+          + "  \"private_key\": \"-----BEGIN PRIVATE KEY-----\\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggS"
+          + "kAgEAAoIBAQC+K2hSuFpAdrJI\\nnCgcDz2M7t7bjdlsadsasad+fvRSW6TjNQZ3p5LLQY1kSZRqBqylRkzteMOyHg"
+          + "aR\\n0Pmxh3ILCND5men43j3h4eDbrhQBuxfEMalkG92sL+PNQSETY2tnvXryOvmBRwa/\\nQP/9dJfIkIDJ9Fw9N4"
+          + "Bhhhp6mCcRpdQjV38H7JsyJ7lih/oNjECgYAt\\nknddadwkwewcVxHFhcZJO+XWf6ofLUXpRwiTZakGMn8EE1uVa2"
+          + "LgczOjwWHGi99MFjxSer5m9\\n1tCa3/KEGKiS/YL71JvjwX3mb+cewlkcmweBKZHM2JPTk0ZednFSpVZMtycjkbLa"
+          + "\\ndYOS8V85AgMBewECggEBAKksaldajfDZDV6nGqbFjMiizAKJolr/M3OQw16K6o3/\\n0S31xIe3sSlgW0+UbYlF"
+          + "4U8KifhManD1apVSC3csafaspP4RZUHFhtBywLO9pR5c\\nr6S5aLp+gPWFyIp1pfXbWGvc5VY/v9x7ya1VEa6rXvL"
+          + "sKupSeWAW4tMj3eo/64ge\\nsdaceaLYw52KeBYiT6+vpsnYrEkAHO1fF/LavbLLOFJmFTMxmsNaG0tuiJHgjshB\\"
+          + "n82DpMCbXG9YcCgI/DbzuIjsdj2JC1cascSP//3PmefWysucBQe7Jryb6NQtASmnv\\nCdDw/0jmZTEjpe4S1lxfHp"
+          + "lAhHFtdgYTvyYtaLZiVVkCgYEA8eVpof2rceecw/I6\\n5ng1q3Hl2usdWV/4mZMvR0fOemacLLfocX6IYxT1zA1FF"
+          + "JlbXSRsJMf/Qq39mOR2\\nSpW+hr4jCoHeRVYLgsbggtrevGmILAlNoqCMpGZ6vDmJpq6ECV9olliDvpPgWOP+\\nm"
+          + "YPDreFBGxWvQrADNbRt2dmGsrsCgYEAyUHqB2wvJHFqdmeBsaacewzV8x9WgmeX\\ngUIi9REwXlGDW0Mz50dxpxcK"
+          + "CAYn65+7TCnY5O/jmL0VRxU1J2mSWyWTo1C+17L0\\n3fUqjxL1pkefwecxwecvC+gFFYdJ4CQ/MHHXU81Lwl1iWdF"
+          + "Cd2UoGddYaOF+KNeM\\nHC7cmqra+JsCgYEAlUNywzq8nUg7282E+uICfCB0LfwejuymR93CtsFgb7cRd6ak\\nECR"
+          + "8FGfCpH8ruWJINllbQfcHVCX47ndLZwqv3oVFKh6pAS/vVI4dpOepP8++7y1u\\ncoOvtreXCX6XqfrWDtKIvv0vjl"
+          + "HBhhhp6mCcRpdQjV38H7JsyJ7lih/oNjECgYAt\\nkndj5uNl5SiuVxHFhcZJO+XWf6ofLUregtevZakGMn8EE1uVa"
+          + "2AY7eafmoU/nZPT\\n00YB0TBATdCbn/nBSuKDESkhSg9s2GEKQZG5hBmL5uCMfo09z3SfxZIhJdlerreP\\nJ7gSi"
+          + "dI12N+EZxYd4xIJh/HFDgp7RRO87f+WJkofMQKBgGTnClK1VMaCRbJZPriw\\nEfeFCoOX75MxKwXs6xgrw4W//AYG"
+          + "GUjDt83lD6AZP6tws7gJ2IwY/qP7+lyhjEqN\\nHtfPZRGFkGZsdaksdlaksd323423d+15/UvrlRSFPNj1tWQmNKk"
+          + "XyRDW4IG1Oa2p\\nrALStNBx5Y9t0/LQnFI4w3aG\\n-----END PRIVATE KEY-----\\n\",\n"
+          + "  \"project_id\": \"someprojectid\",\n"
+          + "  \"client_email\": \"someclientid@developer.gserviceaccount.com\",\n"
+          + "  \"client_id\": \"someclientid.apps.googleusercontent.com\",\n"
+          + "  \"type\": \"service_account\",\n"
+          + "  \"universe_domain\": \"googleapis.com\"\n"
+          + "}";
+  private static final String FAKE_JSON_CRED_WITH_INVALID_DOMAIN =
+      "{\n"
+          + "  \"private_key_id\": \"somekeyid\",\n"
+          + "  \"private_key\": \"-----BEGIN PRIVATE KEY-----\\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggS"
+          + "kAgEAAoIBAQC+K2hSuFpAdrJI\\nnCgcDz2M7t7bjdlsadsasad+fvRSW6TjNQZ3p5LLQY1kSZRqBqylRkzteMOyHg"
+          + "aR\\n0Pmxh3ILCND5men43j3h4eDbrhQBuxfEMalkG92sL+PNQSETY2tnvXryOvmBRwa/\\nQP/9dJfIkIDJ9Fw9N4"
+          + "Bhhhp6mCcRpdQjV38H7JsyJ7lih/oNjECgYAt\\nknddadwkwewcVxHFhcZJO+XWf6ofLUXpRwiTZakGMn8EE1uVa2"
+          + "LgczOjwWHGi99MFjxSer5m9\\n1tCa3/KEGKiS/YL71JvjwX3mb+cewlkcmweBKZHM2JPTk0ZednFSpVZMtycjkbLa"
+          + "\\ndYOS8V85AgMBewECggEBAKksaldajfDZDV6nGqbFjMiizAKJolr/M3OQw16K6o3/\\n0S31xIe3sSlgW0+UbYlF"
+          + "4U8KifhManD1apVSC3csafaspP4RZUHFhtBywLO9pR5c\\nr6S5aLp+gPWFyIp1pfXbWGvc5VY/v9x7ya1VEa6rXvL"
+          + "sKupSeWAW4tMj3eo/64ge\\nsdaceaLYw52KeBYiT6+vpsnYrEkAHO1fF/LavbLLOFJmFTMxmsNaG0tuiJHgjshB\\"
+          + "n82DpMCbXG9YcCgI/DbzuIjsdj2JC1cascSP//3PmefWysucBQe7Jryb6NQtASmnv\\nCdDw/0jmZTEjpe4S1lxfHp"
+          + "lAhHFtdgYTvyYtaLZiVVkCgYEA8eVpof2rceecw/I6\\n5ng1q3Hl2usdWV/4mZMvR0fOemacLLfocX6IYxT1zA1FF"
+          + "JlbXSRsJMf/Qq39mOR2\\nSpW+hr4jCoHeRVYLgsbggtrevGmILAlNoqCMpGZ6vDmJpq6ECV9olliDvpPgWOP+\\nm"
+          + "YPDreFBGxWvQrADNbRt2dmGsrsCgYEAyUHqB2wvJHFqdmeBsaacewzV8x9WgmeX\\ngUIi9REwXlGDW0Mz50dxpxcK"
+          + "CAYn65+7TCnY5O/jmL0VRxU1J2mSWyWTo1C+17L0\\n3fUqjxL1pkefwecxwecvC+gFFYdJ4CQ/MHHXU81Lwl1iWdF"
+          + "Cd2UoGddYaOF+KNeM\\nHC7cmqra+JsCgYEAlUNywzq8nUg7282E+uICfCB0LfwejuymR93CtsFgb7cRd6ak\\nECR"
+          + "8FGfCpH8ruWJINllbQfcHVCX47ndLZwqv3oVFKh6pAS/vVI4dpOepP8++7y1u\\ncoOvtreXCX6XqfrWDtKIvv0vjl"
+          + "HBhhhp6mCcRpdQjV38H7JsyJ7lih/oNjECgYAt\\nkndj5uNl5SiuVxHFhcZJO+XWf6ofLUregtevZakGMn8EE1uVa"
+          + "2AY7eafmoU/nZPT\\n00YB0TBATdCbn/nBSuKDESkhSg9s2GEKQZG5hBmL5uCMfo09z3SfxZIhJdlerreP\\nJ7gSi"
+          + "dI12N+EZxYd4xIJh/HFDgp7RRO87f+WJkofMQKBgGTnClK1VMaCRbJZPriw\\nEfeFCoOX75MxKwXs6xgrw4W//AYG"
+          + "GUjDt83lD6AZP6tws7gJ2IwY/qP7+lyhjEqN\\nHtfPZRGFkGZsdaksdlaksd323423d+15/UvrlRSFPNj1tWQmNKk"
+          + "XyRDW4IG1Oa2p\\nrALStNBx5Y9t0/LQnFI4w3aG\\n-----END PRIVATE KEY-----\\n\",\n"
+          + "  \"project_id\": \"someprojectid\",\n"
+          + "  \"client_email\": \"someclientid@developer.gserviceaccount.com\",\n"
+          + "  \"client_id\": \"someclientid.apps.googleusercontent.com\",\n"
+          + "  \"type\": \"service_account\",\n"
+          + "  \"universe_domain\": \"fake.domain\"\n"
+          + "}";
+
+  private static final Schema RANGE_SCHEMA =
+      Schema.of(
+          Field.newBuilder("name", StandardSQLTypeName.STRING)
+              .setMode(Field.Mode.NULLABLE)
+              .setDescription("Name of the row")
+              .build(),
+          Field.newBuilder("date", StandardSQLTypeName.RANGE)
+              .setMode(Field.Mode.NULLABLE)
+              .setDescription("Range field with DATE")
+              .setRangeElementType(FieldElementType.newBuilder().setType("DATE").build())
+              .build(),
+          Field.newBuilder("datetime", StandardSQLTypeName.RANGE)
+              .setMode(Field.Mode.NULLABLE)
+              .setDescription("Range field with DATETIME")
+              .setRangeElementType(FieldElementType.newBuilder().setType("DATETIME").build())
+              .build(),
+          Field.newBuilder("timestamp", StandardSQLTypeName.RANGE)
+              .setMode(Field.Mode.NULLABLE)
+              .setDescription("Range field with TIMESTAMP")
+              .setRangeElementType(FieldElementType.newBuilder().setType("TIMESTAMP").build())
+              .build());
+
+  private static final ImmutableMap<String, Range> RANGE_TEST_VALUES_DATES =
+      new ImmutableMap.Builder<String, Range>()
+          .put(
+              "bounded",
+              Range.newBuilder()
+                  .setStart("2020-01-01")
+                  .setEnd("2020-12-31")
+                  .setType(FieldElementType.newBuilder().setType("DATE").build())
+                  .build())
+          .put(
+              "unboundedStart",
+              Range.newBuilder()
+                  .setStart(null)
+                  .setEnd("2020-12-31")
+                  .setType(FieldElementType.newBuilder().setType("DATE").build())
+                  .build())
+          .put(
+              "unboundedEnd",
+              Range.newBuilder()
+                  .setStart("2020-01-01")
+                  .setEnd(null)
+                  .setType(FieldElementType.newBuilder().setType("DATE").build())
+                  .build())
+          .put(
+              "unbounded",
+              Range.newBuilder()
+                  .setStart(null)
+                  .setEnd(null)
+                  .setType(FieldElementType.newBuilder().setType("DATE").build())
+                  .build())
+          .build();
+
+  private static final ImmutableMap<String, Range> RANGE_TEST_VALUES_DATETIME =
+      new ImmutableMap.Builder<String, Range>()
+          .put(
+              "bounded",
+              Range.newBuilder()
+                  .setStart("2014-08-19T05:41:35.220000")
+                  .setEnd("2015-09-20T06:41:35.220000")
+                  .setType(FieldElementType.newBuilder().setType("DATETIME").build())
+                  .build())
+          .put(
+              "unboundedStart",
+              Range.newBuilder()
+                  .setStart(null)
+                  .setEnd("2015-09-20T06:41:35.220000")
+                  .setType(FieldElementType.newBuilder().setType("DATETIME").build())
+                  .build())
+          .put(
+              "unboundedEnd",
+              Range.newBuilder()
+                  .setStart("2014-08-19T05:41:35.220000")
+                  .setEnd(null)
+                  .setType(FieldElementType.newBuilder().setType("DATETIME").build())
+                  .build())
+          .put(
+              "unbounded",
+              Range.newBuilder()
+                  .setStart(null)
+                  .setEnd(null)
+                  .setType(FieldElementType.newBuilder().setType("DATETIME").build())
+                  .build())
+          .build();
+
+  private static final ImmutableMap<String, Range> RANGE_TEST_VALUES_TIMESTAMP =
+      new ImmutableMap.Builder<String, Range>()
+          .put(
+              "bounded",
+              Range.newBuilder()
+                  .setStart("2014-08-19 12:41:35.220000+00:00")
+                  .setEnd("2015-09-20 13:41:35.220000+01:00")
+                  .setType(FieldElementType.newBuilder().setType("TIMESTAMP").build())
+                  .build())
+          .put(
+              "unboundedStart",
+              Range.newBuilder()
+                  .setStart(null)
+                  .setEnd("2015-09-20 13:41:35.220000+01:00")
+                  .setType(FieldElementType.newBuilder().setType("TIMESTAMP").build())
+                  .build())
+          .put(
+              "unboundedEnd",
+              Range.newBuilder()
+                  .setStart("2014-08-19 12:41:35.220000+00:00")
+                  .setEnd(null)
+                  .setType(FieldElementType.newBuilder().setType("TIMESTAMP").build())
+                  .build())
+          .put(
+              "unbounded",
+              Range.newBuilder()
+                  .setStart(null)
+                  .setEnd(null)
+                  .setType(FieldElementType.newBuilder().setType("TIMESTAMP").build())
+                  .build())
+          .build();
+
+  // timestamps are returned as seconds since epoch
+  private static final ImmutableMap<String, Range> RANGE_TEST_VALUES_EXPECTED_TIMESTAMP =
+      new ImmutableMap.Builder<String, Range>()
+          .put(
+              "bounded",
+              Range.newBuilder()
+                  .setStart("1408452095.220000")
+                  .setEnd("1442752895.220000")
+                  .setType(FieldElementType.newBuilder().setType("TIMESTAMP").build())
+                  .build())
+          .put(
+              "unboundedStart",
+              Range.newBuilder()
+                  .setStart(null)
+                  .setEnd("1442752895.220000")
+                  .setType(FieldElementType.newBuilder().setType("TIMESTAMP").build())
+                  .build())
+          .put(
+              "unboundedEnd",
+              Range.newBuilder()
+                  .setStart("1408452095.220000")
+                  .setEnd(null)
+                  .setType(FieldElementType.newBuilder().setType("TIMESTAMP").build())
+                  .build())
+          .put(
+              "unbounded",
+              Range.newBuilder()
+                  .setStart(null)
+                  .setEnd(null)
+                  .setType(FieldElementType.newBuilder().setType("TIMESTAMP").build())
+                  .build())
+          .build();
 
   private static BigQuery bigquery;
   private static Storage storage;
@@ -894,11 +1127,16 @@ public class ITBigQueryTest {
     Page<Dataset> datasets = bigquery.listDatasets("bigquery-public-data");
     Iterator<Dataset> iterator = datasets.iterateAll().iterator();
     Set<String> datasetNames = new HashSet<>();
+    Map<String, String> datasetLocation = new HashMap<>();
     while (iterator.hasNext()) {
-      datasetNames.add(iterator.next().getDatasetId().getDataset());
+      Dataset dataset = iterator.next();
+      String name = dataset.getDatasetId().getDataset();
+      datasetNames.add(name);
+      datasetLocation.put(name, dataset.getLocation());
     }
     for (String type : PUBLIC_DATASETS) {
       assertTrue(datasetNames.contains(type));
+      assertEquals(PUBLIC_DATASETS_LOCATION.get(type), datasetLocation.get(type));
     }
   }
 
@@ -965,6 +1203,7 @@ public class ITBigQueryTest {
     assertNull(dataset.getLastModified());
     assertNull(dataset.getLocation());
     assertNull(dataset.getSelfLink());
+    assertNull(dataset.getStorageBillingModel());
   }
 
   @Test
@@ -980,6 +1219,7 @@ public class ITBigQueryTest {
     assertThat(dataset.getDatasetId().getDataset()).isEqualTo(OTHER_DATASET);
     assertThat(dataset.getDescription()).isEqualTo("Some Description");
     assertThat(dataset.getLabels()).containsExactly("a", "b");
+    assertThat(dataset.getStorageBillingModel()).isNull();
 
     Map<String, String> updateLabels = new HashMap<>();
     updateLabels.put("x", "y");
@@ -990,9 +1230,11 @@ public class ITBigQueryTest {
                 .toBuilder()
                 .setDescription("Updated Description")
                 .setLabels(updateLabels)
+                .setStorageBillingModel("LOGICAL")
                 .build());
     assertThat(updatedDataset.getDescription()).isEqualTo("Updated Description");
     assertThat(updatedDataset.getLabels()).containsExactly("x", "y");
+    assertThat(updatedDataset.getStorageBillingModel()).isEqualTo("LOGICAL");
 
     updatedDataset = bigquery.update(updatedDataset.toBuilder().setLabels(null).build());
     assertThat(updatedDataset.getLabels()).isEmpty();
@@ -1022,6 +1264,7 @@ public class ITBigQueryTest {
     assertNull(updatedDataset.getLastModified());
     assertNull(updatedDataset.getLocation());
     assertNull(updatedDataset.getSelfLink());
+    assertNull(updatedDataset.getStorageBillingModel());
     assertTrue(dataset.delete());
   }
 
@@ -1228,8 +1471,88 @@ public class ITBigQueryTest {
               .build();
       TableResult result = bigquery.query(queryJobConfiguration);
       assertNotNull(result.getJobId());
+      PeriodDuration periodDuration =
+          PeriodDuration.of(Period.of(125, 7, -19), java.time.Duration.parse("PT24M12.000006S"));
       for (FieldValueList values : result.iterateAll()) {
         assertEquals("125-7 -19 0:24:12.000006", values.get(0).getValue());
+        assertEquals(periodDuration, values.get(0).getPeriodDuration());
+      }
+    } finally {
+      assertTrue(bigquery.delete(tableId));
+    }
+  }
+
+  @Test
+  public void testRangeType() throws InterruptedException {
+    String tableName = "test_range_type_table";
+    TableId tableId = TableId.of(DATASET, tableName);
+
+    StandardTableDefinition standardTableDefinition = StandardTableDefinition.of(RANGE_SCHEMA);
+    try {
+      // Create a table with a RANGE columns and verify the result.
+      Table createdTable = bigquery.create(TableInfo.of(tableId, standardTableDefinition));
+      assertNotNull(createdTable);
+
+      Table remoteTable = bigquery.getTable(DATASET, tableName);
+      Schema remoteSchema = remoteTable.<StandardTableDefinition>getDefinition().getSchema();
+      assertEquals(RANGE_SCHEMA, remoteSchema);
+
+      // Insert range values to the table.
+      InsertAllRequest.Builder request = InsertAllRequest.newBuilder(tableId);
+      for (String name : RANGE_TEST_VALUES_DATES.keySet()) {
+        ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
+        builder.put("name", name);
+        builder.put("date", RANGE_TEST_VALUES_DATES.get(name).getValues());
+        builder.put("datetime", RANGE_TEST_VALUES_DATETIME.get(name).getValues());
+        builder.put("timestamp", RANGE_TEST_VALUES_TIMESTAMP.get(name).getValues());
+        request.addRow(builder.build());
+      }
+      bigquery.insertAll(request.build());
+
+      // Test listTableData
+      TableResult result = bigquery.listTableData(DATASET, tableName, RANGE_SCHEMA);
+      assertEquals(RANGE_TEST_VALUES_DATES.size(), Iterables.size(result.getValues()));
+      for (FieldValueList values : result.iterateAll()) {
+        String name = values.get("name").getStringValue();
+        assertEquals(RANGE_TEST_VALUES_DATES.get(name), values.get("date").getRangeValue());
+        assertEquals(RANGE_TEST_VALUES_DATETIME.get(name), values.get("datetime").getRangeValue());
+        assertEquals(
+            RANGE_TEST_VALUES_EXPECTED_TIMESTAMP.get(name),
+            values.get("timestamp").getRangeValue());
+      }
+
+      // Test Query Parameter by selecting for the bounded Range entry only.
+      String query =
+          String.format(
+              "SELECT name, date, datetime, timestamp\n"
+                  + "FROM %s.%s\n"
+                  + "WHERE date = @dateParam\n"
+                  + "AND datetime = @datetimeParam\n"
+                  + "AND timestamp = @timestampParam",
+              DATASET, tableName);
+
+      QueryJobConfiguration config =
+          QueryJobConfiguration.newBuilder(query)
+              .setDefaultDataset(DatasetId.of(DATASET))
+              .addNamedParameter(
+                  "dateParam", QueryParameterValue.range(RANGE_TEST_VALUES_DATES.get("bounded")))
+              .addNamedParameter(
+                  "datetimeParam",
+                  QueryParameterValue.range(RANGE_TEST_VALUES_DATETIME.get("bounded")))
+              .addNamedParameter(
+                  "timestampParam",
+                  QueryParameterValue.range(RANGE_TEST_VALUES_TIMESTAMP.get("bounded")))
+              .build();
+      result = bigquery.query(config);
+
+      assertEquals(1, Iterables.size(result.getValues()));
+      for (FieldValueList values : result.iterateAll()) {
+        String name = values.get("name").getStringValue();
+        assertEquals(RANGE_TEST_VALUES_DATES.get(name), values.get("date").getRangeValue());
+        assertEquals(RANGE_TEST_VALUES_DATETIME.get(name), values.get("datetime").getRangeValue());
+        assertEquals(
+            RANGE_TEST_VALUES_EXPECTED_TIMESTAMP.get(name),
+            values.get("timestamp").getRangeValue());
       }
     } finally {
       assertTrue(bigquery.delete(tableId));
@@ -1278,6 +1601,23 @@ public class ITBigQueryTest {
     Table remoteTable = bigquery.getTable(DATASET, tableName);
     assertEquals(schema, remoteTable.<StandardTableDefinition>getDefinition().getSchema());
     bigquery.delete(tableId);
+  }
+
+  @Test
+  public void testCreateDatasetWithSpecifiedStorageBillingModel() {
+    String billingModelDataset = RemoteBigQueryHelper.generateDatasetName();
+    DatasetInfo info =
+        DatasetInfo.newBuilder(billingModelDataset)
+            .setDescription(DESCRIPTION)
+            .setStorageBillingModel(STORAGE_BILLING_MODEL)
+            .setLabels(LABELS)
+            .build();
+    bigquery.create(info);
+
+    Dataset dataset = bigquery.getDataset(DatasetId.of(billingModelDataset));
+    assertEquals(STORAGE_BILLING_MODEL, dataset.getStorageBillingModel());
+
+    RemoteBigQueryHelper.forceDelete(bigquery, billingModelDataset);
   }
 
   @Test
@@ -2658,6 +2998,33 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testRoutineDataGovernanceType() {
+    String routineName = RemoteBigQueryHelper.generateRoutineName();
+    RoutineId routineId = RoutineId.of(ROUTINE_DATASET, routineName);
+    RoutineInfo routineInfo =
+        RoutineInfo.newBuilder(routineId)
+            .setLanguage("SQL")
+            .setRoutineType("SCALAR_FUNCTION")
+            .setBody("x")
+            .setArguments(
+                ImmutableList.of(
+                    RoutineArgument.newBuilder()
+                        .setName("x")
+                        .setDataType(StandardSQLDataType.newBuilder("INT64").build())
+                        .build()))
+            .setReturnType(StandardSQLDataType.newBuilder("INT64").build())
+            .setDataGovernanceType("DATA_MASKING")
+            .build();
+
+    Routine routine = bigquery.create(routineInfo);
+    assertNotNull(routine);
+    assertEquals(routine.getLanguage(), "SQL");
+    assertEquals(routine.getRoutineType(), "SCALAR_FUNCTION");
+    assertEquals(routine.getReturnType(), StandardSQLDataType.newBuilder("INT64").build());
+    assertEquals(routine.getDataGovernanceType(), "DATA_MASKING");
+  }
+
+  @Test
   public void testAuthorizeRoutine() {
     String routineName = RemoteBigQueryHelper.generateRoutineName();
     RoutineId routineId = RoutineId.of(PROJECT_ID, ROUTINE_DATASET, routineName);
@@ -2810,6 +3177,23 @@ public class ITBigQueryTest {
     Job job2 = bigquery.getJob(job.getJobId());
     JobStatistics.QueryStatistics statistics = job2.getStatistics();
     assertNotNull(statistics.getQueryPlan());
+  }
+
+  @Test
+  public void testQueryStatistics() throws InterruptedException {
+    // Use CURRENT_TIMESTAMP to avoid potential caching.
+    String query = "SELECT CURRENT_TIMESTAMP() AS ts";
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query)
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .setUseQueryCache(false)
+            .build();
+    Job job = bigquery.create(JobInfo.of(JobId.of(), config));
+    job = job.waitFor();
+
+    JobStatistics.QueryStatistics statistics = job.getStatistics();
+    assertNotNull(statistics.getQueryPlan());
+    assertThat(statistics.getTotalSlotMs()).isGreaterThan(0L);
   }
 
   @Test
@@ -2979,6 +3363,34 @@ public class ITBigQueryTest {
         BQ_RESULTSET_EXPECTED_SCHEMA, bigQueryDryRunResultSet.getSchema()); // match the schema
     List<Parameter> queryParameters = bigQueryDryRunResultSet.getQueryParameters();
     assertEquals(StandardSQLTypeName.STRING, queryParameters.get(0).getValue().getType());
+    QueryStatistics queryStatistics = bigQueryDryRunResultSet.getStatistics().getQueryStatistics();
+    assertNotNull(queryStatistics);
+    SessionInfo sessionInfo = bigQueryDryRunResultSet.getStatistics().getSessionInfo();
+    assertNotNull(sessionInfo.getSessionId());
+    assertEquals(StatementType.SELECT, queryStatistics.getStatementType());
+  }
+
+  @Test
+  public void testConnectionImplDryRunNoQueryParameters() throws SQLException {
+    String query =
+        String.format(
+            "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, "
+                + "TimestampField, FloatField, NumericField, TimeField, DateField,  DateTimeField, "
+                + "GeographyField, RecordField.BytesField, RecordField.BooleanField, "
+                + "IntegerArrayField from %s order by TimestampField",
+            TABLE_ID_FASTQUERY_BQ_RESULTSET.getTable());
+    ConnectionSettings connectionSettings =
+        ConnectionSettings.newBuilder()
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .setCreateSession(true)
+            .build();
+    Connection connection = bigquery.createConnection(connectionSettings);
+    BigQueryDryRunResult bigQueryDryRunResultSet = connection.dryRun(query);
+    assertNotNull(bigQueryDryRunResultSet.getSchema());
+    assertEquals(
+        BQ_RESULTSET_EXPECTED_SCHEMA, bigQueryDryRunResultSet.getSchema()); // match the schema
+    List<Parameter> queryParameters = bigQueryDryRunResultSet.getQueryParameters();
+    assertEquals(0, queryParameters.size());
     QueryStatistics queryStatistics = bigQueryDryRunResultSet.getStatistics().getQueryStatistics();
     assertNotNull(queryStatistics);
     SessionInfo sessionInfo = bigQueryDryRunResultSet.getStatistics().getSessionInfo();
@@ -3199,7 +3611,7 @@ public class ITBigQueryTest {
       throws SQLException, ExecutionException,
           InterruptedException { // use read API to read 300K records and check the order
     String query =
-        "SELECT date, county, state_name, confirmed_cases, deaths FROM "
+        "SELECT date, county, state_name, confirmed_cases, deaths / 10 FROM "
             + TABLE_ID_LARGE.getTable()
             + " where date is not null and county is not null and state_name is not null order by confirmed_cases asc limit 300000";
 
@@ -3224,7 +3636,8 @@ public class ITBigQueryTest {
       assertNotNull(rs.getString(1));
       assertNotNull(rs.getString(2));
       assertTrue(rs.getInt(3) >= 0);
-      assertTrue(rs.getInt(4) >= 0);
+      assertTrue(rs.getDouble(3) >= 0);
+      assertTrue(rs.getDouble(4) >= 0);
 
       // check if the records are sorted
       assertTrue(rs.getInt(3) >= lasConfirmedCases);
@@ -4052,6 +4465,7 @@ public class ITBigQueryTest {
 
     Job loadJob = bigquery.getJob(job.getJobId());
     JobStatistics.LoadStatistics statistics = loadJob.getStatistics();
+    assertThat(statistics.getTotalSlotMs()).isGreaterThan(0L);
     String sessionId = statistics.getSessionInfo().getSessionId();
     assertNotNull(sessionId);
 
@@ -4806,12 +5220,11 @@ public class ITBigQueryTest {
     assertNotNull(remoteJob.getStatus());
     assertEquals(createdJob.getSelfLink(), remoteJob.getSelfLink());
     assertEquals(createdJob.getUserEmail(), remoteJob.getUserEmail());
-    assertTrue(createdTable.delete());
 
     Job completedJob = remoteJob.waitFor(RetryOption.totalTimeout(Duration.ofMinutes(1)));
-
     assertNotNull(completedJob);
     assertNull(completedJob.getStatus().getError());
+    assertTrue(createdTable.delete());
     assertTrue(bigquery.delete(destinationTable));
   }
 
@@ -4854,13 +5267,12 @@ public class ITBigQueryTest {
     assertNull(remoteJob.getStatus());
     assertNull(remoteJob.getSelfLink());
     assertNull(remoteJob.getUserEmail());
-    assertTrue(createdTable.delete());
-
     Job completedJob =
         remoteJob.waitFor(
             RetryOption.initialRetryDelay(Duration.ofSeconds(1)),
             RetryOption.totalTimeout(Duration.ofMinutes(1)));
     assertNotNull(completedJob);
+    assertTrue(createdTable.delete());
     assertNull(completedJob.getStatus().getError());
     assertTrue(bigquery.delete(destinationTable));
   }
@@ -4876,11 +5288,18 @@ public class ITBigQueryTest {
     assertNotNull(createdTable);
     assertEquals(DATASET, createdTable.getTableId().getDataset());
     assertEquals(sourceTableName, createdTable.getTableId().getTable());
+
     TableId destinationTable = TableId.of(DATASET, destinationTableName);
     CopyJobConfiguration configuration = CopyJobConfiguration.of(destinationTable, sourceTable);
     Job remoteJob = bigquery.create(JobInfo.of(configuration));
     remoteJob = remoteJob.waitFor();
     assertNull(remoteJob.getStatus().getError());
+
+    CopyStatistics copyStatistics = remoteJob.getStatistics();
+    assertNotNull(copyStatistics);
+    assertEquals(0, copyStatistics.getCopiedRows().longValue());
+    assertEquals(0, copyStatistics.getCopiedLogicalBytes().longValue());
+
     Table remoteTable = bigquery.getTable(DATASET, destinationTableName);
     assertNotNull(remoteTable);
     assertEquals(destinationTable.getDataset(), remoteTable.getTableId().getDataset());
@@ -4888,6 +5307,37 @@ public class ITBigQueryTest {
     assertEquals(TABLE_SCHEMA, remoteTable.getDefinition().getSchema());
     assertTrue(createdTable.delete());
     assertTrue(remoteTable.delete());
+  }
+
+  @Test
+  public void testCopyJobStatistics() throws InterruptedException, TimeoutException {
+    String sourceTableName = "test_copy_job_statistics_source_table";
+    String destinationTableName = "test_copy_job_statistics_destination_table";
+
+    QueryJobConfiguration createTable =
+        QueryJobConfiguration.newBuilder(
+                String.format(
+                    "CREATE TABLE %s AS SELECT num FROM UNNEST(GENERATE_ARRAY(0,5)) as num",
+                    sourceTableName))
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .setUseLegacySql(false)
+            .build();
+    bigquery.query(createTable);
+
+    // Copy the created table.
+    TableId sourceTable = TableId.of(DATASET, sourceTableName);
+    TableId destinationTable = TableId.of(DATASET, destinationTableName);
+    CopyJobConfiguration configuration = CopyJobConfiguration.of(destinationTable, sourceTable);
+    Job remoteJob = bigquery.create(JobInfo.of(configuration));
+    remoteJob = remoteJob.waitFor();
+    assertNull(remoteJob.getStatus().getError());
+
+    CopyStatistics copyStatistics = remoteJob.getStatistics();
+    assertNotNull(copyStatistics);
+    assertEquals(6, copyStatistics.getCopiedRows().longValue());
+    // Assert != 0 since copied logical bytes is may return non-deterministic value due to how the
+    // data is represented.
+    assertNotEquals(0, copyStatistics.getCopiedLogicalBytes().longValue());
   }
 
   @Test
@@ -5090,7 +5540,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testQueryJobWithSearchReturnsSearchStatistics() throws InterruptedException {
+  public void testQueryJobWithSearchReturnsSearchStatisticsUnused() throws InterruptedException {
     String tableName = "test_query_job_table";
     String query =
         "SELECT * FROM "
@@ -5109,6 +5559,10 @@ public class ITBigQueryTest {
       JobStatistics.QueryStatistics stats = remoteJob.getStatistics();
       assertNotNull(stats.getSearchStats());
       assertEquals(stats.getSearchStats().getIndexUsageMode(), "UNUSED");
+      assertNotNull(stats.getSearchStats().getIndexUnusedReasons());
+      assertNotNull(
+          stats.getSearchStats().getIndexUnusedReasons().get(0).getCode(),
+          "INDEX_CONFIG_NOT_AVAILABLE");
     } finally {
       bigquery.delete(destinationTable);
     }
@@ -5245,6 +5699,8 @@ public class ITBigQueryTest {
     assertNull(remoteLoadJob.getStatus().getError());
     LoadJobConfiguration loadJobConfiguration = remoteLoadJob.getConfiguration();
     assertEquals(labels, loadJobConfiguration.getLabels());
+    LoadStatistics loadStatistics = remoteLoadJob.getStatistics();
+    assertNotNull(loadStatistics);
 
     ExtractJobConfiguration extractConfiguration =
         ExtractJobConfiguration.newBuilder(destinationTable, "gs://" + BUCKET + "/" + EXTRACT_FILE)
@@ -5253,6 +5709,13 @@ public class ITBigQueryTest {
     Job remoteExtractJob = bigquery.create(JobInfo.of(extractConfiguration));
     remoteExtractJob = remoteExtractJob.waitFor();
     assertNull(remoteExtractJob.getStatus().getError());
+
+    ExtractStatistics extractStatistics = remoteExtractJob.getStatistics();
+    assertNotNull(extractStatistics);
+    assertEquals(1L, extractStatistics.getDestinationUriFileCounts().size());
+    assertEquals(
+        loadStatistics.getOutputBytes().longValue(), extractStatistics.getInputBytes().longValue());
+    assertThat(extractStatistics.getTotalSlotMs()).isGreaterThan(0L);
 
     String extractedCsv =
         new String(storage.readAllBytes(BUCKET, EXTRACT_FILE), StandardCharsets.UTF_8);
@@ -6128,5 +6591,321 @@ public class ITBigQueryTest {
         fail("Already exists error should not be thrown");
       }
     }
+  }
+
+  @Test
+  public void testStatelessQueries() throws InterruptedException {
+    // Create local BigQuery to not contaminate global test parameters.
+    RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
+    BigQuery bigQuery = bigqueryHelper.getOptions().getService();
+
+    // Simulate setting the QUERY_PREVIEW_ENABLED environment variable.
+    bigQuery.getOptions().setQueryPreviewEnabled("TRUE");
+    TableResult tableResult = executeSimpleQuery(bigQuery);
+    assertNotNull(tableResult.getQueryId());
+    assertNull(tableResult.getJobId());
+
+    // The flag should be case-insensitive.
+    bigQuery.getOptions().setQueryPreviewEnabled("tRuE");
+    tableResult = executeSimpleQuery(bigQuery);
+    assertNotNull(tableResult.getQueryId());
+    assertNull(tableResult.getJobId());
+
+    // Any other values won't enable optional job creation mode.
+    bigQuery.getOptions().setQueryPreviewEnabled("test_value");
+    tableResult = executeSimpleQuery(bigQuery);
+    assertNotNull(tableResult.getQueryId());
+    assertNotNull(tableResult.getJobId());
+
+    // Reset the flag.
+    bigQuery.getOptions().setQueryPreviewEnabled(null);
+    tableResult = executeSimpleQuery(bigQuery);
+    assertNotNull(tableResult.getQueryId());
+    assertNotNull(tableResult.getJobId());
+  }
+
+  private TableResult executeSimpleQuery(BigQuery bigQuery) throws InterruptedException {
+    String query = "SELECT 1 as one";
+    QueryJobConfiguration config = QueryJobConfiguration.newBuilder(query).build();
+    TableResult result = bigQuery.query(config);
+    return result;
+  }
+
+  @Test
+  public void testTableResultJobIdAndQueryId() throws InterruptedException {
+    // For stateless queries, jobId and queryId are populated based on the following criteria:
+    // 1. For stateless queries, then queryId is populated.
+    // 2. For queries that fails the requirements to be stateless, then jobId is populated and
+    // queryId is not.
+    // 3. For explicitly created jobs, then jobId is populated and queryId is not populated.
+
+    // Test scenario 1.
+    // Create local BigQuery for test scenario 1 to not contaminate global test parameters.
+    RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
+    BigQuery bigQuery = bigqueryHelper.getOptions().getService();
+    // Simulate setting the QUERY_PREVIEW_ENABLED environment variable.
+    bigQuery.getOptions().setQueryPreviewEnabled("TRUE");
+    String query = "SELECT 1 as one";
+    QueryJobConfiguration configStateless = QueryJobConfiguration.newBuilder(query).build();
+    TableResult result = bigQuery.query(configStateless);
+    assertNull(result.getJobId());
+    assertNotNull(result.getQueryId());
+
+    // Test scenario 2 by failing stateless check by setting job timeout.
+    QueryJobConfiguration configQueryWithJob =
+        QueryJobConfiguration.newBuilder(query).setJobTimeoutMs(1L).build();
+    result = bigQuery.query(configQueryWithJob);
+    assertNotNull(result.getJobId());
+    assertNull(result.getQueryId());
+
+    // Test scenario 3.
+    QueryJobConfiguration configWithJob = QueryJobConfiguration.newBuilder(query).build();
+    Job job = bigQuery.create(JobInfo.of(JobId.of(), configWithJob));
+    result = job.getQueryResults();
+    assertNotNull(result.getJobId());
+    assertNull(result.getQueryId());
+  }
+
+  @Test
+  public void testStatelessQueriesWithLocation() throws Exception {
+    // This test validates BigQueryOption location is used for stateless query by verifying that the
+    // stateless query fails when the BigQueryOption location does not match the dataset location.
+    String location = "EU";
+    String wrongLocation = "US";
+
+    RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
+    BigQuery bigQuery =
+        bigqueryHelper.getOptions().toBuilder().setLocation(location).build().getService();
+
+    Dataset dataset =
+        bigQuery.create(
+            DatasetInfo.newBuilder("locationset_" + UUID.randomUUID().toString().replace("-", "_"))
+                .setLocation(location)
+                .build());
+    try {
+      TableId tableId = TableId.of(dataset.getDatasetId().getDataset(), "sometable");
+      Schema schema = Schema.of(Field.of("name", LegacySQLTypeName.STRING));
+      TableDefinition tableDef = StandardTableDefinition.of(schema);
+      Table table = bigQuery.create(TableInfo.newBuilder(tableId, tableDef).build());
+
+      String query =
+          String.format(
+              "SELECT * FROM `%s.%s.%s`",
+              table.getTableId().getProject(),
+              table.getTableId().getDataset(),
+              table.getTableId().getTable());
+
+      // Test stateless query when BigQueryOption location matches dataset location.
+      bigQuery.getOptions().setQueryPreviewEnabled("TRUE");
+      TableResult tb = bigQuery.query(QueryJobConfiguration.of(query));
+      assertNull(tb.getJobId());
+
+      // Test stateless query when BigQueryOption location does not match dataset location.
+      try {
+        BigQuery bigQueryWrongLocation =
+            bigqueryHelper.getOptions().toBuilder().setLocation(wrongLocation).build().getService();
+        bigQueryWrongLocation.getOptions().setQueryPreviewEnabled("TRUE");
+        bigQueryWrongLocation.query(QueryJobConfiguration.of(query));
+        fail("querying a table with wrong location shouldn't work");
+      } catch (BigQueryException e) {
+        // Nothing to do
+      }
+    } finally {
+      bigQuery.delete(dataset.getDatasetId(), DatasetDeleteOption.deleteContents());
+    }
+  }
+
+  @Test
+  public void testUniverseDomainWithInvalidUniverseDomain() {
+    RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
+    BigQueryOptions bigQueryOptions =
+        bigqueryHelper
+            .getOptions()
+            .toBuilder()
+            .setCredentials(loadCredentials(FAKE_JSON_CRED_WITH_GOOGLE_DOMAIN))
+            .setUniverseDomain("invalid.domain")
+            .build();
+    BigQuery bigQuery = bigQueryOptions.getService();
+
+    try {
+      // Use list dataset to send RPC to invalid domain.
+      bigQuery.listDatasets("bigquery-public-data");
+      fail("RPCs to invalid universe domain should fail");
+    } catch (BigQueryException e) {
+      assertEquals(e.getCode(), HTTP_UNAUTHORIZED);
+      assertNotNull(e.getMessage());
+      assertThat(
+              (e.getMessage()
+                  .contains("does not match the universe domain found in the credentials")))
+          .isTrue();
+    }
+  }
+
+  @Test
+  public void testInvalidUniverseDomainWithMismatchCredentials() {
+    RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
+    BigQueryOptions bigQueryOptions =
+        bigqueryHelper
+            .getOptions()
+            .toBuilder()
+            .setCredentials(loadCredentials(FAKE_JSON_CRED_WITH_INVALID_DOMAIN))
+            .build();
+    BigQuery bigQuery = bigQueryOptions.getService();
+
+    try {
+      // Use list dataset to send RPC to invalid domain.
+      bigQuery.listDatasets("bigquery-public-data");
+      fail("RPCs to invalid universe domain should fail");
+    } catch (BigQueryException e) {
+      assertEquals(e.getCode(), HTTP_UNAUTHORIZED);
+      assertNotNull(e.getMessage());
+      assertThat(
+              (e.getMessage()
+                  .contains("does not match the universe domain found in the credentials")))
+          .isTrue();
+    }
+  }
+
+  @Test
+  public void testUniverseDomainWithMatchingDomain() {
+    // Test a valid domain using the default credentials and Google default universe domain.
+    RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
+    BigQueryOptions bigQueryOptions =
+        bigqueryHelper.getOptions().toBuilder().setUniverseDomain("googleapis.com").build();
+    BigQuery bigQuery = bigQueryOptions.getService();
+
+    // Verify that all is well by listing a dataset.
+    Page<Dataset> datasets = bigQuery.listDatasets("bigquery-public-data");
+    Iterator<Dataset> iterator = datasets.iterateAll().iterator();
+    Set<String> datasetNames = new HashSet<>();
+    Map<String, String> datasetLocation = new HashMap<>();
+    while (iterator.hasNext()) {
+      Dataset dataset = iterator.next();
+      String name = dataset.getDatasetId().getDataset();
+      datasetNames.add(name);
+      datasetLocation.put(name, dataset.getLocation());
+    }
+    for (String type : PUBLIC_DATASETS) {
+      assertTrue(datasetNames.contains(type));
+      assertEquals(PUBLIC_DATASETS_LOCATION.get(type), datasetLocation.get(type));
+    }
+  }
+
+  @Test
+  public void testExternalTableMetadataCachingNotEnable() throws InterruptedException {
+    String tableName = "test_metadata_cache_not_enable";
+    TableId tableId = TableId.of(DATASET, tableName);
+    ExternalTableDefinition externalTableDefinition =
+        ExternalTableDefinition.of(
+            "gs://" + BUCKET + "/" + JSON_LOAD_FILE, TABLE_SCHEMA, FormatOptions.json());
+    TableInfo tableInfo = TableInfo.of(tableId, externalTableDefinition);
+    Table createdTable = bigquery.create(tableInfo);
+    assertNotNull(createdTable);
+    assertEquals(DATASET, createdTable.getTableId().getDataset());
+    assertEquals(tableName, createdTable.getTableId().getTable());
+    Table remoteTable = bigquery.getTable(DATASET, tableName);
+    assertNotNull(remoteTable);
+    assertTrue(remoteTable.getDefinition() instanceof ExternalTableDefinition);
+    assertEquals(createdTable.getTableId(), remoteTable.getTableId());
+    assertEquals(TABLE_SCHEMA, remoteTable.getDefinition().getSchema());
+
+    String query = String.format("SELECT * FROM  %s.%s", DATASET, tableName);
+    QueryJobConfiguration config = QueryJobConfiguration.newBuilder(query).build();
+
+    Job remoteJob = bigquery.create(JobInfo.of(config));
+    remoteJob = remoteJob.waitFor();
+    assertNull(remoteJob.getStatus().getError());
+
+    Job queryJob = bigquery.getJob(remoteJob.getJobId());
+    JobStatistics.QueryStatistics statistics = queryJob.getStatistics();
+    assertNotNull(statistics);
+    assertNotNull(statistics.getMetadataCacheStats());
+    assertThat(statistics.getMetadataCacheStats().getTableMetadataCacheUsage().size()).isEqualTo(1);
+    assertThat(
+            statistics
+                .getMetadataCacheStats()
+                .getTableMetadataCacheUsage()
+                .get(0)
+                .getUnusedReason())
+        .isEqualTo(UnusedReason.METADATA_CACHING_NOT_ENABLED);
+
+    assertTrue(remoteTable.delete());
+  }
+
+  @Test
+  public void testObjectTable() throws InterruptedException {
+    String tableName = "test_object_table";
+    TableId tableId = TableId.of(DATASET, tableName);
+
+    String sourceUri = "gs://" + BUCKET + "/" + JSON_LOAD_FILE;
+    ExternalTableDefinition externalTableDefinition =
+        ExternalTableDefinition.newBuilder(sourceUri)
+            .setConnectionId(
+                "projects/java-docs-samples-testing/locations/us/connections/DEVREL_TEST_CONNECTION")
+            .setObjectMetadata("SIMPLE")
+            .build();
+    TableInfo tableInfo = TableInfo.of(tableId, externalTableDefinition);
+    Table createdTable = bigquery.create(tableInfo);
+    assertNotNull(createdTable);
+    assertEquals(DATASET, createdTable.getTableId().getDataset());
+    assertEquals(tableName, createdTable.getTableId().getTable());
+    Table remoteTable = bigquery.getTable(DATASET, tableName);
+    assertNotNull(remoteTable);
+
+    try {
+      assertTrue(remoteTable.getDefinition() instanceof ExternalTableDefinition);
+      assertEquals(createdTable.getTableId(), remoteTable.getTableId());
+      assertEquals(
+          "SIMPLE", ((ExternalTableDefinition) remoteTable.getDefinition()).getObjectMetadata());
+      assertNotNull(remoteTable.getDefinition().getSchema().getFields().get("uri"));
+
+      String query = String.format("SELECT * FROM  %s.%s", DATASET, tableName);
+      QueryJobConfiguration config = QueryJobConfiguration.newBuilder(query).build();
+
+      Job remoteJob = bigquery.create(JobInfo.of(config));
+      remoteJob = remoteJob.waitFor();
+      assertNull(remoteJob.getStatus().getError());
+
+      Job queryJob = bigquery.getJob(remoteJob.getJobId());
+      JobStatistics.QueryStatistics statistics = queryJob.getStatistics();
+      assertNotNull(statistics);
+      assertThat(statistics.getTotalBytesProcessed()).isGreaterThan(0);
+    } finally {
+      assertTrue(remoteTable.delete());
+    }
+  }
+
+  static GoogleCredentials loadCredentials(String credentialFile) {
+    try {
+      InputStream keyStream = new ByteArrayInputStream(credentialFile.getBytes());
+      return GoogleCredentials.fromStream(keyStream);
+    } catch (IOException e) {
+      fail("Couldn't create fake JSON credentials.");
+    }
+    return null;
+  }
+
+  @Test
+  public void testQueryExportStatistics() throws InterruptedException {
+    String query =
+        String.format(
+            "EXPORT DATA OPTIONS(\n"
+                + "  uri='gs://%s/*.csv',\n"
+                + "  format='CSV',\n"
+                + "  overwrite=true,\n"
+                + "  header=true,\n"
+                + "  field_delimiter=';') AS\n"
+                + "SELECT num FROM UNNEST([1,2,3]) AS num",
+            BUCKET);
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
+    Job job = bigquery.create(JobInfo.of(JobId.of(), config));
+    job = job.waitFor();
+
+    QueryStatistics queryStatistics = job.getStatistics();
+    assertNotNull(queryStatistics);
+    assertNotNull(queryStatistics.getExportDataStats());
+    assertEquals(1L, queryStatistics.getExportDataStats().getFileCount().longValue());
+    assertEquals(3L, queryStatistics.getExportDataStats().getRowCount().longValue());
   }
 }

@@ -58,8 +58,10 @@ public class ExternalTableDefinitionTest {
           .setMode("AUTO")
           .setSourceUriPrefix(SOURCE_URIS.get(0))
           .build();
+  private static final String OBJECT_METADATA = "SIMPLE";
   private static final ExternalTableDefinition EXTERNAL_TABLE_DEFINITION =
       ExternalTableDefinition.newBuilder(SOURCE_URIS, TABLE_SCHEMA, CSV_OPTIONS)
+          .setFileSetSpecType("FILE_SET_SPEC_TYPE_FILE_SYSTEM_MATCH")
           .setDecimalTargetTypes(DECIMAL_TARGET_TYPES)
           .setCompression(COMPRESSION)
           .setConnectionId(CONNECTION_ID)
@@ -67,6 +69,7 @@ public class ExternalTableDefinitionTest {
           .setMaxBadRecords(MAX_BAD_RECORDS)
           .setAutodetect(AUTODETECT)
           .setHivePartitioningOptions(HIVE_PARTITIONING_OPTIONS)
+          .setObjectMetadata(OBJECT_METADATA)
           .build();
 
   private static final ExternalTableDefinition EXTERNAL_TABLE_DEFINITION_AVRO =
@@ -154,6 +157,7 @@ public class ExternalTableDefinitionTest {
   private void compareExternalTableDefinition(
       ExternalTableDefinition expected, ExternalTableDefinition value) {
     assertEquals(expected, value);
+    assertEquals(expected.getFileSetSpecType(), value.getFileSetSpecType());
     assertEquals(expected.getDecimalTargetTypes(), value.getDecimalTargetTypes());
     assertEquals(expected.getCompression(), value.getCompression());
     assertEquals(expected.getConnectionId(), value.getConnectionId());
@@ -165,5 +169,6 @@ public class ExternalTableDefinitionTest {
     assertEquals(expected.hashCode(), value.hashCode());
     assertEquals(expected.getAutodetect(), value.getAutodetect());
     assertEquals(expected.getHivePartitioningOptions(), value.getHivePartitioningOptions());
+    assertEquals(expected.getObjectMetadata(), value.getObjectMetadata());
   }
 }
