@@ -3425,6 +3425,7 @@ public class ITBigQueryTest {
       ++cnt;
     }
     assertEquals(300000, cnt); // total 300000 rows should be read
+    rs.close();  // assert close method does not throw an exception
   }
 
   @Test
@@ -3454,6 +3455,7 @@ public class ITBigQueryTest {
       ++cnt;
     }
     assertEquals(300000, cnt); // total 300000 rows should be read
+    rs.close();  // assert close method does not throw an exception
   }
 
   @Test
@@ -3514,6 +3516,7 @@ public class ITBigQueryTest {
     assertEquals(3, (integerArrayFieldValue.get(2).getNumericValue()).intValue());
 
     assertFalse(rs.next()); // no 3rd row in the table
+    rs.close();  // assert close method does not throw an exception
   }
 
   @Test
@@ -3540,6 +3543,7 @@ public class ITBigQueryTest {
     assertTrue(cnt < 100000); // Extra records are still read even after canceling, as
     // the backgrounds threads are still active while the interrupt occurs and the
     // buffer and pageCache are cleared
+    rs.close();  // assert close method does not throw an exception
   }
 
   @Test
@@ -3566,6 +3570,7 @@ public class ITBigQueryTest {
       ++cnt;
     }
     assertEquals(300000, cnt); // total 300000 rows should be read
+    rs.close();  // assert close method does not throw an exception
   }
 
   // @Test - Temporarily disabling till https://github.com/googleapis/gax-java/issues/1712 or
@@ -3604,6 +3609,7 @@ public class ITBigQueryTest {
     }
     assertEquals(300000, cnt); // total 300000 rows should be read
     connection.close();
+    rs.close();  // assert close method does not throw an exception
   }
 
   @Test
@@ -3646,6 +3652,7 @@ public class ITBigQueryTest {
     }
     assertEquals(300000, cnt); // total 300000 rows should be read
     connection.close();
+    rs.close();  // assert close method does not throw an exception
   }
 
   @Test
@@ -3796,6 +3803,7 @@ public class ITBigQueryTest {
       }
       assertEquals(300000, cnt); // total 300000 rows should be read
       assertTrue(connection.close()); // check if connection closed
+      rs.close();  // assert close method does not throw an exception
       closeCnt++;
     }
     assertEquals(
@@ -3865,6 +3873,7 @@ public class ITBigQueryTest {
             (integerArrayFieldValue.get(2).getNumericValue()).intValue(),
             (integerArrayFieldValueColInd.get(2).getNumericValue()).intValue());
       }
+      rs.close();  // assert close method does not throw an exception
     }
   }
 
@@ -3899,6 +3908,7 @@ public class ITBigQueryTest {
     assertEquals("Vancouver", addressFieldValue.get(0).getStringValue());
     assertEquals(5, addressFieldValue.get(1).getLongValue());
     assertFalse(rs.next()); // only 1 row of data
+    rs.close();  // assert close method does not throw an exception
   }
 
   @Test
@@ -3925,6 +3935,7 @@ public class ITBigQueryTest {
     assertEquals(rs.getString("city"), rs.getObject(0));
     assertEquals("Vancouver", cityFieldValue);
     assertFalse(rs.next()); // only 1 row of data
+    rs.close();  // assert close method does not throw an exception
   }
 
   @Test
@@ -3948,6 +3959,7 @@ public class ITBigQueryTest {
     assertEquals(1, arrayFieldValue.get(0).getLongValue());
     assertEquals(2, arrayFieldValue.get(1).getLongValue());
     assertEquals(3, arrayFieldValue.get(2).getLongValue());
+    rs.close();  // assert close method does not throw an exception
   }
 
   @Test
@@ -3987,6 +3999,7 @@ public class ITBigQueryTest {
     assertEquals(Attribute.RECORD, arrayOfStructFieldValue.get(1).getAttribute());
     assertEquals("Boston", arrayOfStructFieldValue.get(1).getRecordValue().get(0).getStringValue());
     assertEquals(10, arrayOfStructFieldValue.get(1).getRecordValue().get(1).getLongValue());
+    rs.close();  // assert close method does not throw an exception
   }
 
   /* TODO(prasmish): replicate the entire test case for executeSelect */
