@@ -30,4 +30,4 @@ libraries:
     library_type: "GAPIC_MANUAL"
     requires_billing: true
     recommended_package: "com.google.cloud.bigquery"
-    GAPICs:
+    GAPICs: []
