@@ -30,4 +30,5 @@ libraries:
     library_type: "GAPIC_MANUAL"
     requires_billing: true
     recommended_package: "com.google.cloud.bigquery"
-    GAPICs: []
+    GAPICs:
+	  - google/api #we use a dummy path to produce a no-op
