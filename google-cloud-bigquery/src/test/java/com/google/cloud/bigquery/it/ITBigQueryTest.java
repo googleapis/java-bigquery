@@ -49,6 +49,7 @@ import com.google.cloud.bigquery.BigQuery.DatasetOption;
 import com.google.cloud.bigquery.BigQuery.JobField;
 import com.google.cloud.bigquery.BigQuery.JobListOption;
 import com.google.cloud.bigquery.BigQuery.JobOption;
+import com.google.cloud.bigquery.BigQuery.QueryResultsOption;
 import com.google.cloud.bigquery.BigQuery.TableField;
 import com.google.cloud.bigquery.BigQuery.TableMetadataView;
 import com.google.cloud.bigquery.BigQuery.TableOption;
@@ -134,6 +135,7 @@ import com.google.cloud.bigquery.TimePartitioning;
 import com.google.cloud.bigquery.TimePartitioning.Type;
 import com.google.cloud.bigquery.ViewDefinition;
 import com.google.cloud.bigquery.WriteChannelConfiguration;
+import com.google.cloud.bigquery.spi.v2.BigQueryRpc.Option;
 import com.google.cloud.bigquery.testing.RemoteBigQueryHelper;
 import com.google.cloud.datacatalog.v1.CreatePolicyTagRequest;
 import com.google.cloud.datacatalog.v1.CreateTaxonomyRequest;
@@ -3153,7 +3155,9 @@ public class ITBigQueryTest {
         QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
     Job job = bigquery.create(JobInfo.of(JobId.of(), config));
 
-    TableResult result = job.getQueryResults();
+    QueryResultsOption queryResultsOption = QueryResultsOption.pageSize(1);
+
+    TableResult result = job.getQueryResults(queryResultsOption);
     assertNotNull(result.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
     int rowCount = 0;
