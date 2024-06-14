@@ -186,6 +186,12 @@ public abstract class ExternalTableDefinition extends TableDefinition {
 
     abstract Builder setObjectMetadataInner(String objectMetadata);
 
+    public Builder setMetadataCacheMode(String metadataCacheMode) {
+      return setMetadataCacheModeInner(metadataCacheMode);
+    }
+
+    abstract Builder setMetadataCacheModeInner(String metadataCacheMode);
+
     /** Creates an {@code ExternalTableDefinition} object. */
     @Override
     public abstract ExternalTableDefinition build();
@@ -275,6 +281,21 @@ public abstract class ExternalTableDefinition extends TableDefinition {
 
   @Nullable
   abstract String getObjectMetadataInner();
+
+  /**
+   * Returns the metadata cache mode.
+   *
+   * @see <a
+   *     href="https://cloud.google.com/bigquery/docs/reference/v2/tables#externalDataConfiguration">
+   *     MetadataCacheMode</a>
+   */
+  @Nullable
+  public String getMetadataCacheMode() {
+    return getMetadataCacheModeInner();
+  }
+
+  @Nullable
+  abstract String getMetadataCacheModeInner();
 
   /**
    * Returns the source format, and possibly some parsing options, of the external data. Supported
@@ -385,6 +406,10 @@ public abstract class ExternalTableDefinition extends TableDefinition {
 
     if (getObjectMetadata() != null) {
       externalConfigurationPb.setObjectMetadata(getObjectMetadata());
+    }
+
+    if (getMetadataCacheMode() != null) {
+      externalConfigurationPb.setMetadataCacheMode(getMetadataCacheMode());
     }
 
     return externalConfigurationPb;
@@ -580,6 +605,9 @@ public abstract class ExternalTableDefinition extends TableDefinition {
       if (externalDataConfiguration.getObjectMetadata() != null) {
         builder.setObjectMetadata(externalDataConfiguration.getObjectMetadata());
       }
+      if (externalDataConfiguration.getMetadataCacheMode() != null) {
+        builder.setMetadataCacheMode(externalDataConfiguration.getMetadataCacheMode());
+      }
     }
     return builder.build();
   }
@@ -645,6 +673,10 @@ public abstract class ExternalTableDefinition extends TableDefinition {
 
     if (externalDataConfiguration.getObjectMetadata() != null) {
       builder.setObjectMetadata(externalDataConfiguration.getObjectMetadata());
+    }
+
+    if (externalDataConfiguration.getMetadataCacheMode() != null) {
+      builder.setMetadataCacheMode(externalDataConfiguration.getMetadataCacheMode());
     }
 
     return builder.build();
