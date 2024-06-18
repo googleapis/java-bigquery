@@ -186,6 +186,14 @@ public abstract class ExternalTableDefinition extends TableDefinition {
 
     abstract Builder setObjectMetadataInner(String objectMetadata);
 
+    /**
+     * [Optional] Metadata Cache Mode for the table. Set this to enable caching of metadata from
+     * external data source.
+     *
+     * @see <a
+     *     href="https://cloud.google.com/bigquery/docs/reference/rest/v2/tables#metadatacachemode">
+     *     MetadataCacheMode</a>
+     */
     public Builder setMetadataCacheMode(String metadataCacheMode) {
       return setMetadataCacheModeInner(metadataCacheMode);
     }
@@ -286,7 +294,7 @@ public abstract class ExternalTableDefinition extends TableDefinition {
    * Returns the metadata cache mode.
    *
    * @see <a
-   *     href="https://cloud.google.com/bigquery/docs/reference/v2/tables#externalDataConfiguration">
+   *     href="https://cloud.google.com/bigquery/docs/reference/rest/v2/tables#metadatacachemode">
    *     MetadataCacheMode</a>
    */
   @Nullable
