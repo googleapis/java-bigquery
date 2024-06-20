@@ -1,20 +1,8 @@
 gapic_generator_version: 2.41.0
-protoc_version: '25.2'
 googleapis_commitish: 6f289d775912966eb0cf04bda91e5e355c998d30
 libraries_bom_version: 26.38.0
-template_excludes:
-  - .kokoro/nightly/samples.cfg
-  - .kokoro/nightly/integration.cfg
-  - .kokoro/presubmit/samples.cfg
-  - .kokoro/presubmit/graalvm-native.cfg
-  - .kokoro/presubmit/graalvm-native-17.cfg
-  - codecov.yaml
-  - renovate.json
-  - .kokoro/build.sh
-  - .kokoro/requirements.in
-  - .kokoro/requirements.txt
 libraries:
-  - api_shortname: "bigquery"
+  - api_shortname: bigquery
     name_pretty: "Cloud BigQuery"
     product_documentation: "https://cloud.google.com/bigquery"
     client_documentation: "https://cloud.google.com/java/docs/reference/google-cloud-bigquery/latest/history"
