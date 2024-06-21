@@ -60,7 +60,7 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
   private final RangePartitioning rangePartitioning;
   private final HivePartitioningOptions hivePartitioningOptions;
   private final String referenceFileSchemaUri;
-  
+
   private final List<ConnectionProperty> connectionProperties;
 
   private final Boolean createSession;
