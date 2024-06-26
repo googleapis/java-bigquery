@@ -73,7 +73,6 @@ if [[ "${CURRENT_PROTO_VERSION}" != "${LATEST_PROTO_VERSION}" ]]; then
   echo "Shared-Deps Version: ${SHARED_DEPS_VERSION}"
   # sdk-platform-java
   popd
-
   mvn clean install -q -ntp \
       -DskipTests=true \
       -Dclirr.skip=true \
@@ -89,11 +88,15 @@ if [[ "${CURRENT_PROTO_VERSION}" != "${LATEST_PROTO_VERSION}" ]]; then
   for pom in "${poms[@]}"; do
     if grep -q "sdk-platform-java-config" "${pom}"; then
       echo "Updating the pom: ${pom} to use shared-deps version: ${SHARED_DEPS_VERSION}"
-      sed -i -E "/<groupId>com.google.cloud<\/groupId>.*<artifactId>sdk-platform-java-config<\/artifactId>/ {
-        s/(<version>)[^<]+(<\/version>)/\1${SHARED_DEPS_VERSION}\2/
-      }" "${pom}"
+      xmlstarlet ed --inplace -N x="http://maven.apache.org/POM/4.0.0" \
+        -u "//x:project/x:parent[x:artifactId='sdk-platform-java-config']/x:version" \
+        -v "${SHARED_DEPS_VERSION}" \
+        "${pom}"
     fi
   done
+
+  # Print out the dependency tree for all module to ensure latest protobuf was installed
+  mvn dependency:tree
 fi
 
 # Reset back to the original Java version if changed
