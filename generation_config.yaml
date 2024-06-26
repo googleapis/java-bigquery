@@ -13,7 +13,7 @@ libraries:
     repo: googleapis/java-bigquery
     repo_short: java-bigquery
     distribution_name: com.google.cloud:google-cloud-bigquery
-    codeowner_team: @googleapis/api-bigquery
+    codeowner_team: '@googleapis/api-bigquery'
     api_id: bigquery.googleapis.com
     library_type: GAPIC_MANUAL
     requires_billing: true
