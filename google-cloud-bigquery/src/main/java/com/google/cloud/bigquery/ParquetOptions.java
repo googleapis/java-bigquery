@@ -35,7 +35,6 @@ public class ParquetOptions extends FormatOptions {
     return enumAsString;
   }
 
-
   /** Returns how the Parquet map is represented. */
   public String getMapTargetType() {
     return mapTargetType;
