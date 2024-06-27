@@ -55,7 +55,7 @@ public final class CsvOptions extends FormatOptions {
       this.allowQuotedNewLines = csvOptions.allowQuotedNewLines;
       this.encoding = csvOptions.encoding;
       this.fieldDelimiter = csvOptions.fieldDelimiter;
-      this.nullMarker = csvOptions.getNullMarker();
+      this.nullMarker = csvOptions.nullMarker;
       this.quote = csvOptions.quote;
       this.skipLeadingRows = csvOptions.skipLeadingRows;
       this.preserveAsciiControlCharacters = csvOptions.preserveAsciiControlCharacters;

@@ -67,10 +67,8 @@ public class ParquetOptions extends FormatOptions {
     /**
      * [Optional] Indicates how to represent a Parquet map if present.
      *
-     * <p>When MapTargetType is MAP_TARGET_TYPE_UNSPECIFIED, the map will have the following schema:
-     * struct map_field_name { repeated struct key_value { key value } }. When it is
-     * ARRAY_OF_STRUCT, the map will have the following schema: repeated struct map_field_name { key
-     * value }.
+     * @see <a href="https://cloud.google.com/bigquery/docs/reference/rest/v2/tables#maptargettype">
+     *     MapTargetType</a>
      */
     public Builder setMapTargetType(String mapTargetType) {
       this.mapTargetType = mapTargetType;
