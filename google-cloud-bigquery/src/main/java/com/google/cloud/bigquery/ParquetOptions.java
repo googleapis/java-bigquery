@@ -21,10 +21,11 @@ import java.util.Objects;
 
 public class ParquetOptions extends FormatOptions {
 
-  private static final long serialVersionUID = 1992L;
+  private static final long serialVersionUID = 1993L;
 
   private final Boolean enableListInference;
   private final Boolean enumAsString;
+  private final String mapTargetType;
 
   public Boolean getEnableListInference() {
     return enableListInference;
@@ -34,16 +35,24 @@ public class ParquetOptions extends FormatOptions {
     return enumAsString;
   }
 
+
+  /** Returns how the Parquet map is represented. */
+  public String getMapTargetType() {
+    return mapTargetType;
+  }
+
   /** A builder for {@code ParquetOptions} objects. */
   public static final class Builder {
     private Boolean enableListInference;
     private Boolean enumAsString;
+    private String mapTargetType;
 
     private Builder() {}
 
     private Builder(ParquetOptions parquetOptions) {
       this.enableListInference = parquetOptions.enableListInference;
       this.enumAsString = parquetOptions.enumAsString;
+      this.mapTargetType = parquetOptions.mapTargetType;
     }
 
     public Builder setEnableListInference(Boolean enableListInference) {
@@ -53,6 +62,19 @@ public class ParquetOptions extends FormatOptions {
 
     public Builder setEnumAsString(Boolean enumAsString) {
       this.enumAsString = enumAsString;
+      return this;
+    }
+
+    /**
+     * [Optional] Indicates how to represent a Parquet map if present.
+     *
+     * <p>When MapTargetType is MAP_TARGET_TYPE_UNSPECIFIED, the map will have the following schema:
+     * struct map_field_name { repeated struct key_value { key value } }. When it is
+     * ARRAY_OF_STRUCT, the map will have the following schema: repeated struct map_field_name { key
+     * value }.
+     */
+    public Builder setMapTargetType(String mapTargetType) {
+      this.mapTargetType = mapTargetType;
       return this;
     }
 
@@ -69,6 +91,7 @@ public class ParquetOptions extends FormatOptions {
     super(FormatOptions.PARQUET);
     enableListInference = builder.enableListInference;
     enumAsString = builder.enumAsString;
+    mapTargetType = builder.mapTargetType;
   }
 
   @Override
@@ -76,12 +99,13 @@ public class ParquetOptions extends FormatOptions {
     return MoreObjects.toStringHelper(this)
         .add("enableListInference", enableListInference)
         .add("enumAsString", enumAsString)
+        .add("mapTargetType", mapTargetType)
         .toString();
   }
 
   @Override
   public final int hashCode() {
-    return Objects.hash(enableListInference, enumAsString);
+    return Objects.hash(enableListInference, enumAsString, mapTargetType);
   }
 
   @Override
@@ -93,7 +117,9 @@ public class ParquetOptions extends FormatOptions {
       return false;
     }
     ParquetOptions other = (ParquetOptions) obj;
-    return enableListInference == other.enableListInference && enumAsString == other.enumAsString;
+    return enableListInference == other.enableListInference
+        && enumAsString == other.enumAsString
+        && Objects.equals(mapTargetType, ((ParquetOptions) obj).getMapTargetType());
   }
 
   /** Returns a builder for a {@link ParquetOptions} object. */
@@ -110,6 +136,9 @@ public class ParquetOptions extends FormatOptions {
     if (parquetOptions.getEnumAsString() != null) {
       builder.setEnumAsString(parquetOptions.getEnumAsString());
     }
+    if (parquetOptions.getMapTargetType() != null) {
+      builder.setMapTargetType(parquetOptions.getMapTargetType());
+    }
     return builder.build();
   }
 
@@ -121,6 +150,9 @@ public class ParquetOptions extends FormatOptions {
     }
     if (enumAsString != null) {
       parquetOptions.setEnumAsString(enumAsString);
+    }
+    if (mapTargetType != null) {
+      parquetOptions.setMapTargetType(mapTargetType);
     }
     return parquetOptions;
   }
