@@ -127,7 +127,8 @@ public final class WriteChannelConfiguration implements LoadConfiguration, Seria
           || loadConfigurationPb.getEncoding() != null
           || loadConfigurationPb.getFieldDelimiter() != null
           || loadConfigurationPb.getQuote() != null
-          || loadConfigurationPb.getSkipLeadingRows() != null) {
+          || loadConfigurationPb.getSkipLeadingRows() != null
+          || loadConfigurationPb.getPreserveAsciiControlCharacters() != null) {
         CsvOptions.Builder builder =
             CsvOptions.newBuilder()
                 .setEncoding(loadConfigurationPb.getEncoding())
@@ -141,6 +142,9 @@ public final class WriteChannelConfiguration implements LoadConfiguration, Seria
         }
         if (loadConfigurationPb.getSkipLeadingRows() != null) {
           builder.setSkipLeadingRows(loadConfigurationPb.getSkipLeadingRows());
+        }
+        if (loadConfigurationPb.getPreserveAsciiControlCharacters() != null) {
+          builder.setPreserveAsciiControlCharacters(loadConfigurationPb.getPreserveAsciiControlCharacters());
         }
         this.formatOptions = builder.build();
       }
