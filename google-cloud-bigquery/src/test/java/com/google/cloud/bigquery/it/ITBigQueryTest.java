@@ -7034,7 +7034,6 @@ public class ITBigQueryTest {
     }
   }
 
-
   @Test
   public void testStatementType() throws InterruptedException {
     String tableName = "test_materialized_view_table_statemnt_type";
