@@ -79,7 +79,19 @@ public abstract class ExternalTableDefinition extends TableDefinition {
       return setSourceUrisImmut(ImmutableList.copyOf(sourceUris));
     }
 
+    abstract Builder setFileSetSpecTypeInner(String spec);
+
     abstract Builder setSourceUrisImmut(ImmutableList<String> sourceUris);
+
+    /**
+     * Defines how to interpret files denoted by URIs. By default the files are assumed to be data
+     * files (this can be specified explicitly via FILE_SET_SPEC_TYPE_FILE_SYSTEM_MATCH). A second
+     * option is "FILE_SET_SPEC_TYPE_NEW_LINE_DELIMITED_MANIFEST" which interprets each file as a
+     * manifest file, where each line is a reference to a file.
+     */
+    public Builder setFileSetSpecType(String fileSetSpecType) {
+      return setFileSetSpecTypeInner(fileSetSpecType);
+    }
 
     /**
      * Sets the source format, and possibly some parsing options, of the external data. Supported
@@ -168,6 +180,26 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     abstract Builder setHivePartitioningOptionsInner(
         HivePartitioningOptions hivePartitioningOptions);
 
+    public Builder setObjectMetadata(String objectMetadata) {
+      return setObjectMetadataInner(objectMetadata);
+    }
+
+    abstract Builder setObjectMetadataInner(String objectMetadata);
+
+    /**
+     * [Optional] Metadata Cache Mode for the table. Set this to enable caching of metadata from
+     * external data source.
+     *
+     * @see <a
+     *     href="https://cloud.google.com/bigquery/docs/reference/rest/v2/tables#metadatacachemode">
+     *     MetadataCacheMode</a>
+     */
+    public Builder setMetadataCacheMode(String metadataCacheMode) {
+      return setMetadataCacheModeInner(metadataCacheMode);
+    }
+
+    abstract Builder setMetadataCacheModeInner(String metadataCacheMode);
+
     /** Creates an {@code ExternalTableDefinition} object. */
     @Override
     public abstract ExternalTableDefinition build();
@@ -233,7 +265,45 @@ public abstract class ExternalTableDefinition extends TableDefinition {
   }
 
   @Nullable
+  public String getFileSetSpecType() {
+    return getFileSetSpecTypeInner();
+  }
+
+  @Nullable
+  abstract String getFileSetSpecTypeInner();
+
+  @Nullable
   public abstract ImmutableList<String> getSourceUrisImmut();
+
+  /**
+   * Returns the object metadata.
+   *
+   * @see <a
+   *     href="https://cloud.google.com/bigquery/docs/reference/v2/tables#externalDataConfiguration">
+   *     ObjectMetadata</a>
+   */
+  @Nullable
+  public String getObjectMetadata() {
+    return getObjectMetadataInner();
+  }
+
+  @Nullable
+  abstract String getObjectMetadataInner();
+
+  /**
+   * Returns the metadata cache mode.
+   *
+   * @see <a
+   *     href="https://cloud.google.com/bigquery/docs/reference/rest/v2/tables#metadatacachemode">
+   *     MetadataCacheMode</a>
+   */
+  @Nullable
+  public String getMetadataCacheMode() {
+    return getMetadataCacheModeInner();
+  }
+
+  @Nullable
+  abstract String getMetadataCacheModeInner();
 
   /**
    * Returns the source format, and possibly some parsing options, of the external data. Supported
@@ -338,6 +408,18 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     if (getHivePartitioningOptions() != null) {
       externalConfigurationPb.setHivePartitioningOptions(getHivePartitioningOptions().toPb());
     }
+    if (getFileSetSpecType() != null) {
+      externalConfigurationPb.setFileSetSpecType(getFileSetSpecType());
+    }
+
+    if (getObjectMetadata() != null) {
+      externalConfigurationPb.setObjectMetadata(getObjectMetadata());
+    }
+
+    if (getMetadataCacheMode() != null) {
+      externalConfigurationPb.setMetadataCacheMode(getMetadataCacheMode());
+    }
+
     return externalConfigurationPb;
   }
 
@@ -400,6 +482,24 @@ public abstract class ExternalTableDefinition extends TableDefinition {
   public static Builder newBuilder(String sourceUri, FormatOptions format) {
     checkArgument(!isNullOrEmpty(sourceUri), "Provided sourceUri is null or empty");
     return newBuilder().setSourceUris(ImmutableList.of(sourceUri)).setFormatOptions(format);
+  }
+
+  /**
+   * Creates a builder for an ExternalTableDefinition object.
+   *
+   * @param sourceUri the fully-qualified URIs that point to your data in Google Cloud. For Google
+   *     Cloud Bigtable URIs: Exactly one URI can be specified and it has be a fully specified and
+   *     valid HTTPS URL for a Google Cloud Bigtable table. Size limits related to load jobs apply
+   *     to external data sources, plus an additional limit of 10 GB maximum size across all URIs.
+   * @return a builder for an ExternalTableDefinition object given source URIs and format
+   * @see <a href="https://cloud.google.com/bigquery/loading-data-into-bigquery#quota">Quota</a>
+   * @see <a
+   *     href="https://cloud.google.com/bigquery/docs/reference/v2/tables#externalDataConfiguration.sourceFormat">
+   *     Source Format</a>
+   */
+  public static Builder newBuilder(String sourceUri) {
+    checkArgument(!isNullOrEmpty(sourceUri), "Provided sourceUri is null or empty");
+    return newBuilder().setSourceUris(ImmutableList.of(sourceUri));
   }
 
   /**
@@ -507,6 +607,15 @@ public abstract class ExternalTableDefinition extends TableDefinition {
       if (externalDataConfiguration.getReferenceFileSchemaUri() != null) {
         builder.setReferenceFileSchemaUri(externalDataConfiguration.getReferenceFileSchemaUri());
       }
+      if (externalDataConfiguration.getFileSetSpecType() != null) {
+        builder.setFileSetSpecType(externalDataConfiguration.getFileSetSpecType());
+      }
+      if (externalDataConfiguration.getObjectMetadata() != null) {
+        builder.setObjectMetadata(externalDataConfiguration.getObjectMetadata());
+      }
+      if (externalDataConfiguration.getMetadataCacheMode() != null) {
+        builder.setMetadataCacheMode(externalDataConfiguration.getMetadataCacheMode());
+      }
     }
     return builder.build();
   }
@@ -565,6 +674,17 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     if (externalDataConfiguration.getHivePartitioningOptions() != null) {
       builder.setHivePartitioningOptions(
           HivePartitioningOptions.fromPb(externalDataConfiguration.getHivePartitioningOptions()));
+    }
+    if (externalDataConfiguration.getFileSetSpecType() != null) {
+      builder.setFileSetSpecType(externalDataConfiguration.getFileSetSpecType());
+    }
+
+    if (externalDataConfiguration.getObjectMetadata() != null) {
+      builder.setObjectMetadata(externalDataConfiguration.getObjectMetadata());
+    }
+
+    if (externalDataConfiguration.getMetadataCacheMode() != null) {
+      builder.setMetadataCacheMode(externalDataConfiguration.getMetadataCacheMode());
     }
 
     return builder.build();

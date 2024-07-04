@@ -91,6 +91,8 @@ public class LoadJobConfigurationTest {
           .setCreateDisposition(CREATE_DISPOSITION)
           .setWriteDisposition(WRITE_DISPOSITION)
           .setFormatOptions(CSV_OPTIONS)
+          .setFileSetSpecType("FILE_SET_SPEC_TYPE_FILE_SYSTEM_MATCH")
+          .setColumnNameCharacterMap("STRICT")
           .setIgnoreUnknownValues(IGNORE_UNKNOWN_VALUES)
           .setMaxBadRecords(MAX_BAD_RECORDS)
           .setSchema(TABLE_SCHEMA)
@@ -240,6 +242,8 @@ public class LoadJobConfigurationTest {
       LoadJobConfiguration expected, LoadJobConfiguration value) {
     assertEquals(expected, value);
     assertEquals(expected.hashCode(), value.hashCode());
+    assertEquals(expected.getFileSetSpecType(), value.getFileSetSpecType());
+    assertEquals(expected.getColumnNameCharacterMap(), value.getColumnNameCharacterMap());
     assertEquals(expected.toString(), value.toString());
     assertEquals(expected.getDestinationTable(), value.getDestinationTable());
     assertEquals(expected.getDecimalTargetTypes(), value.getDecimalTargetTypes());
