@@ -53,6 +53,154 @@ public abstract class JobStatistics implements Serializable {
   private final SessionInfo sessionInfo;
   private final Long totalSlotMs;
 
+  protected JobStatistics(Builder builder) {
+    this.creationTime = builder.creationTime;
+    this.endTime = builder.endTime;
+    this.startTime = builder.startTime;
+    this.numChildJobs = builder.numChildJobs;
+    this.parentJobId = builder.parentJobId;
+    this.scriptStatistics = builder.scriptStatistics;
+    this.reservationUsage = builder.reservationUsage;
+    this.transactionInfo = builder.transactionInfo;
+    this.sessionInfo = builder.sessionInfo;
+    this.totalSlotMs = builder.totalSlotMs;
+  }
+
+  @SuppressWarnings("unchecked")
+  static <T extends JobStatistics> T fromPb(com.google.api.services.bigquery.model.Job jobPb) {
+    JobConfiguration jobConfigPb = jobPb.getConfiguration();
+    com.google.api.services.bigquery.model.JobStatistics statisticPb = jobPb.getStatistics();
+    if (jobConfigPb.getLoad() != null) {
+      return (T) LoadStatistics.fromPb(statisticPb);
+    } else if (jobConfigPb.getExtract() != null) {
+      return (T) ExtractStatistics.fromPb(statisticPb);
+    } else if (jobConfigPb.getQuery() != null) {
+      return (T) QueryStatistics.fromPb(statisticPb);
+    } else if (jobConfigPb.getCopy() != null) {
+      return (T) CopyStatistics.fromPb(statisticPb);
+    } else {
+      throw new IllegalArgumentException("unknown job configuration: " + jobConfigPb);
+    }
+  }
+
+  /** Returns the creation time of the job in milliseconds since epoch. */
+  public Long getCreationTime() {
+    return creationTime;
+  }
+
+  /**
+   * Returns the end time of the job in milliseconds since epoch. Returns {@code null} if the job
+   * has not finished yet.
+   */
+  public Long getEndTime() {
+    return endTime;
+  }
+
+  /**
+   * Returns the start time of the job in milliseconds since epoch. Returns {@code null} if the job
+   * has not started yet.
+   */
+  public Long getStartTime() {
+    return startTime;
+  }
+
+  /** Returns the number of child job executed. */
+  public Long getNumChildJobs() {
+    return numChildJobs;
+  }
+
+  /** Returns the parent job id of child job. */
+  public String getParentJobId() {
+    return parentJobId;
+  }
+
+  /** Returns the statistics for a child job of a script. */
+  public ScriptStatistics getScriptStatistics() {
+    return scriptStatistics;
+  }
+
+  /** ReservationUsage contains information about a job's usage of a single reservation. */
+  public List<ReservationUsage> getReservationUsage() {
+    return reservationUsage;
+  }
+
+  /** Info indicates the transaction ID associated with the job, if any. */
+  public TransactionInfo getTransactionInfo() {
+    return transactionInfo;
+  }
+
+  /** Info of the session if this job is part of one. */
+  public SessionInfo getSessionInfo() {
+    return sessionInfo;
+  }
+
+  /** Returns the slot-milliseconds for the job. */
+  public Long getTotalSlotMs() {
+    return totalSlotMs;
+  }
+
+  ToStringHelper toStringHelper() {
+    return MoreObjects.toStringHelper(this)
+        .add("creationTime", creationTime)
+        .add("endTime", endTime)
+        .add("startTime", startTime)
+        .add("numChildJobs", numChildJobs)
+        .add("parentJobId", parentJobId)
+        .add("scriptStatistics", scriptStatistics)
+        .add("reservationUsage", reservationUsage)
+        .add("transactionInfo", transactionInfo)
+        .add("sessionInfo", sessionInfo)
+        .add("totalSlotMs", totalSlotMs);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper().toString();
+  }
+
+  final int baseHashCode() {
+    return Objects.hash(
+        creationTime,
+        endTime,
+        startTime,
+        numChildJobs,
+        parentJobId,
+        scriptStatistics,
+        reservationUsage,
+        transactionInfo,
+        sessionInfo,
+        totalSlotMs);
+  }
+
+  final boolean baseEquals(JobStatistics jobStatistics) {
+    return Objects.equals(toPb(), jobStatistics.toPb());
+  }
+
+  com.google.api.services.bigquery.model.JobStatistics toPb() {
+    com.google.api.services.bigquery.model.JobStatistics statistics =
+        new com.google.api.services.bigquery.model.JobStatistics();
+    statistics.setCreationTime(creationTime);
+    statistics.setEndTime(endTime);
+    statistics.setStartTime(startTime);
+    statistics.setNumChildJobs(numChildJobs);
+    statistics.setParentJobId(parentJobId);
+    statistics.setTotalSlotMs(totalSlotMs);
+    if (scriptStatistics != null) {
+      statistics.setScriptStatistics(scriptStatistics.toPb());
+    }
+    if (reservationUsage != null) {
+      statistics.setReservationUsage(
+          Lists.transform(reservationUsage, ReservationUsage.TO_PB_FUNCTION));
+    }
+    if (transactionInfo != null) {
+      statistics.setTransactionInfo(transactionInfo.toPb());
+    }
+    if (sessionInfo != null) {
+      statistics.setSessionInfo(sessionInfo.toPb());
+    }
+    return statistics;
+  }
+
   /** A Google BigQuery Copy Job statistics. */
   public static class CopyStatistics extends JobStatistics {
 
@@ -61,6 +209,59 @@ public abstract class JobStatistics implements Serializable {
     private final Long copiedLogicalBytes;
 
     private final Long copiedRows;
+
+    private CopyStatistics(Builder builder) {
+      super(builder);
+      this.copiedLogicalBytes = builder.copiedLogicalBytes;
+      this.copiedRows = builder.copiedRows;
+    }
+
+    static Builder newBuilder() {
+      return new Builder();
+    }
+
+    @SuppressWarnings("unchecked")
+    static CopyStatistics fromPb(com.google.api.services.bigquery.model.JobStatistics statisticPb) {
+      return new Builder(statisticPb).build();
+    }
+
+    /** Returns number of logical bytes copied to the destination table. */
+    public Long getCopiedLogicalBytes() {
+      return copiedLogicalBytes;
+    }
+
+    /** Returns number of rows copied to the destination table. */
+    public Long getCopiedRows() {
+      return copiedRows;
+    }
+
+    @Override
+    ToStringHelper toStringHelper() {
+      return super.toStringHelper()
+          .add("copiedLogicalBytes", copiedLogicalBytes)
+          .add("copiedRows", copiedRows);
+    }
+
+    @Override
+    com.google.api.services.bigquery.model.JobStatistics toPb() {
+      JobStatistics5 copyStatisticsPb = new JobStatistics5();
+      copyStatisticsPb.setCopiedLogicalBytes(copiedLogicalBytes);
+      copyStatisticsPb.setCopiedRows(copiedRows);
+      return super.toPb().setCopy(copyStatisticsPb);
+    }
+
+    @Override
+    public final int hashCode() {
+      return Objects.hash(baseHashCode(), copiedLogicalBytes, copiedRows);
+    }
+
+    @Override
+    public final boolean equals(Object obj) {
+      return obj == this
+          || obj != null
+              && obj.getClass().equals(CopyStatistics.class)
+              && baseEquals((CopyStatistics) obj);
+    }
 
     static final class Builder extends JobStatistics.Builder<CopyStatistics, Builder> {
 
@@ -93,59 +294,6 @@ public abstract class JobStatistics implements Serializable {
         return new CopyStatistics(this);
       }
     }
-
-    private CopyStatistics(Builder builder) {
-      super(builder);
-      this.copiedLogicalBytes = builder.copiedLogicalBytes;
-      this.copiedRows = builder.copiedRows;
-    }
-
-    /** Returns number of logical bytes copied to the destination table. */
-    public Long getCopiedLogicalBytes() {
-      return copiedLogicalBytes;
-    }
-
-    /** Returns number of rows copied to the destination table. */
-    public Long getCopiedRows() {
-      return copiedRows;
-    }
-
-    @Override
-    ToStringHelper toStringHelper() {
-      return super.toStringHelper()
-          .add("copiedLogicalBytes", copiedLogicalBytes)
-          .add("copiedRows", copiedRows);
-    }
-
-    @Override
-    public final boolean equals(Object obj) {
-      return obj == this
-          || obj != null
-              && obj.getClass().equals(CopyStatistics.class)
-              && baseEquals((CopyStatistics) obj);
-    }
-
-    @Override
-    public final int hashCode() {
-      return Objects.hash(baseHashCode(), copiedLogicalBytes, copiedRows);
-    }
-
-    @Override
-    com.google.api.services.bigquery.model.JobStatistics toPb() {
-      JobStatistics5 copyStatisticsPb = new JobStatistics5();
-      copyStatisticsPb.setCopiedLogicalBytes(copiedLogicalBytes);
-      copyStatisticsPb.setCopiedRows(copiedRows);
-      return super.toPb().setCopy(copyStatisticsPb);
-    }
-
-    static Builder newBuilder() {
-      return new Builder();
-    }
-
-    @SuppressWarnings("unchecked")
-    static CopyStatistics fromPb(com.google.api.services.bigquery.model.JobStatistics statisticPb) {
-      return new Builder(statisticPb).build();
-    }
   }
 
   /** A Google BigQuery Extract Job statistics. */
@@ -156,6 +304,62 @@ public abstract class JobStatistics implements Serializable {
     private final List<Long> destinationUriFileCounts;
 
     private final Long inputBytes;
+
+    private ExtractStatistics(Builder builder) {
+      super(builder);
+      this.destinationUriFileCounts = builder.destinationUriFileCounts;
+      this.inputBytes = builder.inputBytes;
+    }
+
+    static Builder newBuilder() {
+      return new Builder();
+    }
+
+    @SuppressWarnings("unchecked")
+    static ExtractStatistics fromPb(
+        com.google.api.services.bigquery.model.JobStatistics statisticPb) {
+      return new Builder(statisticPb).build();
+    }
+
+    /**
+     * Returns the number of files per destination URI or URI pattern specified in the extract job.
+     * These values will be in the same order as the URIs specified by {@link
+     * ExtractJobConfiguration#getDestinationUris()}.
+     */
+    public List<Long> getDestinationUriFileCounts() {
+      return destinationUriFileCounts;
+    }
+
+    /** Returns number of user bytes extracted into the result. */
+    public Long getInputBytes() {
+      return inputBytes;
+    }
+
+    @Override
+    ToStringHelper toStringHelper() {
+      return super.toStringHelper().add("destinationUriFileCounts", destinationUriFileCounts);
+    }
+
+    @Override
+    com.google.api.services.bigquery.model.JobStatistics toPb() {
+      JobStatistics4 extractStatisticsPb = new JobStatistics4();
+      extractStatisticsPb.setDestinationUriFileCounts(destinationUriFileCounts);
+      extractStatisticsPb.setInputBytes(inputBytes);
+      return super.toPb().setExtract(extractStatisticsPb);
+    }
+
+    @Override
+    public final int hashCode() {
+      return Objects.hash(baseHashCode(), destinationUriFileCounts);
+    }
+
+    @Override
+    public final boolean equals(Object obj) {
+      return obj == this
+          || obj != null
+              && obj.getClass().equals(ExtractStatistics.class)
+              && baseEquals((ExtractStatistics) obj);
+    }
 
     static final class Builder extends JobStatistics.Builder<ExtractStatistics, Builder> {
 
@@ -188,62 +392,6 @@ public abstract class JobStatistics implements Serializable {
         return new ExtractStatistics(this);
       }
     }
-
-    private ExtractStatistics(Builder builder) {
-      super(builder);
-      this.destinationUriFileCounts = builder.destinationUriFileCounts;
-      this.inputBytes = builder.inputBytes;
-    }
-
-    /**
-     * Returns the number of files per destination URI or URI pattern specified in the extract job.
-     * These values will be in the same order as the URIs specified by {@link
-     * ExtractJobConfiguration#getDestinationUris()}.
-     */
-    public List<Long> getDestinationUriFileCounts() {
-      return destinationUriFileCounts;
-    }
-
-    /** Returns number of user bytes extracted into the result. */
-    public Long getInputBytes() {
-      return inputBytes;
-    }
-
-    @Override
-    ToStringHelper toStringHelper() {
-      return super.toStringHelper().add("destinationUriFileCounts", destinationUriFileCounts);
-    }
-
-    @Override
-    public final boolean equals(Object obj) {
-      return obj == this
-          || obj != null
-              && obj.getClass().equals(ExtractStatistics.class)
-              && baseEquals((ExtractStatistics) obj);
-    }
-
-    @Override
-    public final int hashCode() {
-      return Objects.hash(baseHashCode(), destinationUriFileCounts);
-    }
-
-    @Override
-    com.google.api.services.bigquery.model.JobStatistics toPb() {
-      JobStatistics4 extractStatisticsPb = new JobStatistics4();
-      extractStatisticsPb.setDestinationUriFileCounts(destinationUriFileCounts);
-      extractStatisticsPb.setInputBytes(inputBytes);
-      return super.toPb().setExtract(extractStatisticsPb);
-    }
-
-    static Builder newBuilder() {
-      return new Builder();
-    }
-
-    @SuppressWarnings("unchecked")
-    static ExtractStatistics fromPb(
-        com.google.api.services.bigquery.model.JobStatistics statisticPb) {
-      return new Builder(statisticPb).build();
-    }
   }
 
   /** A Google BigQuery Load Job statistics. */
@@ -256,6 +404,84 @@ public abstract class JobStatistics implements Serializable {
     private final Long outputBytes;
     private final Long outputRows;
     private final Long badRecords;
+
+    private LoadStatistics(Builder builder) {
+      super(builder);
+      this.inputBytes = builder.inputBytes;
+      this.inputFiles = builder.inputFiles;
+      this.outputBytes = builder.outputBytes;
+      this.outputRows = builder.outputRows;
+      this.badRecords = builder.badRecords;
+    }
+
+    static Builder newBuilder() {
+      return new Builder();
+    }
+
+    @SuppressWarnings("unchecked")
+    static LoadStatistics fromPb(com.google.api.services.bigquery.model.JobStatistics statisticPb) {
+      return new Builder(statisticPb).build();
+    }
+
+    /** Returns the number of bytes of source data in a load job. */
+    public Long getInputBytes() {
+      return inputBytes;
+    }
+
+    /** Returns the number of source files in a load job. */
+    public Long getInputFiles() {
+      return inputFiles;
+    }
+
+    /** Returns the size of the data loaded by a load job so far, in bytes. */
+    public Long getOutputBytes() {
+      return outputBytes;
+    }
+
+    /** Returns the number of rows loaded by a load job so far. */
+    public Long getOutputRows() {
+      return outputRows;
+    }
+
+    /** Returns the number of bad records reported in a job. */
+    public Long getBadRecords() {
+      return badRecords;
+    }
+
+    @Override
+    ToStringHelper toStringHelper() {
+      return super.toStringHelper()
+          .add("inputBytes", inputBytes)
+          .add("inputFiles", inputFiles)
+          .add("outputBytes", outputBytes)
+          .add("outputRows", outputRows)
+          .add("badRecords", badRecords);
+    }
+
+    @Override
+    com.google.api.services.bigquery.model.JobStatistics toPb() {
+      JobStatistics3 loadStatisticsPb = new JobStatistics3();
+      loadStatisticsPb.setInputFileBytes(inputBytes);
+      loadStatisticsPb.setInputFiles(inputFiles);
+      loadStatisticsPb.setOutputBytes(outputBytes);
+      loadStatisticsPb.setOutputRows(outputRows);
+      loadStatisticsPb.setBadRecords(badRecords);
+      return super.toPb().setLoad(loadStatisticsPb);
+    }
+
+    @Override
+    public final int hashCode() {
+      return Objects.hash(
+          baseHashCode(), inputBytes, inputFiles, outputBytes, outputRows, badRecords);
+    }
+
+    @Override
+    public final boolean equals(Object obj) {
+      return obj == this
+          || obj != null
+              && obj.getClass().equals(LoadStatistics.class)
+              && baseEquals((LoadStatistics) obj);
+    }
 
     static final class Builder extends JobStatistics.Builder<LoadStatistics, Builder> {
 
@@ -308,84 +534,6 @@ public abstract class JobStatistics implements Serializable {
         return new LoadStatistics(this);
       }
     }
-
-    private LoadStatistics(Builder builder) {
-      super(builder);
-      this.inputBytes = builder.inputBytes;
-      this.inputFiles = builder.inputFiles;
-      this.outputBytes = builder.outputBytes;
-      this.outputRows = builder.outputRows;
-      this.badRecords = builder.badRecords;
-    }
-
-    /** Returns the number of bytes of source data in a load job. */
-    public Long getInputBytes() {
-      return inputBytes;
-    }
-
-    /** Returns the number of source files in a load job. */
-    public Long getInputFiles() {
-      return inputFiles;
-    }
-
-    /** Returns the size of the data loaded by a load job so far, in bytes. */
-    public Long getOutputBytes() {
-      return outputBytes;
-    }
-
-    /** Returns the number of rows loaded by a load job so far. */
-    public Long getOutputRows() {
-      return outputRows;
-    }
-
-    /** Returns the number of bad records reported in a job. */
-    public Long getBadRecords() {
-      return badRecords;
-    }
-
-    @Override
-    ToStringHelper toStringHelper() {
-      return super.toStringHelper()
-          .add("inputBytes", inputBytes)
-          .add("inputFiles", inputFiles)
-          .add("outputBytes", outputBytes)
-          .add("outputRows", outputRows)
-          .add("badRecords", badRecords);
-    }
-
-    @Override
-    public final boolean equals(Object obj) {
-      return obj == this
-          || obj != null
-              && obj.getClass().equals(LoadStatistics.class)
-              && baseEquals((LoadStatistics) obj);
-    }
-
-    @Override
-    public final int hashCode() {
-      return Objects.hash(
-          baseHashCode(), inputBytes, inputFiles, outputBytes, outputRows, badRecords);
-    }
-
-    @Override
-    com.google.api.services.bigquery.model.JobStatistics toPb() {
-      JobStatistics3 loadStatisticsPb = new JobStatistics3();
-      loadStatisticsPb.setInputFileBytes(inputBytes);
-      loadStatisticsPb.setInputFiles(inputFiles);
-      loadStatisticsPb.setOutputBytes(outputBytes);
-      loadStatisticsPb.setOutputRows(outputRows);
-      loadStatisticsPb.setBadRecords(badRecords);
-      return super.toPb().setLoad(loadStatisticsPb);
-    }
-
-    static Builder newBuilder() {
-      return new Builder();
-    }
-
-    @SuppressWarnings("unchecked")
-    static LoadStatistics fromPb(com.google.api.services.bigquery.model.JobStatistics statisticPb) {
-      return new Builder(statisticPb).build();
-    }
   }
 
   /** A Google BigQuery Query Job statistics. */
@@ -415,11 +563,280 @@ public abstract class JobStatistics implements Serializable {
     private final MetadataCacheStats metadataCacheStats;
     private final List<QueryParameter> queryParameters;
 
+    private QueryStatistics(Builder builder) {
+      super(builder);
+      this.biEngineStats = builder.biEngineStats;
+      this.billingTier = builder.billingTier;
+      this.cacheHit = builder.cacheHit;
+      this.ddlOperationPerformed = builder.ddlOperationPerformed;
+      this.ddlTargetTable = builder.ddlTargetTable;
+      this.ddlTargetRoutine = builder.ddlTargetRoutine;
+      this.estimatedBytesProcessed = builder.estimatedBytesProcessed;
+      this.numDmlAffectedRows = builder.numDmlAffectedRows;
+      this.dmlStats = builder.dmlStats;
+      this.exportDataStats = builder.exportDataStats;
+      this.referencedTables = builder.referencedTables;
+      this.statementType = builder.statementType;
+      this.totalBytesBilled = builder.totalBytesBilled;
+      this.totalBytesProcessed = builder.totalBytesProcessed;
+      this.totalPartitionsProcessed = builder.totalPartitionsProcessed;
+      this.queryPlan = builder.queryPlan;
+      this.timeline = builder.timeline;
+      this.schema = builder.schema;
+      this.searchStats = builder.searchStats;
+      this.metadataCacheStats = builder.metadataCacheStats;
+      this.queryParameters = builder.queryParameters;
+    }
+
+    static Builder newBuilder() {
+      return new Builder();
+    }
+
+    @SuppressWarnings("unchecked")
+    static QueryStatistics fromPb(
+        com.google.api.services.bigquery.model.JobStatistics statisticPb) {
+      return new Builder(statisticPb).build();
+    }
+
+    /** Returns query statistics specific to the use of BI Engine. */
+    public BiEngineStats getBiEngineStats() {
+      return biEngineStats;
+    }
+
+    /** Returns the billing tier for the job. */
+    public Integer getBillingTier() {
+      return billingTier;
+    }
+
+    /**
+     * Returns whether the query result was fetched from the query cache.
+     *
+     * @see <a href="https://cloud.google.com/bigquery/querying-data#querycaching">Query Caching</a>
+     */
+    public Boolean getCacheHit() {
+      return cacheHit;
+    }
+
+    /** [BETA] For DDL queries, returns the operation applied to the DDL target table. */
+    public String getDdlOperationPerformed() {
+      return ddlOperationPerformed;
+    }
+
+    /** [BETA] For DDL queries, returns the TableID of the targeted table. */
+    public TableId getDdlTargetTable() {
+      return ddlTargetTable;
+    }
+
+    /** [BETA] For DDL queries, returns the RoutineId of the targeted routine. */
+    public RoutineId getDdlTargetRoutine() {
+      return ddlTargetRoutine;
+    }
+
+    /** The original estimate of bytes processed for the job. */
+    public Long getEstimatedBytesProcessed() {
+      return estimatedBytesProcessed;
+    }
+
+    /**
+     * The number of rows affected by a DML statement. Present only for DML statements INSERT,
+     * UPDATE or DELETE.
+     */
+    public Long getNumDmlAffectedRows() {
+      return numDmlAffectedRows;
+    }
+
+    /** Detailed statistics for DML statements. */
+    public DmlStats getDmlStats() {
+      return dmlStats;
+    }
+
+    /** Detailed statistics for EXPORT DATA statement. */
+    public ExportDataStats getExportDataStats() {
+      return exportDataStats;
+    }
+
+    /**
+     * Referenced tables for the job. Queries that reference more than 50 tables will not have a
+     * complete list.
+     */
+    public List<TableId> getReferencedTables() {
+      return referencedTables;
+    }
+
+    /**
+     * [BETA] The type of query statement, if valid. Possible values include: SELECT INSERT UPDATE
+     * DELETE CREATE_TABLE CREATE_TABLE_AS_SELECT DROP_TABLE CREATE_VIEW DROP_VIEW
+     */
+    public StatementType getStatementType() {
+      return statementType;
+    }
+
+    /** Returns the total number of bytes billed for the job. */
+    public Long getTotalBytesBilled() {
+      return totalBytesBilled;
+    }
+
+    /** Returns the total number of bytes processed by the job. */
+    public Long getTotalBytesProcessed() {
+      return totalBytesProcessed;
+    }
+
+    /** Total number of partitions processed from all partitioned tables referenced in the job. */
+    public Long getTotalPartitionsProcessed() {
+      return totalPartitionsProcessed;
+    }
+
+    /**
+     * Returns the query plan as a list of stages or {@code null} if a query plan is not available.
+     * Each stage involves a number of steps that read from data sources, perform a series of
+     * transformations on the input, and emit an output to a future stage (or the final result). The
+     * query plan is available for a completed query job and is retained for 7 days.
+     *
+     * @see <a href="https://cloud.google.com/bigquery/query-plan-explanation">Query Plan</a>
+     */
+    public List<QueryStage> getQueryPlan() {
+      return queryPlan;
+    }
+
+    /**
+     * Return the timeline for the query, as a list of timeline samples. Each sample provides
+     * information about the overall progress of the query. Information includes time of the sample,
+     * progress reporting on active, completed, and pending units of work, as well as the cumulative
+     * estimation of slot-milliseconds consumed by the query.
+     */
+    public List<TimelineSample> getTimeline() {
+      return timeline;
+    }
+
+    /**
+     * Returns the schema for the query result. Present only for successful dry run of non-legacy
+     * SQL queries.
+     */
+    public Schema getSchema() {
+      return schema;
+    }
+
+    /**
+     * Statistics for a search query. Populated as part of JobStatistics2. Provides information
+     * about how indexes are used in search queries. If an index is not used, you can retrieve
+     * debugging information about the reason why.
+     */
+    public SearchStats getSearchStats() {
+      return searchStats;
+    }
+
+    /** Statistics for metadata caching in BigLake tables. */
+    public MetadataCacheStats getMetadataCacheStats() {
+      return metadataCacheStats;
+    }
+
+    /**
+     * Standard SQL only: Returns a list of undeclared query parameters detected during a dry run
+     * validation.
+     */
+    public List<QueryParameter> getQueryParameters() {
+      return queryParameters;
+    }
+
+    @Override
+    ToStringHelper toStringHelper() {
+      return super.toStringHelper()
+          .add("biEngineStats", biEngineStats)
+          .add("billingTier", billingTier)
+          .add("cacheHit", cacheHit)
+          .add("totalBytesBilled", totalBytesBilled)
+          .add("totalBytesProcessed", totalBytesProcessed)
+          .add("queryPlan", queryPlan)
+          .add("timeline", timeline)
+          .add("schema", schema)
+          .add("searchStats", searchStats)
+          .add("metadataCacheStats", metadataCacheStats)
+          .add("queryParameters", queryParameters);
+    }
+
+    @Override
+    com.google.api.services.bigquery.model.JobStatistics toPb() {
+      JobStatistics2 queryStatisticsPb = new JobStatistics2();
+      if (biEngineStats != null) {
+        queryStatisticsPb.setBiEngineStatistics(biEngineStats.toPb());
+      }
+      queryStatisticsPb.setBillingTier(billingTier);
+      queryStatisticsPb.setCacheHit(cacheHit);
+      queryStatisticsPb.setDdlOperationPerformed(ddlOperationPerformed);
+      queryStatisticsPb.setEstimatedBytesProcessed(estimatedBytesProcessed);
+      queryStatisticsPb.setTotalBytesBilled(totalBytesBilled);
+      queryStatisticsPb.setTotalBytesProcessed(totalBytesProcessed);
+      queryStatisticsPb.setTotalPartitionsProcessed(totalPartitionsProcessed);
+      if (ddlTargetTable != null) {
+        queryStatisticsPb.setDdlTargetTable(ddlTargetTable.toPb());
+      }
+      if (ddlTargetRoutine != null) {
+        queryStatisticsPb.setDdlTargetRoutine(ddlTargetRoutine.toPb());
+      }
+      if (dmlStats != null) {
+        queryStatisticsPb.setDmlStats(dmlStats.toPb());
+      }
+      if (exportDataStats != null) {
+        queryStatisticsPb.setExportDataStatistics(exportDataStats.toPb());
+      }
+      if (referencedTables != null) {
+        queryStatisticsPb.setReferencedTables(
+            Lists.transform(referencedTables, TableId.TO_PB_FUNCTION));
+      }
+      if (statementType != null) {
+        queryStatisticsPb.setStatementType(statementType.toString());
+      }
+      if (queryPlan != null) {
+        queryStatisticsPb.setQueryPlan(Lists.transform(queryPlan, QueryStage.TO_PB_FUNCTION));
+      }
+      if (timeline != null) {
+        queryStatisticsPb.setTimeline(Lists.transform(timeline, TimelineSample.TO_PB_FUNCTION));
+      }
+      if (schema != null) {
+        queryStatisticsPb.setSchema(schema.toPb());
+      }
+      if (searchStats != null) {
+        queryStatisticsPb.setSearchStatistics(searchStats.toPb());
+      }
+      if (metadataCacheStats != null) {
+        queryStatisticsPb.setMetadataCacheStatistics(metadataCacheStats.toPb());
+      }
+      if (queryParameters != null) {
+        queryStatisticsPb.setUndeclaredQueryParameters(queryParameters);
+      }
+      return super.toPb().setQuery(queryStatisticsPb);
+    }
+
+    @Override
+    public final int hashCode() {
+      return Objects.hash(
+          baseHashCode(),
+          biEngineStats,
+          billingTier,
+          cacheHit,
+          totalBytesBilled,
+          totalBytesProcessed,
+          queryPlan,
+          schema,
+          searchStats,
+          metadataCacheStats,
+          queryParameters);
+    }
+
+    @Override
+    public final boolean equals(Object obj) {
+      return obj == this
+          || obj != null
+              && obj.getClass().equals(QueryStatistics.class)
+              && baseEquals((QueryStatistics) obj);
+    }
+
     /**
      * StatementType represents possible types of SQL statements reported as part of the
      * QueryStatistics of a BigQuery job.
      */
     public static final class StatementType extends StringEnumValue {
+
       private static final long serialVersionUID = 818920627219751204L;
 
       private static final ApiFunction<String, StatementType> CONSTRUCTOR =
@@ -452,6 +869,44 @@ public abstract class JobStatistics implements Serializable {
       public static final StatementType DROP_FUNCTION = type.createAndRegister("DROP_FUNCTION");
       public static final StatementType DROP_PROCEDURE = type.createAndRegister("DROP_PROCEDURE");
       public static final StatementType MERGE = type.createAndRegister("MERGE");
+      public static final StatementType CREATE_MATERIALIZED_VIEW =
+          type.createAndRegister("CREATE_MATERIALIZED_VIEW");
+      public static final StatementType CREATE_TABLE_FUNCTION =
+          type.createAndRegister("CREATE_TABLE_FUNCTION");
+      public static final StatementType CREATE_ROW_ACCESS_POLICY =
+          type.createAndRegister("CREATE_ROW_ACCESS_POLICY");
+      public static final StatementType CREATE_SCHEMA = type.createAndRegister("CREATE_SCHEMA");
+      public static final StatementType CREATE_SNAPSHOT_TABLE =
+          type.createAndRegister("CREATE_SNAPSHOT_TABLE");
+      public static final StatementType CREATE_SEARCH_INDEX =
+          type.createAndRegister("CREATE_SEARCH_INDEX");
+      public static final StatementType DROP_EXTERNAL_TABLE =
+          type.createAndRegister("DROP_EXTERNAL_TABLE");
+
+      public static final StatementType DROP_MODEL = type.createAndRegister("DROP_MODEL");
+      public static final StatementType DROP_MATERIALIZED_VIEW =
+          type.createAndRegister("DROP_MATERIALIZED_VIEW");
+
+      public static final StatementType DROP_TABLE_FUNCTION =
+          type.createAndRegister("DROP_TABLE_FUNCTION");
+      public static final StatementType DROP_SEARCH_INDEX =
+          type.createAndRegister("DROP_SEARCH_INDEX");
+      public static final StatementType DROP_SCHEMA = type.createAndRegister("DROP_SCHEMA");
+      public static final StatementType DROP_SNAPSHOT_TABLE =
+          type.createAndRegister("DROP_SNAPSHOT_TABLE");
+      public static final StatementType DROP_ROW_ACCESS_POLICY =
+          type.createAndRegister("DROP_ROW_ACCESS_POLICY");
+      public static final StatementType ALTER_MATERIALIZED_VIEW =
+          type.createAndRegister("ALTER_MATERIALIZED_VIEW");
+      public static final StatementType ALTER_SCHEMA = type.createAndRegister("ALTER_SCHEMA");
+      public static final StatementType SCRIPT = type.createAndRegister("SCRIPT");
+      public static final StatementType TRUNCATE_TABLE = type.createAndRegister("TRUNCATE_TABLE");
+      public static final StatementType CREATE_EXTERNAL_TABLE =
+          type.createAndRegister("CREATE_EXTERNAL_TABLE");
+      public static final StatementType EXPORT_DATA = type.createAndRegister("EXPORT_DATA");
+      public static final StatementType EXPORT_MODEL = type.createAndRegister("EXPORT_MODEL");
+      public static final StatementType LOAD_DATA = type.createAndRegister("LOAD_DATA");
+      public static final StatementType CALL = type.createAndRegister("CALL");
 
       private StatementType(String constant) {
         super(constant);
@@ -482,7 +937,23 @@ public abstract class JobStatistics implements Serializable {
      */
     @AutoValue
     public abstract static class ExportDataStats implements Serializable {
+
       private static final long serialVersionUID = 1L;
+
+      public static Builder newBuilder() {
+        return new AutoValue_JobStatistics_QueryStatistics_ExportDataStats.Builder();
+      }
+
+      static ExportDataStats fromPb(ExportDataStatistics exportDataStatisticsPb) {
+        Builder builder = newBuilder();
+        if (exportDataStatisticsPb.getFileCount() != null) {
+          builder.setFileCount(exportDataStatisticsPb.getFileCount());
+        }
+        if (exportDataStatisticsPb.getRowCount() != null) {
+          builder.setRowCount(exportDataStatisticsPb.getRowCount());
+        }
+        return builder.build();
+      }
 
       /**
        * Returns number of destination files generated in case of EXPORT DATA statement only.
@@ -501,21 +972,6 @@ public abstract class JobStatistics implements Serializable {
       public abstract Long getRowCount();
 
       public abstract Builder toBuilder();
-
-      public static Builder newBuilder() {
-        return new AutoValue_JobStatistics_QueryStatistics_ExportDataStats.Builder();
-      }
-
-      static ExportDataStats fromPb(ExportDataStatistics exportDataStatisticsPb) {
-        Builder builder = newBuilder();
-        if (exportDataStatisticsPb.getFileCount() != null) {
-          builder.setFileCount(exportDataStatisticsPb.getFileCount());
-        }
-        if (exportDataStatisticsPb.getRowCount() != null) {
-          builder.setRowCount(exportDataStatisticsPb.getRowCount());
-        }
-        return builder.build();
-      }
 
       ExportDataStatistics toPb() {
         ExportDataStatistics exportDataStatisticsPb = new ExportDataStatistics();
@@ -752,274 +1208,6 @@ public abstract class JobStatistics implements Serializable {
         return new QueryStatistics(this);
       }
     }
-
-    private QueryStatistics(Builder builder) {
-      super(builder);
-      this.biEngineStats = builder.biEngineStats;
-      this.billingTier = builder.billingTier;
-      this.cacheHit = builder.cacheHit;
-      this.ddlOperationPerformed = builder.ddlOperationPerformed;
-      this.ddlTargetTable = builder.ddlTargetTable;
-      this.ddlTargetRoutine = builder.ddlTargetRoutine;
-      this.estimatedBytesProcessed = builder.estimatedBytesProcessed;
-      this.numDmlAffectedRows = builder.numDmlAffectedRows;
-      this.dmlStats = builder.dmlStats;
-      this.exportDataStats = builder.exportDataStats;
-      this.referencedTables = builder.referencedTables;
-      this.statementType = builder.statementType;
-      this.totalBytesBilled = builder.totalBytesBilled;
-      this.totalBytesProcessed = builder.totalBytesProcessed;
-      this.totalPartitionsProcessed = builder.totalPartitionsProcessed;
-      this.queryPlan = builder.queryPlan;
-      this.timeline = builder.timeline;
-      this.schema = builder.schema;
-      this.searchStats = builder.searchStats;
-      this.metadataCacheStats = builder.metadataCacheStats;
-      this.queryParameters = builder.queryParameters;
-    }
-
-    /** Returns query statistics specific to the use of BI Engine. */
-    public BiEngineStats getBiEngineStats() {
-      return biEngineStats;
-    }
-
-    /** Returns the billing tier for the job. */
-    public Integer getBillingTier() {
-      return billingTier;
-    }
-
-    /**
-     * Returns whether the query result was fetched from the query cache.
-     *
-     * @see <a href="https://cloud.google.com/bigquery/querying-data#querycaching">Query Caching</a>
-     */
-    public Boolean getCacheHit() {
-      return cacheHit;
-    }
-
-    /** [BETA] For DDL queries, returns the operation applied to the DDL target table. */
-    public String getDdlOperationPerformed() {
-      return ddlOperationPerformed;
-    }
-
-    /** [BETA] For DDL queries, returns the TableID of the targeted table. */
-    public TableId getDdlTargetTable() {
-      return ddlTargetTable;
-    }
-
-    /** [BETA] For DDL queries, returns the RoutineId of the targeted routine. */
-    public RoutineId getDdlTargetRoutine() {
-      return ddlTargetRoutine;
-    }
-
-    /** The original estimate of bytes processed for the job. */
-    public Long getEstimatedBytesProcessed() {
-      return estimatedBytesProcessed;
-    }
-
-    /**
-     * The number of rows affected by a DML statement. Present only for DML statements INSERT,
-     * UPDATE or DELETE.
-     */
-    public Long getNumDmlAffectedRows() {
-      return numDmlAffectedRows;
-    }
-
-    /** Detailed statistics for DML statements. */
-    public DmlStats getDmlStats() {
-      return dmlStats;
-    }
-
-    /** Detailed statistics for EXPORT DATA statement. */
-    public ExportDataStats getExportDataStats() {
-      return exportDataStats;
-    }
-
-    /**
-     * Referenced tables for the job. Queries that reference more than 50 tables will not have a
-     * complete list.
-     */
-    public List<TableId> getReferencedTables() {
-      return referencedTables;
-    }
-
-    /**
-     * [BETA] The type of query statement, if valid. Possible values include: SELECT INSERT UPDATE
-     * DELETE CREATE_TABLE CREATE_TABLE_AS_SELECT DROP_TABLE CREATE_VIEW DROP_VIEW
-     */
-    public StatementType getStatementType() {
-      return statementType;
-    }
-
-    /** Returns the total number of bytes billed for the job. */
-    public Long getTotalBytesBilled() {
-      return totalBytesBilled;
-    }
-
-    /** Returns the total number of bytes processed by the job. */
-    public Long getTotalBytesProcessed() {
-      return totalBytesProcessed;
-    }
-
-    /** Total number of partitions processed from all partitioned tables referenced in the job. */
-    public Long getTotalPartitionsProcessed() {
-      return totalPartitionsProcessed;
-    }
-
-    /**
-     * Returns the query plan as a list of stages or {@code null} if a query plan is not available.
-     * Each stage involves a number of steps that read from data sources, perform a series of
-     * transformations on the input, and emit an output to a future stage (or the final result). The
-     * query plan is available for a completed query job and is retained for 7 days.
-     *
-     * @see <a href="https://cloud.google.com/bigquery/query-plan-explanation">Query Plan</a>
-     */
-    public List<QueryStage> getQueryPlan() {
-      return queryPlan;
-    }
-
-    /**
-     * Return the timeline for the query, as a list of timeline samples. Each sample provides
-     * information about the overall progress of the query. Information includes time of the sample,
-     * progress reporting on active, completed, and pending units of work, as well as the cumulative
-     * estimation of slot-milliseconds consumed by the query.
-     */
-    public List<TimelineSample> getTimeline() {
-      return timeline;
-    }
-
-    /**
-     * Returns the schema for the query result. Present only for successful dry run of non-legacy
-     * SQL queries.
-     */
-    public Schema getSchema() {
-      return schema;
-    }
-
-    /**
-     * Statistics for a search query. Populated as part of JobStatistics2. Provides information
-     * about how indexes are used in search queries. If an index is not used, you can retrieve
-     * debugging information about the reason why.
-     */
-    public SearchStats getSearchStats() {
-      return searchStats;
-    }
-
-    /** Statistics for metadata caching in BigLake tables. */
-    public MetadataCacheStats getMetadataCacheStats() {
-      return metadataCacheStats;
-    }
-
-    /**
-     * Standard SQL only: Returns a list of undeclared query parameters detected during a dry run
-     * validation.
-     */
-    public List<QueryParameter> getQueryParameters() {
-      return queryParameters;
-    }
-
-    @Override
-    ToStringHelper toStringHelper() {
-      return super.toStringHelper()
-          .add("biEngineStats", biEngineStats)
-          .add("billingTier", billingTier)
-          .add("cacheHit", cacheHit)
-          .add("totalBytesBilled", totalBytesBilled)
-          .add("totalBytesProcessed", totalBytesProcessed)
-          .add("queryPlan", queryPlan)
-          .add("timeline", timeline)
-          .add("schema", schema)
-          .add("searchStats", searchStats)
-          .add("metadataCacheStats", metadataCacheStats)
-          .add("queryParameters", queryParameters);
-    }
-
-    @Override
-    public final boolean equals(Object obj) {
-      return obj == this
-          || obj != null
-              && obj.getClass().equals(QueryStatistics.class)
-              && baseEquals((QueryStatistics) obj);
-    }
-
-    @Override
-    public final int hashCode() {
-      return Objects.hash(
-          baseHashCode(),
-          biEngineStats,
-          billingTier,
-          cacheHit,
-          totalBytesBilled,
-          totalBytesProcessed,
-          queryPlan,
-          schema,
-          searchStats,
-          metadataCacheStats,
-          queryParameters);
-    }
-
-    @Override
-    com.google.api.services.bigquery.model.JobStatistics toPb() {
-      JobStatistics2 queryStatisticsPb = new JobStatistics2();
-      if (biEngineStats != null) {
-        queryStatisticsPb.setBiEngineStatistics(biEngineStats.toPb());
-      }
-      queryStatisticsPb.setBillingTier(billingTier);
-      queryStatisticsPb.setCacheHit(cacheHit);
-      queryStatisticsPb.setDdlOperationPerformed(ddlOperationPerformed);
-      queryStatisticsPb.setEstimatedBytesProcessed(estimatedBytesProcessed);
-      queryStatisticsPb.setTotalBytesBilled(totalBytesBilled);
-      queryStatisticsPb.setTotalBytesProcessed(totalBytesProcessed);
-      queryStatisticsPb.setTotalPartitionsProcessed(totalPartitionsProcessed);
-      if (ddlTargetTable != null) {
-        queryStatisticsPb.setDdlTargetTable(ddlTargetTable.toPb());
-      }
-      if (ddlTargetRoutine != null) {
-        queryStatisticsPb.setDdlTargetRoutine(ddlTargetRoutine.toPb());
-      }
-      if (dmlStats != null) {
-        queryStatisticsPb.setDmlStats(dmlStats.toPb());
-      }
-      if (exportDataStats != null) {
-        queryStatisticsPb.setExportDataStatistics(exportDataStats.toPb());
-      }
-      if (referencedTables != null) {
-        queryStatisticsPb.setReferencedTables(
-            Lists.transform(referencedTables, TableId.TO_PB_FUNCTION));
-      }
-      if (statementType != null) {
-        queryStatisticsPb.setStatementType(statementType.toString());
-      }
-      if (queryPlan != null) {
-        queryStatisticsPb.setQueryPlan(Lists.transform(queryPlan, QueryStage.TO_PB_FUNCTION));
-      }
-      if (timeline != null) {
-        queryStatisticsPb.setTimeline(Lists.transform(timeline, TimelineSample.TO_PB_FUNCTION));
-      }
-      if (schema != null) {
-        queryStatisticsPb.setSchema(schema.toPb());
-      }
-      if (searchStats != null) {
-        queryStatisticsPb.setSearchStatistics(searchStats.toPb());
-      }
-      if (metadataCacheStats != null) {
-        queryStatisticsPb.setMetadataCacheStatistics(metadataCacheStats.toPb());
-      }
-      if (queryParameters != null) {
-        queryStatisticsPb.setUndeclaredQueryParameters(queryParameters);
-      }
-      return super.toPb().setQuery(queryStatisticsPb);
-    }
-
-    static Builder newBuilder() {
-      return new Builder();
-    }
-
-    @SuppressWarnings("unchecked")
-    static QueryStatistics fromPb(
-        com.google.api.services.bigquery.model.JobStatistics statisticPb) {
-      return new Builder(statisticPb).build();
-    }
   }
 
   /** A Google BigQuery Script statistics. */
@@ -1029,6 +1217,75 @@ public abstract class JobStatistics implements Serializable {
 
     private final String evaluationKind;
     private final List<ScriptStackFrame> stackFrames;
+
+    private ScriptStatistics(Builder builder) {
+      this.evaluationKind = builder.evaluationKind;
+      this.stackFrames = builder.stackFrames;
+    }
+
+    static Builder newBuilder() {
+      return new Builder();
+    }
+
+    static ScriptStatistics fromPb(
+        com.google.api.services.bigquery.model.ScriptStatistics scriptStatistics) {
+      Builder builder = newBuilder();
+      if (scriptStatistics.getEvaluationKind() != null) {
+        builder.setEvaluationKind(scriptStatistics.getEvaluationKind());
+      }
+      if (scriptStatistics.getStackFrames() != null) {
+        builder.setStackFrames(
+            Lists.transform(scriptStatistics.getStackFrames(), ScriptStackFrame.FROM_PB_FUNCTION));
+      }
+      return builder.build();
+    }
+
+    /** Returns child job was a statement or expression */
+    public String getEvaluationKind() {
+      return evaluationKind;
+    }
+
+    /**
+     * Stack trace showing the line/column/procedure name of each frame on the stack at the point
+     * where the current evaluation happened. The leaf frame is first, the primary script is last.
+     * Never empty.
+     */
+    public List<ScriptStackFrame> getStackFrames() {
+      return stackFrames;
+    }
+
+    ToStringHelper toStringHelper() {
+      return MoreObjects.toStringHelper(this)
+          .add("evaluationKind", evaluationKind)
+          .add("stackFrames", stackFrames);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(evaluationKind, stackFrames);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      return obj == this
+          || obj != null
+              && obj.getClass().equals(ScriptStatistics.class)
+              && Objects.equals(toPb(), ((ScriptStatistics) obj).toPb());
+    }
+
+    @Override
+    public String toString() {
+      return toStringHelper().toString();
+    }
+
+    com.google.api.services.bigquery.model.ScriptStatistics toPb() {
+      com.google.api.services.bigquery.model.ScriptStatistics scriptStatistics =
+          new com.google.api.services.bigquery.model.ScriptStatistics();
+      scriptStatistics.setEvaluationKind(evaluationKind);
+      scriptStatistics.setStackFrames(
+          Lists.transform(stackFrames, ScriptStackFrame.TO_PB_FUNCTION));
+      return scriptStatistics;
+    }
 
     public static class ScriptStackFrame {
 
@@ -1075,48 +1332,32 @@ public abstract class JobStatistics implements Serializable {
         this.text = builder.text;
       }
 
-      static class Builder {
+      static Builder newBuilder() {
+        return new Builder();
+      }
 
-        private Integer endColumn;
-        private Integer endLine;
-        private String procedureId;
-        private Integer startColumn;
-        private Integer startLine;
-        private String text;
-
-        Builder setEndColumn(Integer endColumn) {
-          this.endColumn = endColumn;
-          return this;
+      static ScriptStackFrame fromPb(
+          com.google.api.services.bigquery.model.ScriptStackFrame stackFrame) {
+        Builder builder = newBuilder();
+        if (stackFrame.getEndColumn() != null) {
+          builder.setEndColumn(stackFrame.getEndColumn());
         }
-
-        Builder setEndLine(Integer endLine) {
-          this.endLine = endLine;
-          return this;
+        if (stackFrame.getEndLine() != null) {
+          builder.setEndLine(stackFrame.getEndLine());
         }
-
-        Builder setProcedureId(String procedureId) {
-          this.procedureId = procedureId;
-          return this;
+        if (stackFrame.getProcedureId() != null) {
+          builder.setProcedureId(stackFrame.getProcedureId());
         }
-
-        Builder setStartColumn(Integer startColumn) {
-          this.startColumn = startColumn;
-          return this;
+        if (stackFrame.getStartColumn() != null) {
+          builder.setStartColumn(stackFrame.getStartColumn());
         }
-
-        Builder setStartLine(Integer startLine) {
-          this.startLine = startLine;
-          return this;
+        if (stackFrame.getStartLine() != null) {
+          builder.setStartLine(stackFrame.getStartLine());
         }
-
-        Builder setText(String text) {
-          this.text = text;
-          return this;
+        if (stackFrame.getText() != null) {
+          builder.setText(stackFrame.getText());
         }
-
-        ScriptStackFrame build() {
-          return new ScriptStackFrame(this);
-        }
+        return builder.build();
       }
 
       /** Returns the end column. */
@@ -1160,8 +1401,8 @@ public abstract class JobStatistics implements Serializable {
       }
 
       @Override
-      public String toString() {
-        return toStringHelper().toString();
+      public int hashCode() {
+        return Objects.hash(endColumn, endLine, procedureId, startColumn, startLine, text);
       }
 
       @Override
@@ -1173,8 +1414,8 @@ public abstract class JobStatistics implements Serializable {
       }
 
       @Override
-      public int hashCode() {
-        return Objects.hash(endColumn, endLine, procedureId, startColumn, startLine, text);
+      public String toString() {
+        return toStringHelper().toString();
       }
 
       com.google.api.services.bigquery.model.ScriptStackFrame toPb() {
@@ -1189,38 +1430,49 @@ public abstract class JobStatistics implements Serializable {
         return stackFrame;
       }
 
-      static Builder newBuilder() {
-        return new Builder();
-      }
+      static class Builder {
 
-      static ScriptStackFrame fromPb(
-          com.google.api.services.bigquery.model.ScriptStackFrame stackFrame) {
-        Builder builder = newBuilder();
-        if (stackFrame.getEndColumn() != null) {
-          builder.setEndColumn(stackFrame.getEndColumn());
-        }
-        if (stackFrame.getEndLine() != null) {
-          builder.setEndLine(stackFrame.getEndLine());
-        }
-        if (stackFrame.getProcedureId() != null) {
-          builder.setProcedureId(stackFrame.getProcedureId());
-        }
-        if (stackFrame.getStartColumn() != null) {
-          builder.setStartColumn(stackFrame.getStartColumn());
-        }
-        if (stackFrame.getStartLine() != null) {
-          builder.setStartLine(stackFrame.getStartLine());
-        }
-        if (stackFrame.getText() != null) {
-          builder.setText(stackFrame.getText());
-        }
-        return builder.build();
-      }
-    }
+        private Integer endColumn;
+        private Integer endLine;
+        private String procedureId;
+        private Integer startColumn;
+        private Integer startLine;
+        private String text;
 
-    private ScriptStatistics(Builder builder) {
-      this.evaluationKind = builder.evaluationKind;
-      this.stackFrames = builder.stackFrames;
+        Builder setEndColumn(Integer endColumn) {
+          this.endColumn = endColumn;
+          return this;
+        }
+
+        Builder setEndLine(Integer endLine) {
+          this.endLine = endLine;
+          return this;
+        }
+
+        Builder setProcedureId(String procedureId) {
+          this.procedureId = procedureId;
+          return this;
+        }
+
+        Builder setStartColumn(Integer startColumn) {
+          this.startColumn = startColumn;
+          return this;
+        }
+
+        Builder setStartLine(Integer startLine) {
+          this.startLine = startLine;
+          return this;
+        }
+
+        Builder setText(String text) {
+          this.text = text;
+          return this;
+        }
+
+        ScriptStackFrame build() {
+          return new ScriptStackFrame(this);
+        }
+      }
     }
 
     static class Builder {
@@ -1243,70 +1495,6 @@ public abstract class JobStatistics implements Serializable {
       ScriptStatistics build() {
         return new ScriptStatistics(this);
       }
-    }
-
-    static Builder newBuilder() {
-      return new Builder();
-    }
-
-    /** Returns child job was a statement or expression */
-    public String getEvaluationKind() {
-      return evaluationKind;
-    }
-
-    /**
-     * Stack trace showing the line/column/procedure name of each frame on the stack at the point
-     * where the current evaluation happened. The leaf frame is first, the primary script is last.
-     * Never empty.
-     */
-    public List<ScriptStackFrame> getStackFrames() {
-      return stackFrames;
-    }
-
-    ToStringHelper toStringHelper() {
-      return MoreObjects.toStringHelper(this)
-          .add("evaluationKind", evaluationKind)
-          .add("stackFrames", stackFrames);
-    }
-
-    @Override
-    public String toString() {
-      return toStringHelper().toString();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      return obj == this
-          || obj != null
-              && obj.getClass().equals(ScriptStatistics.class)
-              && Objects.equals(toPb(), ((ScriptStatistics) obj).toPb());
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(evaluationKind, stackFrames);
-    }
-
-    com.google.api.services.bigquery.model.ScriptStatistics toPb() {
-      com.google.api.services.bigquery.model.ScriptStatistics scriptStatistics =
-          new com.google.api.services.bigquery.model.ScriptStatistics();
-      scriptStatistics.setEvaluationKind(evaluationKind);
-      scriptStatistics.setStackFrames(
-          Lists.transform(stackFrames, ScriptStackFrame.TO_PB_FUNCTION));
-      return scriptStatistics;
-    }
-
-    static ScriptStatistics fromPb(
-        com.google.api.services.bigquery.model.ScriptStatistics scriptStatistics) {
-      Builder builder = newBuilder();
-      if (scriptStatistics.getEvaluationKind() != null) {
-        builder.setEvaluationKind(scriptStatistics.getEvaluationKind());
-      }
-      if (scriptStatistics.getStackFrames() != null) {
-        builder.setStackFrames(
-            Lists.transform(scriptStatistics.getStackFrames(), ScriptStackFrame.FROM_PB_FUNCTION));
-      }
-      return builder.build();
     }
   }
 
@@ -1342,6 +1530,63 @@ public abstract class JobStatistics implements Serializable {
     private final String name;
     private final Long slotMs;
 
+    private ReservationUsage(Builder builder) {
+      this.name = builder.name;
+      this.slotMs = builder.slotMs;
+    }
+
+    static Builder newBuilder() {
+      return new Builder();
+    }
+
+    static ReservationUsage fromPb(
+        com.google.api.services.bigquery.model.JobStatistics.ReservationUsage usage) {
+      Builder builder = newBuilder();
+      builder.setName(usage.getName());
+      builder.setSlotMs(usage.getSlotMs());
+      return builder.build();
+    }
+
+    // Return mame indicates the utilized reservation name, or "unreserved" for ondemand usage.
+    public String getName() {
+      return name;
+    }
+
+    // Returns slotMs reports the slot milliseconds utilized within in the given reservation.
+    public Long getSlotMs() {
+      return slotMs;
+    }
+
+    ToStringHelper toStringHelper() {
+      return MoreObjects.toStringHelper(this).add("name", name).add("slotMs", slotMs);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(name, slotMs);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      return obj == this
+          || obj != null
+              && obj.getClass().equals(ReservationUsage.class)
+              && Objects.equals(toPb(), ((ReservationUsage) obj).toPb());
+    }
+
+    @Override
+    public String toString() {
+      return toStringHelper().toString();
+    }
+
+    com.google.api.services.bigquery.model.JobStatistics.ReservationUsage toPb() {
+      com.google.api.services.bigquery.model.JobStatistics.ReservationUsage usage =
+          new com.google.api.services.bigquery.model.JobStatistics.ReservationUsage();
+      usage.setName(name);
+      usage.setSlotMs(slotMs);
+      return usage;
+    }
+
     public static class Builder {
 
       private String name;
@@ -1363,63 +1608,6 @@ public abstract class JobStatistics implements Serializable {
         return new ReservationUsage(this);
       }
     }
-
-    private ReservationUsage(Builder builder) {
-      this.name = builder.name;
-      this.slotMs = builder.slotMs;
-    }
-
-    // Return mame indicates the utilized reservation name, or "unreserved" for ondemand usage.
-    public String getName() {
-      return name;
-    }
-
-    // Returns slotMs reports the slot milliseconds utilized within in the given reservation.
-    public Long getSlotMs() {
-      return slotMs;
-    }
-
-    static Builder newBuilder() {
-      return new Builder();
-    }
-
-    ToStringHelper toStringHelper() {
-      return MoreObjects.toStringHelper(this).add("name", name).add("slotMs", slotMs);
-    }
-
-    @Override
-    public String toString() {
-      return toStringHelper().toString();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      return obj == this
-          || obj != null
-              && obj.getClass().equals(ReservationUsage.class)
-              && Objects.equals(toPb(), ((ReservationUsage) obj).toPb());
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(name, slotMs);
-    }
-
-    com.google.api.services.bigquery.model.JobStatistics.ReservationUsage toPb() {
-      com.google.api.services.bigquery.model.JobStatistics.ReservationUsage usage =
-          new com.google.api.services.bigquery.model.JobStatistics.ReservationUsage();
-      usage.setName(name);
-      usage.setSlotMs(slotMs);
-      return usage;
-    }
-
-    static ReservationUsage fromPb(
-        com.google.api.services.bigquery.model.JobStatistics.ReservationUsage usage) {
-      Builder builder = newBuilder();
-      builder.setName(usage.getName());
-      builder.setSlotMs(usage.getSlotMs());
-      return builder.build();
-    }
   }
 
   // TransactionInfo contains information about a multi-statement transaction that may have
@@ -1428,6 +1616,54 @@ public abstract class JobStatistics implements Serializable {
 
     // TransactionID is the system-generated identifier for the transaction.
     private final String transactionId;
+
+    private TransactionInfo(Builder builder) {
+      this.transactionId = builder.transactionId;
+    }
+
+    static Builder newbuilder() {
+      return new Builder();
+    }
+
+    static TransactionInfo fromPb(
+        com.google.api.services.bigquery.model.TransactionInfo transactionInfo) {
+      Builder builder = newbuilder();
+      builder.setTransactionId(transactionInfo.getTransactionId());
+      return builder.build();
+    }
+
+    public String getTransactionId() {
+      return transactionId;
+    }
+
+    ToStringHelper toStringHelper() {
+      return MoreObjects.toStringHelper(this).add("transactionId", transactionId);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(transactionId);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      return obj == this
+          || obj != null
+              && obj.getClass().equals(TransactionInfo.class)
+              && Objects.equals(toPb(), ((TransactionInfo) obj).toPb());
+    }
+
+    @Override
+    public String toString() {
+      return toStringHelper().toString();
+    }
+
+    com.google.api.services.bigquery.model.TransactionInfo toPb() {
+      com.google.api.services.bigquery.model.TransactionInfo transactionInfo =
+          new com.google.api.services.bigquery.model.TransactionInfo();
+      transactionInfo.setTransactionId(transactionId);
+      return transactionInfo;
+    }
 
     public static class Builder {
 
@@ -1444,54 +1680,6 @@ public abstract class JobStatistics implements Serializable {
         return new TransactionInfo(this);
       }
     }
-
-    private TransactionInfo(Builder builder) {
-      this.transactionId = builder.transactionId;
-    }
-
-    public String getTransactionId() {
-      return transactionId;
-    }
-
-    static Builder newbuilder() {
-      return new Builder();
-    }
-
-    ToStringHelper toStringHelper() {
-      return MoreObjects.toStringHelper(this).add("transactionId", transactionId);
-    }
-
-    @Override
-    public String toString() {
-      return toStringHelper().toString();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      return obj == this
-          || obj != null
-              && obj.getClass().equals(TransactionInfo.class)
-              && Objects.equals(toPb(), ((TransactionInfo) obj).toPb());
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(transactionId);
-    }
-
-    com.google.api.services.bigquery.model.TransactionInfo toPb() {
-      com.google.api.services.bigquery.model.TransactionInfo transactionInfo =
-          new com.google.api.services.bigquery.model.TransactionInfo();
-      transactionInfo.setTransactionId(transactionId);
-      return transactionInfo;
-    }
-
-    static TransactionInfo fromPb(
-        com.google.api.services.bigquery.model.TransactionInfo transactionInfo) {
-      Builder builder = newbuilder();
-      builder.setTransactionId(transactionInfo.getTransactionId());
-      return builder.build();
-    }
   }
 
   // SessionInfo contains information about the session if this job is part of one.
@@ -1499,6 +1687,53 @@ public abstract class JobStatistics implements Serializable {
 
     // Id of the session
     private final String sessionId;
+
+    private SessionInfo(Builder builder) {
+      this.sessionId = builder.sessionId;
+    }
+
+    static Builder newBuilder() {
+      return new Builder();
+    }
+
+    static SessionInfo fromPb(com.google.api.services.bigquery.model.SessionInfo sessionInfo) {
+      SessionInfo.Builder builder = newBuilder();
+      builder.setSessionId(sessionInfo.getSessionId());
+      return builder.build();
+    }
+
+    public String getSessionId() {
+      return sessionId;
+    }
+
+    ToStringHelper toStringHelper() {
+      return MoreObjects.toStringHelper(this).add("sessionId", sessionId);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(sessionId);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      return obj == this
+          || obj != null
+              && obj.getClass().equals(SessionInfo.class)
+              && Objects.equals(toPb(), ((SessionInfo) obj).toPb());
+    }
+
+    @Override
+    public String toString() {
+      return toStringHelper().toString();
+    }
+
+    com.google.api.services.bigquery.model.SessionInfo toPb() {
+      com.google.api.services.bigquery.model.SessionInfo sessionInfo =
+          new com.google.api.services.bigquery.model.SessionInfo();
+      sessionInfo.setSessionId(sessionId);
+      return sessionInfo;
+    }
 
     public static class Builder {
 
@@ -1514,53 +1749,6 @@ public abstract class JobStatistics implements Serializable {
       SessionInfo build() {
         return new SessionInfo(this);
       }
-    }
-
-    private SessionInfo(Builder builder) {
-      this.sessionId = builder.sessionId;
-    }
-
-    public String getSessionId() {
-      return sessionId;
-    }
-
-    static Builder newBuilder() {
-      return new Builder();
-    }
-
-    ToStringHelper toStringHelper() {
-      return MoreObjects.toStringHelper(this).add("sessionId", sessionId);
-    }
-
-    @Override
-    public String toString() {
-      return toStringHelper().toString();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      return obj == this
-          || obj != null
-              && obj.getClass().equals(SessionInfo.class)
-              && Objects.equals(toPb(), ((SessionInfo) obj).toPb());
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(sessionId);
-    }
-
-    com.google.api.services.bigquery.model.SessionInfo toPb() {
-      com.google.api.services.bigquery.model.SessionInfo sessionInfo =
-          new com.google.api.services.bigquery.model.SessionInfo();
-      sessionInfo.setSessionId(sessionId);
-      return sessionInfo;
-    }
-
-    static SessionInfo fromPb(com.google.api.services.bigquery.model.SessionInfo sessionInfo) {
-      SessionInfo.Builder builder = newBuilder();
-      builder.setSessionId(sessionInfo.getSessionId());
-      return builder.build();
     }
   }
 
@@ -1629,153 +1817,5 @@ public abstract class JobStatistics implements Serializable {
     }
 
     abstract T build();
-  }
-
-  protected JobStatistics(Builder builder) {
-    this.creationTime = builder.creationTime;
-    this.endTime = builder.endTime;
-    this.startTime = builder.startTime;
-    this.numChildJobs = builder.numChildJobs;
-    this.parentJobId = builder.parentJobId;
-    this.scriptStatistics = builder.scriptStatistics;
-    this.reservationUsage = builder.reservationUsage;
-    this.transactionInfo = builder.transactionInfo;
-    this.sessionInfo = builder.sessionInfo;
-    this.totalSlotMs = builder.totalSlotMs;
-  }
-
-  /** Returns the creation time of the job in milliseconds since epoch. */
-  public Long getCreationTime() {
-    return creationTime;
-  }
-
-  /**
-   * Returns the end time of the job in milliseconds since epoch. Returns {@code null} if the job
-   * has not finished yet.
-   */
-  public Long getEndTime() {
-    return endTime;
-  }
-
-  /**
-   * Returns the start time of the job in milliseconds since epoch. Returns {@code null} if the job
-   * has not started yet.
-   */
-  public Long getStartTime() {
-    return startTime;
-  }
-
-  /** Returns the number of child job executed. */
-  public Long getNumChildJobs() {
-    return numChildJobs;
-  }
-
-  /** Returns the parent job id of child job. */
-  public String getParentJobId() {
-    return parentJobId;
-  }
-
-  /** Returns the statistics for a child job of a script. */
-  public ScriptStatistics getScriptStatistics() {
-    return scriptStatistics;
-  }
-
-  /** ReservationUsage contains information about a job's usage of a single reservation. */
-  public List<ReservationUsage> getReservationUsage() {
-    return reservationUsage;
-  }
-
-  /** Info indicates the transaction ID associated with the job, if any. */
-  public TransactionInfo getTransactionInfo() {
-    return transactionInfo;
-  }
-
-  /** Info of the session if this job is part of one. */
-  public SessionInfo getSessionInfo() {
-    return sessionInfo;
-  }
-
-  /** Returns the slot-milliseconds for the job. */
-  public Long getTotalSlotMs() {
-    return totalSlotMs;
-  }
-
-  ToStringHelper toStringHelper() {
-    return MoreObjects.toStringHelper(this)
-        .add("creationTime", creationTime)
-        .add("endTime", endTime)
-        .add("startTime", startTime)
-        .add("numChildJobs", numChildJobs)
-        .add("parentJobId", parentJobId)
-        .add("scriptStatistics", scriptStatistics)
-        .add("reservationUsage", reservationUsage)
-        .add("transactionInfo", transactionInfo)
-        .add("sessionInfo", sessionInfo)
-        .add("totalSlotMs", totalSlotMs);
-  }
-
-  @Override
-  public String toString() {
-    return toStringHelper().toString();
-  }
-
-  final int baseHashCode() {
-    return Objects.hash(
-        creationTime,
-        endTime,
-        startTime,
-        numChildJobs,
-        parentJobId,
-        scriptStatistics,
-        reservationUsage,
-        transactionInfo,
-        sessionInfo,
-        totalSlotMs);
-  }
-
-  final boolean baseEquals(JobStatistics jobStatistics) {
-    return Objects.equals(toPb(), jobStatistics.toPb());
-  }
-
-  com.google.api.services.bigquery.model.JobStatistics toPb() {
-    com.google.api.services.bigquery.model.JobStatistics statistics =
-        new com.google.api.services.bigquery.model.JobStatistics();
-    statistics.setCreationTime(creationTime);
-    statistics.setEndTime(endTime);
-    statistics.setStartTime(startTime);
-    statistics.setNumChildJobs(numChildJobs);
-    statistics.setParentJobId(parentJobId);
-    statistics.setTotalSlotMs(totalSlotMs);
-    if (scriptStatistics != null) {
-      statistics.setScriptStatistics(scriptStatistics.toPb());
-    }
-    if (reservationUsage != null) {
-      statistics.setReservationUsage(
-          Lists.transform(reservationUsage, ReservationUsage.TO_PB_FUNCTION));
-    }
-    if (transactionInfo != null) {
-      statistics.setTransactionInfo(transactionInfo.toPb());
-    }
-    if (sessionInfo != null) {
-      statistics.setSessionInfo(sessionInfo.toPb());
-    }
-    return statistics;
-  }
-
-  @SuppressWarnings("unchecked")
-  static <T extends JobStatistics> T fromPb(com.google.api.services.bigquery.model.Job jobPb) {
-    JobConfiguration jobConfigPb = jobPb.getConfiguration();
-    com.google.api.services.bigquery.model.JobStatistics statisticPb = jobPb.getStatistics();
-    if (jobConfigPb.getLoad() != null) {
-      return (T) LoadStatistics.fromPb(statisticPb);
-    } else if (jobConfigPb.getExtract() != null) {
-      return (T) ExtractStatistics.fromPb(statisticPb);
-    } else if (jobConfigPb.getQuery() != null) {
-      return (T) QueryStatistics.fromPb(statisticPb);
-    } else if (jobConfigPb.getCopy() != null) {
-      return (T) CopyStatistics.fromPb(statisticPb);
-    } else {
-      throw new IllegalArgumentException("unknown job configuration: " + jobConfigPb);
-    }
   }
 }
