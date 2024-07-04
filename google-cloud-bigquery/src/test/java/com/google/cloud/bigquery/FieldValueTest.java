@@ -20,6 +20,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import com.google.api.client.util.Data;
 import com.google.api.services.bigquery.model.TableCell;
@@ -55,6 +56,9 @@ public class FieldValueTest {
   private static final Map<String, String> BYTES_FIELD = ImmutableMap.of("v", BYTES_BASE64);
   private static final Map<String, String> NULL_FIELD =
       ImmutableMap.of("v", Data.nullOf(String.class));
+
+  private static final Map<String, String> RANGE_FIELD = ImmutableMap.of("v", "[start, end)");
+
   private static final Map<String, Object> REPEATED_FIELD =
       ImmutableMap.<String, Object>of("v", ImmutableList.<Object>of(INTEGER_FIELD, INTEGER_FIELD));
   private static final Map<String, Object> RECORD_FIELD =
@@ -74,12 +78,14 @@ public class FieldValueTest {
     value = FieldValue.fromPb(GEOGRAPHY_FIELD);
     assertEquals(FieldValue.Attribute.PRIMITIVE, value.getAttribute());
     assertEquals("POINT(-122.350220 47.649154)", value.getStringValue());
+    assertEquals("POINT(-122.350220 47.649154)", value.getStringValueOrDefault(null));
     value = FieldValue.fromPb(NUMERIC_FIELD);
     assertEquals(FieldValue.Attribute.PRIMITIVE, value.getAttribute());
     assertEquals(new BigDecimal("123456789.123456789"), value.getNumericValue());
     value = FieldValue.fromPb(STRING_FIELD);
     assertEquals(FieldValue.Attribute.PRIMITIVE, value.getAttribute());
     assertEquals("string", value.getStringValue());
+    assertEquals("string", value.getStringValueOrDefault(null));
     value = FieldValue.fromPb(TIMESTAMP_FIELD);
     assertEquals(FieldValue.Attribute.PRIMITIVE, value.getAttribute());
     assertEquals(42000000, value.getTimestampValue());
@@ -89,16 +95,21 @@ public class FieldValueTest {
         PeriodDuration.of(Period.of(3, 2, 1), Duration.parse("PT12H34M56.789S"));
     assertEquals(periodDuration, value.getPeriodDuration());
     assertEquals("P3Y2M1DT12H34M56.789S", value.getStringValue());
+    assertEquals("P3Y2M1DT12H34M56.789S", value.getStringValueOrDefault(null));
     value = FieldValue.fromPb(INTERVAL_FIELD_2);
     assertEquals(FieldValue.Attribute.PRIMITIVE, value.getAttribute());
     periodDuration = PeriodDuration.of(Period.of(3, 2, 1), Duration.parse("PT12H34M56.789S"));
     assertEquals(periodDuration, value.getPeriodDuration());
     assertEquals("3-2 1 12:34:56.789", value.getStringValue());
+    assertEquals("3-2 1 12:34:56.789", value.getStringValueOrDefault(null));
     value = FieldValue.fromPb(BYTES_FIELD);
     assertEquals(FieldValue.Attribute.PRIMITIVE, value.getAttribute());
     assertArrayEquals(BYTES, value.getBytesValue());
     value = FieldValue.fromPb(NULL_FIELD);
     assertNull(value.getValue());
+    value = FieldValue.fromPb(RANGE_FIELD);
+    assertEquals(FieldValue.Attribute.PRIMITIVE, value.getAttribute());
+    assertEquals(Range.of(RANGE_FIELD.get("v")), value.getRangeValue());
     value = FieldValue.fromPb(REPEATED_FIELD);
     assertEquals(FieldValue.Attribute.REPEATED, value.getAttribute());
     assertEquals(FieldValue.fromPb(INTEGER_FIELD), value.getRepeatedValue().get(0));
@@ -107,6 +118,10 @@ public class FieldValueTest {
     assertEquals(FieldValue.Attribute.RECORD, value.getAttribute());
     assertEquals(FieldValue.fromPb(FLOAT_FIELD), value.getRepeatedValue().get(0));
     assertEquals(FieldValue.fromPb(TIMESTAMP_FIELD), value.getRepeatedValue().get(1));
+    value = FieldValue.fromPb(NULL_FIELD);
+    assertTrue(value.isNull());
+    assertEquals(null, value.getStringValueOrDefault(null));
+    assertEquals("defaultValue", value.getStringValueOrDefault("defaultValue"));
   }
 
   @Test
@@ -155,6 +170,10 @@ public class FieldValueTest {
     FieldValue nullValue = FieldValue.of(FieldValue.Attribute.PRIMITIVE, null);
     assertEquals(nullValue, FieldValue.fromPb(NULL_FIELD));
     assertEquals(nullValue.hashCode(), FieldValue.fromPb(NULL_FIELD).hashCode());
+
+    FieldValue rangeValue = FieldValue.of(FieldValue.Attribute.PRIMITIVE, "[start, end)");
+    assertEquals(rangeValue, FieldValue.fromPb(RANGE_FIELD));
+    assertEquals(rangeValue.hashCode(), FieldValue.fromPb(RANGE_FIELD).hashCode());
 
     FieldValue repeatedValue =
         FieldValue.of(FieldValue.Attribute.REPEATED, ImmutableList.of(integerValue, integerValue));
