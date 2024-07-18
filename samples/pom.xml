@@ -47,7 +47,6 @@
     <module>install-without-bom</module>
     <module>snapshot</module>
     <module>snippets</module>
-    <module>native-image-sample</module>
   </modules>
 
   <build>
@@ -63,7 +62,7 @@
       <plugin>
         <groupId>org.sonatype.plugins</groupId>
         <artifactId>nexus-staging-maven-plugin</artifactId>
-        <version>1.6.13</version>
+        <version>1.7.0</version>
         <configuration>
           <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
         </configuration>

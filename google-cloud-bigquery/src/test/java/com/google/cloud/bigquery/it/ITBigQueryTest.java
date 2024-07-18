@@ -586,6 +586,8 @@ public class ITBigQueryTest {
       RangePartitioning.newBuilder().setField("IntegerField").setRange(RANGE).build();
   private static final String LOAD_FILE = "load.csv";
   private static final String LOAD_FILE_LARGE = "load_large.csv";
+
+  private static final String LOAD_FILE_FLEXIBLE_COLUMN_NAME = "load_flexible_column_name.csv";
   private static final String JSON_LOAD_FILE = "load.json";
   private static final String JSON_LOAD_FILE_BQ_RESULTSET = "load_bq_resultset.json";
   private static final String JSON_LOAD_FILE_SIMPLE = "load_simple.json";
@@ -601,6 +603,7 @@ public class ITBigQueryTest {
   private static final TableId TABLE_ID_FASTQUERY_BQ_RESULTSET =
       TableId.of(DATASET, "fastquery_testing_bq_resultset");
   private static final String CSV_CONTENT = "StringValue1\nStringValue2\n";
+  private static final String CSV_CONTENT_FLEXIBLE_COLUMN = "name,&ampersand\nrow_name,1";
 
   private static final String JSON_CONTENT =
       "{"
@@ -1019,6 +1022,11 @@ public class ITBigQueryTest {
     storage.create(
         BlobInfo.newBuilder(BUCKET, LOAD_FILE).setContentType("text/plain").build(),
         CSV_CONTENT.getBytes(StandardCharsets.UTF_8));
+    storage.create(
+        BlobInfo.newBuilder(BUCKET, LOAD_FILE_FLEXIBLE_COLUMN_NAME)
+            .setContentType("text/plain")
+            .build(),
+        CSV_CONTENT_FLEXIBLE_COLUMN.getBytes(StandardCharsets.UTF_8));
     storage.create(
         BlobInfo.newBuilder(BUCKET, JSON_LOAD_FILE).setContentType("application/json").build(),
         JSON_CONTENT.getBytes(StandardCharsets.UTF_8));
@@ -1893,6 +1901,41 @@ public class ITBigQueryTest {
         partitioning, remoteTable.<StandardTableDefinition>getDefinition().getTimePartitioning());
     assertEquals(clustering, remoteTable.<StandardTableDefinition>getDefinition().getClustering());
     assertTrue(remoteTable.delete());
+  }
+
+  @Test
+  public void testCreateAndListTable() {
+    String tableName = "test_create_and_list_table";
+    TableId tableId = TableId.of(DATASET, tableName);
+    TimePartitioning partitioning = TimePartitioning.of(Type.DAY);
+    Clustering clustering =
+        Clustering.newBuilder().setFields(ImmutableList.of(STRING_FIELD_SCHEMA.getName())).build();
+    StandardTableDefinition tableDefinition =
+        StandardTableDefinition.newBuilder()
+            .setSchema(TABLE_SCHEMA)
+            .setTimePartitioning(partitioning)
+            .setClustering(clustering)
+            .build();
+    Table createdTable = bigquery.create(TableInfo.of(tableId, tableDefinition));
+    assertNotNull(createdTable);
+    assertEquals(DATASET, createdTable.getTableId().getDataset());
+    assertEquals(tableName, createdTable.getTableId().getTable());
+
+    Page<Table> tables = bigquery.listTables(DATASET);
+    boolean found = false;
+    Iterator<Table> tableIterator = tables.getValues().iterator();
+    // Find createdTable and validate the table definition.
+    while (tableIterator.hasNext() && !found) {
+      Table table = tableIterator.next();
+      if (table.getTableId().equals(createdTable.getTableId())) {
+        StandardTableDefinition definition = table.getDefinition();
+        assertThat(definition.getClustering()).isNotNull();
+        assertThat(definition.getTimePartitioning()).isNotNull();
+        found = true;
+      }
+    }
+    assertTrue(found);
+    assertTrue(createdTable.delete());
   }
 
   @Test
@@ -2807,7 +2850,7 @@ public class ITBigQueryTest {
             + "`"
             + "OPTIONS ( "
             + "model_type='linear_reg', "
-            + "max_iteration=1, "
+            + "max_iterations=1, "
             + "learn_rate=0.4, "
             + "learn_rate_strategy='constant' "
             + ") AS ( "
@@ -4214,26 +4257,11 @@ public class ITBigQueryTest {
     TableResult result = bigquery.query(dmlConfig);
     assertNotNull(result.getJobId());
     assertEquals(TABLE_SCHEMA, result.getSchema());
-    assertEquals(2, result.getTotalRows());
-    // Verify correctness of table content
-    String sqlQuery = String.format("SELECT * FROM %s.%s", DATASET, tableName);
-    QueryJobConfiguration sqlConfig = QueryJobConfiguration.newBuilder(sqlQuery).build();
-    TableResult resultAfterDML = bigquery.query(sqlConfig);
-    assertNotNull(resultAfterDML.getJobId());
-    for (FieldValueList row : resultAfterDML.getValues()) {
-      FieldValue timestampCell = row.get(0);
-      assertEquals(timestampCell, row.get("TimestampField"));
-      FieldValue stringCell = row.get(1);
-      assertEquals(stringCell, row.get("StringField"));
-      FieldValue booleanCell = row.get(3);
-      assertEquals(booleanCell, row.get("BooleanField"));
-      assertEquals(FieldValue.Attribute.PRIMITIVE, timestampCell.getAttribute());
-      assertEquals(FieldValue.Attribute.PRIMITIVE, stringCell.getAttribute());
-      assertEquals(FieldValue.Attribute.PRIMITIVE, booleanCell.getAttribute());
-      assertEquals(1408452095220000L, timestampCell.getTimestampValue());
-      assertEquals("hello", stringCell.getStringValue());
-      assertEquals(false, booleanCell.getBooleanValue());
-    }
+    // Using the job reference on the TableResult, lookup and verify DML statistics.
+    Job queryJob = bigquery.getJob(result.getJobId());
+    JobStatistics.QueryStatistics statistics = queryJob.getStatistics();
+    assertEquals(2L, statistics.getNumDmlAffectedRows().longValue());
+    assertEquals(2L, statistics.getDmlStats().getUpdatedRowCount().longValue());
   }
 
   @Test
@@ -5735,7 +5763,7 @@ public class ITBigQueryTest {
             + "`"
             + "OPTIONS ( "
             + "model_type='linear_reg', "
-            + "max_iteration=1, "
+            + "max_iterations=1, "
             + "learn_rate=0.4, "
             + "learn_rate_strategy='constant' "
             + ") AS ( "
@@ -6625,7 +6653,7 @@ public class ITBigQueryTest {
   }
 
   private TableResult executeSimpleQuery(BigQuery bigQuery) throws InterruptedException {
-    String query = "SELECT 1 as one";
+    String query = "SELECT CURRENT_TIMESTAMP() as ts";
     QueryJobConfiguration config = QueryJobConfiguration.newBuilder(query).build();
     TableResult result = bigQuery.query(config);
     return result;
@@ -6833,6 +6861,32 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testExternalMetadataCacheModeFailForNonBiglake() {
+    // Validate that MetadataCacheMode is passed to the backend.
+    // TODO: Enhance this test after BigLake testing infrastructure is inplace.
+    String tableName = "test_metadata_cache_mode_fail_for_non_biglake";
+    TableId tableId = TableId.of(DATASET, tableName);
+    ExternalTableDefinition externalTableDefinition =
+        ExternalTableDefinition.newBuilder(
+                "gs://" + BUCKET + "/" + JSON_LOAD_FILE, TABLE_SCHEMA, FormatOptions.json())
+            .setMetadataCacheMode("AUTOMATIC")
+            .build();
+    TableInfo tableInfo = TableInfo.of(tableId, externalTableDefinition);
+
+    try {
+      bigquery.create(tableInfo);
+      fail("BigQueryException was expected");
+    } catch (BigQueryException e) {
+      BigQueryError error = e.getError();
+      assertNotNull(error);
+      assertEquals("invalid", error.getReason());
+      assertThat(
+              e.getMessage().contains("metadataCacheMode provided for non BigLake external table"))
+          .isTrue();
+    }
+  }
+
+  @Test
   public void testObjectTable() throws InterruptedException {
     String tableName = "test_object_table";
     TableId tableId = TableId.of(DATASET, tableName);
@@ -6907,5 +6961,82 @@ public class ITBigQueryTest {
     assertNotNull(queryStatistics.getExportDataStats());
     assertEquals(1L, queryStatistics.getExportDataStats().getFileCount().longValue());
     assertEquals(3L, queryStatistics.getExportDataStats().getRowCount().longValue());
+  }
+
+  @Test
+  public void testLoadConfigurationFlexibleColumnName() throws InterruptedException {
+    // See https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#columnnamecharactermap for
+    // mapping.
+
+    // Test v1 mapping.
+    String v1TableName = "flexible_column_name_data_testing_table_v1";
+    TableId v1TableId = TableId.of(DATASET, v1TableName);
+    try {
+      LoadJobConfiguration loadJobConfigurationV1 =
+          LoadJobConfiguration.newBuilder(
+                  v1TableId,
+                  "gs://" + BUCKET + "/" + LOAD_FILE_FLEXIBLE_COLUMN_NAME,
+                  FormatOptions.csv())
+              .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
+              .setAutodetect(true)
+              .setColumnNameCharacterMap("V1")
+              .build();
+      Job jobV1 = bigquery.create(JobInfo.of(loadJobConfigurationV1));
+      jobV1 = jobV1.waitFor();
+      assertNull(jobV1.getStatus().getError());
+
+      Table remoteTableV1 = bigquery.getTable(DATASET, v1TableName);
+      assertNotNull(remoteTableV1);
+      assertEquals(
+          "_ampersand", remoteTableV1.getDefinition().getSchema().getFields().get(1).getName());
+    } finally {
+      bigquery.delete(v1TableId);
+    }
+
+    // Test v2 mapping.
+    String v2TableName = "flexible_column_name_data_testing_table_v2";
+    TableId v2TableId = TableId.of(DATASET, v2TableName);
+    try {
+      LoadJobConfiguration loadJobConfigurationV2 =
+          LoadJobConfiguration.newBuilder(
+                  v2TableId,
+                  "gs://" + BUCKET + "/" + LOAD_FILE_FLEXIBLE_COLUMN_NAME,
+                  FormatOptions.csv())
+              .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
+              .setAutodetect(true)
+              .setColumnNameCharacterMap("V2")
+              .build();
+      Job jobV2 = bigquery.create(JobInfo.of(loadJobConfigurationV2));
+      jobV2 = jobV2.waitFor();
+      assertNull(jobV2.getStatus().getError());
+
+      Table remoteTableV2 = bigquery.getTable(DATASET, v2TableName);
+      assertNotNull(remoteTableV2);
+      assertEquals(
+          "&ampersand", remoteTableV2.getDefinition().getSchema().getFields().get(1).getName());
+    } finally {
+      bigquery.delete(v2TableId);
+    }
+  }
+
+  @Test
+  public void testStatementType() throws InterruptedException {
+    String tableName = "test_materialized_view_table_statemnt_type";
+    String createQuery =
+        String.format(
+            "CREATE MATERIALIZED VIEW %s.%s.%s "
+                + "AS (SELECT MAX(TimestampField) AS TimestampField,StringField, MAX(BooleanField) AS BooleanField FROM %s.%s.%s GROUP BY StringField)",
+            PROJECT_ID, DATASET, tableName, PROJECT_ID, DATASET, TABLE_ID.getTable());
+    TableResult result = bigquery.query(QueryJobConfiguration.of(createQuery));
+    assertNotNull(result);
+    Job job = bigquery.getJob(result.getJobId());
+    JobStatistics.QueryStatistics stats = job.getStatistics();
+    assertEquals(StatementType.CREATE_MATERIALIZED_VIEW, stats.getStatementType());
+
+    // cleanup
+    Table remoteTable = bigquery.getTable(DATASET, tableName);
+    assertNotNull(remoteTable);
+    assertTrue(remoteTable.getDefinition() instanceof MaterializedViewDefinition);
+    assertTrue(remoteTable.delete());
   }
 }
