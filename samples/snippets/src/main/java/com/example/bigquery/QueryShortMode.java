@@ -24,7 +24,7 @@ import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.TableResult;
 
-// Sample to run query total rows
+// Sample demonstrating short mode query execution.
 public class QueryShortMode {
 
   public static void main(String[] args) {
@@ -37,8 +37,7 @@ public class QueryShortMode {
   public static void queryShortMode(String query) {
     try {
       // Initialize client that will be used to send requests. This client only needs
-      // to be created
-      // once, and can be reused for multiple requests.
+      // to be created once, and can be reused for multiple requests.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
       // Execute the query. The returned TableResult provides access information
