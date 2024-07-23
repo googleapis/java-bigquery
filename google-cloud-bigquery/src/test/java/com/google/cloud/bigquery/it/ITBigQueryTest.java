@@ -3233,7 +3233,6 @@ public class ITBigQueryTest {
             .setDefaultDataset(DatasetId.of(DATASET))
             .setUseQueryCache(false)
             .build();
-
     Job job = bigquery.create(JobInfo.of(JobId.of(), config));
     job = job.waitFor();
 
