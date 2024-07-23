@@ -54,9 +54,11 @@ import com.google.cloud.bigquery.BigQuery.TableMetadataView;
 import com.google.cloud.bigquery.BigQuery.TableOption;
 import com.google.cloud.bigquery.BigQueryDryRunResult;
 import com.google.cloud.bigquery.BigQueryError;
+import com.google.cloud.bigquery.BigQueryErrorMessages;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.BigQueryResult;
+import com.google.cloud.bigquery.BigQueryRetryConfig;
 import com.google.cloud.bigquery.BigQuerySQLException;
 import com.google.cloud.bigquery.CloneDefinition;
 import com.google.cloud.bigquery.Clustering;
@@ -3225,13 +3227,21 @@ public class ITBigQueryTest {
   @Test
   public void testQueryStatistics() throws InterruptedException {
     // Use CURRENT_TIMESTAMP to avoid potential caching.
+    // TODO(NOW)
     String query = "SELECT CURRENT_TIMESTAMP() AS ts";
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query)
             .setDefaultDataset(DatasetId.of(DATASET))
             .setUseQueryCache(false)
             .build();
-    Job job = bigquery.create(JobInfo.of(JobId.of(), config));
+
+    BigQueryRetryConfig retryConfig =
+        BigQueryRetryConfig.newBuilder()
+            .retryOnMessage(BigQueryErrorMessages.RATE_LIMIT_EXCEEDED_MSG)
+            .build(); // retry config with Error Message for RateLimitExceeded Error
+    Job job =
+        bigquery.create(
+            JobInfo.of(JobId.of(), config), BigQuery.JobOption.bigQueryRetryConfig(retryConfig));
     job = job.waitFor();
 
     JobStatistics.QueryStatistics statistics = job.getStatistics();

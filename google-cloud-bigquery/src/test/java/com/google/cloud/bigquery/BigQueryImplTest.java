@@ -52,6 +52,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryImplTest {
+  // TODO(NOW)
 
   private static final String PROJECT = "project";
   private static final String LOCATION = "US";
@@ -2297,6 +2298,8 @@ public class BigQueryImplTest {
     assertEquals(null, response.getSchema());
     verify(bigqueryRpcMock).getQueryResults(PROJECT, JOB, null, EMPTY_RPC_OPTIONS);
   }
+
+  // TODO(NOW)
 
   @Test
   public void testGetQueryResultsRetry() {
