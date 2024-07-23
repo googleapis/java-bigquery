@@ -54,7 +54,6 @@ import com.google.cloud.bigquery.BigQuery.TableMetadataView;
 import com.google.cloud.bigquery.BigQuery.TableOption;
 import com.google.cloud.bigquery.BigQueryDryRunResult;
 import com.google.cloud.bigquery.BigQueryError;
-import com.google.cloud.bigquery.BigQueryErrorMessages;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.BigQueryResult;
