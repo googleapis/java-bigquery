@@ -27,6 +27,7 @@ import com.google.api.gax.paging.Page;
 import com.google.api.services.bigquery.model.*;
 import com.google.api.services.bigquery.model.JobStatistics;
 import com.google.cloud.Policy;
+import com.google.cloud.RetryOption;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.BigQuery.JobOption;
@@ -52,8 +53,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryImplTest {
-  // TODO(NOW)
-
   private static final String PROJECT = "project";
   private static final String LOCATION = "US";
   private static final String OTHER_PROJECT = "otherProject";
@@ -1596,6 +1595,115 @@ public class BigQueryImplTest {
   }
 
   @Test
+  public void testCreateJobWithBigQueryRetryConfigFailureShouldRetry() {
+    // Validate create job with BigQueryRetryConfig that retries on rate limit error message.
+    JobOption bigQueryRetryConfigOption = JobOption.bigQueryRetryConfig(BigQueryRetryConfig.newBuilder()
+        .retryOnMessage(BigQueryErrorMessages.RATE_LIMIT_EXCEEDED_MSG)
+        .retryOnMessage(BigQueryErrorMessages.JOB_RATE_LIMIT_EXCEEDED_MSG)
+        .retryOnRegEx(BigQueryErrorMessages.RetryRegExPatterns.RATE_LIMIT_EXCEEDED_REGEX)
+        .build());
+
+    Map<BigQueryRpc.Option, ?> bigQueryRpcOptions = optionMap(bigQueryRetryConfigOption);
+    when(bigqueryRpcMock.create(jobCapture.capture(), eq(bigQueryRpcOptions)))
+        .thenThrow(
+            new BigQueryException(
+                400, RATE_LIMIT_ERROR_MSG)) // retrial on based on RATE_LIMIT_EXCEEDED_MSG
+        .thenThrow(new BigQueryException(200, RATE_LIMIT_ERROR_MSG))
+        .thenReturn(newJobPb());
+
+    bigquery = options.getService();
+    bigquery =
+        options
+            .toBuilder()
+            .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
+            .build()
+            .getService();
+
+    ((BigQueryImpl) bigquery).create(JobInfo.of(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY), bigQueryRetryConfigOption);
+    verify(bigqueryRpcMock, times(3)).create(jobCapture.capture(), eq(bigQueryRpcOptions));
+  }
+
+  @Test
+  public void testCreateJobWithBigQueryRetryConfigFailureShouldNotRetry() {
+    // Validate create job with BigQueryRetryConfig that does not retry on rate limit error message.
+    JobOption bigQueryRetryConfigOption = JobOption.bigQueryRetryConfig(BigQueryRetryConfig.newBuilder()
+        .build());
+
+    Map<BigQueryRpc.Option, ?> bigQueryRpcOptions = optionMap(bigQueryRetryConfigOption);
+    when(bigqueryRpcMock.create(jobCapture.capture(), eq(bigQueryRpcOptions)))
+        .thenThrow(
+            new BigQueryException(
+                400, RATE_LIMIT_ERROR_MSG));
+
+    bigquery = options.getService();
+    bigquery =
+        options
+            .toBuilder()
+            .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
+            .build()
+            .getService();
+
+    try {
+      ((BigQueryImpl) bigquery).create(JobInfo.of(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY), bigQueryRetryConfigOption);
+      fail("JobException expected");
+    } catch (BigQueryException e) {
+      assertNotNull(e.getMessage());
+    }
+    // Verify that getQueryResults is attempted only once and not retried since the error message
+    // does not match.
+    verify(bigqueryRpcMock, times(1)).create(jobCapture.capture(), eq(bigQueryRpcOptions));
+  }
+
+  @Test
+  public void testCreateJobWithRetryOptionsFailureShouldRetry() {
+    // Validate create job with RetryOptions.
+    JobOption retryOptions = JobOption.retryOptions(RetryOption.maxAttempts(4));
+    Map<BigQueryRpc.Option, ?> bigQueryRpcOptions = optionMap(retryOptions);
+    when(bigqueryRpcMock.create(jobCapture.capture(), eq(bigQueryRpcOptions)))
+        .thenThrow(new BigQueryException(500, "InternalError"))
+        .thenThrow(new BigQueryException(502, "Bad Gateway"))
+        .thenThrow(new BigQueryException(503, "Service Unavailable"))
+        .thenReturn(newJobPb());
+
+    bigquery = options.getService();
+    bigquery =
+        options
+            .toBuilder()
+            .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
+            .build()
+            .getService();
+
+    ((BigQueryImpl) bigquery).create(JobInfo.of(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY), retryOptions);
+    verify(bigqueryRpcMock, times(4)).create(jobCapture.capture(), eq(bigQueryRpcOptions));
+  }
+
+  @Test
+  public void testCreateJobWithRetryOptionsFailureShouldNotRetry() {
+    // Validate create job with RetryOptions that only attempts once (no retry).
+    JobOption retryOptions = JobOption.retryOptions(RetryOption.maxAttempts(1));
+    Map<BigQueryRpc.Option, ?> bigQueryRpcOptions = optionMap(retryOptions);
+    when(bigqueryRpcMock.create(jobCapture.capture(), eq(bigQueryRpcOptions)))
+        .thenThrow(new BigQueryException(500, "InternalError"))
+        .thenReturn(newJobPb());
+
+    bigquery = options.getService();
+    bigquery =
+        options
+            .toBuilder()
+            .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
+            .build()
+            .getService();
+
+    try {
+      ((BigQueryImpl) bigquery).create(JobInfo.of(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY), retryOptions);
+      fail("JobException expected");
+    } catch (BigQueryException e) {
+      assertNotNull(e.getMessage());
+    }
+    verify(bigqueryRpcMock, times(1)).create(jobCapture.capture(), eq(bigQueryRpcOptions));
+  }
+
+  @Test
   public void testCreateJobWithSelectedFields() {
     when(bigqueryRpcMock.create(
             any(com.google.api.services.bigquery.model.Job.class), capturedOptions.capture()))
@@ -2298,8 +2406,6 @@ public class BigQueryImplTest {
     assertEquals(null, response.getSchema());
     verify(bigqueryRpcMock).getQueryResults(PROJECT, JOB, null, EMPTY_RPC_OPTIONS);
   }
-
-  // TODO(NOW)
 
   @Test
   public void testGetQueryResultsRetry() {

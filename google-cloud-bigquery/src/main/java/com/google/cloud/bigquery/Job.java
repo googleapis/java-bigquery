@@ -28,14 +28,12 @@ import com.google.cloud.bigquery.BigQuery.JobOption;
 import com.google.cloud.bigquery.BigQuery.QueryResultsOption;
 import com.google.cloud.bigquery.BigQuery.TableDataListOption;
 import com.google.cloud.bigquery.JobConfiguration.Type;
-import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -243,11 +241,14 @@ public class Job extends JobInfo {
   public Job waitFor(RetryOption... waitOptions) throws InterruptedException {
     return waitForInternal(DEFAULT_RETRY_CONFIG, waitOptions);
   }
-  public Job waitFor(BigQueryRetryConfig bigQueryRetryConfig, RetryOption... waitOptions) throws InterruptedException {
+
+  public Job waitFor(BigQueryRetryConfig bigQueryRetryConfig, RetryOption... waitOptions)
+      throws InterruptedException {
     return waitForInternal(bigQueryRetryConfig, waitOptions);
   }
 
-  private Job waitForInternal(BigQueryRetryConfig bigQueryRetryConfig, RetryOption... waitOptions) throws InterruptedException {
+  private Job waitForInternal(BigQueryRetryConfig bigQueryRetryConfig, RetryOption... waitOptions)
+      throws InterruptedException {
     checkNotDryRun("waitFor");
     Object completedJobResponse;
     if (getConfiguration().getType() == Type.QUERY) {
@@ -264,17 +265,17 @@ public class Job extends JobInfo {
     return completedJobResponse == null ? null : reload();
   }
 
-    /**
-     * Gets the query results of this job. This job must be of type {@code
-     * JobConfiguration.Type.QUERY}, otherwise this method will throw {@link
-     * UnsupportedOperationException}.
-     *
-     * <p>If the job hasn't finished, this method waits for the job to complete. However, the state of
-     * the current {@code Job} instance is not updated. To get the new state, call {@link
-     * #waitFor(RetryOption...)} or {@link #reload(JobOption...)}.
-     *
-     * @throws BigQueryException upon failure
-     */
+  /**
+   * Gets the query results of this job. This job must be of type {@code
+   * JobConfiguration.Type.QUERY}, otherwise this method will throw {@link
+   * UnsupportedOperationException}.
+   *
+   * <p>If the job hasn't finished, this method waits for the job to complete. However, the state of
+   * the current {@code Job} instance is not updated. To get the new state, call {@link
+   * #waitFor(RetryOption...)} or {@link #reload(JobOption...)}.
+   *
+   * @throws BigQueryException upon failure
+   */
   public TableResult getQueryResults(QueryResultsOption... options)
       throws InterruptedException, JobException {
     checkNotDryRun("getQueryResults");
@@ -305,7 +306,9 @@ public class Job extends JobInfo {
 
     QueryResponse response =
         waitForQueryResults(
-            DEFAULT_JOB_WAIT_SETTINGS, DEFAULT_RETRY_CONFIG, waitOptions.toArray(new QueryResultsOption[0]));
+            DEFAULT_JOB_WAIT_SETTINGS,
+            DEFAULT_RETRY_CONFIG,
+            waitOptions.toArray(new QueryResultsOption[0]));
 
     // Get the job resource to determine if it has errored.
     Job job = this;
@@ -345,7 +348,9 @@ public class Job extends JobInfo {
   }
 
   private QueryResponse waitForQueryResults(
-      RetrySettings retrySettings, BigQueryRetryConfig bigQueryRetryConfig, final QueryResultsOption... resultsOptions)
+      RetrySettings retrySettings,
+      BigQueryRetryConfig bigQueryRetryConfig,
+      final QueryResultsOption... resultsOptions)
       throws InterruptedException {
     if (getConfiguration().getType() != Type.QUERY) {
       throw new UnsupportedOperationException(

@@ -136,6 +136,7 @@ import com.google.cloud.bigquery.TimePartitioning;
 import com.google.cloud.bigquery.TimePartitioning.Type;
 import com.google.cloud.bigquery.ViewDefinition;
 import com.google.cloud.bigquery.WriteChannelConfiguration;
+import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
 import com.google.cloud.bigquery.testing.RemoteBigQueryHelper;
 import com.google.cloud.datacatalog.v1.CreatePolicyTagRequest;
 import com.google.cloud.datacatalog.v1.CreateTaxonomyRequest;
@@ -3227,7 +3228,6 @@ public class ITBigQueryTest {
   @Test
   public void testQueryStatistics() throws InterruptedException {
     // Use CURRENT_TIMESTAMP to avoid potential caching.
-    // TODO(NOW)
     String query = "SELECT CURRENT_TIMESTAMP() AS ts";
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query)
@@ -5279,6 +5279,24 @@ public class ITBigQueryTest {
     assertNull(completedJob.getStatus().getError());
     assertTrue(createdTable.delete());
     assertTrue(bigquery.delete(destinationTable));
+  }
+
+  @Test
+  public void testCreateJobAndWaitForWithRetryOptions() throws InterruptedException, TimeoutException {
+    // Note: This only tests the non failure/retry case. For retry cases, see unit tests with mocked RPC calls.
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder("SELECT CURRENT_TIMESTAMP() as ts")
+            .setDefaultDataset(DATASET)
+            .setUseLegacySql(false)
+            .build();
+
+    BigQueryRetryConfig bigQueryRetryConfig = BigQueryRetryConfig.newBuilder().build();
+    JobOption bigQueryRetryConfigOption = JobOption.bigQueryRetryConfig(bigQueryRetryConfig);
+    JobOption retryOptions = JobOption.retryOptions(RetryOption.maxAttempts(1));
+
+    Job job = bigquery.create(JobInfo.of(config), bigQueryRetryConfigOption, retryOptions);
+    job = job.waitFor(bigQueryRetryConfig);
+    assertEquals(DONE, job.getStatus().getState());
   }
 
   @Test

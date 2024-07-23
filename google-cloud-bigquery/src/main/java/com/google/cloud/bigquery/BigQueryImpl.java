@@ -1635,13 +1635,11 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     return optionMap;
   }
 
-  @VisibleForTesting
   static BigQueryRetryConfig getBigQueryRetryConfig(Map<BigQueryRpc.Option, ?> options) {
     return (BigQueryRetryConfig)
         options.getOrDefault(BigQueryRpc.Option.BIGQUERY_RETRY_CONFIG, null);
   }
 
-  @VisibleForTesting
   static RetryOption[] getRetryOptions(Map<BigQueryRpc.Option, ?> options) {
     return (RetryOption[]) options.getOrDefault(BigQueryRpc.Option.RETRY_OPTIONS, null);
   }

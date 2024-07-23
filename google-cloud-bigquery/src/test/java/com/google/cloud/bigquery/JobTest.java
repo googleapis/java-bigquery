@@ -37,14 +37,10 @@ import com.google.api.core.CurrentMillisClock;
 import com.google.api.gax.paging.Page;
 import com.google.api.gax.paging.Pages;
 import com.google.cloud.RetryOption;
-import com.google.cloud.bigquery.BigQuery.QueryResultsOption;
 import com.google.cloud.bigquery.JobStatistics.CopyStatistics;
 import com.google.cloud.bigquery.JobStatistics.QueryStatistics;
 import com.google.cloud.bigquery.JobStatus.State;
 import com.google.common.collect.ImmutableList;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -69,6 +65,10 @@ public class JobTest {
       CopyStatistics.newBuilder().setCreationTimestamp(1L).setEndTime(3L).setStartTime(2L).build();
   private static final CopyJobConfiguration COPY_CONFIGURATION =
       CopyJobConfiguration.of(TABLE_ID1, TABLE_ID2);
+  private static final QueryJobConfiguration DDL_QUERY_CONFIGURATION =
+      QueryJobConfiguration.newBuilder("CREATE VIEW").setDestinationTable(TABLE_ID1).build();
+  private static final QueryJobConfiguration DRL_QUERY_CONFIGURATION =
+      QueryJobConfiguration.newBuilder("SELECT 1").setDestinationTable(TABLE_ID1).build();
   private static final JobInfo JOB_INFO =
       JobInfo.newBuilder(COPY_CONFIGURATION)
           .setJobId(JOB_ID)
@@ -89,7 +89,10 @@ public class JobTest {
         RetryOption.retryDelayMultiplier(1.0)
       };
 
-  private static final BigQueryRetryConfig TEST_BIGQUERY_RETRY_CONFIG = BigQueryRetryConfig.newBuilder().retryOnMessage(BigQueryErrorMessages.RATE_LIMIT_EXCEEDED_MSG).build();
+  private static final BigQueryRetryConfig TEST_BIGQUERY_RETRY_CONFIG =
+      BigQueryRetryConfig.newBuilder()
+          .retryOnMessage(BigQueryErrorMessages.RATE_LIMIT_EXCEEDED_MSG)
+          .build();
 
   @Rule public MockitoRule rule;
 
@@ -197,8 +200,6 @@ public class JobTest {
 
   @Test
   public void testWaitForAndGetQueryResultsEmpty() throws InterruptedException {
-    QueryJobConfiguration jobConfig =
-        QueryJobConfiguration.newBuilder("CREATE VIEW").setDestinationTable(TABLE_ID1).build();
     QueryStatistics jobStatistics =
         QueryStatistics.newBuilder()
             .setCreationTimestamp(1L)
@@ -206,7 +207,7 @@ public class JobTest {
             .setStartTime(2L)
             .build();
     JobInfo jobInfo =
-        JobInfo.newBuilder(jobConfig)
+        JobInfo.newBuilder(DDL_QUERY_CONFIGURATION)
             .setJobId(JOB_ID)
             .setStatistics(jobStatistics)
             .setJobId(JOB_ID)
@@ -234,7 +235,7 @@ public class JobTest {
     when(bigquery.getQueryResults(jobInfo.getJobId(), Job.DEFAULT_QUERY_WAIT_OPTIONS))
         .thenReturn(completedQuery);
     when(bigquery.getJob(JOB_INFO.getJobId())).thenReturn(completedJob);
-    job = this.job.toBuilder().setConfiguration(jobConfig).build();
+    job = this.job.toBuilder().setConfiguration(DDL_QUERY_CONFIGURATION).build();
     assertThat(job.waitFor(TEST_RETRY_OPTIONS)).isSameInstanceAs(completedJob);
     assertThat(job.getQueryResults().iterateAll()).isEmpty();
     verify(bigquery, times(2)).getQueryResults(jobInfo.getJobId(), Job.DEFAULT_QUERY_WAIT_OPTIONS);
@@ -243,8 +244,6 @@ public class JobTest {
 
   @Test
   public void testWaitForAndGetQueryResultsEmptyWithSchema() throws InterruptedException {
-    QueryJobConfiguration jobConfig =
-        QueryJobConfiguration.newBuilder("CREATE VIEW").setDestinationTable(TABLE_ID1).build();
     QueryStatistics jobStatistics =
         QueryStatistics.newBuilder()
             .setCreationTimestamp(1L)
@@ -252,7 +251,7 @@ public class JobTest {
             .setStartTime(2L)
             .build();
     JobInfo jobInfo =
-        JobInfo.newBuilder(jobConfig)
+        JobInfo.newBuilder(DDL_QUERY_CONFIGURATION)
             .setJobId(JOB_ID)
             .setStatistics(jobStatistics)
             .setJobId(JOB_ID)
@@ -280,7 +279,7 @@ public class JobTest {
     when(bigquery.getJob(JOB_INFO.getJobId())).thenReturn(completedJob);
     when(bigquery.getQueryResults(jobInfo.getJobId(), Job.DEFAULT_QUERY_WAIT_OPTIONS))
         .thenReturn(completedQuery);
-    job = this.job.toBuilder().setConfiguration(jobConfig).build();
+    job = this.job.toBuilder().setConfiguration(DDL_QUERY_CONFIGURATION).build();
     assertThat(job.waitFor(TEST_RETRY_OPTIONS)).isSameInstanceAs(completedJob);
     assertThat(job.getQueryResults().getSchema())
         .isEqualTo(Schema.of(Field.of("field1", LegacySQLTypeName.BOOLEAN)));
@@ -290,8 +289,6 @@ public class JobTest {
 
   @Test
   public void testWaitForAndGetQueryResults() throws InterruptedException {
-    QueryJobConfiguration jobConfig =
-        QueryJobConfiguration.newBuilder("SELECT 1").setDestinationTable(TABLE_ID1).build();
     QueryStatistics jobStatistics =
         QueryStatistics.newBuilder()
             .setCreationTimestamp(1L)
@@ -299,7 +296,7 @@ public class JobTest {
             .setStartTime(2L)
             .build();
     JobInfo jobInfo =
-        JobInfo.newBuilder(jobConfig)
+        JobInfo.newBuilder(DRL_QUERY_CONFIGURATION)
             .setJobId(JOB_ID)
             .setStatistics(jobStatistics)
             .setJobId(JOB_ID)
@@ -335,7 +332,7 @@ public class JobTest {
     when(bigquery.getQueryResults(jobInfo.getJobId(), Job.DEFAULT_QUERY_WAIT_OPTIONS))
         .thenReturn(completedQuery);
     when(bigquery.listTableData(eq(TABLE_ID1), any(Schema.class))).thenReturn(result);
-    job = this.job.toBuilder().setConfiguration(jobConfig).build();
+    job = this.job.toBuilder().setConfiguration(DRL_QUERY_CONFIGURATION).build();
     assertThat(job.waitFor(TEST_RETRY_OPTIONS)).isSameInstanceAs(completedJob);
     assertThat(job.getQueryResults().iterateAll()).hasSize(0);
     verify(bigquery, times(2)).getQueryResults(jobInfo.getJobId(), Job.DEFAULT_QUERY_WAIT_OPTIONS);
@@ -413,9 +410,7 @@ public class JobTest {
   }
 
   @Test
-  public void testWaitForBigQueryRetryConfig() throws InterruptedException {
-    QueryJobConfiguration jobConfig =
-        QueryJobConfiguration.newBuilder("SELECT 1").setDestinationTable(TABLE_ID1).build();
+  public void testWaitForWithBigQueryRetryConfig() throws InterruptedException {
     QueryStatistics jobStatistics =
         QueryStatistics.newBuilder()
             .setCreationTimestamp(1L)
@@ -423,7 +418,7 @@ public class JobTest {
             .setStartTime(2L)
             .build();
     JobInfo jobInfo =
-        JobInfo.newBuilder(jobConfig)
+        JobInfo.newBuilder(DRL_QUERY_CONFIGURATION)
             .setJobId(JOB_ID)
             .setStatistics(jobStatistics)
             .setJobId(JOB_ID)
@@ -438,13 +433,6 @@ public class JobTest {
     when(mockOptions.getClock()).thenReturn(CurrentMillisClock.getDefaultClock());
     Job completedJob =
         expectedJob.toBuilder().setStatus(new JobStatus(JobStatus.State.RUNNING)).build();
-    Page<FieldValueList> singlePage = Pages.empty();
-    TableResult result =
-        TableResult.newBuilder()
-            .setSchema(Schema.of())
-            .setTotalRows(1L)
-            .setPageNoSchema(singlePage)
-            .build();
     QueryResponse completedQuery =
         QueryResponse.newBuilder()
             .setCompleted(true)
@@ -453,25 +441,18 @@ public class JobTest {
             .setErrors(ImmutableList.<BigQueryError>of())
             .build();
 
-    // when(bigquery.getQueryResults(jobInfo.getJobId(), Job.DEFAULT_QUERY_WAIT_OPTIONS))
-    //     .thenReturn(completedQuery);
     when(bigquery.getJob(JOB_INFO.getJobId())).thenReturn(completedJob);
     when(bigquery.getQueryResults(jobInfo.getJobId(), Job.DEFAULT_QUERY_WAIT_OPTIONS))
         .thenReturn(completedQuery);
-    // when(bigquery.listTableData(eq(TABLE_ID1), any(Schema.class))).thenReturn(result);
-    job = this.job.toBuilder().setConfiguration(jobConfig).build();
-    assertThat(job.waitFor(TEST_BIGQUERY_RETRY_CONFIG, TEST_RETRY_OPTIONS)).isSameInstanceAs(completedJob);
-    // assertThat(job.getQueryResults().iterateAll()).hasSize(0);
+    job = this.job.toBuilder().setConfiguration(DRL_QUERY_CONFIGURATION).build();
+    assertThat(job.waitFor(TEST_BIGQUERY_RETRY_CONFIG, TEST_RETRY_OPTIONS))
+        .isSameInstanceAs(completedJob);
     verify(bigquery, times(1)).getQueryResults(jobInfo.getJobId(), Job.DEFAULT_QUERY_WAIT_OPTIONS);
     verify(bigquery).getJob(JOB_INFO.getJobId());
   }
 
   @Test
-  public void testWaitForBigQueryRetryConfigRetryError() throws InterruptedException {
-    // TODO(NOW)
-
-    QueryJobConfiguration jobConfig =
-        QueryJobConfiguration.newBuilder("SELECT 1").setDestinationTable(TABLE_ID1).build();
+  public void testWaitForWithBigQueryRetryConfigShouldRetry() throws InterruptedException {
     QueryStatistics jobStatistics =
         QueryStatistics.newBuilder()
             .setCreationTimestamp(1L)
@@ -479,7 +460,7 @@ public class JobTest {
             .setStartTime(2L)
             .build();
     JobInfo jobInfo =
-        JobInfo.newBuilder(jobConfig)
+        JobInfo.newBuilder(DRL_QUERY_CONFIGURATION)
             .setJobId(JOB_ID)
             .setStatistics(jobStatistics)
             .setJobId(JOB_ID)
@@ -494,13 +475,6 @@ public class JobTest {
     when(mockOptions.getClock()).thenReturn(CurrentMillisClock.getDefaultClock());
     Job completedJob =
         expectedJob.toBuilder().setStatus(new JobStatus(JobStatus.State.RUNNING)).build();
-    Page<FieldValueList> singlePage = Pages.empty();
-    TableResult result =
-        TableResult.newBuilder()
-            .setSchema(Schema.of())
-            .setTotalRows(1L)
-            .setPageNoSchema(singlePage)
-            .build();
     QueryResponse completedQuery =
         QueryResponse.newBuilder()
             .setCompleted(true)
@@ -509,28 +483,73 @@ public class JobTest {
             .setErrors(ImmutableList.<BigQueryError>of())
             .build();
 
-
-    // when(bigquery.getQueryResults(jobInfo.getJobId(), Job.DEFAULT_QUERY_WAIT_OPTIONS))
-    //     .thenReturn(completedQuery);
-    // Setup the error message. TODO
     when(bigquery.getJob(JOB_INFO.getJobId())).thenReturn(completedJob);
-    // BigQueryError bigQueryError = new BigQueryError("invalidQuery", "US", "invalidQuery");
-    BigQueryError bigQueryError = new BigQueryError("invalidQuery", "US", "Exceeded rate limits:");
+    BigQueryError bigQueryError =
+        new BigQueryError(
+            "testReasonRateLimitExceeded", "US", "testMessage: Exceeded rate limits:");
 
     ImmutableList<BigQueryError> bigQueryErrorList = ImmutableList.of(bigQueryError);
     BigQueryException bigQueryException = new BigQueryException(bigQueryErrorList);
     when(bigquery.getQueryResults(jobInfo.getJobId(), Job.DEFAULT_QUERY_WAIT_OPTIONS))
-        // .thenReturn(completedQuery)
-        .thenThrow(bigQueryException);
-    when(bigquery.getQueryResults(jobInfo.getJobId(), Job.DEFAULT_QUERY_WAIT_OPTIONS))
+        .thenThrow(bigQueryException)
         .thenReturn(completedQuery);
-        // .thenThrow(bigQueryException);
-    // when(bigquery.listTableData(eq(TABLE_ID1), any(Schema.class))).thenReturn(result);
-    job = this.job.toBuilder().setConfiguration(jobConfig).build();
-    assertThat(job.waitFor(TEST_BIGQUERY_RETRY_CONFIG, TEST_RETRY_OPTIONS)).isSameInstanceAs(completedJob);
-    // assertThat(job.getQueryResults().iterateAll()).hasSize(0);
-    verify(bigquery, times(1)).getQueryResults(jobInfo.getJobId(), Job.DEFAULT_QUERY_WAIT_OPTIONS);
+    job = this.job.toBuilder().setConfiguration(DRL_QUERY_CONFIGURATION).build();
+    assertThat(job.waitFor(TEST_BIGQUERY_RETRY_CONFIG, TEST_RETRY_OPTIONS))
+        .isSameInstanceAs(completedJob);
+    // Verify that getQueryResults is attempted twice. First during bigQueryException with "Exceeded
+    // rate limits" error message and the second successful attempt.
+    verify(bigquery, times(2)).getQueryResults(jobInfo.getJobId(), Job.DEFAULT_QUERY_WAIT_OPTIONS);
     verify(bigquery).getJob(JOB_INFO.getJobId());
+  }
+
+  @Test
+  public void testWaitForWithBigQueryRetryConfigErrorShouldNotRetry() throws InterruptedException {
+    QueryStatistics jobStatistics =
+        QueryStatistics.newBuilder()
+            .setCreationTimestamp(1L)
+            .setEndTime(3L)
+            .setStartTime(2L)
+            .build();
+    JobInfo jobInfo =
+        JobInfo.newBuilder(DRL_QUERY_CONFIGURATION)
+            .setJobId(JOB_ID)
+            .setStatistics(jobStatistics)
+            .setJobId(JOB_ID)
+            .setEtag(ETAG)
+            .setGeneratedId(GENERATED_ID)
+            .setSelfLink(SELF_LINK)
+            .setUserEmail(EMAIL)
+            .setStatus(JOB_STATUS)
+            .build();
+
+    when(bigquery.getOptions()).thenReturn(mockOptions);
+    when(mockOptions.getClock()).thenReturn(CurrentMillisClock.getDefaultClock());
+    QueryResponse completedQuery =
+        QueryResponse.newBuilder()
+            .setCompleted(true)
+            .setTotalRows(1) // Lies to force call of listTableData().
+            .setSchema(Schema.of(Field.of("_f0", LegacySQLTypeName.INTEGER)))
+            .setErrors(ImmutableList.<BigQueryError>of())
+            .build();
+
+    BigQueryError bigQueryError =
+        new BigQueryError("testReasonRateLimitExceeded", "US", "testMessage: do not retry error");
+
+    ImmutableList<BigQueryError> bigQueryErrorList = ImmutableList.of(bigQueryError);
+    BigQueryException bigQueryException = new BigQueryException(bigQueryErrorList);
+    when(bigquery.getQueryResults(jobInfo.getJobId(), Job.DEFAULT_QUERY_WAIT_OPTIONS))
+        .thenThrow(bigQueryException)
+        .thenReturn(completedQuery);
+    job = this.job.toBuilder().setConfiguration(DRL_QUERY_CONFIGURATION).build();
+    try {
+      job.waitFor(TEST_BIGQUERY_RETRY_CONFIG, TEST_RETRY_OPTIONS);
+      fail("JobException expected");
+    } catch (BigQueryException e) {
+      assertNotNull(e.getErrors());
+    }
+    // Verify that getQueryResults is attempted only once and not retried since the error message
+    // does not match.
+    verify(bigquery, times(1)).getQueryResults(jobInfo.getJobId(), Job.DEFAULT_QUERY_WAIT_OPTIONS);
   }
 
   @Test
