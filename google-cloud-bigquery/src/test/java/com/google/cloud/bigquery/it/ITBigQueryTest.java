@@ -3234,13 +3234,7 @@ public class ITBigQueryTest {
             .setUseQueryCache(false)
             .build();
 
-    BigQueryRetryConfig retryConfig =
-        BigQueryRetryConfig.newBuilder()
-            .retryOnMessage(BigQueryErrorMessages.RATE_LIMIT_EXCEEDED_MSG)
-            .build(); // retry config with Error Message for RateLimitExceeded Error
-    Job job =
-        bigquery.create(
-            JobInfo.of(JobId.of(), config), BigQuery.JobOption.bigQueryRetryConfig(retryConfig));
+    Job job = bigquery.create(JobInfo.of(JobId.of(), config));
     job = job.waitFor();
 
     JobStatistics.QueryStatistics statistics = job.getStatistics();
