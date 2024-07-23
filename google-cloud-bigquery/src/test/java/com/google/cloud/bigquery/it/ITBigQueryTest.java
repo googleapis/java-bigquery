@@ -136,7 +136,6 @@ import com.google.cloud.bigquery.TimePartitioning;
 import com.google.cloud.bigquery.TimePartitioning.Type;
 import com.google.cloud.bigquery.ViewDefinition;
 import com.google.cloud.bigquery.WriteChannelConfiguration;
-import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
 import com.google.cloud.bigquery.testing.RemoteBigQueryHelper;
 import com.google.cloud.datacatalog.v1.CreatePolicyTagRequest;
 import com.google.cloud.datacatalog.v1.CreateTaxonomyRequest;
@@ -5282,8 +5281,10 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateJobAndWaitForWithRetryOptions() throws InterruptedException, TimeoutException {
-    // Note: This only tests the non failure/retry case. For retry cases, see unit tests with mocked RPC calls.
+  public void testCreateJobAndWaitForWithRetryOptions()
+      throws InterruptedException, TimeoutException {
+    // Note: This only tests the non failure/retry case. For retry cases, see unit tests with mocked
+    // RPC calls.
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder("SELECT CURRENT_TIMESTAMP() as ts")
             .setDefaultDataset(DATASET)
