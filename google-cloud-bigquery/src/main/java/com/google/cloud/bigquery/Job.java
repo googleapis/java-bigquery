@@ -197,12 +197,20 @@ public class Job extends JobInfo {
     return job == null || JobStatus.State.DONE.equals(job.getStatus().getState());
   }
 
+  /** See {@link #waitFor(BigQueryRetryConfig, RetryOption...)} */
+  public Job waitFor(RetryOption... waitOptions) throws InterruptedException {
+    return waitForInternal(DEFAULT_RETRY_CONFIG, waitOptions);
+  }
+
   /**
    * Blocks until this job completes its execution, either failing or succeeding. This method
    * returns current job's latest information. If the job no longer exists, this method returns
    * {@code null}. By default, the job status is checked using jittered exponential backoff with 1
    * second as an initial delay, 2.0 as a backoff factor, 1 minute as maximum delay between polls,
-   * 12 hours as a total timeout and unlimited number of attempts.
+   * 12 hours as a total timeout and unlimited number of attempts. For query jobs, the job status
+   * check can be configured to retry on specific BigQuery error messages using {@link
+   * BigQueryRetryConfig}. This {@link BigQueryRetryConfig} configuration is not available for
+   * non-query jobs.
    *
    * <p>Example usage of {@code waitFor()}.
    *
@@ -233,15 +241,32 @@ public class Job extends JobInfo {
    * }
    * }</pre>
    *
+   * <p>Example usage of {@code waitFor()} with BigQuery retry configuration to retry on rate limit
+   * exceeded error messages for query jobs.
+   *
+   * <pre>{@code
+   * Job completedJob =
+   *     job.waitFor(
+   *             BigQueryRetryConfig.newBuilder()
+   *                 .retryOnMessage(BigQueryErrorMessages.RATE_LIMIT_EXCEEDED_MSG)
+   *                 .retryOnMessage(BigQueryErrorMessages.JOB_RATE_LIMIT_EXCEEDED_MSG)
+   *                 .retryOnRegEx(BigQueryErrorMessages.RetryRegExPatterns.RATE_LIMIT_EXCEEDED_REGEX)
+   *                 .build());
+   * if (completedJob == null) {
+   *   // job no longer exists
+   * } else if (completedJob.getStatus().getError() != null) {
+   *   // job failed, handle error
+   * } else {
+   *   // job completed successfully
+   * }
+   * }</pre>
+   *
+   * @param bigQueryRetryConfig configures retries for query jobs for BigQuery failures
    * @param waitOptions options to configure checking period and timeout
    * @throws BigQueryException upon failure, check {@link BigQueryException#getCause()} for details
    * @throws InterruptedException if the current thread gets interrupted while waiting for the job
    *     to complete
    */
-  public Job waitFor(RetryOption... waitOptions) throws InterruptedException {
-    return waitForInternal(DEFAULT_RETRY_CONFIG, waitOptions);
-  }
-
   public Job waitFor(BigQueryRetryConfig bigQueryRetryConfig, RetryOption... waitOptions)
       throws InterruptedException {
     return waitForInternal(bigQueryRetryConfig, waitOptions);
