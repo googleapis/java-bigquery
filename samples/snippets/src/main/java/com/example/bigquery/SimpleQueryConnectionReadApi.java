@@ -35,26 +35,28 @@ public class SimpleQueryConnectionReadApi {
   }
 
   public static void simpleQueryConnectionReadApi(String query) {
+
+
     try {
-      // Initialize client that will be used to send requests. This client only needs to be created
-      // once, and can be reused for multiple requests.
+      // Initialize client and create a Connection session.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
+      ConnectionSettings connectionSettings = ConnectionSettings.newBuilder()
+          .setRequestTimeout(10L)
+          .setMaxResults(100L)
+          .setUseQueryCache(true)
+          .build();
+      Connection connection = bigquery.createConnection(connectionSettings);
 
-      // Create the query job.
-      QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query).build();
+      // Execute the query using the Connection session.
+      BigQueryResult bigQueryResult = connection.executeSelect(query);
+      ResultSet resultSet = bigQueryResult.getResultSet();
 
-      // Execute the query.
-      TableResult result = bigquery.query(queryConfig);
-
-      // Print the results.
-      result
-          .iterateAll()
-          .forEach(
-              row -> {
-                System.out.print("corpus:" + row.get("corpus").getStringValue());
-                System.out.print(", count:" + row.get("corpus_count").getLongValue());
-                System.out.println();
-              });
+      while (resultSet.next()) {
+        System.out.print("corpus:" + resultSet.getString("corpus"));
+        System.out.print(", count:" + resultSet.getLong("corpus_count");
+        System.out.println();
+      }
+      resultSet.close();
 
       System.out.println("Query ran successfully");
     } catch (BigQueryException | InterruptedException e) {
