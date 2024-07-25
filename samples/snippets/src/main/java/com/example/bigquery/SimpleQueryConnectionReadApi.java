@@ -19,7 +19,6 @@ package com.example.bigquery;
 // [START bigquery_simple_query_connection_read_api]
 
 import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.BigQueryResult;
 import com.google.cloud.bigquery.Connection;
@@ -38,15 +37,15 @@ public class SimpleQueryConnectionReadApi {
 
   public static void simpleQueryConnectionReadApi(String query) {
 
-
     try {
       // Initialize client and create a Connection session.
       BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
-      ConnectionSettings connectionSettings = ConnectionSettings.newBuilder()
-          .setRequestTimeout(10L)
-          .setMaxResults(100L)
-          .setUseQueryCache(true)
-          .build();
+      ConnectionSettings connectionSettings =
+          ConnectionSettings.newBuilder()
+              .setRequestTimeout(10L)
+              .setMaxResults(100L)
+              .setUseQueryCache(true)
+              .build();
       Connection connection = bigquery.createConnection(connectionSettings);
 
       // Execute the query using the Connection session.
