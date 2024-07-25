@@ -32,9 +32,10 @@ import com.google.cloud.bigquery.TableResult;
 public class QueryShortMode {
 
   public static void main(String[] args) {
-    String query = "SELECT name, gender, SUM(number) AS total FROM "
-        + "bigquery-public-data.usa_names.usa_1910_2013 GROUP BY "
-        + "name, gender ORDER BY total DESC LIMIT 10";
+    String query =
+        "SELECT name, gender, SUM(number) AS total FROM "
+            + "bigquery-public-data.usa_names.usa_1910_2013 GROUP BY "
+            + "name, gender ORDER BY total DESC LIMIT 10";
     queryShortMode(query);
   }
 
