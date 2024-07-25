@@ -21,13 +21,11 @@ package com.example.bigquery;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
-import com.google.cloud.bigquery.ConnectionSettings;
-import com.google.cloud.bigquery.Connection;
 import com.google.cloud.bigquery.BigQueryResult;
-
-import java.sql.SQLException;
+import com.google.cloud.bigquery.Connection;
+import com.google.cloud.bigquery.ConnectionSettings;
 import java.sql.ResultSet;
-
+import java.sql.SQLException;
 
 public class SimpleQueryConnectionReadApi {
 
