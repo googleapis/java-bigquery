@@ -59,8 +59,6 @@ public class SimpleQueryConnectionReadApi {
         System.out.print(", count:" + resultSet.getLong("corpus_count"));
         System.out.println();
       }
-      resultSet.close();
-
       System.out.println("Query ran successfully");
     } catch (SQLException e) {
       System.out.println("Query did not run \n" + e.toString());
