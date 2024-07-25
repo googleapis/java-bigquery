@@ -30,7 +30,6 @@ import java.sql.SQLException;
 public class SimpleQueryConnectionReadApi {
 
   public static void main(String[] args) {
-    // TODO(developer): Replace this query before running the sample.
     String query =
         "SELECT corpus, count(*) as corpus_count "
             + "FROM `bigquery-public-data.samples.shakespeare` GROUP BY corpus;";
