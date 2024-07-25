@@ -21,8 +21,13 @@ package com.example.bigquery;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
-import com.google.cloud.bigquery.QueryJobConfiguration;
-import com.google.cloud.bigquery.TableResult;
+import com.google.cloud.bigquery.ConnectionSettings;
+import com.google.cloud.bigquery.Connection;
+import com.google.cloud.bigquery.BigQueryResult;
+
+import java.sql.SQLException;
+import java.sql.ResultSet;
+
 
 public class SimpleQueryConnectionReadApi {
 
@@ -53,13 +58,13 @@ public class SimpleQueryConnectionReadApi {
 
       while (resultSet.next()) {
         System.out.print("corpus:" + resultSet.getString("corpus"));
-        System.out.print(", count:" + resultSet.getLong("corpus_count");
+        System.out.print(", count:" + resultSet.getLong("corpus_count"));
         System.out.println();
       }
       resultSet.close();
 
       System.out.println("Query ran successfully");
-    } catch (BigQueryException | InterruptedException e) {
+    } catch (SQLException e) {
       System.out.println("Query did not run \n" + e.toString());
     }
   }
