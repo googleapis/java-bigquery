@@ -25,7 +25,7 @@ import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.TableResult;
 
 // Sample demonstrating short mode query execution.
-// 
+//
 // While this feature is still in preview, it is controlled by
 // setting the environment variable QUERY_PREVIEW_ENABLED=TRUE
 // to request short mode execution.
