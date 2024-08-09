@@ -90,7 +90,7 @@ public class RoutineInfo implements Serializable {
     abstract Builder setCreationTime(Long creationMillis);
 
     /** Sets the description for the routine. */
-    abstract Builder setDescription(String description);
+    public abstract Builder setDescription(String description);
 
     abstract Builder setLastModifiedTime(Long lastModifiedMillis);
 
