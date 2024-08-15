@@ -46,7 +46,8 @@ public class CreateIamPolicy {
       Policy policy = bigquery.getIamPolicy(tableId);
       policy
           .toBuilder()
-          .addIdentity(Role.of("roles/bigquery.dataViewer"), Identity.user("example-analyst-group@google.com"))
+          .addIdentity(Role.of("roles/bigquery.dataViewer"),
+              Identity.user("example-analyst-group@google.com"))
           .build();
       bigquery.setIamPolicy(tableId, policy);
       System.out.println("Iam policy created successfully");
