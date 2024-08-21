@@ -384,7 +384,6 @@ public class ConnectionImplTest {
     ConnectionImpl connectionSpy = Mockito.spy(connection);
     com.google.api.services.bigquery.model.Job jobResponseMock =
         new com.google.api.services.bigquery.model.Job()
-            // .setConfiguration(QUERY_JOB.g)
             .setJobReference(QUERY_JOB.toPb())
             .setId(JOB)
             .setStatus(new com.google.api.services.bigquery.model.JobStatus().setState("DONE"));
