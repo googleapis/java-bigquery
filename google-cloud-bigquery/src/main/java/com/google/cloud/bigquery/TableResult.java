@@ -39,7 +39,7 @@ public abstract class TableResult implements Page<FieldValueList>, Serializable 
      * Sets the total number of rows in the complete result set, which can be more than the number
      * of rows in the first page of results returned by {@link #getValues()}.
      */
-    public abstract TableResult.Builder setTotalRows(Long totalRows);
+    public abstract TableResult.Builder setTotalRows(long totalRows);
 
     public abstract TableResult.Builder setJobId(JobId jobId);
 
