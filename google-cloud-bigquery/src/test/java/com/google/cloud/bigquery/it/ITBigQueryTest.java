@@ -28,7 +28,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Ignore;
 
 import com.google.api.client.util.IOUtils;
 import com.google.api.gax.paging.Page;
@@ -194,6 +193,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.Ignore;
 import org.junit.rules.Timeout;
 import org.threeten.bp.Duration;
 import org.threeten.extra.PeriodDuration;
