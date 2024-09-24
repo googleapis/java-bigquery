@@ -3250,6 +3250,7 @@ public class ITBigQueryTest {
   }
 
   @Test
+  @Ignore("https://github.com/googleapis/java-bigquery/issues/3471")
   public void testExecuteSelectWithCredentials() throws SQLException {
     // This test validate that executeSelect uses the same credential provided by the BigQuery
     // object used to create the Connection client.
