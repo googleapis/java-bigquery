@@ -1118,10 +1118,11 @@ public class ITBigQueryTest {
   @AfterClass
   public static void afterClass() throws ExecutionException, InterruptedException {
     if (bigquery != null) {
-      RemoteBigQueryHelper.forceDelete(bigquery, DATASET);
-      RemoteBigQueryHelper.forceDelete(bigquery, UK_DATASET);
-      RemoteBigQueryHelper.forceDelete(bigquery, MODEL_DATASET);
-      RemoteBigQueryHelper.forceDelete(bigquery, ROUTINE_DATASET);
+      // TODO(NOW)
+      // RemoteBigQueryHelper.forceDelete(bigquery, DATASET);
+      // RemoteBigQueryHelper.forceDelete(bigquery, UK_DATASET);
+      // RemoteBigQueryHelper.forceDelete(bigquery, MODEL_DATASET);
+      // RemoteBigQueryHelper.forceDelete(bigquery, ROUTINE_DATASET);
     }
     if (storage != null) {
       boolean wasDeleted = RemoteStorageHelper.forceDelete(storage, BUCKET, 10, TimeUnit.SECONDS);
@@ -2108,17 +2109,22 @@ public class ITBigQueryTest {
 
   @Test
   public void testCreateExternalTable() throws InterruptedException {
+    // TODO(NOW)
     String tableName = "test_create_external_table";
     TableId tableId = TableId.of(DATASET, tableName);
+    System.out.println("CHUONGPH: TableId: " + tableId);
+
     ExternalTableDefinition externalTableDefinition =
         ExternalTableDefinition.of(
-            "gs://" + BUCKET + "/" + JSON_LOAD_FILE, TABLE_SCHEMA, FormatOptions.json());
+            "gs://" + BUCKET + "/" + JSON_LOAD_FILE, TABLE_SCHEMA, FormatOptions.json()).toBuilder().setMaxStaleness("INTERVAL '1' DAY")
+            .build();
     TableInfo tableInfo = TableInfo.of(tableId, externalTableDefinition);
     Table createdTable = bigquery.create(tableInfo);
     assertNotNull(createdTable);
     assertEquals(DATASET, createdTable.getTableId().getDataset());
     assertEquals(tableName, createdTable.getTableId().getTable());
     Table remoteTable = bigquery.getTable(DATASET, tableName);
+    System.out.println("CHUONGPH: " + remoteTable);
     assertNotNull(remoteTable);
     assertTrue(remoteTable.getDefinition() instanceof ExternalTableDefinition);
     assertEquals(createdTable.getTableId(), remoteTable.getTableId());
@@ -2157,7 +2163,7 @@ public class ITBigQueryTest {
       rowCount++;
     }
     assertEquals(4, rowCount);
-    assertTrue(remoteTable.delete());
+    // assertTrue(remoteTable.delete());
   }
 
   @Test
@@ -2271,8 +2277,10 @@ public class ITBigQueryTest {
 
   @Test
   public void testCreateMaterializedViewTable() {
+    // TODO(NOW)
     String tableName = "test_materialized_view_table";
     TableId tableId = TableId.of(DATASET, tableName);
+    System.out.println("CHUONGPH: tableId: " + tableId);
     MaterializedViewDefinition viewDefinition =
         MaterializedViewDefinition.newBuilder(
                 String.format(
@@ -2290,7 +2298,7 @@ public class ITBigQueryTest {
     assertEquals(createdTable.getTableId(), remoteTable.getTableId());
     assertTrue(remoteTable.getDefinition() instanceof MaterializedViewDefinition);
     assertEquals(VIEW_SCHEMA, remoteTable.getDefinition().getSchema());
-    assertTrue(remoteTable.delete());
+    // assertTrue(remoteTable.delete());
   }
 
   @Test
@@ -5411,13 +5419,15 @@ public class ITBigQueryTest {
 
   @Test
   public void testCopyJobStatistics() throws InterruptedException, TimeoutException {
+    // TODO(NOW)
+    System.out.println("CHUONGPH: Dataset: " + DATASET);
     String sourceTableName = "test_copy_job_statistics_source_table";
     String destinationTableName = "test_copy_job_statistics_destination_table";
 
     QueryJobConfiguration createTable =
         QueryJobConfiguration.newBuilder(
                 String.format(
-                    "CREATE TABLE %s AS SELECT num FROM UNNEST(GENERATE_ARRAY(0,5)) as num",
+                    "CREATE TABLE %s AS SELECT num FROM UNNEST(GENERATE_ARRAY(0,5)) as num OPTIONS(max_staleness = INTERVAL 15 MINUTE);",
                     sourceTableName))
             .setDefaultDataset(DatasetId.of(DATASET))
             .setUseLegacySql(false)

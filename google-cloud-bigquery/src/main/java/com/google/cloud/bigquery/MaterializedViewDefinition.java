@@ -134,6 +134,8 @@ public abstract class MaterializedViewDefinition extends TableDefinition {
     Table tablePb = super.toPb();
     com.google.api.services.bigquery.model.MaterializedViewDefinition materializedViewDefinition =
         new com.google.api.services.bigquery.model.MaterializedViewDefinition();
+    // TODO(NOW)
+    materializedViewDefinition.setMaxStaleness("INTERVAL 15 MINUTE");
     if (getQuery() != null) {
       materializedViewDefinition.setQuery(getQuery());
     }
