@@ -320,7 +320,8 @@ public abstract class ExternalTableDefinition extends TableDefinition {
   abstract String getMetadataCacheModeInner();
 
   /**
-   * Returns the maximum staleness of data that could be returned when the table is queried. Staleness encoded as a string encoding of sql IntervalValue type.
+   * Returns the maximum staleness of data that could be returned when the table is queried.
+   * Staleness encoded as a string encoding of sql IntervalValue type.
    *
    * @see <a
    *     href="hhttps://cloud.google.com/bigquery/docs/reference/rest/v2/tables#resource:-table">

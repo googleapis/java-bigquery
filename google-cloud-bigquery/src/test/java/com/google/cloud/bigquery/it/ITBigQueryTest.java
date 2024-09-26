@@ -2113,7 +2113,8 @@ public class ITBigQueryTest {
 
     ExternalTableDefinition externalTableDefinition =
         ExternalTableDefinition.of(
-            "gs://" + BUCKET + "/" + JSON_LOAD_FILE, TABLE_SCHEMA, FormatOptions.json()).toBuilder()
+                "gs://" + BUCKET + "/" + JSON_LOAD_FILE, TABLE_SCHEMA, FormatOptions.json())
+            .toBuilder()
             .setMaxStaleness("INTERVAL 15 MINUTE")
             .build();
     TableInfo tableInfo = TableInfo.of(tableId, externalTableDefinition);

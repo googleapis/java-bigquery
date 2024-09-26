@@ -312,13 +312,14 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       String projectId, String datasetId, String tableId, Map<Option, ?> options) {
     try {
       validateRPC();
-      Table ans = bigquery
-          .tables()
-          .get(projectId, datasetId, tableId)
-          .setPrettyPrint(false)
-          .setFields(Option.FIELDS.getString(options))
-          .setView(getTableMetadataOption(options))
-          .execute();
+      Table ans =
+          bigquery
+              .tables()
+              .get(projectId, datasetId, tableId)
+              .setPrettyPrint(false)
+              .setFields(Option.FIELDS.getString(options))
+              .setView(getTableMetadataOption(options))
+              .execute();
       return ans;
     } catch (IOException ex) {
       BigQueryException serviceException = translate(ex);
