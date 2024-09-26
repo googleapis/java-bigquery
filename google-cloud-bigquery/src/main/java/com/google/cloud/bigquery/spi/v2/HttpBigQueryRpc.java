@@ -188,7 +188,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   @Override
   public Table create(Table table, Map<Option, ?> options) {
     try {
-      System.out.println("CHUONGPH: out going table value: " + table);
       validateRPC();
       // unset the type, as it is output only
       table.setType(null);
@@ -320,7 +319,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
           .setFields(Option.FIELDS.getString(options))
           .setView(getTableMetadataOption(options))
           .execute();
-      System.out.println("CHUONGPH: getTableRPC ans: " + ans);
       return ans;
     } catch (IOException ex) {
       BigQueryException serviceException = translate(ex);

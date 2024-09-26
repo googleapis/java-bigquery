@@ -379,10 +379,10 @@ public abstract class ExternalTableDefinition extends TableDefinition {
   @Override
   com.google.api.services.bigquery.model.Table toPb() {
     Table tablePb = super.toPb();
+    tablePb.setExternalDataConfiguration(toExternalDataConfigurationPb());
     if (getMaxStaleness() != null) {
       tablePb.setMaxStaleness(getMaxStaleness());
     }
-    tablePb.setExternalDataConfiguration(toExternalDataConfigurationPb());
     return tablePb;
   }
 
@@ -594,11 +594,6 @@ public abstract class ExternalTableDefinition extends TableDefinition {
   static ExternalTableDefinition fromPb(Table tablePb) {
     Builder builder = newBuilder().table(tablePb);
 
-    if (tablePb.getMaxStaleness() != null) {
-      // This can be moved to TableDefinition once  maxStaleness available for all table types.
-      builder.setMaxStaleness(tablePb.getMaxStaleness());
-    }
-
     com.google.api.services.bigquery.model.ExternalDataConfiguration externalDataConfiguration =
         tablePb.getExternalDataConfiguration();
     if (externalDataConfiguration != null) {
@@ -652,6 +647,9 @@ public abstract class ExternalTableDefinition extends TableDefinition {
       }
       if (externalDataConfiguration.getMetadataCacheMode() != null) {
         builder.setMetadataCacheMode(externalDataConfiguration.getMetadataCacheMode());
+      }
+      if (tablePb.getMaxStaleness() != null) {
+        builder.setMaxStaleness(tablePb.getMaxStaleness());
       }
     }
     return builder.build();

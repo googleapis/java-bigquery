@@ -803,7 +803,6 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   @Override
   public Table getTable(TableId tableId, TableOption... options) {
-    System.out.println("CHUONGPH: Ran get table");
     // More context about why this:
     // https://github.com/googleapis/google-cloud-java/issues/3808
     final TableId completeTableId =
@@ -831,8 +830,6 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       if (getOptions().getThrowNotFound() && answer == null) {
         throw new BigQueryException(HTTP_NOT_FOUND, "Table not found");
       }
-      // TODO(NOW)
-      System.out.println("CHUONGPH: table: " + answer);
       return answer == null ? null : Table.fromPb(this, answer);
     } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
