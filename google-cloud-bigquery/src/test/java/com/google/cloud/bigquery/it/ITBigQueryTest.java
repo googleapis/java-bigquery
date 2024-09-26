@@ -5421,7 +5421,7 @@ public class ITBigQueryTest {
     QueryJobConfiguration createTable =
         QueryJobConfiguration.newBuilder(
                 String.format(
-                    "CREATE TABLE %s AS SELECT num FROM UNNEST(GENERATE_ARRAY(0,5)) as num OPTIONS(max_staleness = INTERVAL 15 MINUTE);",
+                    "CREATE TABLE %s AS SELECT num FROM UNNEST(GENERATE_ARRAY(0,5)) as num",
                     sourceTableName))
             .setDefaultDataset(DatasetId.of(DATASET))
             .setUseLegacySql(false)
