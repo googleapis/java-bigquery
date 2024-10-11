@@ -39,49 +39,53 @@ public class SimpleApp {
   }
 
   public static void simpleApp(String projectId) {
-    // [START bigquery_simple_app_client]
-    BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
-    // [END bigquery_simple_app_client]
-    // [START bigquery_simple_app_query]
-    QueryJobConfiguration queryConfig =
-        QueryJobConfiguration.newBuilder(
-                "SELECT CONCAT('https://stackoverflow.com/questions/', "
-                    + "CAST(id as STRING)) as url, view_count "
-                    + "FROM `bigquery-public-data.stackoverflow.posts_questions` "
-                    + "WHERE tags like '%google-bigquery%' "
-                    + "ORDER BY view_count DESC "
-                    + "LIMIT 10")
-            // Use standard SQL syntax for queries.
-            // See: https://cloud.google.com/bigquery/sql-reference/
-            .setUseLegacySql(false)
-            .build();
+    try {
+      // [START bigquery_simple_app_client]
+      BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
+      // [END bigquery_simple_app_client]
+      // [START bigquery_simple_app_query]
+      QueryJobConfiguration queryConfig =
+          QueryJobConfiguration.newBuilder(
+                  "SELECT CONCAT('https://stackoverflow.com/questions/', "
+                      + "CAST(id as STRING)) as url, view_count "
+                      + "FROM `bigquery-public-data.stackoverflow.posts_questions` "
+                      + "WHERE tags like '%google-bigquery%' "
+                      + "ORDER BY view_count DESC "
+                      + "LIMIT 10")
+              // Use standard SQL syntax for queries.
+              // See: https://cloud.google.com/bigquery/sql-reference/
+              .setUseLegacySql(false)
+              .build();
 
-    JobId jobId = JobId.newBuilder().setProject(projectId).build();
-    Job queryJob = bigquery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
+      JobId jobId = JobId.newBuilder().setProject(projectId).build();
+      Job queryJob = bigquery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
 
-    // Wait for the query to complete.
-    queryJob = queryJob.waitFor();
+      // Wait for the query to complete.
+      queryJob = queryJob.waitFor();
 
-    // Check for errors
-    if (queryJob == null) {
-      throw new RuntimeException("Job no longer exists");
-    } else if (queryJob.getStatus().getError() != null) {
-      // You can also look at queryJob.getStatus().getExecutionErrors() for all
-      // errors, not just the latest one.
-      throw new RuntimeException(queryJob.getStatus().getError().toString());
-    }
-    // [END bigquery_simple_app_query]
+      // Check for errors
+      if (queryJob == null) {
+        throw new RuntimeException("Job no longer exists");
+      } else if (queryJob.getStatus().getError() != null) {
+        // You can also look at queryJob.getStatus().getExecutionErrors() for all
+        // errors, not just the latest one.
+        throw new RuntimeException(queryJob.getStatus().getError().toString());
+      }
+      // [END bigquery_simple_app_query]
 
-    // [START bigquery_simple_app_print]
-    // Get the results.
-    TableResult result = queryJob.getQueryResults();
+      // [START bigquery_simple_app_print]
+      // Get the results.
+      TableResult result = queryJob.getQueryResults();
 
-    // Print all pages of the results.
-    for (FieldValueList row : result.iterateAll()) {
-      // String type
-      String url = row.get("url").getStringValue();
-      String viewCount = row.get("view_count").getStringValue();
-      System.out.printf("%s : %s views\n", url, viewCount);
+      // Print all pages of the results.
+      for (FieldValueList row : result.iterateAll()) {
+        // String type
+        String url = row.get("url").getStringValue();
+        String viewCount = row.get("view_count").getStringValue();
+        System.out.printf("%s : %s views\n", url, viewCount);
+      }
+    } catch (BigQueryException | InterruptedException e) {
+      System.out.println("Simple App failed due to error: \n" + e.toString());
     }
     // [END bigquery_simple_app_print]
   }
