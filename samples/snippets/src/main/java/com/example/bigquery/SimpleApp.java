@@ -33,6 +33,12 @@ import java.util.UUID;
 
 public class SimpleApp {
   public static void main(String... args) throws Exception {
+    // TODO(developer): Replace these variables before running the app.
+    String projectId = "MY_PROJECT_ID";
+    simpleApp(projectId);
+  }
+
+  public static void simpleApp(String projectId) {
     // [START bigquery_simple_app_client]
     BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
     // [END bigquery_simple_app_client]
@@ -50,8 +56,7 @@ public class SimpleApp {
             .setUseLegacySql(false)
             .build();
 
-    // Create a job ID so that we can safely retry.
-    JobId jobId = JobId.of(UUID.randomUUID().toString());
+    JobId jobId = JobId.newBuilder().setProject(projectId).build();
     Job queryJob = bigquery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
 
     // Wait for the query to complete.
@@ -80,5 +85,4 @@ public class SimpleApp {
     }
     // [END bigquery_simple_app_print]
   }
-}
 // [END bigquery_simple_app_all]

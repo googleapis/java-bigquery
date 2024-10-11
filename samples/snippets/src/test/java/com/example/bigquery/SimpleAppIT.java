@@ -37,6 +37,12 @@ public class SimpleAppIT {
   private ByteArrayOutputStream bout;
   private PrintStream out;
   private PrintStream originalPrintStream;
+  private static final String PROJECT_ID = requireEnvVar("GOOGLE_CLOUD_PROJECT");
+
+  @BeforeClass
+  public static void checkRequirements() {
+    requireEnvVar("GOOGLE_CLOUD_PROJECT");
+  }
 
   @Before
   public void setUp() {
@@ -56,7 +62,7 @@ public class SimpleAppIT {
 
   @Test
   public void testQuickstart() throws Exception {
-    SimpleApp.main();
+    SimpleApp.simpleApp(PROJECT_ID);
     String got = bout.toString();
     assertThat(got).contains("https://stackoverflow.com/questions/");
   }
