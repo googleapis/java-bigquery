@@ -20,6 +20,7 @@ package com.example.bigquery;
 // [START bigquery_simple_app_deps]
 
 import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.Job;
