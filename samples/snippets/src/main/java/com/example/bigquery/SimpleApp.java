@@ -31,6 +31,7 @@ import com.google.cloud.bigquery.TableResult;
 // [END bigquery_simple_app_deps]
 
 public class SimpleApp {
+
   public static void main(String... args) throws Exception {
     // TODO(developer): Replace these variables before running the app.
     String projectId = "MY_PROJECT_ID";
@@ -84,4 +85,5 @@ public class SimpleApp {
     }
     // [END bigquery_simple_app_print]
   }
+}
 // [END bigquery_simple_app_all]
