@@ -41,10 +41,12 @@ public class SimpleAppIT {
   private PrintStream originalPrintStream;
   private static final String PROJECT_ID = requireEnvVar("GOOGLE_CLOUD_PROJECT");
 
-  private static void requireEnvVar(String varName) {
+  private static String requireEnvVar(String varName) {
+    String value = System.getenv(varName);
     assertNotNull(
         "Environment variable " + varName + " is required to perform these tests.",
         System.getenv(varName));
+    return value;
   }
 
   @BeforeClass
