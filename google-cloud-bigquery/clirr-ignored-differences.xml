@@ -129,4 +129,9 @@
     <className>com/google/cloud/bigquery/StandardTableDefinition*</className>
     <method>*BigLakeConfiguration(*)</method>
   </difference>
+  <difference>
+    <differenceType>7005</differenceType>
+    <className>com/google/cloud/bigquery/TableResult*</className>
+    <method>*setTotalRows(*)</method>
+  </difference>
   </differences>
