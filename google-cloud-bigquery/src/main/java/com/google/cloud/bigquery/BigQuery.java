@@ -1490,8 +1490,7 @@ public interface BigQuery extends Service<BigQueryOptions> {
    *
    * <p>Example of running a query.
    *
-   * <pre>
-   * {@code
+   * <pre>{@code
    * // BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
    * String query = "SELECT corpus FROM `bigquery-public-data.samples.shakespeare` GROUP BY corpus;";
    * QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query).build();
