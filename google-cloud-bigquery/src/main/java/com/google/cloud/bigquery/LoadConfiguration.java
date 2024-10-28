@@ -100,18 +100,16 @@ public interface LoadConfiguration {
     Builder setIgnoreUnknownValues(Boolean ignoreUnknownValues);
 
     /**
-     * Sets options allowing the schema of the destination table to be updated as a
-     * side effect of the load job. Schema update options are supported in two cases: when
-     * writeDisposition is WRITE_APPEND; when writeDisposition is WRITE_TRUNCATE and the destination
-     * table is a partition of a table, specified by partition decorators. For normal tables,
-     * WRITE_TRUNCATE will always overwrite the schema.
+     * Sets options allowing the schema of the destination table to be updated as a side effect of
+     * the load job. Schema update options are supported in two cases: when writeDisposition is
+     * WRITE_APPEND; when writeDisposition is WRITE_TRUNCATE and the destination table is a
+     * partition of a table, specified by partition decorators. For normal tables, WRITE_TRUNCATE
+     * will always overwrite the schema.
      */
     @InternalApi
     Builder setSchemaUpdateOptions(List<SchemaUpdateOption> schemaUpdateOptions);
 
-    /**
-     * Sets automatic inference of the options and schema for CSV and JSON sources.
-     */
+    /** Sets automatic inference of the options and schema for CSV and JSON sources. */
     @InternalApi
     Builder setAutodetect(Boolean autodetect);
 
@@ -205,18 +203,17 @@ public interface LoadConfiguration {
   DatastoreBackupOptions getDatastoreBackupOptions();
 
   /**
-   * Returns options allowing the schema of the destination table to be updated as a
-   * side effect of the load job. Schema update options are supported in two cases: when
-   * writeDisposition is WRITE_APPEND; when writeDisposition is WRITE_TRUNCATE and the destination
-   * table is a partition of a table, specified by partition decorators. For normal tables,
-   * WRITE_TRUNCATE will always overwrite the schema.
+   * Returns options allowing the schema of the destination table to be updated as a side effect of
+   * the load job. Schema update options are supported in two cases: when writeDisposition is
+   * WRITE_APPEND; when writeDisposition is WRITE_TRUNCATE and the destination table is a partition
+   * of a table, specified by partition decorators. For normal tables, WRITE_TRUNCATE will always
+   * overwrite the schema.
    */
   @InternalApi
   List<SchemaUpdateOption> getSchemaUpdateOptions();
 
   /**
-   * Returns whether automatic inference of the options and schema for CSV and JSON
-   * sources is set.
+   * Returns whether automatic inference of the options and schema for CSV and JSON sources is set.
    */
   @InternalApi
   Boolean getAutodetect();
