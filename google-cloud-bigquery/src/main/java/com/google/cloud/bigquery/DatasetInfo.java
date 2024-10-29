@@ -144,9 +144,8 @@ public class DatasetInfo implements Serializable {
     public abstract Builder setStorageBillingModel(String storageBillingModel);
 
     /**
-     *
-     * Optional. Amount of time in hours that deleted or updated data will remain accessible
-     * to be queried for all tables in the dataset. Default is 168 hours (7 days).
+     * Optional. Defines the time travel window in hours. The value can be from 48 to 168 hours (2
+     * to 7 days). The default value is 168 hours if this is not set. The value may be {@code null}.
      */
     public abstract Builder setMaxTimeTravelHours(Long maxTimeTravelHours);
 
