@@ -1224,8 +1224,8 @@ public interface BigQuery extends Service<BigQueryOptions> {
   /**
    * Lists the tables in the dataset. This method returns partial information on each table: ({@link
    * Table#getTableId()}, {@link Table#getFriendlyName()}, {@link Table#getGeneratedId()} and type,
-   * which is part of {@link Table#getDefinition()}). To get complete information use either {@link
-   * #getTable(TableId, TableOption...)} or {@link #getTable(String, String, TableOption...)}.
+   * which is part of {@link Table#getDefinition()}). To get complete information use {@link
+   * #getTable}.
    *
    * <p>Example of listing the tables in a dataset.
    *
