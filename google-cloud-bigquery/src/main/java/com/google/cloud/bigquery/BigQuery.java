@@ -244,8 +244,9 @@ public interface BigQuery extends Service<BigQueryOptions> {
     }
 
     /**
-     * Returns an option to specify a label filter. See
-     * https://cloud.google.com/bigquery/docs/adding-using-labels#filtering_datasets_using_labels
+     * Returns an option to specify a label filter. @see <a href=
+     * "https://cloud.google.com/bigquery/docs/adding-using-labels#filtering_datasets_using_labels">Filtering
+     * using labels</a>
      *
      * @param labelFilter In the form "labels.key:value"
      */
@@ -1430,7 +1431,7 @@ public interface BigQuery extends Service<BigQueryOptions> {
   /**
    * Sends a job cancel request. This call will return immediately. The job status can then be
    * checked using either {@link #getJob(JobId, JobOption...)} or {@link #getJob(String,
-   * JobOption...)}).
+   * JobOption...)}.
    *
    * <p>If the location of the job is not "US" or "EU", {@link #cancel(JobId)} must be used instead.
    *
