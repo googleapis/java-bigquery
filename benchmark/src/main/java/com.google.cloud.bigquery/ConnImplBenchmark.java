@@ -81,8 +81,9 @@ public class ConnImplBenchmark {
     TableResult result = bigQuery.query(config);
     long hash = 0L;
     int cnt = 0;
-    System.out.print("\n Running");
+    System.out.println("\n Running");
     // iterate al the records and compute the hash
+    long lastTime = System.currentTimeMillis();
     for (FieldValueList row : result.iterateAll()) {
       hash +=
           row.get("vendor_id").getStringValue() == null
@@ -105,14 +106,6 @@ public class ConnImplBenchmark {
               ? 0
               : row.get("trip_distance").getDoubleValue();
       hash +=
-          row.get("pickup_longitude").getValue() == null
-              ? 0
-              : row.get("pickup_longitude").getDoubleValue();
-      hash +=
-          row.get("pickup_latitude").getValue() == null
-              ? 0
-              : row.get("pickup_latitude").getDoubleValue();
-      hash +=
           row.get("rate_code").getStringValue() == null
               ? 0
               : row.get("rate_code").getStringValue().hashCode();
@@ -125,22 +118,6 @@ public class ConnImplBenchmark {
               ? 0
               : row.get("payment_type").getStringValue().hashCode();
       hash +=
-          row.get("pickup_location_id").getStringValue() == null
-              ? 0
-              : row.get("pickup_location_id").getStringValue().hashCode();
-      hash +=
-          row.get("dropoff_location_id").getStringValue() == null
-              ? 0
-              : row.get("dropoff_location_id").getStringValue().hashCode();
-      hash +=
-          row.get("dropoff_longitude").getValue() == null
-              ? 0
-              : row.get("dropoff_longitude").getDoubleValue();
-      hash +=
-          row.get("dropoff_latitude").getValue() == null
-              ? 0
-              : row.get("dropoff_latitude").getDoubleValue();
-      hash +=
           row.get("fare_amount").getValue() == null ? 0 : row.get("fare_amount").getDoubleValue();
       hash += row.get("extra").getValue() == null ? 0 : row.get("extra").getDoubleValue();
       hash += row.get("mta_tax").getValue() == null ? 0 : row.get("mta_tax").getDoubleValue();
@@ -152,10 +129,31 @@ public class ConnImplBenchmark {
               ? 0
               : row.get("imp_surcharge").getDoubleValue();
       hash +=
+          row.get("airport_fee").getValue() == null ? 0 : row.get("airport_fee").getDoubleValue();
+      hash +=
           row.get("total_amount").getValue() == null ? 0 : row.get("total_amount").getDoubleValue();
+      hash +=
+          row.get("pickup_location_id").getStringValue() == null
+              ? 0
+              : row.get("pickup_location_id").getStringValue().hashCode();
+      hash +=
+          row.get("dropoff_location_id").getStringValue() == null
+              ? 0
+              : row.get("dropoff_location_id").getStringValue().hashCode();
+      hash +=
+          row.get("data_file_year").getValue() == null
+              ? 0
+              : row.get("data_file_year").getLongValue();
+      hash +=
+          row.get("data_file_month").getValue() == null
+              ? 0
+              : row.get("data_file_month").getLongValue();
 
-      if (++cnt % 100000 == 0) { // just to indicate the progress while long running benchmarks
-        System.out.print(".");
+      if (++cnt % 100_000 == 0) { // just to indicate the progress while long running benchmarks
+        long now = System.currentTimeMillis();
+        long duration = now - lastTime;
+        System.out.println("ROW " + cnt + " Time: " + duration + " ms");
+        lastTime = now;
       }
     }
     System.out.println(cnt + " records processed using bigquery.query");
@@ -207,7 +205,9 @@ public class ConnImplBenchmark {
     ResultSet rs = bigQueryResultSet.getResultSet();
     long hash = 0L;
     int cnt = 0;
-    System.out.print("\n Running");
+    System.out.println("\n Running");
+
+    long lastTime = System.currentTimeMillis();
     while (rs.next()) {
       hash += rs.getString("vendor_id") == null ? 0 : rs.getString("vendor_id").hashCode();
       hash +=
@@ -218,15 +218,11 @@ public class ConnImplBenchmark {
               : rs.getString("dropoff_datetime").hashCode();
       hash += rs.getLong("passenger_count");
       hash += rs.getDouble("trip_distance");
-      hash += rs.getDouble("pickup_longitude");
-      hash += rs.getDouble("pickup_latitude");
       hash += rs.getString("rate_code") == null ? 0 : rs.getString("rate_code").hashCode();
       hash +=
           rs.getString("store_and_fwd_flag") == null
               ? 0
               : rs.getString("store_and_fwd_flag").hashCode();
-      hash += rs.getDouble("dropoff_longitude");
-      hash += rs.getDouble("dropoff_latitude");
       hash += rs.getString("payment_type") == null ? 0 : rs.getString("payment_type").hashCode();
       hash += rs.getDouble("fare_amount");
       hash += rs.getDouble("extra");
@@ -234,6 +230,7 @@ public class ConnImplBenchmark {
       hash += rs.getDouble("tip_amount");
       hash += rs.getDouble("tolls_amount");
       hash += rs.getDouble("imp_surcharge");
+      hash += rs.getDouble("airport_fee");
       hash += rs.getDouble("total_amount");
       hash +=
           rs.getString("pickup_location_id") == null
@@ -243,8 +240,14 @@ public class ConnImplBenchmark {
           rs.getString("dropoff_location_id") == null
               ? 0
               : rs.getString("dropoff_location_id").hashCode();
-      if (++cnt % 100000 == 0) { // just to indicate the progress while long running benchmarks
-        System.out.print(".");
+      hash += rs.getLong("data_file_year");
+      hash += rs.getLong("data_file_month");
+
+      if (++cnt % 100_000 == 0) { // just to indicate the progress while long running benchmarks
+        long now = System.currentTimeMillis();
+        long duration = now - lastTime;
+        System.out.println("ROW " + cnt + " Time: " + duration + " ms");
+        lastTime = now;
       }
     }
     return hash;
