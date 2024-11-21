@@ -19,6 +19,7 @@ package com.google.cloud.bigquery;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -129,6 +130,22 @@ public class FieldValueTest {
     FieldValue fieldValue = FieldValue.of(FieldValue.Attribute.PRIMITIVE, "-1.9954383398377106E10");
     long received = fieldValue.getTimestampValue();
     long expected = -19954383398377106L;
+    assertEquals(expected, received);
+  }
+
+  @Test
+  public void testInt64Timestamp() {
+    FieldValue lossyFieldValue = FieldValue.of(FieldValue.Attribute.PRIMITIVE, "-1.9954383398377106E10");
+    long lossy = lossyFieldValue.getTimestampValue();
+
+    FieldValue losslessFieldValue = FieldValue.of(FieldValue.Attribute.PRIMITIVE, "19954383398377106", true);
+    long lossless = losslessFieldValue.getTimestampValue();
+
+    assertNotEquals(lossy, lossless);
+
+    FieldValue fieldValue = FieldValue.of(FieldValue.Attribute.PRIMITIVE, "19954383398377106", true);
+    long received = fieldValue.getTimestampValue();
+    long expected = 19954383398377106L;
     assertEquals(expected, received);
   }
 

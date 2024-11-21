@@ -560,7 +560,6 @@ public final class QueryJobConfiguration extends JobConfiguration {
       this.useLegacySql = useLegacySql;
       return this;
     }
-
     /**
      * Limits the billing tier for this job. Queries that have resource usage beyond this tier will
      * fail (without incurring a charge). If unspecified, this will be set to your project default.

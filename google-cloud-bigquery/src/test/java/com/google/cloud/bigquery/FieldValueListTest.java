@@ -17,6 +17,7 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.api.client.util.Data;
@@ -72,6 +73,7 @@ public class FieldValueListTest {
   private final FieldValue floatFv = FieldValue.of(Attribute.PRIMITIVE, "1.5");
   private final FieldValue stringFv = FieldValue.of(Attribute.PRIMITIVE, "string");
   private final FieldValue timestampFv = FieldValue.of(Attribute.PRIMITIVE, "42");
+  private final FieldValue losslessTimestampFv = FieldValue.of(Attribute.PRIMITIVE, "42", true);
   private final FieldValue bytesFv = FieldValue.of(Attribute.PRIMITIVE, BYTES_BASE64);
   private final FieldValue nullFv = FieldValue.of(Attribute.PRIMITIVE, null);
   private final FieldValue repeatedFv =
@@ -122,6 +124,8 @@ public class FieldValueListTest {
     assertEquals(fieldValues, FieldValueList.fromPb(fieldValuesPb, schema));
     // Schema does not influence values equality
     assertEquals(fieldValues, FieldValueList.fromPb(fieldValuesPb, null));
+
+    assertNotEquals(fieldValues, FieldValueList.fromPb(fieldValuesPb, null, true));
   }
 
   @Test

@@ -3235,6 +3235,26 @@ public class ITBigQueryTest {
     }
   }
 
+  @Test
+  public void testLosslessTimestamp() throws InterruptedException {
+    String query = "SELECT TIMESTAMP '2022-01-24T23:54:25.095574Z'";
+    long expectedTimestamp = 1643068465095574L;
+
+    bigquery.getOptions().setUseInt64Timestamps(true);
+
+    TableResult resultInteractive =
+        bigquery.query(
+            QueryJobConfiguration.newBuilder(query)
+                .setDefaultDataset(DatasetId.of(DATASET))
+                .build());
+    assertNotNull(resultInteractive.getJobId());
+    for (FieldValueList row : resultInteractive.getValues()) {
+      FieldValue timeStampCell = row.get(0);
+      assertEquals(expectedTimestamp, timeStampCell.getTimestampValue());
+    }
+    bigquery.getOptions().setUseInt64Timestamps(false);
+  }
+
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testQuery() throws InterruptedException {
