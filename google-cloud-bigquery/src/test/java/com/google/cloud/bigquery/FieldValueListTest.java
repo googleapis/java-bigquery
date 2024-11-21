@@ -53,6 +53,12 @@ public class FieldValueListTest {
           Field.of("tenth", LegacySQLTypeName.NUMERIC),
           Field.of("eleventh", LegacySQLTypeName.BIGNUMERIC));
 
+  private final FieldList schemaLosslessTimestamp =
+      FieldList.of(
+          Field.of("first", LegacySQLTypeName.BOOLEAN),
+          Field.of("second", LegacySQLTypeName.INTEGER),
+          Field.of("third", LegacySQLTypeName.TIMESTAMP));
+
   private final Map<String, String> integerPb = ImmutableMap.of("v", "1");
   private final Map<String, String> floatPb = ImmutableMap.of("v", "1.5");
   private final Map<String, String> stringPb = ImmutableMap.of("v", "string");
@@ -69,7 +75,11 @@ public class FieldValueListTest {
           "v", "99999999999999999999999999999999999999.99999999999999999999999999999999999999");
 
   private final FieldValue booleanFv = FieldValue.of(Attribute.PRIMITIVE, "false");
+  private final FieldValue booleanLosslessTimestampFv =
+      FieldValue.of(Attribute.PRIMITIVE, "false", true);
   private final FieldValue integerFv = FieldValue.of(Attribute.PRIMITIVE, "1");
+  private final FieldValue integerLosslessTimestampFv =
+      FieldValue.of(Attribute.PRIMITIVE, "1", true);
   private final FieldValue floatFv = FieldValue.of(Attribute.PRIMITIVE, "1.5");
   private final FieldValue stringFv = FieldValue.of(Attribute.PRIMITIVE, "string");
   private final FieldValue timestampFv = FieldValue.of(Attribute.PRIMITIVE, "42");
@@ -119,6 +129,14 @@ public class FieldValueListTest {
               bigNumericFv),
           schema);
 
+  private final List<?> fieldValuesLosslessTimestampPb =
+      ImmutableList.of(booleanPb, integerPb, timestampPb);
+  private final FieldValueList fieldValuesLosslessTimestamp =
+      FieldValueList.of(
+          ImmutableList.of(
+              booleanLosslessTimestampFv, integerLosslessTimestampFv, losslessTimestampFv),
+          schemaLosslessTimestamp);
+
   @Test
   public void testFromPb() {
     assertEquals(fieldValues, FieldValueList.fromPb(fieldValuesPb, schema));
@@ -126,6 +144,10 @@ public class FieldValueListTest {
     assertEquals(fieldValues, FieldValueList.fromPb(fieldValuesPb, null));
 
     assertNotEquals(fieldValues, FieldValueList.fromPb(fieldValuesPb, null, true));
+
+    assertEquals(
+        fieldValuesLosslessTimestamp,
+        FieldValueList.fromPb(fieldValuesLosslessTimestampPb, null, true));
   }
 
   @Test
