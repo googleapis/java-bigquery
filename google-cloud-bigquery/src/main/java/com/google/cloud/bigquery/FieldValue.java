@@ -349,7 +349,9 @@ public class FieldValue implements Serializable {
       return false;
     }
     FieldValue other = (FieldValue) obj;
-    return attribute == other.attribute && Objects.equals(value, other.value) && Objects.equals(useInt64Timestamps, other.useInt64Timestamps);
+    return attribute == other.attribute
+        && Objects.equals(value, other.value)
+        && Objects.equals(useInt64Timestamps, other.useInt64Timestamps);
   }
 
   /**
@@ -370,6 +372,7 @@ public class FieldValue implements Serializable {
   public static FieldValue of(Attribute attribute, Object value) {
     return of(attribute, value, false);
   }
+
   @BetaApi
   public static FieldValue of(Attribute attribute, Object value, Boolean useInt64Timestamps) {
     return new FieldValue(attribute, value, useInt64Timestamps);
@@ -389,12 +392,16 @@ public class FieldValue implements Serializable {
           && (recordSchema.getType() == LegacySQLTypeName.RANGE)
           && (recordSchema.getRangeElementType() != null)) {
         return FieldValue.of(
-            Attribute.RANGE, Range.of((String) cellPb, recordSchema.getRangeElementType()), useInt64Timestamps);
+            Attribute.RANGE,
+            Range.of((String) cellPb, recordSchema.getRangeElementType()),
+            useInt64Timestamps);
       }
       return FieldValue.of(Attribute.PRIMITIVE, cellPb, useInt64Timestamps);
     }
     if (cellPb instanceof List) {
-      return FieldValue.of(Attribute.REPEATED, FieldValueList.fromPb((List<Object>) cellPb, null, useInt64Timestamps));
+      return FieldValue.of(
+          Attribute.REPEATED,
+          FieldValueList.fromPb((List<Object>) cellPb, null, useInt64Timestamps));
     }
     if (cellPb instanceof Map) {
       Map<String, Object> cellMapPb = (Map<String, Object>) cellPb;
@@ -402,7 +409,8 @@ public class FieldValue implements Serializable {
         FieldList subFieldsSchema = recordSchema != null ? recordSchema.getSubFields() : null;
         return FieldValue.of(
             Attribute.RECORD,
-            FieldValueList.fromPb((List<Object>) cellMapPb.get("f"), subFieldsSchema, useInt64Timestamps));
+            FieldValueList.fromPb(
+                (List<Object>) cellMapPb.get("f"), subFieldsSchema, useInt64Timestamps));
       }
       // This should never be the case when we are processing a first level table field (i.e. a
       // row's field, not a record sub-field)

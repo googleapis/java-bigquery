@@ -17,9 +17,9 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 
 import com.google.api.services.bigquery.model.QueryRequest;
 import com.google.cloud.bigquery.JobInfo.CreateDisposition;
@@ -152,7 +152,8 @@ public class QueryRequestInfoTest {
           .setCreateSession(CREATE_SESSION)
           .setMaxResults(100L)
           .build();
-  QueryRequestInfo REQUEST_INFO_SUPPORTED = new QueryRequestInfo(QUERY_JOB_CONFIGURATION_SUPPORTED, false);
+  QueryRequestInfo REQUEST_INFO_SUPPORTED =
+      new QueryRequestInfo(QUERY_JOB_CONFIGURATION_SUPPORTED, false);
 
   @Test
   public void testIsFastQuerySupported() {
