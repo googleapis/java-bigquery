@@ -47,7 +47,7 @@ import org.threeten.extra.PeriodDuration;
 public class FieldValue implements Serializable {
 
   private static final int MICROSECONDS = 1000000;
-  private static final long serialVersionUID = 469098630191710061L;
+  private static final long serialVersionUID = 469098630191710062L;
 
   private final Attribute attribute;
   private final Object value;

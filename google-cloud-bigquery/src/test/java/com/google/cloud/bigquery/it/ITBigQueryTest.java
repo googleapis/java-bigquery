@@ -3240,19 +3240,35 @@ public class ITBigQueryTest {
     String query = "SELECT TIMESTAMP '2022-01-24T23:54:25.095574Z'";
     long expectedTimestamp = 1643068465095574L;
 
-    bigquery.getOptions().setUseInt64Timestamps(true);
-
-    TableResult resultInteractive =
+    TableResult result =
         bigquery.query(
             QueryJobConfiguration.newBuilder(query)
                 .setDefaultDataset(DatasetId.of(DATASET))
                 .build());
-    assertNotNull(resultInteractive.getJobId());
-    for (FieldValueList row : resultInteractive.getValues()) {
+    assertNotNull(result.getJobId());
+    for (FieldValueList row : result.getValues()) {
       FieldValue timeStampCell = row.get(0);
+      assertFalse(timeStampCell.getUseInt64Timestamps());
       assertEquals(expectedTimestamp, timeStampCell.getTimestampValue());
     }
-    bigquery.getOptions().setUseInt64Timestamps(false);
+
+    // Create new BQ object to toggle lossless timestamps without affecting
+    // other tests.
+    RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
+    BigQuery bigqueryLossless = bigqueryHelper.getOptions().getService();
+    bigqueryLossless.getOptions().setUseInt64Timestamps(true);
+
+    TableResult resultLossless =
+        bigqueryLossless.query(
+            QueryJobConfiguration.newBuilder(query)
+                .setDefaultDataset(DatasetId.of(DATASET))
+                .build());
+    assertNotNull(resultLossless.getJobId());
+    for (FieldValueList row : resultLossless.getValues()) {
+      FieldValue timeStampCellLossless = row.get(0);
+      assertTrue(timeStampCellLossless.getUseInt64Timestamps());
+      assertEquals(expectedTimestamp, timeStampCellLossless.getTimestampValue());
+    }
   }
 
   /* TODO(prasmish): replicate the entire test case for executeSelect */

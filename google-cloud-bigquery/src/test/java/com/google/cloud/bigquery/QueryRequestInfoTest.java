@@ -180,13 +180,13 @@ public class QueryRequestInfoTest {
 
   @Test
   public void testInt64Timestamp() {
-    QueryRequestInfo qri = new QueryRequestInfo(QUERY_JOB_CONFIGURATION, false);
-    QueryRequest qr = qri.toPb();
-    assertFalse(qr.getFormatOptions().getUseInt64Timestamp());
+    QueryRequestInfo requestInfo = new QueryRequestInfo(QUERY_JOB_CONFIGURATION, false);
+    QueryRequest requestPb = requestInfo.toPb();
+    assertFalse(requestPb.getFormatOptions().getUseInt64Timestamp());
 
-    QueryRequestInfo qri2 = new QueryRequestInfo(QUERY_JOB_CONFIGURATION, true);
-    QueryRequest qr2 = qri2.toPb();
-    assertTrue(qr2.getFormatOptions().getUseInt64Timestamp());
+    QueryRequestInfo requestInfoLosslessTs = new QueryRequestInfo(QUERY_JOB_CONFIGURATION, true);
+    QueryRequest requestLosslessTsPb = requestInfoLosslessTs.toPb();
+    assertTrue(requestLosslessTsPb.getFormatOptions().getUseInt64Timestamp());
   }
 
   /*
