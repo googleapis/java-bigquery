@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.45.0](https://github.com/googleapis/java-bigquery/compare/v2.44.0...v2.45.0) (2024-12-06)
+
+
+### Features
+
+* Enable Lossless Timestamps in BQ java client lib ([#3589](https://github.com/googleapis/java-bigquery/issues/3589)) ([c0b874a](https://github.com/googleapis/java-bigquery/commit/c0b874aa0150e63908450b13d019864b8cbfbfe3))
+* Introduce `java.time` methods and variables ([#3586](https://github.com/googleapis/java-bigquery/issues/3586)) ([31fb15f](https://github.com/googleapis/java-bigquery/commit/31fb15fb963c18e4c29391e9fe56dfde31577511))
+
+
+### Bug Fixes
+
+* **test:** Update schema for broken ConnImplBenchmark test ([#3574](https://github.com/googleapis/java-bigquery/issues/3574)) ([8cf4387](https://github.com/googleapis/java-bigquery/commit/8cf4387fae22c81d40635b470b216fa4c126d681))
+
+
+### Dependencies
+
+* Update dependency com.google.api.grpc:proto-google-cloud-bigqueryconnection-v1 to v2.56.0 ([#3582](https://github.com/googleapis/java-bigquery/issues/3582)) ([616ee2a](https://github.com/googleapis/java-bigquery/commit/616ee2aa8ccf3d2975274b256252f2f249775960))
+* Update dependency com.google.apis:google-api-services-bigquery to v2-rev20241111-2.0.0 ([#3591](https://github.com/googleapis/java-bigquery/issues/3591)) ([3eef3a9](https://github.com/googleapis/java-bigquery/commit/3eef3a9959bcfdb76c26fdf9069d9acf89f93a7a))
+* Update dependency com.google.cloud:google-cloud-datacatalog-bom to v1.60.0 ([#3583](https://github.com/googleapis/java-bigquery/issues/3583)) ([34dd8bc](https://github.com/googleapis/java-bigquery/commit/34dd8bc22c8188f2b61dc9939b24a8d820548e2b))
+* Update github/codeql-action action to v2.27.5 ([#3588](https://github.com/googleapis/java-bigquery/issues/3588)) ([3f94075](https://github.com/googleapis/java-bigquery/commit/3f9407570fea5317aaf212b058ca1da05985eda9))
+* Update github/codeql-action action to v2.27.6 ([#3597](https://github.com/googleapis/java-bigquery/issues/3597)) ([bc1f3b9](https://github.com/googleapis/java-bigquery/commit/bc1f3b97a0c8ccc6e93a07b2f0ebcf8e05da9b48))
+
 ## [2.44.0](https://github.com/googleapis/java-bigquery/compare/v2.43.3...v2.44.0) (2024-11-17)
 
 
