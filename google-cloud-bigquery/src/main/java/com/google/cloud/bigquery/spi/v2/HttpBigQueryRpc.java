@@ -176,7 +176,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       Integer accessPolicyVersion = null;
       for (Map.Entry<Option, ?> entry : options.entrySet()) {
         if (entry.getKey() == Option.ACCESS_POLICY_VERSION && entry.getValue() != null) {
-          accessPolicyVersion = (Integer)entry.getValue();
+          accessPolicyVersion = (Integer) entry.getValue();
         }
       }
       validateRPC();

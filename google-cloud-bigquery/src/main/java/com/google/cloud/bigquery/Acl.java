@@ -21,9 +21,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.api.core.ApiFunction;
 import com.google.api.services.bigquery.model.Dataset.Access;
 import com.google.api.services.bigquery.model.DatasetAccessEntry;
+import com.google.api.services.bigquery.model.Expr;
 import com.google.cloud.StringEnumType;
 import com.google.cloud.StringEnumValue;
-import com.google.api.services.bigquery.model.Expr;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
@@ -570,25 +570,23 @@ public final class Acl implements Serializable {
     }
   }
 
-  /**
-   * Expr represents the conditional information related to dataset access policies.
-   */
+  /** Expr represents the conditional information related to dataset access policies. */
   public static final class Expr implements Serializable {
     // Textual representation of an expression in Common Expression Language syntax.
     private final String expression;
     /**
-     * Optional. Title for the expression, i.e. a short string describing
-     * its purpose. This can be used e.g. in UIs which allow to enter the expression.
+     * Optional. Title for the expression, i.e. a short string describing its purpose. This can be
+     * used e.g. in UIs which allow to enter the expression.
      */
     private final String title;
     /**
-     * Optional. Description of the expression. This is a longer text which
-     * describes the expression, e.g. when hovered over it in a UI.
+     * Optional. Description of the expression. This is a longer text which describes the
+     * expression, e.g. when hovered over it in a UI.
      */
     private final String description;
     /**
-     * Optional. String indicating the location of the expression for error
-     * reporting, e.g. a file name and a position in the file.
+     * Optional. String indicating the location of the expression for error reporting, e.g. a file
+     * name and a position in the file.
      */
     private final String location;
 
@@ -600,7 +598,8 @@ public final class Acl implements Serializable {
     }
 
     com.google.api.services.bigquery.model.Expr toPb() {
-      com.google.api.services.bigquery.model.Expr bqExpr = new com.google.api.services.bigquery.model.Expr();
+      com.google.api.services.bigquery.model.Expr bqExpr =
+          new com.google.api.services.bigquery.model.Expr();
       bqExpr.setExpression(this.expression);
       bqExpr.setTitle(this.title);
       bqExpr.setDescription(this.description);
@@ -609,7 +608,8 @@ public final class Acl implements Serializable {
     }
 
     static Expr fromPb(com.google.api.services.bigquery.model.Expr bqExpr) {
-      return new Expr(bqExpr.getExpression(), bqExpr.getTitle(), bqExpr.getDescription(), bqExpr.getLocation());
+      return new Expr(
+          bqExpr.getExpression(), bqExpr.getTitle(), bqExpr.getDescription(), bqExpr.getLocation());
     }
 
     static Expr defaultExpr() {
@@ -620,6 +620,7 @@ public final class Acl implements Serializable {
     public int hashCode() {
       return Objects.hash(expression, title, description, location);
     }
+
     @Override
     public boolean equals(Object obj) {
       if (this == obj) {
@@ -628,8 +629,11 @@ public final class Acl implements Serializable {
       if (obj == null || getClass() != obj.getClass()) {
         return false;
       }
-      final Expr other = (Expr)obj;
-      return Objects.equals(this.expression, other.expression) && Objects.equals(this.title, other.title) && Objects.equals(this.description, other.description) && Objects.equals(this.location, other.location);
+      final Expr other = (Expr) obj;
+      return Objects.equals(this.expression, other.expression)
+          && Objects.equals(this.title, other.title)
+          && Objects.equals(this.description, other.description)
+          && Objects.equals(this.location, other.location);
     }
   }
 
@@ -713,7 +717,9 @@ public final class Acl implements Serializable {
       return false;
     }
     final Acl other = (Acl) obj;
-    return Objects.equals(this.entity, other.entity) && Objects.equals(this.role, other.role) && Objects.equals(this.condition, other.condition);
+    return Objects.equals(this.entity, other.entity)
+        && Objects.equals(this.role, other.role)
+        && Objects.equals(this.condition, other.condition);
   }
 
   Access toPb() {
@@ -727,6 +733,8 @@ public final class Acl implements Serializable {
 
   static Acl fromPb(Access access) {
     return Acl.of(
-        Entity.fromPb(access), access.getRole() != null ? Role.valueOf(access.getRole()) : null, Expr.fromPb(access.getCondition()));
+        Entity.fromPb(access),
+        access.getRole() != null ? Role.valueOf(access.getRole()) : null,
+        Expr.fromPb(access.getCondition()));
   }
 }
