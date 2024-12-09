@@ -261,10 +261,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   public Dataset create(DatasetInfo datasetInfo, DatasetOption... options) {
     final com.google.api.services.bigquery.model.Dataset datasetPb =
         datasetInfo
-            .setProjectId(
-                Strings.isNullOrEmpty(datasetInfo.getDatasetId().getProject())
-                    ? getOptions().getProjectId()
-                    : datasetInfo.getDatasetId().getProject())
+            .setProjectId(Strings.isNullOrEmpty(datasetInfo.getDatasetId().getProject())
+                ? getOptions().getProjectId()
+                : datasetInfo.getDatasetId().getProject())
             .toPb();
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
     try {

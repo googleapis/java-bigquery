@@ -289,6 +289,10 @@ public interface BigQuery extends Service<BigQueryOptions> {
       return new DatasetOption(
           BigQueryRpc.Option.FIELDS, Helper.selector(DatasetField.REQUIRED_FIELDS, fields));
     }
+
+    public static DatasetOption accessPolicyVersion(Integer accessPolicyVersion) {
+      return new DatasetOption(BigQueryRpc.Option.ACCESS_POLICY_VERSION, accessPolicyVersion);
+    }
   }
 
   /** Class for specifying dataset delete options. */

@@ -41,6 +41,8 @@ import com.google.cloud.Role;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.bigquery.Acl;
 import com.google.cloud.bigquery.Acl.DatasetAclEntity;
+import com.google.cloud.bigquery.Acl.Expr;
+import com.google.cloud.bigquery.Acl.User;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQuery.DatasetDeleteOption;
 import com.google.cloud.bigquery.BigQuery.DatasetField;
@@ -1686,6 +1688,26 @@ public class ITBigQueryTest {
     assertEquals("und:ci", dataset.getDefaultCollation());
 
     RemoteBigQueryHelper.forceDelete(bigquery, collationDataset);
+  }
+
+  @Test
+  public void testCreateDatabaseWithAccessPolicyVersion() {
+    String accessPolicyDataset = RemoteBigQueryHelper.generateDatasetName();
+    User user = new User("Joe@example.com");
+    Acl.Role role = Acl.Role.OWNER;
+    Acl.Expr condition = new Expr("expression", "title", "description", "location");
+    Acl acl = Acl.of(user, role, condition);
+    DatasetInfo info =
+        DatasetInfo.newBuilder(accessPolicyDataset)
+            .setDescription(DESCRIPTION)
+            .setLabels(LABELS)
+            .setAcl(ImmutableList.of(acl))
+            .build();
+    DatasetOption datasetOption = DatasetOption.accessPolicyVersion(3);
+    Dataset dataset = bigquery.create(info, datasetOption);
+    assertNotNull(dataset);
+
+    RemoteBigQueryHelper.forceDelete(bigquery, accessPolicyDataset);
   }
 
   @Test
