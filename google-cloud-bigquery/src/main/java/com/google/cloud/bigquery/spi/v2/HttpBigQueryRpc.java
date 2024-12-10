@@ -130,6 +130,21 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   public Dataset getDataset(String projectId, String datasetId, Map<Option, ?> options) {
     try {
       validateRPC();
+      Integer accessPolicyVersion = null;
+      for (Map.Entry<Option, ?> entry : options.entrySet()) {
+        if (entry.getKey() == Option.ACCESS_POLICY_VERSION && entry.getValue() != null) {
+          accessPolicyVersion = (Integer) entry.getValue();
+        }
+      }
+      if (accessPolicyVersion != null) {
+        return bigquery
+            .datasets()
+            .get(projectId, datasetId)
+            .setFields(Option.FIELDS.getString(options))
+            .setPrettyPrint(false)
+            .setAccessPolicyVersion(accessPolicyVersion)
+            .execute();
+      }
       return bigquery
           .datasets()
           .get(projectId, datasetId)
@@ -174,6 +189,21 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   public Dataset create(Dataset dataset, Map<Option, ?> options) {
     try {
       validateRPC();
+      Integer accessPolicyVersion = null;
+      for (Map.Entry<Option, ?> entry : options.entrySet()) {
+        if (entry.getKey() == Option.ACCESS_POLICY_VERSION && entry.getValue() != null) {
+          accessPolicyVersion = (Integer) entry.getValue();
+        }
+      }
+      if (accessPolicyVersion != null) {
+        return bigquery
+            .datasets()
+            .insert(dataset.getDatasetReference().getProjectId(), dataset)
+            .setPrettyPrint(false)
+            .setFields(Option.FIELDS.getString(options))
+            .setAccessPolicyVersion(accessPolicyVersion)
+            .execute();
+      }
       return bigquery
           .datasets()
           .insert(dataset.getDatasetReference().getProjectId(), dataset)
@@ -276,7 +306,22 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   public Dataset patch(Dataset dataset, Map<Option, ?> options) {
     try {
       validateRPC();
+      Integer accessPolicyVersion = null;
+      for (Map.Entry<Option, ?> entry : options.entrySet()) {
+        if (entry.getKey() == Option.ACCESS_POLICY_VERSION && entry.getValue() != null) {
+          accessPolicyVersion = (Integer) entry.getValue();
+        }
+      }
       DatasetReference reference = dataset.getDatasetReference();
+      if (accessPolicyVersion != null) {
+        return bigquery
+            .datasets()
+            .patch(reference.getProjectId(), reference.getDatasetId(), dataset)
+            .setPrettyPrint(false)
+            .setFields(Option.FIELDS.getString(options))
+            .setAccessPolicyVersion(accessPolicyVersion)
+            .execute();
+      }
       return bigquery
           .datasets()
           .patch(reference.getProjectId(), reference.getDatasetId(), dataset)
