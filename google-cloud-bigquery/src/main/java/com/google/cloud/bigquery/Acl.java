@@ -612,10 +612,6 @@ public final class Acl implements Serializable {
           bqExpr.getExpression(), bqExpr.getTitle(), bqExpr.getDescription(), bqExpr.getLocation());
     }
 
-    static Expr defaultExpr() {
-      return new Expr("", "", "", "");
-    }
-
     @Override
     public int hashCode() {
       return Objects.hash(expression, title, description, location);
@@ -638,7 +634,7 @@ public final class Acl implements Serializable {
   }
 
   private Acl(Entity entity, Role role) {
-    this(entity, role, Expr.defaultExpr());
+    this(entity, role, null);
   }
 
   private Acl(Entity entity, Role role, Expr condition) {
@@ -727,7 +723,9 @@ public final class Acl implements Serializable {
     if (role != null) {
       accessPb.setRole(role.name());
     }
-    accessPb.setCondition(condition.toPb());
+    if (condition != null) {
+      accessPb.setCondition(condition.toPb());
+    }
     return accessPb;
   }
 
@@ -735,6 +733,6 @@ public final class Acl implements Serializable {
     return Acl.of(
         Entity.fromPb(access),
         access.getRole() != null ? Role.valueOf(access.getRole()) : null,
-        Expr.fromPb(access.getCondition()));
+        access.getCondition() != null ? Expr.fromPb(access.getCondition()) : null);
   }
 }

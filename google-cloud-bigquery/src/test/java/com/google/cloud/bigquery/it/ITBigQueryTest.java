@@ -1222,6 +1222,35 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testGetDatasetWithAccessPolicyVersion() {
+    String accessPolicyDataset = RemoteBigQueryHelper.generateDatasetName();
+    User user = new User("liamhuffman@google.com");
+    Acl.Role role = Acl.Role.WRITER;
+    Acl.Expr condition =
+        new Expr(
+            "request.time < timestamp('2030-01-01T00:00:00Z')",
+            "test condition",
+            "requests before the year 2030",
+            "location");
+    Acl acl = Acl.of(user, role, condition);
+    DatasetOption datasetOption = DatasetOption.accessPolicyVersion(3);
+
+    Dataset dataset =
+        bigquery.create(
+            DatasetInfo.newBuilder(accessPolicyDataset)
+                .setDescription("Some Description")
+                .setAcl(ImmutableList.of(acl))
+                .build(),
+            datasetOption);
+    assertThat(dataset).isNotNull();
+
+    Dataset datasetClone = bigquery.getDataset(accessPolicyDataset, datasetOption);
+    assertNotNull(datasetClone);
+    assertEquals(dataset.getDescription(), datasetClone.getDescription());
+    assertNotNull(datasetClone.getCreationTime());
+  }
+
+  @Test
   public void testUpdateDataset() {
     Dataset dataset =
         bigquery.create(
@@ -1285,6 +1314,47 @@ public class ITBigQueryTest {
     assertNull(updatedDataset.getStorageBillingModel());
     assertNull(updatedDataset.getMaxTimeTravelHours());
     assertTrue(dataset.delete());
+  }
+
+  @Test
+  public void testUpdateDatabaseWithAccessPolicy() {
+    String accessPolicyDataset = RemoteBigQueryHelper.generateDatasetName();
+    Dataset dataset =
+        bigquery.create(
+            DatasetInfo.newBuilder(accessPolicyDataset)
+                .setDescription("Some Description")
+                .setLabels(Collections.singletonMap("a", "b"))
+                .build());
+    assertThat(dataset).isNotNull();
+
+    User user = new User("liamhuffman@google.com");
+    Acl.Role role = Acl.Role.WRITER;
+    Acl.Expr condition =
+        new Expr(
+            "request.time < timestamp('2030-01-01T00:00:00Z')",
+            "test condition",
+            "requests before the year 2030",
+            "location");
+    Acl acl = Acl.of(user, role, condition);
+    List<Acl> acls = new ArrayList<>();
+    acls.addAll(dataset.getAcl());
+    acls.add(acl);
+
+    DatasetOption datasetOption = DatasetOption.accessPolicyVersion(3);
+    Dataset updatedDataset =
+        bigquery.update(
+            dataset
+                .toBuilder()
+                .setDescription("Updated Description")
+                .setLabels(null)
+                .setAcl(acls)
+                .build(),
+            datasetOption);
+    assertNotNull(updatedDataset);
+    assertEquals(updatedDataset.getDescription(), "Updated Description");
+    assertThat(updatedDataset.getLabels().isEmpty());
+
+    RemoteBigQueryHelper.forceDelete(bigquery, accessPolicyDataset);
   }
 
   @Test
@@ -1693,9 +1763,14 @@ public class ITBigQueryTest {
   @Test
   public void testCreateDatabaseWithAccessPolicyVersion() {
     String accessPolicyDataset = RemoteBigQueryHelper.generateDatasetName();
-    User user = new User("Joe@example.com");
+    User user = new User("liamhuffman@google.com");
     Acl.Role role = Acl.Role.OWNER;
-    Acl.Expr condition = new Expr("expression", "title", "description", "location");
+    Acl.Expr condition =
+        new Expr(
+            "request.time < timestamp('2030-01-01T00:00:00Z')",
+            "test condition",
+            "requests before the year 2030",
+            "location");
     Acl acl = Acl.of(user, role, condition);
     DatasetInfo info =
         DatasetInfo.newBuilder(accessPolicyDataset)
@@ -1704,6 +1779,32 @@ public class ITBigQueryTest {
             .setAcl(ImmutableList.of(acl))
             .build();
     DatasetOption datasetOption = DatasetOption.accessPolicyVersion(3);
+    Dataset dataset = bigquery.create(info, datasetOption);
+    assertNotNull(dataset);
+    assertEquals(dataset.getDescription(), DESCRIPTION);
+
+    RemoteBigQueryHelper.forceDelete(bigquery, accessPolicyDataset);
+  }
+
+  @Test(expected = BigQueryException.class)
+  public void testCreateDatabaseWithInvalidAccessPolicyVersion() {
+    String accessPolicyDataset = RemoteBigQueryHelper.generateDatasetName();
+    User user = new User("liamhuffman@google.com");
+    Acl.Role role = Acl.Role.READER;
+    Acl.Expr condition =
+        new Expr(
+            "request.time < timestamp('2030-01-01T00:00:00Z')",
+            "test condition",
+            "requests before the year 2030",
+            "location");
+    Acl acl = Acl.of(user, role, condition);
+    DatasetInfo info =
+        DatasetInfo.newBuilder(accessPolicyDataset)
+            .setDescription(DESCRIPTION)
+            .setLabels(LABELS)
+            .setAcl(ImmutableList.of(acl))
+            .build();
+    DatasetOption datasetOption = DatasetOption.accessPolicyVersion(4);
     Dataset dataset = bigquery.create(info, datasetOption);
     assertNotNull(dataset);
 
