@@ -302,9 +302,10 @@ public abstract class QueryParameterValue implements Serializable {
 
   /**
    * Creates a {@code QueryParameterValue} object with a type of TIMESTAMP.
-   * @param value Microseconds since epoch, e.g. 1733945416000000 corresponds
-   * to 2024-12-11 19:30:16.929Z
-   * */
+   *
+   * @param value Microseconds since epoch, e.g. 1733945416000000 corresponds to 2024-12-11
+   *     19:30:16.929Z
+   */
   public static QueryParameterValue timestamp(Long value) {
     return of(value, StandardSQLTypeName.TIMESTAMP);
   }
