@@ -136,21 +136,17 @@ public class HttpBigQueryRpc implements BigQueryRpc {
           accessPolicyVersion = (Integer) entry.getValue();
         }
       }
+
+      Bigquery.Datasets.Get bqGetRequest =
+          bigquery
+              .datasets()
+              .get(projectId, datasetId)
+              .setFields(Option.FIELDS.getString(options))
+              .setPrettyPrint(false);
       if (accessPolicyVersion != null) {
-        return bigquery
-            .datasets()
-            .get(projectId, datasetId)
-            .setFields(Option.FIELDS.getString(options))
-            .setPrettyPrint(false)
-            .setAccessPolicyVersion(accessPolicyVersion)
-            .execute();
+        bqGetRequest.setAccessPolicyVersion(accessPolicyVersion);
       }
-      return bigquery
-          .datasets()
-          .get(projectId, datasetId)
-          .setFields(Option.FIELDS.getString(options))
-          .setPrettyPrint(false)
-          .execute();
+      return bqGetRequest.execute();
     } catch (IOException ex) {
       BigQueryException serviceException = translate(ex);
       if (serviceException.getCode() == HTTP_NOT_FOUND) {
@@ -195,21 +191,16 @@ public class HttpBigQueryRpc implements BigQueryRpc {
           accessPolicyVersion = (Integer) entry.getValue();
         }
       }
+      Bigquery.Datasets.Insert bqCreateRequest =
+          bigquery
+              .datasets()
+              .insert(dataset.getDatasetReference().getProjectId(), dataset)
+              .setPrettyPrint(false)
+              .setFields(Option.FIELDS.getString(options));
       if (accessPolicyVersion != null) {
-        return bigquery
-            .datasets()
-            .insert(dataset.getDatasetReference().getProjectId(), dataset)
-            .setPrettyPrint(false)
-            .setFields(Option.FIELDS.getString(options))
-            .setAccessPolicyVersion(accessPolicyVersion)
-            .execute();
+        bqCreateRequest.setAccessPolicyVersion(accessPolicyVersion);
       }
-      return bigquery
-          .datasets()
-          .insert(dataset.getDatasetReference().getProjectId(), dataset)
-          .setPrettyPrint(false)
-          .setFields(Option.FIELDS.getString(options))
-          .execute();
+      return bqCreateRequest.execute();
     } catch (IOException ex) {
       throw translate(ex);
     }
@@ -313,21 +304,16 @@ public class HttpBigQueryRpc implements BigQueryRpc {
         }
       }
       DatasetReference reference = dataset.getDatasetReference();
+      Bigquery.Datasets.Patch bqPatchRequest =
+          bigquery
+              .datasets()
+              .patch(reference.getProjectId(), reference.getDatasetId(), dataset)
+              .setPrettyPrint(false)
+              .setFields(Option.FIELDS.getString(options));
       if (accessPolicyVersion != null) {
-        return bigquery
-            .datasets()
-            .patch(reference.getProjectId(), reference.getDatasetId(), dataset)
-            .setPrettyPrint(false)
-            .setFields(Option.FIELDS.getString(options))
-            .setAccessPolicyVersion(accessPolicyVersion)
-            .execute();
+        bqPatchRequest.setAccessPolicyVersion(accessPolicyVersion);
       }
-      return bigquery
-          .datasets()
-          .patch(reference.getProjectId(), reference.getDatasetId(), dataset)
-          .setPrettyPrint(false)
-          .setFields(Option.FIELDS.getString(options))
-          .execute();
+      return bqPatchRequest.execute();
     } catch (IOException ex) {
       throw translate(ex);
     }

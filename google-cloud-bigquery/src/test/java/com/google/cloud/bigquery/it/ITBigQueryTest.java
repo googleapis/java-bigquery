@@ -213,6 +213,8 @@ public class ITBigQueryTest {
   private static final String MODEL_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String ROUTINE_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
+  private static final String DEFAULT_USER_SERVICE_ACCOUNT =
+      "test-svc-bq-user@" + PROJECT_ID + ".iam.gserviceaccount.com";
   private static final String RANDOM_ID = UUID.randomUUID().toString().substring(0, 8);
   private static final String STORAGE_BILLING_MODEL = "LOGICAL";
   private static final Long MAX_TIME_TRAVEL_HOURS = 120L;
@@ -1224,7 +1226,7 @@ public class ITBigQueryTest {
   @Test
   public void testGetDatasetWithAccessPolicyVersion() {
     String accessPolicyDataset = RemoteBigQueryHelper.generateDatasetName();
-    User user = new User("liamhuffman@google.com");
+    User user = new User(DEFAULT_USER_SERVICE_ACCOUNT);
     Acl.Role role = Acl.Role.WRITER;
     Acl.Expr condition =
         new Expr(
@@ -1317,7 +1319,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testUpdateDatabaseWithAccessPolicy() {
+  public void testUpdateDatabaseWithAccessPolicyVersion() {
     String accessPolicyDataset = RemoteBigQueryHelper.generateDatasetName();
     Dataset dataset =
         bigquery.create(
@@ -1327,7 +1329,7 @@ public class ITBigQueryTest {
                 .build());
     assertThat(dataset).isNotNull();
 
-    User user = new User("liamhuffman@google.com");
+    User user = new User(DEFAULT_USER_SERVICE_ACCOUNT);
     Acl.Role role = Acl.Role.WRITER;
     Acl.Expr condition =
         new Expr(
@@ -1763,7 +1765,7 @@ public class ITBigQueryTest {
   @Test
   public void testCreateDatabaseWithAccessPolicyVersion() {
     String accessPolicyDataset = RemoteBigQueryHelper.generateDatasetName();
-    User user = new User("liamhuffman@google.com");
+    User user = new User(DEFAULT_USER_SERVICE_ACCOUNT);
     Acl.Role role = Acl.Role.OWNER;
     Acl.Expr condition =
         new Expr(
@@ -1789,7 +1791,7 @@ public class ITBigQueryTest {
   @Test(expected = BigQueryException.class)
   public void testCreateDatabaseWithInvalidAccessPolicyVersion() {
     String accessPolicyDataset = RemoteBigQueryHelper.generateDatasetName();
-    User user = new User("liamhuffman@google.com");
+    User user = new User(DEFAULT_USER_SERVICE_ACCOUNT);
     Acl.Role role = Acl.Role.READER;
     Acl.Expr condition =
         new Expr(

@@ -631,6 +631,11 @@ public final class Acl implements Serializable {
           && Objects.equals(this.description, other.description)
           && Objects.equals(this.location, other.location);
     }
+
+    @Override
+    public String toString() {
+      return toPb().toString();
+    }
   }
 
   private Acl(Entity entity, Role role) {
