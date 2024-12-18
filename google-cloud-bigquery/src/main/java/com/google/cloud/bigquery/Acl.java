@@ -590,6 +590,68 @@ public final class Acl implements Serializable {
      */
     private final String location;
 
+    private static final long serialVersionUID = 7358264726377291156L;
+
+    static final class Builder {
+      private String expression;
+      private String title;
+      private String description;
+      private String location;
+
+      Builder() {}
+
+      Builder(Expr expr) {
+        this.expression = expr.expression;
+        this.title = expr.title;
+        this.description = expr.description;
+        this.location = expr.location;
+      }
+
+      Builder(com.google.api.services.bigquery.model.Expr bqExpr) {
+        this.expression = bqExpr.getExpression();
+        if (bqExpr.getTitle() != null) {
+          this.title = bqExpr.getTitle();
+        }
+        if (bqExpr.getDescription() != null) {
+          this.description = bqExpr.getDescription();
+        }
+        if (bqExpr.getLocation() != null) {
+          this.location = bqExpr.getLocation();
+        }
+      }
+
+      public Builder setExpression(String expression) {
+        this.expression = expression;
+        return this;
+      }
+
+      public Builder setTitle(String title) {
+        this.title = title;
+        return this;
+      }
+
+      public Builder setDescription(String description) {
+        this.description = description;
+        return this;
+      }
+
+      public Builder setLocation(String location) {
+        this.location = location;
+        return this;
+      }
+
+      public Expr build() {
+        return new Expr(this);
+      }
+    }
+
+    public Expr(Builder builder) {
+      this.expression = builder.expression;
+      this.title = builder.title;
+      this.description = builder.description;
+      this.location = builder.location;
+    }
+
     public Expr(String expression, String title, String description, String location) {
       this.expression = expression;
       this.title = title;
@@ -608,8 +670,11 @@ public final class Acl implements Serializable {
     }
 
     static Expr fromPb(com.google.api.services.bigquery.model.Expr bqExpr) {
-      return new Expr(
-          bqExpr.getExpression(), bqExpr.getTitle(), bqExpr.getDescription(), bqExpr.getLocation());
+      return new Builder(bqExpr).build();
+    }
+
+    public Builder toBuilder() {
+      return new Builder(this);
     }
 
     @Override

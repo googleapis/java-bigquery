@@ -1230,9 +1230,9 @@ public class ITBigQueryTest {
     Acl.Role role = Acl.Role.WRITER;
     Acl.Expr condition =
         new Expr(
-            "request.time < timestamp('2030-01-01T00:00:00Z')",
+            "request.time > timestamp('2024-01-01T00:00:00Z')",
             "test condition",
-            "requests before the year 2030",
+            "requests after the year 2024",
             "location");
     Acl acl = Acl.of(user, role, condition);
     DatasetOption datasetOption = DatasetOption.accessPolicyVersion(3);
@@ -1246,10 +1246,21 @@ public class ITBigQueryTest {
             datasetOption);
     assertThat(dataset).isNotNull();
 
-    Dataset datasetClone = bigquery.getDataset(accessPolicyDataset, datasetOption);
-    assertNotNull(datasetClone);
-    assertEquals(dataset.getDescription(), datasetClone.getDescription());
-    assertNotNull(datasetClone.getCreationTime());
+    Dataset remoteDataset = bigquery.getDataset(accessPolicyDataset, datasetOption);
+    assertNotNull(remoteDataset);
+    assertEquals(dataset.getDescription(), remoteDataset.getDescription());
+    assertNotNull(remoteDataset.getCreationTime());
+
+    Acl remoteAclWithCond = null;
+    for (Acl remoteAcl : remoteDataset.getAcl()) {
+      if (remoteAcl.getCondition() != null) {
+        remoteAclWithCond = remoteAcl;
+      }
+    }
+    assertNotNull(remoteAclWithCond);
+    assertEquals(remoteAclWithCond.getCondition(), condition);
+
+    RemoteBigQueryHelper.forceDelete(bigquery, accessPolicyDataset);
   }
 
   @Test
@@ -1335,9 +1346,9 @@ public class ITBigQueryTest {
     Acl.Role role = Acl.Role.WRITER;
     Acl.Expr condition =
         new Expr(
-            "request.time < timestamp('2030-01-01T00:00:00Z')",
+            "request.time > timestamp('2024-01-01T00:00:00Z')",
             "test condition",
-            "requests before the year 2030",
+            "requests after the year 2024",
             "location");
     Acl acl = Acl.of(user, role, condition);
     List<Acl> acls = new ArrayList<>();
@@ -1357,6 +1368,15 @@ public class ITBigQueryTest {
     assertNotNull(updatedDataset);
     assertEquals(updatedDataset.getDescription(), "Updated Description");
     assertThat(updatedDataset.getLabels().isEmpty());
+
+    Acl updatedAclWithCond = null;
+    for (Acl updatedAcl : updatedDataset.getAcl()) {
+      if (updatedAcl.getCondition() != null) {
+        updatedAclWithCond = updatedAcl;
+      }
+    }
+    assertNotNull(updatedAclWithCond);
+    assertEquals(updatedAclWithCond.getCondition(), condition);
 
     RemoteBigQueryHelper.forceDelete(bigquery, accessPolicyDataset);
   }
@@ -1773,9 +1793,9 @@ public class ITBigQueryTest {
     Acl.Role role = Acl.Role.OWNER;
     Acl.Expr condition =
         new Expr(
-            "request.time < timestamp('2030-01-01T00:00:00Z')",
+            "request.time > timestamp('2024-01-01T00:00:00Z')",
             "test condition",
-            "requests before the year 2030",
+            "requests after the year 2024",
             "location");
     Acl acl = Acl.of(user, role, condition);
     DatasetInfo info =
@@ -1789,6 +1809,15 @@ public class ITBigQueryTest {
     assertNotNull(dataset);
     assertEquals(dataset.getDescription(), DESCRIPTION);
 
+    Acl remoteAclWithCond = null;
+    for (Acl remoteAcl : dataset.getAcl()) {
+      if (remoteAcl.getCondition() != null) {
+        remoteAclWithCond = remoteAcl;
+      }
+    }
+    assertNotNull(remoteAclWithCond);
+    assertEquals(remoteAclWithCond.getCondition(), condition);
+
     RemoteBigQueryHelper.forceDelete(bigquery, accessPolicyDataset);
   }
 
@@ -1801,9 +1830,9 @@ public class ITBigQueryTest {
     Acl.Role role = Acl.Role.READER;
     Acl.Expr condition =
         new Expr(
-            "request.time < timestamp('2030-01-01T00:00:00Z')",
+            "request.time > timestamp('2024-01-01T00:00:00Z')",
             "test condition",
-            "requests before the year 2030",
+            "requests after the year 2024",
             "location");
     Acl acl = Acl.of(user, role, condition);
     DatasetInfo info =

@@ -130,12 +130,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   public Dataset getDataset(String projectId, String datasetId, Map<Option, ?> options) {
     try {
       validateRPC();
-      Integer accessPolicyVersion = null;
-      for (Map.Entry<Option, ?> entry : options.entrySet()) {
-        if (entry.getKey() == Option.ACCESS_POLICY_VERSION && entry.getValue() != null) {
-          accessPolicyVersion = (Integer) entry.getValue();
-        }
-      }
 
       Bigquery.Datasets.Get bqGetRequest =
           bigquery
@@ -143,8 +137,10 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .get(projectId, datasetId)
               .setFields(Option.FIELDS.getString(options))
               .setPrettyPrint(false);
-      if (accessPolicyVersion != null) {
-        bqGetRequest.setAccessPolicyVersion(accessPolicyVersion);
+      for (Map.Entry<Option, ?> entry : options.entrySet()) {
+        if (entry.getKey() == Option.ACCESS_POLICY_VERSION && entry.getValue() != null) {
+          bqGetRequest.setAccessPolicyVersion((Integer) entry.getValue());
+        }
       }
       return bqGetRequest.execute();
     } catch (IOException ex) {
@@ -185,20 +181,16 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   public Dataset create(Dataset dataset, Map<Option, ?> options) {
     try {
       validateRPC();
-      Integer accessPolicyVersion = null;
-      for (Map.Entry<Option, ?> entry : options.entrySet()) {
-        if (entry.getKey() == Option.ACCESS_POLICY_VERSION && entry.getValue() != null) {
-          accessPolicyVersion = (Integer) entry.getValue();
-        }
-      }
       Bigquery.Datasets.Insert bqCreateRequest =
           bigquery
               .datasets()
               .insert(dataset.getDatasetReference().getProjectId(), dataset)
               .setPrettyPrint(false)
               .setFields(Option.FIELDS.getString(options));
-      if (accessPolicyVersion != null) {
-        bqCreateRequest.setAccessPolicyVersion(accessPolicyVersion);
+      for (Map.Entry<Option, ?> entry : options.entrySet()) {
+        if (entry.getKey() == Option.ACCESS_POLICY_VERSION && entry.getValue() != null) {
+          bqCreateRequest.setAccessPolicyVersion((Integer) entry.getValue());
+        }
       }
       return bqCreateRequest.execute();
     } catch (IOException ex) {
@@ -297,12 +289,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   public Dataset patch(Dataset dataset, Map<Option, ?> options) {
     try {
       validateRPC();
-      Integer accessPolicyVersion = null;
-      for (Map.Entry<Option, ?> entry : options.entrySet()) {
-        if (entry.getKey() == Option.ACCESS_POLICY_VERSION && entry.getValue() != null) {
-          accessPolicyVersion = (Integer) entry.getValue();
-        }
-      }
       DatasetReference reference = dataset.getDatasetReference();
       Bigquery.Datasets.Patch bqPatchRequest =
           bigquery
@@ -310,8 +296,10 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .patch(reference.getProjectId(), reference.getDatasetId(), dataset)
               .setPrettyPrint(false)
               .setFields(Option.FIELDS.getString(options));
-      if (accessPolicyVersion != null) {
-        bqPatchRequest.setAccessPolicyVersion(accessPolicyVersion);
+      for (Map.Entry<Option, ?> entry : options.entrySet()) {
+        if (entry.getKey() == Option.ACCESS_POLICY_VERSION && entry.getValue() != null) {
+          bqPatchRequest.setAccessPolicyVersion((Integer) entry.getValue());
+        }
       }
       return bqPatchRequest.execute();
     } catch (IOException ex) {
