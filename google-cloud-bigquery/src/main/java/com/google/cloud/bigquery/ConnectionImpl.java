@@ -234,7 +234,8 @@ class ConnectionImpl implements Connection {
     }
     try {
       // use jobs.query if possible
-      if (isFastQuerySupported()) {
+      // Using the ReadAPI should take precedence over fast query
+      if (isFastQuerySupported() && !connectionSettings.getUseReadAPI()) {
         logger.log(Level.INFO, "\n Using Fast Query Path");
         final String projectId = bigQueryOptions.getProjectId();
         final QueryRequest queryRequest =
@@ -482,16 +483,17 @@ class ConnectionImpl implements Connection {
       // Query is long-running (> 10s) and hasn't completed yet, or query completed but didn't
       // return the schema, fallback to jobs.insert path. Some operations don't return the schema
       // and can be optimized here, but this is left as future work.
-      Long totalRows = results.getTotalRows() == null ? null : results.getTotalRows().longValue();
-      Long pageRows = results.getRows() == null ? null : (long) (results.getRows().size());
+      JobId jobId = JobId.fromPb(results.getJobReference());
+      GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
+      Long totalRows =
+          firstPage.getTotalRows() == null ? null : firstPage.getTotalRows().longValue();
+      Long pageRows = firstPage.getRows() == null ? null : (long) (firstPage.getRows().size());
       logger.log(
           Level.WARNING,
           "\n"
               + String.format(
                   "results.getJobComplete(): %s, isSchemaNull: %s , totalRows: %s, pageRows: %s",
                   results.getJobComplete(), results.getSchema() == null, totalRows, pageRows));
-      JobId jobId = JobId.fromPb(results.getJobReference());
-      GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
       return getSubsequentQueryResultsWithJob(
           totalRows, pageRows, jobId, firstPage, hasQueryParameters);
     }
