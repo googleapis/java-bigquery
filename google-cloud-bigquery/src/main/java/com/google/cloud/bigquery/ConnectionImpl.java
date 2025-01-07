@@ -479,6 +479,7 @@ class ConnectionImpl implements Connection {
     // Results should be read using the high throughput read API if sufficiently large.
     boolean shouldUseReadApi =
         connectionSettings.getUseReadAPI()
+            && results.getTotalRows() != null
             && results.getTotalRows().longValue() > connectionSettings.getMinResultSize();
     if (results.getJobComplete() && results.getSchema() != null && !shouldUseReadApi) {
       return processQueryResponseResults(results);
