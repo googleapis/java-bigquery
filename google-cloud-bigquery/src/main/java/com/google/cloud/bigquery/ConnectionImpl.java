@@ -234,8 +234,7 @@ class ConnectionImpl implements Connection {
     }
     try {
       // use jobs.query if possible
-      // Using the ReadAPI should take precedence over fast query
-      if (isFastQuerySupported() && !connectionSettings.getUseReadAPI()) {
+      if (isFastQuerySupported()) {
         logger.log(Level.INFO, "\n Using Fast Query Path");
         final String projectId = bigQueryOptions.getProjectId();
         final QueryRequest queryRequest =
@@ -477,12 +476,17 @@ class ConnectionImpl implements Connection {
     }
 
     // Query finished running and we can paginate all the results
-    if (results.getJobComplete() && results.getSchema() != null) {
+    // Results should be read using the high throughput read API if sufficiently large.
+    boolean shouldUseReadApi =
+        connectionSettings.getUseReadAPI()
+            && results.getTotalRows().longValue() > connectionSettings.getMinResultSize();
+    if (results.getJobComplete() && results.getSchema() != null && !shouldUseReadApi) {
       return processQueryResponseResults(results);
     } else {
-      // Query is long-running (> 10s) and hasn't completed yet, or query completed but didn't
-      // return the schema, fallback to jobs.insert path. Some operations don't return the schema
-      // and can be optimized here, but this is left as future work.
+      // Query is long-running (> 10s) and hasn't completed yet, query completed but didn't
+      // return the schema, or results are sufficiently large to use the high throughput read API,
+      // fallback to jobs.insert path. Some operations don't return the schema and can be optimized
+      // here, but this is left as future work.
       JobId jobId = JobId.fromPb(results.getJobReference());
       GetQueryResultsResponse firstPage = getQueryResultsFirstPage(jobId);
       Long totalRows =
