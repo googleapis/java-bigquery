@@ -1003,6 +1003,7 @@ class ConnectionImpl implements Connection {
           schema);
 
       logger.log(Level.INFO, "\n Using BigQuery Read API");
+      stats.getQueryStatistics().setUseReadApi(true);
       return new BigQueryResultImpl<BigQueryResultImpl.Row>(schema, totalRows, bufferRow, stats);
 
     } catch (IOException e) {
