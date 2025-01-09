@@ -3507,7 +3507,8 @@ public class ITBigQueryTest {
             .setTotalToPageRowCountRatio(1)
             .build();
 
-    Connection connectionReadAPIEnabled = bigquery.createConnection(connectionSettingsReadAPIEnabledFastQueryDisabled);
+    Connection connectionReadAPIEnabled =
+        bigquery.createConnection(connectionSettingsReadAPIEnabledFastQueryDisabled);
 
     String selectQuery = String.format(QUERY, rowLimit);
 
@@ -3533,7 +3534,8 @@ public class ITBigQueryTest {
             .setTotalToPageRowCountRatio(1)
             .build();
 
-    Connection connectionReadAPIEnabled = bigquery.createConnection(connectionSettingsReadAPIEnabledFastQueryDisabled);
+    Connection connectionReadAPIEnabled =
+        bigquery.createConnection(connectionSettingsReadAPIEnabledFastQueryDisabled);
 
     String selectQuery = String.format(QUERY, rowLimit);
 
