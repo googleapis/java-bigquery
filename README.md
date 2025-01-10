@@ -11,7 +11,7 @@ Java idiomatic client for [Cloud BigQuery][product-docs].
 
 ## Quickstart
 
-If you are using Maven with [BOM][libraries-bom], add this to your pom.xml file:
+TESTING: If you are using Maven with [BOM][libraries-bom], add this to your pom.xml file:
 
 ```xml
 <!--  Using libraries-bom to manage versions.
