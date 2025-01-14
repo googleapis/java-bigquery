@@ -477,11 +477,11 @@ class ConnectionImpl implements Connection {
 
     // Query finished running and we can paginate all the results
     // Results should be read using the high throughput read API if sufficiently large.
-    boolean shouldUseReadApi =
+    boolean resultsLargeEnoughForReadApi =
         connectionSettings.getUseReadAPI()
             && results.getTotalRows() != null
             && results.getTotalRows().longValue() > connectionSettings.getMinResultSize();
-    if (results.getJobComplete() && results.getSchema() != null && !shouldUseReadApi) {
+    if (results.getJobComplete() && results.getSchema() != null && !resultsLargeEnoughForReadApi) {
       return processQueryResponseResults(results);
     } else {
       // Query is long-running (> 10s) and hasn't completed yet, query completed but didn't
