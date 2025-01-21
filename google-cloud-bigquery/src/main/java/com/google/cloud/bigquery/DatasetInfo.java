@@ -76,6 +76,7 @@ public class DatasetInfo implements Serializable {
   private final ExternalDatasetReference externalDatasetReference;
   private final String storageBillingModel;
   private final Long maxTimeTravelHours;
+  private final Map<String, String> resourceTags;
 
   /** A builder for {@code DatasetInfo} objects. */
   public abstract static class Builder {
@@ -184,6 +185,19 @@ public class DatasetInfo implements Serializable {
      */
     public abstract Builder setDefaultCollation(String defaultCollation);
 
+    /**
+     * Optional. The <a href="https://cloud.google.com/bigquery/docs/tags">tags</a> attached to this
+     * dataset. Tag keys are globally unique. Tag key is expected to be in the namespaced format,
+     * for example "123456789012/environment" where 123456789012 is the ID of the parent
+     * organization or project resource for this tag key. Tag value is expected to be the short
+     * name, for example "Production".
+     *
+     * @see <a href="https://cloud.google.com/iam/docs/tags-access-control#definitions">Tag
+     *     definitions</a> for more details.
+     * @param resourceTags resourceTags or {@code null} for none
+     */
+    public abstract Builder setResourceTags(Map<String, String> resourceTags);
+
     /** Creates a {@code DatasetInfo} object. */
     public abstract DatasetInfo build();
   }
@@ -208,6 +222,7 @@ public class DatasetInfo implements Serializable {
     private ExternalDatasetReference externalDatasetReference;
     private String storageBillingModel;
     private Long maxTimeTravelHours;
+    private Map<String, String> resourceTags;
 
     BuilderImpl() {}
 
@@ -230,6 +245,7 @@ public class DatasetInfo implements Serializable {
       this.externalDatasetReference = datasetInfo.externalDatasetReference;
       this.storageBillingModel = datasetInfo.storageBillingModel;
       this.maxTimeTravelHours = datasetInfo.maxTimeTravelHours;
+      this.resourceTags = datasetInfo.resourceTags;
     }
 
     BuilderImpl(com.google.api.services.bigquery.model.Dataset datasetPb) {
@@ -270,6 +286,9 @@ public class DatasetInfo implements Serializable {
       }
       this.storageBillingModel = datasetPb.getStorageBillingModel();
       this.maxTimeTravelHours = datasetPb.getMaxTimeTravelHours();
+      if (datasetPb.getResourceTags() != null) {
+        this.resourceTags = datasetPb.getResourceTags();
+      }
     }
 
     @Override
@@ -389,6 +408,12 @@ public class DatasetInfo implements Serializable {
     }
 
     @Override
+    public Builder setResourceTags(Map<String, String> resourceTags) {
+      this.resourceTags = resourceTags;
+      return this;
+    }
+
+    @Override
     public DatasetInfo build() {
       return new DatasetInfo(this);
     }
@@ -413,6 +438,7 @@ public class DatasetInfo implements Serializable {
     externalDatasetReference = builder.externalDatasetReference;
     storageBillingModel = builder.storageBillingModel;
     maxTimeTravelHours = builder.maxTimeTravelHours;
+    resourceTags = builder.resourceTags;
   }
 
   /** Returns the dataset identity. */
@@ -555,6 +581,21 @@ public class DatasetInfo implements Serializable {
   }
 
   /**
+   * Optional. The <a href="https://cloud.google.com/bigquery/docs/tags">tags</a> attached to this
+   * dataset. Tag keys are globally unique. Tag key is expected to be in the namespaced format, for
+   * example "123456789012/environment" where 123456789012 is the ID of the parent organization or
+   * project resource for this tag key. Tag value is expected to be the short name, for example
+   * "Production".
+   *
+   * @see <a href="https://cloud.google.com/iam/docs/tags-access-control#definitions">Tag
+   *     definitions</a> for more details.
+   * @return value or {@code null} for none
+   */
+  public Map<String, String> getResourceTags() {
+    return resourceTags;
+  }
+
+  /**
    * Returns information about the external metadata storage where the dataset is defined. Filled
    * out when the dataset type is EXTERNAL.
    */
@@ -588,6 +629,7 @@ public class DatasetInfo implements Serializable {
         .add("externalDatasetReference", externalDatasetReference)
         .add("storageBillingModel", storageBillingModel)
         .add("maxTimeTravelHours", maxTimeTravelHours)
+        .add("resourceTags", resourceTags)
         .toString();
   }
 
@@ -674,6 +716,9 @@ public class DatasetInfo implements Serializable {
     }
     if (maxTimeTravelHours != null) {
       datasetPb.setMaxTimeTravelHours(maxTimeTravelHours);
+    }
+    if (resourceTags != null) {
+      datasetPb.setResourceTags(resourceTags);
     }
     return datasetPb;
   }
