@@ -1815,7 +1815,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateDatasetWithSpecificResourceTags() {
+  public void testCreateDatasetWithSpecificResourceTags() throws IOException {
     ServiceAccountCredentials credentials =
         (ServiceAccountCredentials) GoogleCredentials.getApplicationDefault();
     User user = new User(credentials.getClientEmail());
