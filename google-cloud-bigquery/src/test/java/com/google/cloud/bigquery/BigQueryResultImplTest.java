@@ -75,7 +75,6 @@ public class BigQueryResultImplTest {
   private static final String BYTES_BASE64 = BaseEncoding.base64().encode(BYTES);
   private static final Timestamp EXPECTED_TIMESTAMP = Timestamp.valueOf("2025-01-02 03:04:05.0");
   private static final String TIME = "20:21:22";
-  private static final long TIME_LONG = 4882000000L;
   private static final Time EXPECTED_TIME = Time.valueOf(LocalTime.of(20, 21, 22));
   private static final String DATE = "2020-01-21";
   private static final int DATE_INT = 18283; // 2020-01-21
@@ -140,9 +139,9 @@ public class BigQueryResultImplTest {
     assertThat(resultSet.wasNull()).isFalse();
     assertThat(resultSet.getTimestamp("timestamp")).isEqualTo(EXPECTED_TIMESTAMP);
     assertThat(resultSet.wasNull()).isFalse();
-    assertThat(resultSet.getTime("time")).isEqualTo(EXPECTED_TIME);
+    assertThat(resultSet.getTime("time").getTime()).isEqualTo(EXPECTED_TIME.getTime());
     assertThat(resultSet.wasNull()).isFalse();
-    assertThat(resultSet.getDate("date")).isEqualTo(EXPECTED_DATE);
+    assertThat(resultSet.getDate("date").getTime()).isEqualTo(EXPECTED_DATE.getTime());
     assertThat(resultSet.wasNull()).isFalse();
 
     assertThat(resultSet.next()).isTrue();
@@ -183,7 +182,7 @@ public class BigQueryResultImplTest {
     rowValues.put("string", new Text("string_value"));
     rowValues.put("bytes", BYTES);
     rowValues.put("timestamp", EXPECTED_TIMESTAMP.getTime() * 1000);
-    rowValues.put("time", TIME_LONG);
+    rowValues.put("time", EXPECTED_TIME.getTime() * 1000);
     rowValues.put("date", DATE_INT);
     buffer.put(new BigQueryResultImpl.Row(rowValues));
 
@@ -222,7 +221,7 @@ public class BigQueryResultImplTest {
     assertThat(resultSet.wasNull()).isFalse();
     assertThat(resultSet.getTimestamp("timestamp")).isEqualTo(EXPECTED_TIMESTAMP);
     assertThat(resultSet.wasNull()).isFalse();
-    assertThat(resultSet.getTime("time").toLocalTime()).isEqualTo(EXPECTED_TIME.toLocalTime());
+    assertThat(resultSet.getTime("time").getTime()).isEqualTo(EXPECTED_TIME.getTime());
     assertThat(resultSet.wasNull()).isFalse();
     assertThat(resultSet.getDate("date").toLocalDate()).isEqualTo(EXPECTED_DATE.toLocalDate());
     assertThat(resultSet.wasNull()).isFalse();
