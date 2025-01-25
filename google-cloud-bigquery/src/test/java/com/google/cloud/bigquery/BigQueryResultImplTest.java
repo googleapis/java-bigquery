@@ -77,7 +77,7 @@ public class BigQueryResultImplTest {
   private static final String TIME = "20:21:22";
   private static final Time EXPECTED_TIME = Time.valueOf(LocalTime.of(20, 21, 22));
   private static final String DATE = "2020-01-21";
-  private static final int DATE_INT = 18283; // 2020-01-21
+  private static final int DATE_INT = 0;
   private static final Date EXPECTED_DATE = java.sql.Date.valueOf(DATE);
   private static final int BUFFER_SIZE = 10;
 

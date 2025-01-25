@@ -666,7 +666,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
             TimeUnit.DAYS.toMillis(
                 Long.valueOf(
                     dateInt)); // For example int 18993 represents 2022-01-01, converting time to
-                               // milli seconds
+        // milli seconds
         return new Date(dateInMillis);
       }
     }
