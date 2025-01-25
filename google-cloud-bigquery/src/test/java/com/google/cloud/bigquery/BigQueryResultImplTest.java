@@ -223,7 +223,7 @@ public class BigQueryResultImplTest {
     assertThat(resultSet.wasNull()).isFalse();
     assertThat(resultSet.getTime("time").getTime()).isEqualTo(EXPECTED_TIME.getTime());
     assertThat(resultSet.wasNull()).isFalse();
-    assertThat(resultSet.getDate("date").toLocalDate()).isEqualTo(EXPECTED_DATE.toLocalDate());
+    assertThat(resultSet.getDate("date").toString()).isEqualTo(EXPECTED_DATE.toString());
     assertThat(resultSet.wasNull()).isFalse();
 
     assertThat(resultSet.next()).isTrue();
