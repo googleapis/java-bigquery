@@ -223,8 +223,9 @@ public class BigQueryResultImplTest {
     assertThat(resultSet.wasNull()).isFalse();
     assertThat(resultSet.getTime("time").getTime()).isEqualTo(EXPECTED_TIME.getTime());
     assertThat(resultSet.wasNull()).isFalse();
+    // Do not check date value as Date object do not have timezone but its toString() applies the
+    // JVM default timezone which causes flakes in non-UTC zones.
     assertThat(resultSet.getDate("date")).isNotNull();
-    assertThat(resultSet.getDate("date").toString()).isEqualTo(EXPECTED_DATE.toString());
     assertThat(resultSet.wasNull()).isFalse();
 
     assertThat(resultSet.next()).isTrue();
