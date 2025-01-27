@@ -76,7 +76,7 @@ public class DatasetInfo implements Serializable {
   private final ExternalDatasetReference externalDatasetReference;
   private final String storageBillingModel;
   private final Long maxTimeTravelHours;
-  private final Map<String, String> resourceTags;
+  private final Annotations resourceTags;
 
   /** A builder for {@code DatasetInfo} objects. */
   public abstract static class Builder {
@@ -222,7 +222,7 @@ public class DatasetInfo implements Serializable {
     private ExternalDatasetReference externalDatasetReference;
     private String storageBillingModel;
     private Long maxTimeTravelHours;
-    private Map<String, String> resourceTags;
+    private Annotations resourceTags = Annotations.ZERO;
 
     BuilderImpl() {}
 
@@ -286,9 +286,7 @@ public class DatasetInfo implements Serializable {
       }
       this.storageBillingModel = datasetPb.getStorageBillingModel();
       this.maxTimeTravelHours = datasetPb.getMaxTimeTravelHours();
-      if (datasetPb.getResourceTags() != null) {
-        this.resourceTags = datasetPb.getResourceTags();
-      }
+      this.resourceTags = Annotations.fromPb(datasetPb.getResourceTags());
     }
 
     @Override
@@ -409,7 +407,7 @@ public class DatasetInfo implements Serializable {
 
     @Override
     public Builder setResourceTags(Map<String, String> resourceTags) {
-      this.resourceTags = resourceTags;
+      this.resourceTags = Annotations.fromUser(resourceTags);
       return this;
     }
 
@@ -592,7 +590,7 @@ public class DatasetInfo implements Serializable {
    * @return value or {@code null} for none
    */
   public Map<String, String> getResourceTags() {
-    return resourceTags;
+    return resourceTags.userMap();
   }
 
   /**
@@ -717,9 +715,7 @@ public class DatasetInfo implements Serializable {
     if (maxTimeTravelHours != null) {
       datasetPb.setMaxTimeTravelHours(maxTimeTravelHours);
     }
-    if (resourceTags != null) {
-      datasetPb.setResourceTags(resourceTags);
-    }
+    datasetPb.setResourceTags(resourceTags.toPb());
     return datasetPb;
   }
 
