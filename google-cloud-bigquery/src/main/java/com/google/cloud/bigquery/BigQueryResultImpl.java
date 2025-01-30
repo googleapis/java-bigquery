@@ -30,6 +30,11 @@ import java.util.concurrent.TimeUnit;
 import org.apache.arrow.vector.util.JsonStringArrayList;
 import org.apache.arrow.vector.util.Text;
 
+/**
+ * An implementation of BigQueryResult.
+ *
+ * <p>This class and the ResultSet it returns is not thread-safe.
+ */
 public class BigQueryResultImpl<T> implements BigQueryResult<T> {
 
   private static final String NULL_CURSOR_MSG =
@@ -688,6 +693,11 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
       }
     }
 
+    /**
+     * Returns whether the last column read had a value of SQL NULL. Note that you must first call
+     * one of the getter methods on a column to try to read its value and then call the method
+     * wasNull to see if the value read was SQL NULL. *
+     */
     @Override
     public boolean wasNull() {
       return wasNull;
