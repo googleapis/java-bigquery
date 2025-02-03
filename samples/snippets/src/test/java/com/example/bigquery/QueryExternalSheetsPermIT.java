@@ -80,7 +80,7 @@ public class QueryExternalSheetsPermIT {
   @Test
   public void testQueryExternalSheetsPerm() {
     String sourceUri =
-        "https://docs.google.com/spreadsheets/d/1i_QCL-7HcSyUZmIbP9E6lO_T5u3HnpLe7dnpHaijg_E/edit?usp=sharing";
+        "https://docs.google.com/spreadsheets/d/1i_QCL-7HcSyUZmIbP9E6lO_T5u3HnpLe7dnpHaijg_E";
     Schema schema =
         Schema.of(
             Field.of("name", StandardSQLTypeName.STRING),
