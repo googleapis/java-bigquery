@@ -79,7 +79,6 @@ public class QueryExternalSheetsPermIT {
 
   @Test
   public void testQueryExternalSheetsPerm() {
-    // TODO(NOW): DO NOT MERGE
     String sourceUri =
         "https://docs.google.com/spreadsheets/d/1i_QCL-7HcSyUZmIbP9E6lO_T5u3HnpLe7dnpHaijg_E/edit?usp=sharing";
     Schema schema =
@@ -92,6 +91,6 @@ public class QueryExternalSheetsPermIT {
     QueryExternalSheetsPerm.queryExternalSheetsPerm(
         BIGQUERY_DATASET_NAME, tableName, sourceUri, schema, query);
     assertThat(bout.toString())
-        .contains("TODO: DO NOT MERGE.");
+        .contains("Query on external permanent table performed successfully.");
   }
 }
