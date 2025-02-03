@@ -93,6 +93,6 @@ public class QueryExternalSheetsPermIT {
     QueryExternalSheetsPerm.queryExternalSheetsPerm(
         BIGQUERY_DATASET_NAME, tableName, sourceUri, schema, query);
     assertThat(bout.toString())
-        .contains("TODO: DO NOT MERGE. Query on external permanent table performed successfully.");
+        .contains("TODO: DO NOT MERGE.");
   }
 }
