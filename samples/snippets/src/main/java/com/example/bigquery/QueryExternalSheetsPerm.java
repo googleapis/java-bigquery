@@ -61,9 +61,9 @@ public class QueryExternalSheetsPerm {
       GoogleCredentials credentials =
           ServiceAccountCredentials.getApplicationDefault()
               .createScoped(
-                  ImmutableSet.of());
-                      // "https://www.googleapis.com/auth/bigquery",
-                      // "https://www.googleapis.com/auth/drive"));
+                  ImmutableSet.of(
+                      "https://www.googleapis.com/auth/bigquery",
+                      "https://www.googleapis.com/auth/drive"));
 
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
