@@ -203,7 +203,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       return bqCreateRequest.execute();
   }
 
-    @Override
+  @Override
   public Table create(Table table, Map<Option, ?> options) {
     try {
       validateRPC();
