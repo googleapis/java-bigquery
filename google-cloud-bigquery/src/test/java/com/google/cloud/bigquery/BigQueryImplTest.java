@@ -545,21 +545,22 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateDataset() {
+  public void testCreateDataset() throws IOException {
     DatasetInfo datasetInfo = DATASET_INFO.setProjectId(OTHER_PROJECT);
-    when(bigqueryRpcMock.create(datasetInfo.toPb(), EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.createSkipExceptionTranslation(datasetInfo.toPb(), EMPTY_RPC_OPTIONS))
         .thenReturn(datasetInfo.toPb());
     BigQueryOptions bigQueryOptions =
         createBigQueryOptionsForProject(OTHER_PROJECT, rpcFactoryMock);
     bigquery = bigQueryOptions.getService();
     Dataset dataset = bigquery.create(datasetInfo);
     assertEquals(new Dataset(bigquery, new DatasetInfo.BuilderImpl(datasetInfo)), dataset);
-    verify(bigqueryRpcMock).create(datasetInfo.toPb(), EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock).createSkipExceptionTranslation(datasetInfo.toPb(), EMPTY_RPC_OPTIONS);
   }
 
   @Test
-  public void testCreateDatasetWithSelectedFields() {
-    when(bigqueryRpcMock.create(eq(DATASET_INFO_WITH_PROJECT.toPb()), capturedOptions.capture()))
+  public void testCreateDatasetWithSelectedFields() throws IOException {
+    when(bigqueryRpcMock.createSkipExceptionTranslation(
+            eq(DATASET_INFO_WITH_PROJECT.toPb()), capturedOptions.capture()))
         .thenReturn(DATASET_INFO_WITH_PROJECT.toPb());
     bigquery = options.getService();
     Dataset dataset = bigquery.create(DATASET_INFO, DATASET_OPTION_FIELDS);
@@ -570,21 +571,25 @@ public class BigQueryImplTest {
     assertEquals(28, selector.length());
     assertEquals(
         new Dataset(bigquery, new DatasetInfo.BuilderImpl(DATASET_INFO_WITH_PROJECT)), dataset);
-    verify(bigqueryRpcMock).create(eq(DATASET_INFO_WITH_PROJECT.toPb()), capturedOptions.capture());
+    verify(bigqueryRpcMock)
+        .createSkipExceptionTranslation(
+            eq(DATASET_INFO_WITH_PROJECT.toPb()), capturedOptions.capture());
   }
 
   @Test
-  public void testCreateDatasetWithAccessPolicy() {
+  public void testCreateDatasetWithAccessPolicy() throws IOException {
     DatasetInfo datasetInfo = DATASET_INFO.setProjectId(OTHER_PROJECT);
     DatasetOption datasetOption = DatasetOption.accessPolicyVersion(3);
-    when(bigqueryRpcMock.create(datasetInfo.toPb(), optionMap(datasetOption)))
+    when(bigqueryRpcMock.createSkipExceptionTranslation(
+            datasetInfo.toPb(), optionMap(datasetOption)))
         .thenReturn(datasetInfo.toPb());
     BigQueryOptions bigQueryOptions =
         createBigQueryOptionsForProject(OTHER_PROJECT, rpcFactoryMock);
     bigquery = bigQueryOptions.getService();
     Dataset dataset = bigquery.create(datasetInfo, datasetOption);
     assertEquals(new Dataset(bigquery, new DatasetInfo.BuilderImpl(datasetInfo)), dataset);
-    verify(bigqueryRpcMock).create(datasetInfo.toPb(), optionMap(datasetOption));
+    verify(bigqueryRpcMock)
+        .createSkipExceptionTranslation(datasetInfo.toPb(), optionMap(datasetOption));
   }
 
   @Test

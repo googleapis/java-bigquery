@@ -187,20 +187,21 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @Override
-  public Dataset createSkipExceptionTranslation(Dataset dataset, Map<Option, ?> options) throws IOException {
-      validateRPC();
-      Bigquery.Datasets.Insert bqCreateRequest =
-          bigquery
-              .datasets()
-              .insert(dataset.getDatasetReference().getProjectId(), dataset)
-              .setPrettyPrint(false)
-              .setFields(Option.FIELDS.getString(options));
-      for (Map.Entry<Option, ?> entry : options.entrySet()) {
-        if (entry.getKey() == Option.ACCESS_POLICY_VERSION && entry.getValue() != null) {
-          bqCreateRequest.setAccessPolicyVersion((Integer) entry.getValue());
-        }
+  public Dataset createSkipExceptionTranslation(Dataset dataset, Map<Option, ?> options)
+      throws IOException {
+    validateRPC();
+    Bigquery.Datasets.Insert bqCreateRequest =
+        bigquery
+            .datasets()
+            .insert(dataset.getDatasetReference().getProjectId(), dataset)
+            .setPrettyPrint(false)
+            .setFields(Option.FIELDS.getString(options));
+    for (Map.Entry<Option, ?> entry : options.entrySet()) {
+      if (entry.getKey() == Option.ACCESS_POLICY_VERSION && entry.getValue() != null) {
+        bqCreateRequest.setAccessPolicyVersion((Integer) entry.getValue());
       }
-      return bqCreateRequest.execute();
+    }
+    return bqCreateRequest.execute();
   }
 
   @Override
