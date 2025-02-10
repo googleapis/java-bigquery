@@ -118,7 +118,7 @@ public interface BigQueryRpc extends ServiceRpc {
   /**
    * Creates a new dataset.
    *
-   * <p>Users are encouraged to use {@link #create(Dataset, Map<Option, ?>...)} instead.
+   * <p>Users are encouraged to use {@link #create(Dataset, Map<Option, ?>)} instead.
    *
    * @throws IOException upon failure
    */
