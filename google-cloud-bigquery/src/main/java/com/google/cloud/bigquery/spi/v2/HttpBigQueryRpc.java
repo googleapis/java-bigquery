@@ -180,6 +180,14 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   @Override
   public Dataset create(Dataset dataset, Map<Option, ?> options) {
     try {
+      return createSkipExceptionTranslation(dataset, options);
+    } catch (IOException ex) {
+      throw translate(ex);
+    }
+  }
+
+  @Override
+  public Dataset createSkipExceptionTranslation(Dataset dataset, Map<Option, ?> options) throws IOException {
       validateRPC();
       Bigquery.Datasets.Insert bqCreateRequest =
           bigquery
@@ -193,12 +201,9 @@ public class HttpBigQueryRpc implements BigQueryRpc {
         }
       }
       return bqCreateRequest.execute();
-    } catch (IOException ex) {
-      throw translate(ex);
-    }
   }
 
-  @Override
+    @Override
   public Table create(Table table, Map<Option, ?> options) {
     try {
       validateRPC();

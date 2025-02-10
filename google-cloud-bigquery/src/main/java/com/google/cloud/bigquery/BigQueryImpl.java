@@ -53,6 +53,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -271,8 +272,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Dataset>() {
                 @Override
-                public com.google.api.services.bigquery.model.Dataset call() {
-                  return bigQueryRpc.create(datasetPb, optionsMap);
+                public com.google.api.services.bigquery.model.Dataset call() throws IOException {
+                  return bigQueryRpc.createSkipExceptionTranslation(datasetPb, optionsMap);
                 }
               },
               getOptions().getRetrySettings(),
