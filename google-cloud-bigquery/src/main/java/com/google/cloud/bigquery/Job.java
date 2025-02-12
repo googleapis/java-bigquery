@@ -193,8 +193,17 @@ public class Job extends JobInfo {
    */
   public boolean isDone() {
     checkNotDryRun("isDone");
+    // check the known state in-memory as it might already contain that it has been finished
+    if (hasDoneState()) {
+      return true;
+    }
+    // refresh the state from BQ to check if it has finished since the current in-memory state has been fetched
     Job job = bigquery.getJob(getJobId(), JobOption.fields(BigQuery.JobField.STATUS));
-    return job == null || JobStatus.State.DONE.equals(job.getStatus().getState());
+    return job == null || job.hasDoneState();
+}
+
+private boolean hasDoneState() {
+    return getStatus() != null && JobStatus.State.DONE.equals(getStatus().getState());
   }
 
   /** See {@link #waitFor(BigQueryRetryConfig, RetryOption...)} */
