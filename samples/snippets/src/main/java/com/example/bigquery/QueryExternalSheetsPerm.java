@@ -70,33 +70,27 @@ public class QueryExternalSheetsPerm {
       BigQuery bigquery =
           BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
 
+      // Skip header row in the file.
+      GoogleSheetsOptions sheetsOptions =
+          GoogleSheetsOptions.newBuilder()
+              .setSkipLeadingRows(1) // Optionally skip header row.
+              .setRange("us-states!A20:B49") // Optionally set range of the sheet to query from.
+              .build();
+
       TableId tableId = TableId.of(datasetName, tableName);
-      TableDefinition tableDefinition = StandardTableDefinition.of(schema);
-      TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build();
+      // Create a permanent table linked to the Sheets file.
+      ExternalTableDefinition externalTable =
+          ExternalTableDefinition.newBuilder(sourceUri, sheetsOptions).setSchema(schema).build();
+      bigquery.create(TableInfo.of(tableId, externalTable));
 
-      bigquery.create(tableInfo);
+      // Example query to find states starting with 'W'
+      TableResult results = bigquery.query(QueryJobConfiguration.of(query));
 
-      // // Skip header row in the file.
-      // GoogleSheetsOptions sheetsOptions =
-      //     GoogleSheetsOptions.newBuilder()
-      //         .setSkipLeadingRows(1) // Optionally skip header row.
-      //         .setRange("us-states!A20:B49") // Optionally set range of the sheet to query from.
-      //         .build();
-      //
-      // TableId tableId = TableId.of(datasetName, tableName);
-      // // Create a permanent table linked to the Sheets file.
-      // ExternalTableDefinition externalTable =
-      //     ExternalTableDefinition.newBuilder(sourceUri, sheetsOptions).setSchema(schema).build();
-      // bigquery.create(TableInfo.of(tableId, externalTable));
-      //
-      // // Example query to find states starting with 'W'
-      // TableResult results = bigquery.query(QueryJobConfiguration.of(query));
-      //
-      // results
-      //     .iterateAll()
-      //     .forEach(row -> row.forEach(val -> System.out.printf("%s,", val.toString())));
-      //
-      // System.out.println("Query on external permanent table performed successfully.");
+      results
+          .iterateAll()
+          .forEach(row -> row.forEach(val -> System.out.printf("%s,", val.toString())));
+
+      System.out.println("Query on external permanent table performed successfully.");
     } catch (BigQueryException | InterruptedException | IOException e) {
       System.out.println("Query not performed \n" + e.toString());
     }
