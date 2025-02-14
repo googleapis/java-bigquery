@@ -56,7 +56,8 @@ public class CreateTable {
       bigquery.create(tableInfo);
 
       // TODO(NOW)
-      String query = String.format("SELECT * FROM %s.INFORMATION_SCHEMA.SESSIONS_BY_USER", datasetName);
+      // String query = String.format("SELECT * FROM %s.INFORMATION_SCHEMA.SESSIONS_BY_USER", datasetName);
+      String query = "SELECT * FROM region-us.INFORMATION_SCHEMA.SCHEMATA"";
       // Create the query job.
       QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query).build();
 
