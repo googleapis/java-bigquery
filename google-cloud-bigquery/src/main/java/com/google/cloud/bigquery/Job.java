@@ -200,9 +200,9 @@ public class Job extends JobInfo {
     // refresh the state from BQ to check if it has finished since the current in-memory state has been fetched
     Job job = bigquery.getJob(getJobId(), JobOption.fields(BigQuery.JobField.STATUS));
     return job == null || job.hasDoneState();
-}
+  }
 
-private boolean hasDoneState() {
+  private boolean hasDoneState() {
     return getStatus() != null && JobStatus.State.DONE.equals(getStatus().getState());
   }
 
