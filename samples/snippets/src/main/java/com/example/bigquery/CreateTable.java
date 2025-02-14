@@ -52,7 +52,28 @@ public class CreateTable {
       TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build();
 
       bigquery.create(tableInfo);
-      System.out.println("Table created successfully");
+
+      // TODO(NOW)
+      String query = "SELECT * `region-us`.INFORMATION_SCHEMA.SESSIONS_BY_USER";
+      // Create the query job.
+      QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query).build();
+
+      // Execute the query.
+      TableResult result = bigquery.query(queryConfig);
+
+      // Print the results.
+      result
+          .iterateAll()
+          .forEach(
+              row -> {
+                System.out.print("creation_time:" + row.get("creation_time").getStringValue());
+                System.out.print(", project_id:" + row.get("project_id").getStringValue());
+                System.out.print(", session_id:" + row.get("session_id").getStringValue());
+                System.out.print(", user_email:" + row.get("user_email").getStringValue());
+                System.out.println();
+              });
+
+      System.out.println("TODO");
     } catch (BigQueryException e) {
       System.out.println("Table was not created. \n" + e.toString());
     }
