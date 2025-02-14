@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Google LLC
+ * Copyright 2019 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,11 +30,9 @@ import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore
-public class QueryExternalSheetsPermIT {
+public class CreateTableIT {
 
   private final Logger log = Logger.getLogger(this.getClass().getName());
   private String tableName;
@@ -42,15 +40,12 @@ public class QueryExternalSheetsPermIT {
   private PrintStream out;
   private PrintStream originalPrintStream;
 
-  private static final String BIGQUERY_DATASET_NAME = requireEnvVar("BIGQUERY_DATASET_NAME");
-  private static final String PROJECT_ID = requireEnvVar("GOOGLE_CLOUD_PROJECT");
+  private static final String BIGQUERY_DATASET_NAME = System.getenv("BIGQUERY_DATASET_NAME");
 
-  private static String requireEnvVar(String varName) {
-    String value = System.getenv(varName);
+  private static void requireEnvVar(String varName) {
     assertNotNull(
         "Environment variable " + varName + " is required to perform these tests.",
         System.getenv(varName));
-    return value;
   }
 
   @BeforeClass
@@ -60,13 +55,11 @@ public class QueryExternalSheetsPermIT {
 
   @Before
   public void setUp() {
-    // Create a test table
-    tableName =
-        "EXTERNAL_SHEETS_TABLE_FROM_GCS_TEST_" + UUID.randomUUID().toString().substring(0, 8);
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
     originalPrintStream = System.out;
     System.setOut(out);
+    tableName = "MY_TABLE_NAME_" + UUID.randomUUID().toString().replace("-", "_");
   }
 
   @After
@@ -80,19 +73,12 @@ public class QueryExternalSheetsPermIT {
   }
 
   @Test
-  public void testQueryExternalSheetsPerm() {
-    String sourceUri =
-        "https://docs.google.com/spreadsheets/d/1i_QCL-7HcSyUZmIbP9E6lO_T5u3HnpLe7dnpHaijg_E/edit?usp=sharing";
+  public void testCreateTable() {
     Schema schema =
         Schema.of(
-            Field.of("name", StandardSQLTypeName.STRING),
-            Field.of("post_abbr", StandardSQLTypeName.STRING));
-    String query =
-        String.format(
-            "SELECT * FROM %s.%s WHERE name LIKE 'W%%'", BIGQUERY_DATASET_NAME, tableName);
-    QueryExternalSheetsPerm.queryExternalSheetsPerm(
-        BIGQUERY_DATASET_NAME, tableName, sourceUri, schema, query);
-    assertThat(bout.toString())
-        .contains("Query on external permanent table performed successfully.");
+            Field.of("stringField", StandardSQLTypeName.STRING),
+            Field.of("booleanField", StandardSQLTypeName.BOOL));
+    CreateTable.createTable(BIGQUERY_DATASET_NAME, tableName, schema);
+    assertThat(bout.toString()).contains("Table created successfully");
   }
 }
