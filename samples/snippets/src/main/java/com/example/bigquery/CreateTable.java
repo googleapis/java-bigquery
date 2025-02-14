@@ -57,7 +57,7 @@ public class CreateTable {
 
       // TODO(NOW)
       // String query = String.format("SELECT * FROM %s.INFORMATION_SCHEMA.SESSIONS_BY_USER", datasetName);
-      String query = "SELECT * FROM region-us.INFORMATION_SCHEMA.SCHEMATA";
+      String query = "SELECT * FROM region-us.INFORMATION_SCHEMA.SESSIONS_BY_USER";
       // Create the query job.
       QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query).build();
 
