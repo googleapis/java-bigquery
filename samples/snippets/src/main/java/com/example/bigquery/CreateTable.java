@@ -76,7 +76,7 @@ public class CreateTable {
               });
 
       System.out.println("TODO");
-    } catch (BigQueryException e) {
+    } catch (BigQueryException e | InterruptedException e) {
       System.out.println("Table was not created. \n" + e.toString());
     }
   }
