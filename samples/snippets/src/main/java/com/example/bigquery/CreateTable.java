@@ -74,9 +74,7 @@ public class CreateTable {
                 System.out.print(", user_email:" + row.get("user_email").getStringValue());
                 System.out.println();
               });
-
-      System.out.println("TODO");
-    } catch (BigQueryException e | InterruptedException e) {
+    } catch (BigQueryException | InterruptedException e) {
       System.out.println("Table was not created. \n" + e.toString());
     }
   }
