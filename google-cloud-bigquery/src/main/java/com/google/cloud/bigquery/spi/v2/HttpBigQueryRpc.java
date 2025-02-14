@@ -186,7 +186,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
     }
   }
 
-  @Override
+  @InternalApi("internal to java-bigquery")
   public Dataset createSkipExceptionTranslation(Dataset dataset, Map<Option, ?> options)
       throws IOException {
     validateRPC();

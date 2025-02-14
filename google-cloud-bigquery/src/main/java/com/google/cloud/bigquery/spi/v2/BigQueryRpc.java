@@ -16,7 +16,6 @@
 
 package com.google.cloud.bigquery.spi.v2;
 
-import com.google.api.core.InternalApi;
 import com.google.api.core.InternalExtensionOnly;
 import com.google.api.services.bigquery.Bigquery.Jobs.Query;
 import com.google.api.services.bigquery.model.Dataset;
@@ -35,7 +34,6 @@ import com.google.api.services.bigquery.model.TestIamPermissionsResponse;
 import com.google.cloud.ServiceRpc;
 import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.BigQueryException;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -114,17 +112,6 @@ public interface BigQueryRpc extends ServiceRpc {
    * @throws BigQueryException upon failure
    */
   Dataset create(Dataset dataset, Map<Option, ?> options);
-
-  /**
-   * Creates a new dataset.
-   *
-   * <p>Users are encouraged to use {@link #create(Dataset, Map<Option, ?>)} instead.
-   *
-   * @throws IOException upon failure
-   */
-  @InternalApi("internal to java-bigquery")
-  Dataset createSkipExceptionTranslation(Dataset dataset, Map<Option, ?> options)
-      throws IOException;
 
   /**
    * Creates a new table.

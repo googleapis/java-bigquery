@@ -36,6 +36,7 @@ import com.google.cloud.bigquery.BigQuery.QueryResultsOption;
 import com.google.cloud.bigquery.InsertAllRequest.RowToInsert;
 import com.google.cloud.bigquery.spi.BigQueryRpcFactory;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
+import com.google.cloud.bigquery.spi.v2.HttpBigQueryRpc;
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.collect.*;
@@ -497,7 +498,7 @@ public class BigQueryImplTest {
           .build();
   private BigQueryOptions options;
   private BigQueryRpcFactory rpcFactoryMock;
-  private BigQueryRpc bigqueryRpcMock;
+  private HttpBigQueryRpc bigqueryRpcMock;
   private BigQuery bigquery;
   private static final String RATE_LIMIT_ERROR_MSG =
       "Job exceeded rate limits: Your table exceeded quota for table update operations. For more information, see https://cloud.google.com/bigquery/docs/troubleshoot-quotas";
@@ -533,7 +534,8 @@ public class BigQueryImplTest {
   @Before
   public void setUp() {
     rpcFactoryMock = mock(BigQueryRpcFactory.class);
-    bigqueryRpcMock = mock(BigQueryRpc.class);
+    // bigqueryRpcMock = mock(BigQueryRpc.class);
+    bigqueryRpcMock = mock(HttpBigQueryRpc.class);
     when(rpcFactoryMock.create(any(BigQueryOptions.class))).thenReturn(bigqueryRpcMock);
     options = createBigQueryOptionsForProject(PROJECT, rpcFactoryMock);
   }
@@ -560,7 +562,7 @@ public class BigQueryImplTest {
   @Test
   public void testCreateDatasetWithSelectedFields() throws IOException {
     when(bigqueryRpcMock.createSkipExceptionTranslation(
-            eq(DATASET_INFO_WITH_PROJECT.toPb()), capturedOptions.capture()))
+        eq(DATASET_INFO_WITH_PROJECT.toPb()), capturedOptions.capture()))
         .thenReturn(DATASET_INFO_WITH_PROJECT.toPb());
     bigquery = options.getService();
     Dataset dataset = bigquery.create(DATASET_INFO, DATASET_OPTION_FIELDS);

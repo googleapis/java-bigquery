@@ -132,8 +132,8 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
     return SCOPES;
   }
 
-  protected BigQueryRpc getBigQueryRpcV2() {
-    return (BigQueryRpc) getRpc();
+  protected HttpBigQueryRpc getBigQueryRpcV2() {
+    return (HttpBigQueryRpc) getRpc();
   }
 
   public String getLocation() {
