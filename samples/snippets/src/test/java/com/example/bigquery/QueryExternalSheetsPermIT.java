@@ -33,7 +33,6 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore
 public class QueryExternalSheetsPermIT {
 
   private final Logger log = Logger.getLogger(this.getClass().getName());

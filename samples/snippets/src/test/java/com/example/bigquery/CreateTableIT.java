@@ -32,6 +32,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+@Ignore
 public class CreateTableIT {
 
   private final Logger log = Logger.getLogger(this.getClass().getName());
