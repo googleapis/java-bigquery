@@ -54,7 +54,7 @@ public class QueryExternalSheetsPerm {
 
   public static void queryExternalSheetsPerm(
       String datasetName, String tableName, String sourceUri, Schema schema, String query) {
-    try {
+    // try {
 
       // Create credentials with Drive & BigQuery API scopes.
       // Both APIs must be enabled for your project before running this code.
@@ -91,9 +91,9 @@ public class QueryExternalSheetsPerm {
           .forEach(row -> row.forEach(val -> System.out.printf("%s,", val.toString())));
 
       System.out.println("Query on external permanent table performed successfully.");
-    } catch (BigQueryException | InterruptedException | IOException e) {
-      System.out.println("Query not performed \n" + e.toString());
-    }
+    // } catch (BigQueryException | InterruptedException | IOException e) {
+    //   System.out.println("Query not performed \n" + e.toString());
+    // }
   }
 }
 // [END bigquery_query_external_sheets_perm]
