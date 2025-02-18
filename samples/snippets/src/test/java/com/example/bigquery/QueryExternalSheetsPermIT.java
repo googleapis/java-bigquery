@@ -33,6 +33,10 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.google.cloud.bigquery.BigQueryException;
+import java.io.IOException;
+
+
 public class QueryExternalSheetsPermIT {
 
   private final Logger log = Logger.getLogger(this.getClass().getName());
