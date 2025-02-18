@@ -37,7 +37,7 @@ import java.io.IOException;
 // Sample to queries an external data source using a permanent table
 public class QueryExternalSheetsPerm {
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws BigQueryException, InterruptedException, IOException  {
     // TODO(developer): Replace these variables before running the sample.
     String datasetName = "MY_DATASET_NAME";
     String tableName = "MY_TABLE_NAME";
