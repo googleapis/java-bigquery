@@ -44,7 +44,10 @@ public class AuthDriveScope {
 
     // TODO(NOW)
     if (ServiceAccountCredentials.getApplicationDefault().equals(credentials)) {
-      System.out.println("CHUONGPH: error: \n");
+      System.out.println("CHUONGPH: equal error: \n");
+      throw new IOException();
+    } else {
+      System.out.println("CHUONGPH: not equal error: \n");
       throw new IOException();
     }
 
