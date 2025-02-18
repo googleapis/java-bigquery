@@ -53,7 +53,7 @@ public class QueryExternalSheetsPerm {
   }
 
   public static void queryExternalSheetsPerm(
-      String datasetName, String tableName, String sourceUri, Schema schema, String query) {
+      String datasetName, String tableName, String sourceUri, Schema schema, String query) throws BigQueryException, InterruptedException, IOException {
     // try {
 
       // Create credentials with Drive & BigQuery API scopes.
