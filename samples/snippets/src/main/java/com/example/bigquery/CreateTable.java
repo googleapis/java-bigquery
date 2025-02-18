@@ -45,9 +45,22 @@ public class CreateTable {
 
   public static void createTable(String datasetName, String tableName, Schema schema) {
     try {
+      // Create credentials with Drive & BigQuery API scopes.
+      // Both APIs must be enabled for your project before running this code.
+      GoogleCredentials credentials =
+          ServiceAccountCredentials.getApplicationDefault()
+              .createScoped(
+                  ImmutableSet.of(
+                      "https://www.googleapis.com/auth/bigquery",
+                      "https://www.googleapis.com/auth/drive"));
+
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
-      BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
+      BigQuery bigquery =
+          BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
+      // // Initialize client that will be used to send requests. This client only needs to be created
+      // // once, and can be reused for multiple requests.
+      // BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
       TableId tableId = TableId.of(datasetName, tableName);
       TableDefinition tableDefinition = StandardTableDefinition.of(schema);
