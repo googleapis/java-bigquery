@@ -17,6 +17,7 @@
 package com.example.bigquery;
 
 // [START bigquery_create_table]
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
