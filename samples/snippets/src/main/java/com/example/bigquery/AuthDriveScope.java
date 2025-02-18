@@ -57,14 +57,14 @@ public class AuthDriveScope {
       BigQuery bigquery =
           BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
 
-      System.out.println("CHUONGPH: Scopes \n" + BigQueryOptions.newBuilder().setCredentials(credentials).build().getScopes());
+      // System.out.println("CHUONGPH: Scopes \n" + BigQueryOptions.newBuilder().setCredentials(credentials).build().getScopes());
 
       // Use the client.
       System.out.println("Auth succeeded with multiple scopes. Datasets:");
       for (Dataset dataset : bigquery.listDatasets().iterateAll()) {
         System.out.printf("Dataset: %s%n", dataset.getDatasetId().getDataset());
       }
-      throw new IOException();
+      // throw new IOException();
     } catch (BigQueryException e) {
       System.out.println("Auth failed due to error: \n" + e.toString());
     }
