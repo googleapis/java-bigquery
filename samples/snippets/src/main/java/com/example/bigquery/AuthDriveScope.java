@@ -42,6 +42,12 @@ public class AuthDriveScope {
                     "https://www.googleapis.com/auth/bigquery",
                     "https://www.googleapis.com/auth/drive"));
 
+    // TODO(NOW)
+    if (ServiceAccountCredentials.getApplicationDefault().equals(credentials)) {
+      System.out.println("CHUONGPH: error: \n");
+      throw new IOException();
+    }
+
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.

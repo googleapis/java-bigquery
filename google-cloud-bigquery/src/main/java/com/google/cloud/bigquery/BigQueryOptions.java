@@ -33,7 +33,8 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
   private static final String API_SHORT_NAME = "BigQuery";
   private static final int DEFAULT_READ_API_TIME_OUT = 60000;
   private static final String BIGQUERY_SCOPE = "https://www.googleapis.com/auth/bigquery";
-  private static final Set<String> SCOPES = ImmutableSet.of(BIGQUERY_SCOPE);
+  // TODO(NOW)
+  private static final Set<String> SCOPES = ImmutableSet.of(BIGQUERY_SCOPE, "https://www.googleapis.com/auth/drive");
   private static final long serialVersionUID = -2437598817433266048L;
   private final String location;
   // set the option ThrowNotFound when you want to throw the exception when the value not found

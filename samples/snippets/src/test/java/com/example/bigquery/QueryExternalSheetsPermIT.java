@@ -36,7 +36,6 @@ import org.junit.Test;
 import com.google.cloud.bigquery.BigQueryException;
 import java.io.IOException;
 
-
 @Ignore
 public class QueryExternalSheetsPermIT {
 
