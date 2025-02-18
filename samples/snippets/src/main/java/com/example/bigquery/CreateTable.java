@@ -32,6 +32,7 @@ import com.google.cloud.bigquery.TableInfo;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.TableResult;
 import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
 
 public class CreateTable {
 
@@ -91,7 +92,7 @@ public class CreateTable {
                 System.out.print(", user_email:" + row.get("user_email").getStringValue());
                 System.out.println();
               });
-    } catch (BigQueryException | InterruptedException e) {
+    } catch (BigQueryException | InterruptedException | IOException e) {
       System.out.println("Table was not created. \n" + e.toString());
     }
   }
