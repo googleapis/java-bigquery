@@ -51,20 +51,20 @@ public class AuthDriveScope {
       throw new IOException();
     }
 
-    try {
-      // Initialize client that will be used to send requests. This client only needs to be created
-      // once, and can be reused for multiple requests.
-      BigQuery bigquery =
-          BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
-
-      // Use the client.
-      System.out.println("Auth succeeded with multiple scopes. Datasets:");
-      for (Dataset dataset : bigquery.listDatasets().iterateAll()) {
-        System.out.printf("Dataset: %s%n", dataset.getDatasetId().getDataset());
-      }
-    } catch (BigQueryException e) {
-      System.out.println("Auth failed due to error: \n" + e.toString());
-    }
+    // try {
+    //   // Initialize client that will be used to send requests. This client only needs to be created
+    //   // once, and can be reused for multiple requests.
+    //   BigQuery bigquery =
+    //       BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
+    //
+    //   // Use the client.
+    //   System.out.println("Auth succeeded with multiple scopes. Datasets:");
+    //   for (Dataset dataset : bigquery.listDatasets().iterateAll()) {
+    //     System.out.printf("Dataset: %s%n", dataset.getDatasetId().getDataset());
+    //   }
+    // } catch (BigQueryException e) {
+    //   System.out.println("Auth failed due to error: \n" + e.toString());
+    // }
   }
 }
 // [END bigquery_auth_drive_scope]
