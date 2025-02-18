@@ -79,7 +79,7 @@ public class QueryExternalSheetsPermIT {
   }
 
   @Test
-  public void testQueryExternalSheetsPerm() {
+  public void testQueryExternalSheetsPerm() throws BigQueryException, InterruptedException, IOException {
     String sourceUri =
         "https://docs.google.com/spreadsheets/d/1i_QCL-7HcSyUZmIbP9E6lO_T5u3HnpLe7dnpHaijg_E/edit?usp=sharing";
     Schema schema =
