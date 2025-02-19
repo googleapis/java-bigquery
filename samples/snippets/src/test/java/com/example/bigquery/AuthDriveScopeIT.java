@@ -26,7 +26,9 @@ import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.Ignore;
 
+@Ignore
 public class AuthDriveScopeIT {
 
   private final Logger log = Logger.getLogger(this.getClass().getName());

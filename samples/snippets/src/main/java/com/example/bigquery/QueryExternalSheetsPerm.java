@@ -65,43 +65,34 @@ public class QueryExternalSheetsPerm {
                       "https://www.googleapis.com/auth/bigquery",
                       "https://www.googleapis.com/auth/drive"));
 
-    // TODO(NOW)
-    if (ServiceAccountCredentials.getApplicationDefault().equals(credentials)) {
-      System.out.println("CHUONGPH: equal error: \n");
-      throw new IOException();
-    } else {
-      System.out.println("CHUONGPH: not equal error: \n");
-      throw new IOException();
-    }
+      // Initialize client that will be used to send requests. This client only needs to be created
+      // once, and can be reused for multiple requests.
+      BigQuery bigquery =
+          BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
 
-    //   // Initialize client that will be used to send requests. This client only needs to be created
-    //   // once, and can be reused for multiple requests.
-    //   BigQuery bigquery =
-    //       BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
-    //
-    //   // Skip header row in the file.
-    //   GoogleSheetsOptions sheetsOptions =
-    //       GoogleSheetsOptions.newBuilder()
-    //           .setSkipLeadingRows(1) // Optionally skip header row.
-    //           .setRange("us-states!A20:B49") // Optionally set range of the sheet to query from.
-    //           .build();
-    //
-    //   TableId tableId = TableId.of(datasetName, tableName);
-    //   // Create a permanent table linked to the Sheets file.
-    //   ExternalTableDefinition externalTable =
-    //       ExternalTableDefinition.newBuilder(sourceUri, sheetsOptions).setSchema(schema).build();
-    //   bigquery.create(TableInfo.of(tableId, externalTable));
-    //
-    //   // Example query to find states starting with 'W'
-    //   TableResult results = bigquery.query(QueryJobConfiguration.of(query));
-    //
-    //   results
-    //       .iterateAll()
-    //       .forEach(row -> row.forEach(val -> System.out.printf("%s,", val.toString())));
-    //
-    //   System.out.println("Query on external permanent table performed successfully.");
-    // // } catch (BigQueryException | InterruptedException | IOException e) {
-    // //   System.out.println("Query not performed \n" + e.toString());
+      // Skip header row in the file.
+      GoogleSheetsOptions sheetsOptions =
+          GoogleSheetsOptions.newBuilder()
+              .setSkipLeadingRows(1) // Optionally skip header row.
+              .setRange("us-states!A20:B49") // Optionally set range of the sheet to query from.
+              .build();
+
+      TableId tableId = TableId.of(datasetName, tableName);
+      // Create a permanent table linked to the Sheets file.
+      ExternalTableDefinition externalTable =
+          ExternalTableDefinition.newBuilder(sourceUri, sheetsOptions).setSchema(schema).build();
+      bigquery.create(TableInfo.of(tableId, externalTable));
+
+      // Example query to find states starting with 'W'
+      TableResult results = bigquery.query(QueryJobConfiguration.of(query));
+
+      results
+          .iterateAll()
+          .forEach(row -> row.forEach(val -> System.out.printf("%s,", val.toString())));
+
+      System.out.println("Query on external permanent table performed successfully.");
+    // } catch (BigQueryException | InterruptedException | IOException e) {
+    //   System.out.println("Query not performed \n" + e.toString());
     // // }
   }
 }
