@@ -36,6 +36,7 @@ import com.google.cloud.bigquery.BigQuery.QueryResultsOption;
 import com.google.cloud.bigquery.InsertAllRequest.RowToInsert;
 import com.google.cloud.bigquery.spi.BigQueryRpcFactory;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
+import com.google.cloud.bigquery.spi.v2.HttpBigQueryRpc;
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.collect.*;
@@ -497,7 +498,7 @@ public class BigQueryImplTest {
           .build();
   private BigQueryOptions options;
   private BigQueryRpcFactory rpcFactoryMock;
-  private BigQueryRpc bigqueryRpcMock;
+  private HttpBigQueryRpc bigqueryRpcMock;
   private BigQuery bigquery;
   private static final String RATE_LIMIT_ERROR_MSG =
       "Job exceeded rate limits: Your table exceeded quota for table update operations. For more information, see https://cloud.google.com/bigquery/docs/troubleshoot-quotas";
@@ -533,7 +534,7 @@ public class BigQueryImplTest {
   @Before
   public void setUp() {
     rpcFactoryMock = mock(BigQueryRpcFactory.class);
-    bigqueryRpcMock = mock(BigQueryRpc.class);
+    bigqueryRpcMock = mock(HttpBigQueryRpc.class);
     when(rpcFactoryMock.create(any(BigQueryOptions.class))).thenReturn(bigqueryRpcMock);
     options = createBigQueryOptionsForProject(PROJECT, rpcFactoryMock);
   }
@@ -545,21 +546,22 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateDataset() {
+  public void testCreateDataset() throws IOException {
     DatasetInfo datasetInfo = DATASET_INFO.setProjectId(OTHER_PROJECT);
-    when(bigqueryRpcMock.create(datasetInfo.toPb(), EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.createSkipExceptionTranslation(datasetInfo.toPb(), EMPTY_RPC_OPTIONS))
         .thenReturn(datasetInfo.toPb());
     BigQueryOptions bigQueryOptions =
         createBigQueryOptionsForProject(OTHER_PROJECT, rpcFactoryMock);
     bigquery = bigQueryOptions.getService();
     Dataset dataset = bigquery.create(datasetInfo);
     assertEquals(new Dataset(bigquery, new DatasetInfo.BuilderImpl(datasetInfo)), dataset);
-    verify(bigqueryRpcMock).create(datasetInfo.toPb(), EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock).createSkipExceptionTranslation(datasetInfo.toPb(), EMPTY_RPC_OPTIONS);
   }
 
   @Test
-  public void testCreateDatasetWithSelectedFields() {
-    when(bigqueryRpcMock.create(eq(DATASET_INFO_WITH_PROJECT.toPb()), capturedOptions.capture()))
+  public void testCreateDatasetWithSelectedFields() throws IOException {
+    when(bigqueryRpcMock.createSkipExceptionTranslation(
+        eq(DATASET_INFO_WITH_PROJECT.toPb()), capturedOptions.capture()))
         .thenReturn(DATASET_INFO_WITH_PROJECT.toPb());
     bigquery = options.getService();
     Dataset dataset = bigquery.create(DATASET_INFO, DATASET_OPTION_FIELDS);
@@ -570,21 +572,25 @@ public class BigQueryImplTest {
     assertEquals(28, selector.length());
     assertEquals(
         new Dataset(bigquery, new DatasetInfo.BuilderImpl(DATASET_INFO_WITH_PROJECT)), dataset);
-    verify(bigqueryRpcMock).create(eq(DATASET_INFO_WITH_PROJECT.toPb()), capturedOptions.capture());
+    verify(bigqueryRpcMock)
+        .createSkipExceptionTranslation(
+            eq(DATASET_INFO_WITH_PROJECT.toPb()), capturedOptions.capture());
   }
 
   @Test
-  public void testCreateDatasetWithAccessPolicy() {
+  public void testCreateDatasetWithAccessPolicy() throws IOException {
     DatasetInfo datasetInfo = DATASET_INFO.setProjectId(OTHER_PROJECT);
     DatasetOption datasetOption = DatasetOption.accessPolicyVersion(3);
-    when(bigqueryRpcMock.create(datasetInfo.toPb(), optionMap(datasetOption)))
+    when(bigqueryRpcMock.createSkipExceptionTranslation(
+            datasetInfo.toPb(), optionMap(datasetOption)))
         .thenReturn(datasetInfo.toPb());
     BigQueryOptions bigQueryOptions =
         createBigQueryOptionsForProject(OTHER_PROJECT, rpcFactoryMock);
     bigquery = bigQueryOptions.getService();
     Dataset dataset = bigquery.create(datasetInfo, datasetOption);
     assertEquals(new Dataset(bigquery, new DatasetInfo.BuilderImpl(datasetInfo)), dataset);
-    verify(bigqueryRpcMock).create(datasetInfo.toPb(), optionMap(datasetOption));
+    verify(bigqueryRpcMock)
+        .createSkipExceptionTranslation(datasetInfo.toPb(), optionMap(datasetOption));
   }
 
   @Test
