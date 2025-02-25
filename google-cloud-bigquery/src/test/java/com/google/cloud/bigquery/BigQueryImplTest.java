@@ -561,7 +561,7 @@ public class BigQueryImplTest {
   @Test
   public void testCreateDatasetWithSelectedFields() throws IOException {
     when(bigqueryRpcMock.createSkipExceptionTranslation(
-        eq(DATASET_INFO_WITH_PROJECT.toPb()), capturedOptions.capture()))
+            eq(DATASET_INFO_WITH_PROJECT.toPb()), capturedOptions.capture()))
         .thenReturn(DATASET_INFO_WITH_PROJECT.toPb());
     bigquery = options.getService();
     Dataset dataset = bigquery.create(DATASET_INFO, DATASET_OPTION_FIELDS);
