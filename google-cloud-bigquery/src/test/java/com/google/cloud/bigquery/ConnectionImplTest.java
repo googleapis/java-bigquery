@@ -27,7 +27,7 @@ import com.google.api.services.bigquery.model.QueryResponse;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.spi.BigQueryRpcFactory;
-import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
+import com.google.cloud.bigquery.spi.v2.HttpBigQueryRpc;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.math.BigInteger;
@@ -50,7 +50,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class ConnectionImplTest {
   private BigQueryOptions options;
   private BigQueryRpcFactory rpcFactoryMock;
-  private BigQueryRpc bigqueryRpcMock;
+  private HttpBigQueryRpc bigqueryRpcMock;
   private Connection connectionMock;
   private BigQuery bigquery;
   private ConnectionImpl connection;
@@ -142,7 +142,7 @@ public class ConnectionImplTest {
   @Before
   public void setUp() {
     rpcFactoryMock = mock(BigQueryRpcFactory.class);
-    bigqueryRpcMock = mock(BigQueryRpc.class);
+    bigqueryRpcMock = mock(HttpBigQueryRpc.class);
     connectionMock = mock(Connection.class);
     when(rpcFactoryMock.create(any(BigQueryOptions.class))).thenReturn(bigqueryRpcMock);
     options = createBigQueryOptionsForProject(PROJECT, rpcFactoryMock);

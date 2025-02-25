@@ -31,7 +31,7 @@ import static org.mockito.Mockito.when;
 import com.google.cloud.RestorableState;
 import com.google.cloud.WriteChannel;
 import com.google.cloud.bigquery.spi.BigQueryRpcFactory;
-import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
+import com.google.cloud.bigquery.spi.v2.HttpBigQueryRpc;
 import java.io.IOException;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
@@ -68,7 +68,7 @@ public class TableDataWriteChannelTest {
 
   private BigQueryOptions options;
   private BigQueryRpcFactory rpcFactoryMock;
-  private BigQueryRpc bigqueryRpcMock;
+  private HttpBigQueryRpc bigqueryRpcMock;
   private BigQueryFactory bigqueryFactoryMock;
   private BigQuery bigqueryMock;
   private Job job;
@@ -81,7 +81,7 @@ public class TableDataWriteChannelTest {
   @Before
   public void setUp() {
     rpcFactoryMock = mock(BigQueryRpcFactory.class);
-    bigqueryRpcMock = mock(BigQueryRpc.class);
+    bigqueryRpcMock = mock(HttpBigQueryRpc.class);
     bigqueryFactoryMock = mock(BigQueryFactory.class);
     bigqueryMock = mock(BigQuery.class);
     when(bigqueryMock.getOptions()).thenReturn(options);

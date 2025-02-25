@@ -15,12 +15,6 @@
     <justification>getQueryResultsWithRowLimit is just used by ConnectionImpl at the moment so it should be fine to update the signature instead of writing an overloaded method</justification>
   </difference>
   <difference>
-    <differenceType>7012</differenceType>
-    <className>com/google/cloud/bigquery/spi/v2/BigQueryRpc</className>
-    <method>com.google.api.services.bigquery.model.Dataset createSkipExceptionTranslation(com.google.api.services.bigquery.model.Dataset, java.util.Map)</method>
-    <justification>createSkipExceptionTranslation is internal only</justification>
-  </difference>
-  <difference>
     <differenceType>7013</differenceType>
     <className>com/google/cloud/bigquery/ExternalTableDefinition*</className>
     <method>*ReferenceFileSchemaUri(*)</method>
