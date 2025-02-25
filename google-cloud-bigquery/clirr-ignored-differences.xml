@@ -17,7 +17,8 @@
   <difference>
     <differenceType>7006</differenceType>
     <className>com/google/cloud/bigquery/BigQueryOptions*</className>
-    <method>com.google.cloud.bigquery.spi.v2.HttpBigQueryRpc getBigQueryRpcV2(*)</method>
+    <method>*getBigQueryRpcV2(*)</method>
+    <to>com.google.cloud.bigquery.spi.v2.HttpBigQueryRpc</to>
     <justification>getBigQueryRpcV2 is protected and is only used within the BigQuery package</justification>
   </difference>
   <difference>
