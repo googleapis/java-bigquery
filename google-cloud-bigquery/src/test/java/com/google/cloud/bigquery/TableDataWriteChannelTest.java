@@ -177,7 +177,7 @@ public class TableDataWriteChannelTest {
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb())))
         .thenReturn(UPLOAD_ID);
-    when(bigqueryRpcMock.write(
+    when(bigqueryRpcMock.writeSkipExceptionTranslation(
             eq(UPLOAD_ID),
             capturedBuffer.capture(),
             eq(0),
@@ -197,7 +197,7 @@ public class TableDataWriteChannelTest {
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb()));
     verify(bigqueryRpcMock)
-        .write(
+        .writeSkipExceptionTranslation(
             eq(UPLOAD_ID),
             capturedBuffer.capture(),
             eq(0),
@@ -213,7 +213,7 @@ public class TableDataWriteChannelTest {
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb())))
         .thenReturn(UPLOAD_ID);
-    when(bigqueryRpcMock.write(
+    when(bigqueryRpcMock.writeSkipExceptionTranslation(
             eq(UPLOAD_ID),
             capturedBuffer.capture(),
             eq(0),
@@ -240,7 +240,7 @@ public class TableDataWriteChannelTest {
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb()));
     verify(bigqueryRpcMock)
-        .write(
+        .writeSkipExceptionTranslation(
             eq(UPLOAD_ID),
             capturedBuffer.capture(),
             eq(0),
@@ -256,7 +256,7 @@ public class TableDataWriteChannelTest {
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb())))
         .thenReturn(UPLOAD_ID);
-    when(bigqueryRpcMock.write(
+    when(bigqueryRpcMock.writeSkipExceptionTranslation(
             eq(UPLOAD_ID), capturedBuffer.capture(), eq(0), eq(0L), eq(0), eq(true)))
         .thenReturn(job.toPb());
     writer = new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION);
@@ -271,7 +271,8 @@ public class TableDataWriteChannelTest {
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb()));
     verify(bigqueryRpcMock)
-        .write(eq(UPLOAD_ID), capturedBuffer.capture(), eq(0), eq(0L), eq(0), eq(true));
+        .writeSkipExceptionTranslation(
+            eq(UPLOAD_ID), capturedBuffer.capture(), eq(0), eq(0L), eq(0), eq(true));
   }
 
   @Test
@@ -282,7 +283,7 @@ public class TableDataWriteChannelTest {
                 .setConfiguration(LOAD_CONFIGURATION.toPb())))
         .thenReturn(UPLOAD_ID);
     ByteBuffer buffer = randomBuffer(MIN_CHUNK_SIZE);
-    when(bigqueryRpcMock.write(
+    when(bigqueryRpcMock.writeSkipExceptionTranslation(
             eq(UPLOAD_ID), capturedBuffer.capture(), eq(0), eq(0L), eq(MIN_CHUNK_SIZE), eq(true)))
         .thenReturn(job.toPb());
     writer = new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION);
@@ -299,7 +300,7 @@ public class TableDataWriteChannelTest {
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb()));
     verify(bigqueryRpcMock)
-        .write(
+        .writeSkipExceptionTranslation(
             eq(UPLOAD_ID), capturedBuffer.capture(), eq(0), eq(0L), eq(MIN_CHUNK_SIZE), eq(true));
   }
 
@@ -310,7 +311,7 @@ public class TableDataWriteChannelTest {
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb())))
         .thenReturn(UPLOAD_ID);
-    when(bigqueryRpcMock.write(
+    when(bigqueryRpcMock.writeSkipExceptionTranslation(
             eq(UPLOAD_ID), capturedBuffer.capture(), eq(0), eq(0L), eq(0), eq(true)))
         .thenReturn(job.toPb());
     writer = new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION);
@@ -328,7 +329,8 @@ public class TableDataWriteChannelTest {
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb()));
     verify(bigqueryRpcMock)
-        .write(eq(UPLOAD_ID), capturedBuffer.capture(), eq(0), eq(0L), eq(0), eq(true));
+        .writeSkipExceptionTranslation(
+            eq(UPLOAD_ID), capturedBuffer.capture(), eq(0), eq(0L), eq(0), eq(true));
   }
 
   @Test
@@ -338,7 +340,7 @@ public class TableDataWriteChannelTest {
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb())))
         .thenReturn(UPLOAD_ID);
-    when(bigqueryRpcMock.write(
+    when(bigqueryRpcMock.writeSkipExceptionTranslation(
             eq(UPLOAD_ID),
             capturedBuffer.capture(),
             eq(0),
@@ -364,7 +366,7 @@ public class TableDataWriteChannelTest {
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb()));
     verify(bigqueryRpcMock, times(2))
-        .write(
+        .writeSkipExceptionTranslation(
             eq(UPLOAD_ID),
             capturedBuffer.capture(),
             eq(0),
@@ -380,7 +382,7 @@ public class TableDataWriteChannelTest {
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb())))
         .thenReturn(UPLOAD_ID);
-    when(bigqueryRpcMock.write(
+    when(bigqueryRpcMock.writeSkipExceptionTranslation(
             eq(UPLOAD_ID), capturedBuffer.capture(), eq(0), eq(0L), eq(0), eq(true)))
         .thenReturn(job.toPb());
     writer = new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION);
@@ -403,7 +405,8 @@ public class TableDataWriteChannelTest {
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb()));
     verify(bigqueryRpcMock)
-        .write(eq(UPLOAD_ID), capturedBuffer.capture(), eq(0), eq(0L), eq(0), eq(true));
+        .writeSkipExceptionTranslation(
+            eq(UPLOAD_ID), capturedBuffer.capture(), eq(0), eq(0L), eq(0), eq(true));
   }
 
   @Test

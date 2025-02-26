@@ -54,10 +54,11 @@ public class TableDataWriteChannel
           runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Job>() {
                 @Override
-                public com.google.api.services.bigquery.model.Job call() {
+                public com.google.api.services.bigquery.model.Job call() throws IOException {
                   return getOptions()
                       .getBigQueryRpcV2()
-                      .write(getUploadId(), getBuffer(), 0, getPosition(), length, last);
+                      .writeSkipExceptionTranslation(
+                          getUploadId(), getBuffer(), 0, getPosition(), length, last);
                 }
               },
               getOptions().getRetrySettings(),

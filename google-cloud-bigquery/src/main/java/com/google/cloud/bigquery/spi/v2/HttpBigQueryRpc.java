@@ -826,7 +826,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
     return response.getHeaders().getLocation();
   }
 
-    @Override
+  @Override
   public Job write(
       String uploadId,
       byte[] toWrite,
@@ -835,48 +835,56 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       int length,
       boolean last) {
     try {
-      if (length == 0) {
-        return null;
-      }
-      GenericUrl url = new GenericUrl(uploadId);
-      HttpRequest httpRequest =
-          bigquery
-              .getRequestFactory()
-              .buildPutRequest(url, new ByteArrayContent(null, toWrite, toWriteOffset, length));
-      httpRequest.setParser(bigquery.getObjectParser());
-      long limit = destOffset + length;
-      StringBuilder range = new StringBuilder("bytes ");
-      range.append(destOffset).append('-').append(limit - 1).append('/');
-      if (last) {
-        range.append(limit);
-      } else {
-        range.append('*');
-      }
-      httpRequest.getHeaders().setContentRange(range.toString());
-      int code;
-      String message;
-      IOException exception = null;
-      HttpResponse response = null;
-      try {
-        response = httpRequest.execute();
-        code = response.getStatusCode();
-        message = response.getStatusMessage();
-      } catch (HttpResponseException ex) {
-        exception = ex;
-        code = ex.getStatusCode();
-        message = ex.getStatusMessage();
-      }
-      if (!last && code != HTTP_RESUME_INCOMPLETE
-          || last && !(code == HTTP_OK || code == HTTP_CREATED)) {
-        if (exception != null) {
-          throw exception;
-        }
-        throw new BigQueryException(code, message);
-      }
-      return last && response != null ? response.parseAs(Job.class) : null;
+      return writeSkipExceptionTranslation(
+          uploadId, toWrite, toWriteOffset, destOffset, length, last);
     } catch (IOException ex) {
       throw translate(ex);
     }
+  }
+
+  @InternalApi("internal to java-bigquery")
+  public Job writeSkipExceptionTranslation(
+      String uploadId, byte[] toWrite, int toWriteOffset, long destOffset, int length, boolean last)
+      throws IOException {
+    if (length == 0) {
+      return null;
+    }
+    GenericUrl url = new GenericUrl(uploadId);
+    HttpRequest httpRequest =
+        bigquery
+            .getRequestFactory()
+            .buildPutRequest(url, new ByteArrayContent(null, toWrite, toWriteOffset, length));
+    httpRequest.setParser(bigquery.getObjectParser());
+    long limit = destOffset + length;
+    StringBuilder range = new StringBuilder("bytes ");
+    range.append(destOffset).append('-').append(limit - 1).append('/');
+    if (last) {
+      range.append(limit);
+    } else {
+      range.append('*');
+    }
+    httpRequest.getHeaders().setContentRange(range.toString());
+    int code;
+    String message;
+    IOException exception = null;
+    HttpResponse response = null;
+    try {
+      response = httpRequest.execute();
+      code = response.getStatusCode();
+      message = response.getStatusMessage();
+    } catch (HttpResponseException ex) {
+      exception = ex;
+      code = ex.getStatusCode();
+      message = ex.getStatusMessage();
+    }
+    if (!last && code != HTTP_RESUME_INCOMPLETE
+        || last && !(code == HTTP_OK || code == HTTP_CREATED)) {
+      if (exception != null) {
+        throw exception;
+      }
+      throw new BigQueryException(code, message);
+    }
+    return last && response != null ? response.parseAs(Job.class) : null;
   }
 
   @Override
