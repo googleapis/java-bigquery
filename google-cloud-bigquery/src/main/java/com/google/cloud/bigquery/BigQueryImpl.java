@@ -302,8 +302,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Table>() {
                 @Override
-                public com.google.api.services.bigquery.model.Table call() {
-                  return bigQueryRpc.create(tablePb, optionsMap);
+                public com.google.api.services.bigquery.model.Table call() throws IOException {
+                  return bigQueryRpc.createSkipExceptionTranslation(tablePb, optionsMap);
                 }
               },
               getOptions().getRetrySettings(),

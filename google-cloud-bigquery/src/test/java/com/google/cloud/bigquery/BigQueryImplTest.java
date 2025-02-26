@@ -808,19 +808,19 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateTable() {
+  public void testCreateTable() throws IOException {
     TableInfo tableInfo = TABLE_INFO.setProjectId(OTHER_PROJECT);
-    when(bigqueryRpcMock.create(tableInfo.toPb(), EMPTY_RPC_OPTIONS)).thenReturn(tableInfo.toPb());
+    when(bigqueryRpcMock.createSkipExceptionTranslation(tableInfo.toPb(), EMPTY_RPC_OPTIONS)).thenReturn(tableInfo.toPb());
     BigQueryOptions bigQueryOptions =
         createBigQueryOptionsForProject(OTHER_PROJECT, rpcFactoryMock);
     bigquery = bigQueryOptions.getService();
     Table table = bigquery.create(tableInfo);
     assertEquals(new Table(bigquery, new TableInfo.BuilderImpl(tableInfo)), table);
-    verify(bigqueryRpcMock).create(tableInfo.toPb(), EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock).createSkipExceptionTranslation(tableInfo.toPb(), EMPTY_RPC_OPTIONS);
   }
 
   @Test
-  public void tesCreateExternalTable() {
+  public void tesCreateExternalTable() throws IOException {
     TableInfo createTableInfo =
         TableInfo.of(TABLE_ID, ExternalTableDefinition.newBuilder().setSchema(TABLE_SCHEMA).build())
             .setProjectId(OTHER_PROJECT);
@@ -828,32 +828,32 @@ public class BigQueryImplTest {
     com.google.api.services.bigquery.model.Table expectedCreateInput =
         createTableInfo.toPb().setSchema(TABLE_SCHEMA.toPb());
     expectedCreateInput.getExternalDataConfiguration().setSchema(null);
-    when(bigqueryRpcMock.create(expectedCreateInput, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.createSkipExceptionTranslation(expectedCreateInput, EMPTY_RPC_OPTIONS))
         .thenReturn(createTableInfo.toPb());
     BigQueryOptions bigQueryOptions =
         createBigQueryOptionsForProject(OTHER_PROJECT, rpcFactoryMock);
     bigquery = bigQueryOptions.getService();
     Table table = bigquery.create(createTableInfo);
     assertEquals(new Table(bigquery, new TableInfo.BuilderImpl(createTableInfo)), table);
-    verify(bigqueryRpcMock).create(expectedCreateInput, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock).createSkipExceptionTranslation(expectedCreateInput, EMPTY_RPC_OPTIONS);
   }
 
   @Test
-  public void testCreateTableWithoutProject() {
+  public void testCreateTableWithoutProject() throws IOException {
     TableInfo tableInfo = TABLE_INFO.setProjectId(PROJECT);
     TableId tableId = TableId.of("", TABLE_ID.getDataset(), TABLE_ID.getTable());
     tableInfo.toBuilder().setTableId(tableId);
-    when(bigqueryRpcMock.create(tableInfo.toPb(), EMPTY_RPC_OPTIONS)).thenReturn(tableInfo.toPb());
+    when(bigqueryRpcMock.createSkipExceptionTranslation(tableInfo.toPb(), EMPTY_RPC_OPTIONS)).thenReturn(tableInfo.toPb());
     BigQueryOptions bigQueryOptions = createBigQueryOptionsForProject(PROJECT, rpcFactoryMock);
     bigquery = bigQueryOptions.getService();
     Table table = bigquery.create(tableInfo);
     assertEquals(new Table(bigquery, new TableInfo.BuilderImpl(tableInfo)), table);
-    verify(bigqueryRpcMock).create(tableInfo.toPb(), EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock).createSkipExceptionTranslation(tableInfo.toPb(), EMPTY_RPC_OPTIONS);
   }
 
   @Test
-  public void testCreateTableWithSelectedFields() {
-    when(bigqueryRpcMock.create(eq(TABLE_INFO_WITH_PROJECT.toPb()), capturedOptions.capture()))
+  public void testCreateTableWithSelectedFields() throws IOException {
+    when(bigqueryRpcMock.createSkipExceptionTranslation(eq(TABLE_INFO_WITH_PROJECT.toPb()), capturedOptions.capture()))
         .thenReturn(TABLE_INFO_WITH_PROJECT.toPb());
     bigquery = options.getService();
     Table table = bigquery.create(TABLE_INFO, TABLE_OPTION_FIELDS);
@@ -863,7 +863,7 @@ public class BigQueryImplTest {
     assertTrue(selector.contains("etag"));
     assertEquals(31, selector.length());
     assertEquals(new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO_WITH_PROJECT)), table);
-    verify(bigqueryRpcMock).create(eq(TABLE_INFO_WITH_PROJECT.toPb()), capturedOptions.capture());
+    verify(bigqueryRpcMock).createSkipExceptionTranslation(eq(TABLE_INFO_WITH_PROJECT.toPb()), capturedOptions.capture());
   }
 
   @Test
