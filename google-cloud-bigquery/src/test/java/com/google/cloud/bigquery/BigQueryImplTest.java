@@ -42,6 +42,8 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.*;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.ConnectException;
+import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -1690,8 +1692,28 @@ public class BigQueryImplTest {
   }
 
   @Test
+  public void testCreateJobFailureShouldRetryExceptionHandlerExceptions() throws IOException {
+    when(bigqueryRpcMock.createSkipExceptionTranslation(
+            jobCapture.capture(), eq(EMPTY_RPC_OPTIONS)))
+        .thenThrow(new UnknownHostException())
+        .thenThrow(new ConnectException())
+        .thenReturn(newJobPb());
+
+    bigquery = options.getService();
+    bigquery =
+        options
+            .toBuilder()
+            .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
+            .build()
+            .getService();
+
+    ((BigQueryImpl) bigquery).create(JobInfo.of(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY));
+    verify(bigqueryRpcMock, times(3))
+        .createSkipExceptionTranslation(jobCapture.capture(), eq(EMPTY_RPC_OPTIONS));
+  }
+
+  @Test
   public void testCreateJobFailureShouldRetry() throws IOException {
-    // TODO(NOW): Need to update verify that the new exceptions ar ebeing retried also.
     when(bigqueryRpcMock.createSkipExceptionTranslation(
             jobCapture.capture(), eq(EMPTY_RPC_OPTIONS)))
         .thenThrow(new BigQueryException(500, "InternalError"))

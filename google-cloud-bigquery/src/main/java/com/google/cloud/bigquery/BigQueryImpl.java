@@ -675,7 +675,6 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             Strings.isNullOrEmpty(jobId.getProject())
                 ? getOptions().getProjectId()
                 : jobId.getProject());
-    System.out.println("CHUONGPH: " + completeJobId);
     try {
       return runWithRetries(
           new Callable<Boolean>() {
