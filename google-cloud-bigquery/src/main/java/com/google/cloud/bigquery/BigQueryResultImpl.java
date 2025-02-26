@@ -113,7 +113,7 @@ public class BigQueryResultImpl<T> implements BigQueryResult<T> {
     return underlyingResultSet;
   }
 
-  public class BigQueryResultSet extends AbstractJdbcResultSet {
+  private class BigQueryResultSet extends AbstractJdbcResultSet {
     private boolean hasReachedEnd =
         false; // flag which will be set to true when we have encountered a EndOfStream or when
     // curTup.isLast(). Ref: https://github.com/googleapis/java-bigquery/issues/2033
