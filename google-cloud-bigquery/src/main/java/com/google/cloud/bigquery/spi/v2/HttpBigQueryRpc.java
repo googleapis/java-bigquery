@@ -605,17 +605,27 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       Integer maxResultPerPage,
       String pageToken) {
     try {
-      validateRPC();
-      return bigquery
-          .tabledata()
-          .list(projectId, datasetId, tableId)
-          .setPrettyPrint(false)
-          .setMaxResults(Long.valueOf(maxResultPerPage))
-          .setPageToken(pageToken)
-          .execute();
+      return listTableDataWithRowLimitSkipExceptionTranslation(projectId, datasetId, tableId, maxResultPerPage, pageToken);
     } catch (IOException ex) {
       throw translate(ex);
     }
+  }
+
+  @InternalApi("internal to java-bigquery")
+  public TableDataList listTableDataWithRowLimitSkipExceptionTranslation(
+      String projectId,
+      String datasetId,
+      String tableId,
+      Integer maxResultPerPage,
+      String pageToken) throws IOException {
+    validateRPC();
+    return bigquery
+        .tabledata()
+        .list(projectId, datasetId, tableId)
+        .setPrettyPrint(false)
+        .setMaxResults(Long.valueOf(maxResultPerPage))
+        .setPageToken(pageToken)
+        .execute();
   }
 
   @Override

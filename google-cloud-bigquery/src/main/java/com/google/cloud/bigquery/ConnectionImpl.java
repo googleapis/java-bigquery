@@ -952,7 +952,7 @@ class ConnectionImpl implements Connection {
               () ->
                   bigQueryOptions
                       .getBigQueryRpcV2()
-                      .listTableDataWithRowLimit(
+                      .listTableDataWithRowLimitSkipExceptionTranslation(
                           completeTableId.getProject(),
                           completeTableId.getDataset(),
                           completeTableId.getTable(),
