@@ -618,7 +618,8 @@ public class BigQueryImplTest {
 
   @Test
   public void testGetDatasetNotFoundWhenThrowIsEnabled() throws IOException {
-    when(bigqueryRpcMock.getDatasetSkipExceptionTranslation(PROJECT, "dataset-not-found", EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.getDatasetSkipExceptionTranslation(
+            PROJECT, "dataset-not-found", EMPTY_RPC_OPTIONS))
         .thenReturn(null)
         .thenThrow(new BigQueryException(404, "Dataset not found"));
     options.setThrowNotFound(true);
@@ -629,7 +630,8 @@ public class BigQueryImplTest {
     } catch (BigQueryException ex) {
       Assert.assertNotNull(ex.getMessage());
     }
-    verify(bigqueryRpcMock).getDatasetSkipExceptionTranslation(PROJECT, "dataset-not-found", EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getDatasetSkipExceptionTranslation(PROJECT, "dataset-not-found", EMPTY_RPC_OPTIONS);
   }
 
   @Test
@@ -647,17 +649,20 @@ public class BigQueryImplTest {
   public void testGetDatasetFromDatasetIdWithProject() throws IOException {
     DatasetInfo datasetInfo = DATASET_INFO.setProjectId(OTHER_PROJECT);
     DatasetId datasetId = DatasetId.of(OTHER_PROJECT, DATASET);
-    when(bigqueryRpcMock.getDatasetSkipExceptionTranslation(OTHER_PROJECT, DATASET, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.getDatasetSkipExceptionTranslation(
+            OTHER_PROJECT, DATASET, EMPTY_RPC_OPTIONS))
         .thenReturn(datasetInfo.toPb());
     bigquery = options.getService();
     Dataset dataset = bigquery.getDataset(datasetId);
     assertEquals(new Dataset(bigquery, new DatasetInfo.BuilderImpl(datasetInfo)), dataset);
-    verify(bigqueryRpcMock).getDatasetSkipExceptionTranslation(OTHER_PROJECT, DATASET, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getDatasetSkipExceptionTranslation(OTHER_PROJECT, DATASET, EMPTY_RPC_OPTIONS);
   }
 
   @Test
   public void testGetDatasetWithSelectedFields() throws IOException {
-    when(bigqueryRpcMock.getDatasetSkipExceptionTranslation(eq(PROJECT), eq(DATASET), capturedOptions.capture()))
+    when(bigqueryRpcMock.getDatasetSkipExceptionTranslation(
+            eq(PROJECT), eq(DATASET), capturedOptions.capture()))
         .thenReturn(DATASET_INFO_WITH_PROJECT.toPb());
     bigquery = options.getService();
     Dataset dataset = bigquery.getDataset(DATASET, DATASET_OPTION_FIELDS);
@@ -668,7 +673,8 @@ public class BigQueryImplTest {
     assertEquals(28, selector.length());
     assertEquals(
         new Dataset(bigquery, new DatasetInfo.BuilderImpl(DATASET_INFO_WITH_PROJECT)), dataset);
-    verify(bigqueryRpcMock).getDatasetSkipExceptionTranslation(eq(PROJECT), eq(DATASET), capturedOptions.capture());
+    verify(bigqueryRpcMock)
+        .getDatasetSkipExceptionTranslation(eq(PROJECT), eq(DATASET), capturedOptions.capture());
   }
 
   @Test
@@ -680,7 +686,8 @@ public class BigQueryImplTest {
             new Dataset(bigquery, new DatasetInfo.BuilderImpl(OTHER_DATASET_INFO)));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Dataset>> result =
         Tuple.of(CURSOR, Iterables.transform(datasetList, DatasetInfo.TO_PB_FUNCTION));
-    when(bigqueryRpcMock.listDatasetsSkipExceptionTranslation(PROJECT, EMPTY_RPC_OPTIONS)).thenReturn(result);
+    when(bigqueryRpcMock.listDatasetsSkipExceptionTranslation(PROJECT, EMPTY_RPC_OPTIONS))
+        .thenReturn(result);
     Page<Dataset> page = bigquery.listDatasets();
     assertEquals(CURSOR, page.getNextPageToken());
     assertArrayEquals(
@@ -697,7 +704,8 @@ public class BigQueryImplTest {
                 bigquery, new DatasetInfo.BuilderImpl(DATASET_INFO.setProjectId(OTHER_PROJECT))));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Dataset>> result =
         Tuple.of(CURSOR, Iterables.transform(datasetList, DatasetInfo.TO_PB_FUNCTION));
-    when(bigqueryRpcMock.listDatasetsSkipExceptionTranslation(OTHER_PROJECT, EMPTY_RPC_OPTIONS)).thenReturn(result);
+    when(bigqueryRpcMock.listDatasetsSkipExceptionTranslation(OTHER_PROJECT, EMPTY_RPC_OPTIONS))
+        .thenReturn(result);
     Page<Dataset> page = bigquery.listDatasets(OTHER_PROJECT);
     assertEquals(CURSOR, page.getNextPageToken());
     assertArrayEquals(
@@ -710,7 +718,8 @@ public class BigQueryImplTest {
     ImmutableList<com.google.api.services.bigquery.model.Dataset> datasets = ImmutableList.of();
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Dataset>> result =
         Tuple.<String, Iterable<com.google.api.services.bigquery.model.Dataset>>of(null, datasets);
-    when(bigqueryRpcMock.listDatasetsSkipExceptionTranslation(PROJECT, EMPTY_RPC_OPTIONS)).thenReturn(result);
+    when(bigqueryRpcMock.listDatasetsSkipExceptionTranslation(PROJECT, EMPTY_RPC_OPTIONS))
+        .thenReturn(result);
     bigquery = options.getService();
     Page<Dataset> page = bigquery.listDatasets();
     assertNull(page.getNextPageToken());
@@ -728,7 +737,8 @@ public class BigQueryImplTest {
             new Dataset(bigquery, new DatasetInfo.BuilderImpl(OTHER_DATASET_INFO)));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Dataset>> result =
         Tuple.of(CURSOR, Iterables.transform(datasetList, DatasetInfo.TO_PB_FUNCTION));
-    when(bigqueryRpcMock.listDatasetsSkipExceptionTranslation(PROJECT, DATASET_LIST_OPTIONS)).thenReturn(result);
+    when(bigqueryRpcMock.listDatasetsSkipExceptionTranslation(PROJECT, DATASET_LIST_OPTIONS))
+        .thenReturn(result);
     Page<Dataset> page =
         bigquery.listDatasets(DATASET_LIST_ALL, DATASET_LIST_PAGE_TOKEN, DATASET_LIST_PAGE_SIZE);
     assertEquals(CURSOR, page.getNextPageToken());
@@ -739,35 +749,45 @@ public class BigQueryImplTest {
 
   @Test
   public void testDeleteDataset() throws IOException {
-    when(bigqueryRpcMock.deleteDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS)).thenReturn(true);
+    when(bigqueryRpcMock.deleteDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS))
+        .thenReturn(true);
     bigquery = options.getService();
     assertTrue(bigquery.delete(DATASET));
-    verify(bigqueryRpcMock).deleteDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .deleteDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS);
   }
 
   @Test
   public void testDeleteDatasetFromDatasetId() throws IOException {
-    when(bigqueryRpcMock.deleteDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS)).thenReturn(true);
+    when(bigqueryRpcMock.deleteDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS))
+        .thenReturn(true);
     bigquery = options.getService();
     assertTrue(bigquery.delete(DatasetId.of(DATASET)));
-    verify(bigqueryRpcMock).deleteDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .deleteDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS);
   }
 
   @Test
   public void testDeleteDatasetFromDatasetIdWithProject() throws IOException {
     DatasetId datasetId = DatasetId.of(OTHER_PROJECT, DATASET);
-    when(bigqueryRpcMock.deleteDatasetSkipExceptionTranslation(OTHER_PROJECT, DATASET, EMPTY_RPC_OPTIONS)).thenReturn(true);
+    when(bigqueryRpcMock.deleteDatasetSkipExceptionTranslation(
+            OTHER_PROJECT, DATASET, EMPTY_RPC_OPTIONS))
+        .thenReturn(true);
     bigquery = options.getService();
     assertTrue(bigquery.delete(datasetId));
-    verify(bigqueryRpcMock).deleteDatasetSkipExceptionTranslation(OTHER_PROJECT, DATASET, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .deleteDatasetSkipExceptionTranslation(OTHER_PROJECT, DATASET, EMPTY_RPC_OPTIONS);
   }
 
   @Test
   public void testDeleteDatasetWithOptions() throws IOException {
-    when(bigqueryRpcMock.deleteDatasetSkipExceptionTranslation(PROJECT, DATASET, DATASET_DELETE_OPTIONS)).thenReturn(true);
+    when(bigqueryRpcMock.deleteDatasetSkipExceptionTranslation(
+            PROJECT, DATASET, DATASET_DELETE_OPTIONS))
+        .thenReturn(true);
     bigquery = options.getService();
     assertTrue(bigquery.delete(DATASET, DATASET_DELETE_CONTENTS));
-    verify(bigqueryRpcMock).deleteDatasetSkipExceptionTranslation(PROJECT, DATASET, DATASET_DELETE_OPTIONS);
+    verify(bigqueryRpcMock)
+        .deleteDatasetSkipExceptionTranslation(PROJECT, DATASET, DATASET_DELETE_OPTIONS);
   }
 
   @Test
@@ -778,12 +798,14 @@ public class BigQueryImplTest {
             .toBuilder()
             .setDescription("newDescription")
             .build();
-    when(bigqueryRpcMock.patchSkipExceptionTranslation(updatedDatasetInfo.toPb(), EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.patchSkipExceptionTranslation(
+            updatedDatasetInfo.toPb(), EMPTY_RPC_OPTIONS))
         .thenReturn(updatedDatasetInfo.toPb());
     bigquery = options.getService();
     Dataset dataset = bigquery.update(updatedDatasetInfo);
     assertEquals(new Dataset(bigquery, new DatasetInfo.BuilderImpl(updatedDatasetInfo)), dataset);
-    verify(bigqueryRpcMock).patchSkipExceptionTranslation(updatedDatasetInfo.toPb(), EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .patchSkipExceptionTranslation(updatedDatasetInfo.toPb(), EMPTY_RPC_OPTIONS);
   }
 
   @Test
@@ -792,7 +814,8 @@ public class BigQueryImplTest {
         DATASET_INFO.toBuilder().setDescription("newDescription").build();
     DatasetInfo updatedDatasetInfoWithProject =
         DATASET_INFO_WITH_PROJECT.toBuilder().setDescription("newDescription").build();
-    when(bigqueryRpcMock.patchSkipExceptionTranslation(eq(updatedDatasetInfoWithProject.toPb()), capturedOptions.capture()))
+    when(bigqueryRpcMock.patchSkipExceptionTranslation(
+            eq(updatedDatasetInfoWithProject.toPb()), capturedOptions.capture()))
         .thenReturn(updatedDatasetInfoWithProject.toPb());
     bigquery = options.getService();
     Dataset dataset = bigquery.update(updatedDatasetInfo, DATASET_OPTION_FIELDS);
@@ -804,13 +827,15 @@ public class BigQueryImplTest {
     assertEquals(
         new Dataset(bigquery, new DatasetInfo.BuilderImpl(updatedDatasetInfoWithProject)), dataset);
     verify(bigqueryRpcMock)
-        .patchSkipExceptionTranslation(eq(updatedDatasetInfoWithProject.toPb()), capturedOptions.capture());
+        .patchSkipExceptionTranslation(
+            eq(updatedDatasetInfoWithProject.toPb()), capturedOptions.capture());
   }
 
   @Test
   public void testCreateTable() throws IOException {
     TableInfo tableInfo = TABLE_INFO.setProjectId(OTHER_PROJECT);
-    when(bigqueryRpcMock.createSkipExceptionTranslation(tableInfo.toPb(), EMPTY_RPC_OPTIONS)).thenReturn(tableInfo.toPb());
+    when(bigqueryRpcMock.createSkipExceptionTranslation(tableInfo.toPb(), EMPTY_RPC_OPTIONS))
+        .thenReturn(tableInfo.toPb());
     BigQueryOptions bigQueryOptions =
         createBigQueryOptionsForProject(OTHER_PROJECT, rpcFactoryMock);
     bigquery = bigQueryOptions.getService();
@@ -843,7 +868,8 @@ public class BigQueryImplTest {
     TableInfo tableInfo = TABLE_INFO.setProjectId(PROJECT);
     TableId tableId = TableId.of("", TABLE_ID.getDataset(), TABLE_ID.getTable());
     tableInfo.toBuilder().setTableId(tableId);
-    when(bigqueryRpcMock.createSkipExceptionTranslation(tableInfo.toPb(), EMPTY_RPC_OPTIONS)).thenReturn(tableInfo.toPb());
+    when(bigqueryRpcMock.createSkipExceptionTranslation(tableInfo.toPb(), EMPTY_RPC_OPTIONS))
+        .thenReturn(tableInfo.toPb());
     BigQueryOptions bigQueryOptions = createBigQueryOptionsForProject(PROJECT, rpcFactoryMock);
     bigquery = bigQueryOptions.getService();
     Table table = bigquery.create(tableInfo);
@@ -853,7 +879,8 @@ public class BigQueryImplTest {
 
   @Test
   public void testCreateTableWithSelectedFields() throws IOException {
-    when(bigqueryRpcMock.createSkipExceptionTranslation(eq(TABLE_INFO_WITH_PROJECT.toPb()), capturedOptions.capture()))
+    when(bigqueryRpcMock.createSkipExceptionTranslation(
+            eq(TABLE_INFO_WITH_PROJECT.toPb()), capturedOptions.capture()))
         .thenReturn(TABLE_INFO_WITH_PROJECT.toPb());
     bigquery = options.getService();
     Table table = bigquery.create(TABLE_INFO, TABLE_OPTION_FIELDS);
@@ -863,33 +890,40 @@ public class BigQueryImplTest {
     assertTrue(selector.contains("etag"));
     assertEquals(31, selector.length());
     assertEquals(new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO_WITH_PROJECT)), table);
-    verify(bigqueryRpcMock).createSkipExceptionTranslation(eq(TABLE_INFO_WITH_PROJECT.toPb()), capturedOptions.capture());
+    verify(bigqueryRpcMock)
+        .createSkipExceptionTranslation(
+            eq(TABLE_INFO_WITH_PROJECT.toPb()), capturedOptions.capture());
   }
 
   @Test
   public void testGetTable() throws IOException {
-    when(bigqueryRpcMock.getTableSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.getTableSkipExceptionTranslation(
+            PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
         .thenReturn(TABLE_INFO_WITH_PROJECT.toPb());
     bigquery = options.getService();
     Table table = bigquery.getTable(DATASET, TABLE);
     assertEquals(new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO_WITH_PROJECT)), table);
-    verify(bigqueryRpcMock).getTableSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getTableSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS);
   }
 
   @Test
   public void testGetModel() throws IOException {
-    when(bigqueryRpcMock.getModelSkipExceptionTranslation(PROJECT, DATASET, MODEL, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.getModelSkipExceptionTranslation(
+            PROJECT, DATASET, MODEL, EMPTY_RPC_OPTIONS))
         .thenReturn(MODEL_INFO_WITH_PROJECT.toPb());
     bigquery = options.getService();
     Model model = bigquery.getModel(DATASET, MODEL);
     assertEquals(new Model(bigquery, new ModelInfo.BuilderImpl(MODEL_INFO_WITH_PROJECT)), model);
-    verify(bigqueryRpcMock).getModelSkipExceptionTranslation(PROJECT, DATASET, MODEL, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getModelSkipExceptionTranslation(PROJECT, DATASET, MODEL, EMPTY_RPC_OPTIONS);
   }
 
   @Test
   public void testGetModelNotFoundWhenThrowIsEnabled() throws IOException {
     String expected = "Model not found";
-    when(bigqueryRpcMock.getModelSkipExceptionTranslation(PROJECT, DATASET, MODEL, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.getModelSkipExceptionTranslation(
+            PROJECT, DATASET, MODEL, EMPTY_RPC_OPTIONS))
         .thenReturn(null)
         .thenThrow(new BigQueryException(404, expected));
     options.setThrowNotFound(true);
@@ -899,7 +933,8 @@ public class BigQueryImplTest {
     } catch (BigQueryException ex) {
       assertEquals(expected, ex.getMessage());
     }
-    verify(bigqueryRpcMock).getModelSkipExceptionTranslation(PROJECT, DATASET, MODEL, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getModelSkipExceptionTranslation(PROJECT, DATASET, MODEL, EMPTY_RPC_OPTIONS);
   }
 
   @Test
@@ -907,30 +942,36 @@ public class BigQueryImplTest {
     when(bigqueryRpcMock.getTableSkipExceptionTranslation(
             PROJECT, DATASET, "table$__PARTITIONS_SUMMARY__", EMPTY_RPC_OPTIONS))
         .thenReturn(TABLE_INFO_PARTITIONS.toPb());
-    when(bigqueryRpcMock.listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.listTableDataSkipExceptionTranslation(
+            PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
         .thenReturn(TABLE_DATA_WITH_PARTITIONS);
     bigquery = options.getService();
     List<String> partition = bigquery.listPartitions(TABLE_ID_WITH_PROJECT);
     assertEquals(3, partition.size());
     verify(bigqueryRpcMock)
-        .getTableSkipExceptionTranslation(PROJECT, DATASET, "table$__PARTITIONS_SUMMARY__", EMPTY_RPC_OPTIONS);
-    verify(bigqueryRpcMock).listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS);
+        .getTableSkipExceptionTranslation(
+            PROJECT, DATASET, "table$__PARTITIONS_SUMMARY__", EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS);
   }
 
   @Test
   public void testGetTableNotFoundWhenThrowIsDisabled() throws IOException {
-    when(bigqueryRpcMock.getTableSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.getTableSkipExceptionTranslation(
+            PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
         .thenReturn(TABLE_INFO_WITH_PROJECT.toPb());
     options.setThrowNotFound(false);
     bigquery = options.getService();
     Table table = bigquery.getTable(DATASET, TABLE);
     assertEquals(new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO_WITH_PROJECT)), table);
-    verify(bigqueryRpcMock).getTableSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getTableSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS);
   }
 
   @Test
   public void testGetTableNotFoundWhenThrowIsEnabled() throws IOException {
-    when(bigqueryRpcMock.getTableSkipExceptionTranslation(PROJECT, DATASET, "table-not-found", EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.getTableSkipExceptionTranslation(
+            PROJECT, DATASET, "table-not-found", EMPTY_RPC_OPTIONS))
         .thenReturn(null)
         .thenThrow(new BigQueryException(404, "Table not found"));
     options.setThrowNotFound(true);
@@ -941,49 +982,57 @@ public class BigQueryImplTest {
     } catch (BigQueryException ex) {
       Assert.assertNotNull(ex.getMessage());
     }
-    verify(bigqueryRpcMock).getTableSkipExceptionTranslation(PROJECT, DATASET, "table-not-found", EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getTableSkipExceptionTranslation(PROJECT, DATASET, "table-not-found", EMPTY_RPC_OPTIONS);
   }
 
   @Test
   public void testGetTableFromTableId() throws IOException {
-    when(bigqueryRpcMock.getTableSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.getTableSkipExceptionTranslation(
+            PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
         .thenReturn(TABLE_INFO_WITH_PROJECT.toPb());
     bigquery = options.getService();
     Table table = bigquery.getTable(TABLE_ID);
     assertEquals(new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO_WITH_PROJECT)), table);
-    verify(bigqueryRpcMock).getTableSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getTableSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS);
   }
 
   @Test
   public void testGetTableFromTableIdWithProject() throws IOException {
     TableInfo tableInfo = TABLE_INFO.setProjectId(OTHER_PROJECT);
     TableId tableId = TABLE_ID.setProjectId(OTHER_PROJECT);
-    when(bigqueryRpcMock.getTableSkipExceptionTranslation(OTHER_PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.getTableSkipExceptionTranslation(
+            OTHER_PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
         .thenReturn(tableInfo.toPb());
     BigQueryOptions bigQueryOptions =
         createBigQueryOptionsForProject(OTHER_PROJECT, rpcFactoryMock);
     bigquery = bigQueryOptions.getService();
     Table table = bigquery.getTable(tableId);
     assertEquals(new Table(bigquery, new TableInfo.BuilderImpl(tableInfo)), table);
-    verify(bigqueryRpcMock).getTableSkipExceptionTranslation(OTHER_PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getTableSkipExceptionTranslation(OTHER_PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS);
   }
 
   @Test
   public void testGetTableFromTableIdWithoutProject() throws IOException {
     TableInfo tableInfo = TABLE_INFO.setProjectId(PROJECT);
     TableId tableId = TableId.of("", TABLE_ID.getDataset(), TABLE_ID.getTable());
-    when(bigqueryRpcMock.getTableSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.getTableSkipExceptionTranslation(
+            PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
         .thenReturn(tableInfo.toPb());
     BigQueryOptions bigQueryOptions = createBigQueryOptionsForProject(PROJECT, rpcFactoryMock);
     bigquery = bigQueryOptions.getService();
     Table table = bigquery.getTable(tableId);
     assertEquals(new Table(bigquery, new TableInfo.BuilderImpl(tableInfo)), table);
-    verify(bigqueryRpcMock).getTableSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getTableSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS);
   }
 
   @Test
   public void testGetTableWithSelectedFields() throws IOException {
-    when(bigqueryRpcMock.getTableSkipExceptionTranslation(eq(PROJECT), eq(DATASET), eq(TABLE), capturedOptions.capture()))
+    when(bigqueryRpcMock.getTableSkipExceptionTranslation(
+            eq(PROJECT), eq(DATASET), eq(TABLE), capturedOptions.capture()))
         .thenReturn(TABLE_INFO_WITH_PROJECT.toPb());
     bigquery = options.getService();
     Table table = bigquery.getTable(TABLE_ID, TABLE_OPTION_FIELDS);
@@ -994,7 +1043,8 @@ public class BigQueryImplTest {
     assertEquals(31, selector.length());
     assertEquals(new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO_WITH_PROJECT)), table);
     verify(bigqueryRpcMock)
-        .getTableSkipExceptionTranslation(eq(PROJECT), eq(DATASET), eq(TABLE), capturedOptions.capture());
+        .getTableSkipExceptionTranslation(
+            eq(PROJECT), eq(DATASET), eq(TABLE), capturedOptions.capture());
   }
 
   @Test
@@ -1007,7 +1057,8 @@ public class BigQueryImplTest {
             new Table(bigquery, new TableInfo.BuilderImpl(MODEL_TABLE_INFO_WITH_PROJECT)));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Table>> result =
         Tuple.of(CURSOR, Iterables.transform(tableList, TableInfo.TO_PB_FUNCTION));
-    when(bigqueryRpcMock.listTablesSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS)).thenReturn(result);
+    when(bigqueryRpcMock.listTablesSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS))
+        .thenReturn(result);
     Page<Table> page = bigquery.listTables(DATASET);
     assertEquals(CURSOR, page.getNextPageToken());
     assertArrayEquals(tableList.toArray(), Iterables.toArray(page.getValues(), Table.class));
@@ -1022,11 +1073,13 @@ public class BigQueryImplTest {
             new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO_WITH_PARTITIONS)));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Table>> result =
         Tuple.of(CURSOR, Iterables.transform(tableList, TableInfo.TO_PB_FUNCTION));
-    when(bigqueryRpcMock.listTablesSkipExceptionTranslation(PROJECT, DATASET, TABLE_LIST_OPTIONS)).thenReturn(result);
+    when(bigqueryRpcMock.listTablesSkipExceptionTranslation(PROJECT, DATASET, TABLE_LIST_OPTIONS))
+        .thenReturn(result);
     Page<Table> page = bigquery.listTables(DATASET, TABLE_LIST_PAGE_SIZE, TABLE_LIST_PAGE_TOKEN);
     assertEquals(CURSOR, page.getNextPageToken());
     assertArrayEquals(tableList.toArray(), Iterables.toArray(page.getValues(), Table.class));
-    verify(bigqueryRpcMock).listTablesSkipExceptionTranslation(PROJECT, DATASET, TABLE_LIST_OPTIONS);
+    verify(bigqueryRpcMock)
+        .listTablesSkipExceptionTranslation(PROJECT, DATASET, TABLE_LIST_OPTIONS);
   }
 
   @Test
@@ -1037,11 +1090,13 @@ public class BigQueryImplTest {
             new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO_WITH_PARTITIONS_NULL_TYPE)));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Table>> result =
         Tuple.of(CURSOR, Iterables.transform(tableList, TableInfo.TO_PB_FUNCTION));
-    when(bigqueryRpcMock.listTablesSkipExceptionTranslation(PROJECT, DATASET, TABLE_LIST_OPTIONS)).thenReturn(result);
+    when(bigqueryRpcMock.listTablesSkipExceptionTranslation(PROJECT, DATASET, TABLE_LIST_OPTIONS))
+        .thenReturn(result);
     Page<Table> page = bigquery.listTables(DATASET, TABLE_LIST_PAGE_SIZE, TABLE_LIST_PAGE_TOKEN);
     assertEquals(CURSOR, page.getNextPageToken());
     assertArrayEquals(tableList.toArray(), Iterables.toArray(page.getValues(), Table.class));
-    verify(bigqueryRpcMock).listTablesSkipExceptionTranslation(PROJECT, DATASET, TABLE_LIST_OPTIONS);
+    verify(bigqueryRpcMock)
+        .listTablesSkipExceptionTranslation(PROJECT, DATASET, TABLE_LIST_OPTIONS);
   }
 
   @Test
@@ -1052,11 +1107,13 @@ public class BigQueryImplTest {
             new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO_RANGE_PARTITIONING)));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Table>> result =
         Tuple.of(CURSOR, Iterables.transform(tableList, TableInfo.TO_PB_FUNCTION));
-    when(bigqueryRpcMock.listTablesSkipExceptionTranslation(PROJECT, DATASET, TABLE_LIST_OPTIONS)).thenReturn(result);
+    when(bigqueryRpcMock.listTablesSkipExceptionTranslation(PROJECT, DATASET, TABLE_LIST_OPTIONS))
+        .thenReturn(result);
     Page<Table> page = bigquery.listTables(DATASET, TABLE_LIST_PAGE_SIZE, TABLE_LIST_PAGE_TOKEN);
     assertEquals(CURSOR, page.getNextPageToken());
     assertArrayEquals(tableList.toArray(), Iterables.toArray(page.getValues(), Table.class));
-    verify(bigqueryRpcMock).listTablesSkipExceptionTranslation(PROJECT, DATASET, TABLE_LIST_OPTIONS);
+    verify(bigqueryRpcMock)
+        .listTablesSkipExceptionTranslation(PROJECT, DATASET, TABLE_LIST_OPTIONS);
   }
 
   @Test
@@ -1068,7 +1125,8 @@ public class BigQueryImplTest {
             new Table(bigquery, new TableInfo.BuilderImpl(OTHER_TABLE_INFO)));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Table>> result =
         Tuple.of(CURSOR, Iterables.transform(tableList, TableInfo.TO_PB_FUNCTION));
-    when(bigqueryRpcMock.listTablesSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS)).thenReturn(result);
+    when(bigqueryRpcMock.listTablesSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS))
+        .thenReturn(result);
     Page<Table> page = bigquery.listTables(DatasetId.of(DATASET));
     assertEquals(CURSOR, page.getNextPageToken());
     assertArrayEquals(tableList.toArray(), Iterables.toArray(page.getValues(), Table.class));
@@ -1083,11 +1141,14 @@ public class BigQueryImplTest {
             new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO.setProjectId(OTHER_PROJECT))));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Table>> result =
         Tuple.of(CURSOR, Iterables.transform(tableList, TableInfo.TO_PB_FUNCTION));
-    when(bigqueryRpcMock.listTablesSkipExceptionTranslation(OTHER_PROJECT, DATASET, EMPTY_RPC_OPTIONS)).thenReturn(result);
+    when(bigqueryRpcMock.listTablesSkipExceptionTranslation(
+            OTHER_PROJECT, DATASET, EMPTY_RPC_OPTIONS))
+        .thenReturn(result);
     Page<Table> page = bigquery.listTables(DatasetId.of(OTHER_PROJECT, DATASET));
     assertEquals(CURSOR, page.getNextPageToken());
     assertArrayEquals(tableList.toArray(), Iterables.toArray(page.getValues(), Table.class));
-    verify(bigqueryRpcMock).listTablesSkipExceptionTranslation(OTHER_PROJECT, DATASET, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .listTablesSkipExceptionTranslation(OTHER_PROJECT, DATASET, EMPTY_RPC_OPTIONS);
   }
 
   @Test
@@ -1099,11 +1160,13 @@ public class BigQueryImplTest {
             new Table(bigquery, new TableInfo.BuilderImpl(OTHER_TABLE_INFO)));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Table>> result =
         Tuple.of(CURSOR, Iterables.transform(tableList, TableInfo.TO_PB_FUNCTION));
-    when(bigqueryRpcMock.listTablesSkipExceptionTranslation(PROJECT, DATASET, TABLE_LIST_OPTIONS)).thenReturn(result);
+    when(bigqueryRpcMock.listTablesSkipExceptionTranslation(PROJECT, DATASET, TABLE_LIST_OPTIONS))
+        .thenReturn(result);
     Page<Table> page = bigquery.listTables(DATASET, TABLE_LIST_PAGE_SIZE, TABLE_LIST_PAGE_TOKEN);
     assertEquals(CURSOR, page.getNextPageToken());
     assertArrayEquals(tableList.toArray(), Iterables.toArray(page.getValues(), Table.class));
-    verify(bigqueryRpcMock).listTablesSkipExceptionTranslation(PROJECT, DATASET, TABLE_LIST_OPTIONS);
+    verify(bigqueryRpcMock)
+        .listTablesSkipExceptionTranslation(PROJECT, DATASET, TABLE_LIST_OPTIONS);
   }
 
   @Test
@@ -1115,7 +1178,8 @@ public class BigQueryImplTest {
             new Model(bigquery, new ModelInfo.BuilderImpl(OTHER_MODEL_INFO)));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Model>> result =
         Tuple.of(CURSOR, Iterables.transform(modelList, ModelInfo.TO_PB_FUNCTION));
-    when(bigqueryRpcMock.listModelsSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS)).thenReturn(result);
+    when(bigqueryRpcMock.listModelsSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS))
+        .thenReturn(result);
     Page<Model> page = bigquery.listModels(DATASET);
     assertEquals(CURSOR, page.getNextPageToken());
     assertArrayEquals(modelList.toArray(), Iterables.toArray(page.getValues(), Model.class));
@@ -1131,7 +1195,8 @@ public class BigQueryImplTest {
             new Model(bigquery, new ModelInfo.BuilderImpl(OTHER_MODEL_INFO)));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Model>> result =
         Tuple.of(CURSOR, Iterables.transform(modelList, ModelInfo.TO_PB_FUNCTION));
-    when(bigqueryRpcMock.listModelsSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS)).thenReturn(result);
+    when(bigqueryRpcMock.listModelsSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS))
+        .thenReturn(result);
     Page<Model> page = bigquery.listModels(DatasetId.of(DATASET));
     assertEquals(CURSOR, page.getNextPageToken());
     assertArrayEquals(modelList.toArray(), Iterables.toArray(page.getValues(), Model.class));
@@ -1140,7 +1205,8 @@ public class BigQueryImplTest {
 
   @Test
   public void testDeleteTable() throws IOException {
-    when(bigqueryRpcMock.deleteTableSkipExceptionTranslation(PROJECT, DATASET, TABLE)).thenReturn(true);
+    when(bigqueryRpcMock.deleteTableSkipExceptionTranslation(PROJECT, DATASET, TABLE))
+        .thenReturn(true);
     bigquery = options.getService();
     assertTrue(bigquery.delete(TABLE_ID));
     verify(bigqueryRpcMock).deleteTableSkipExceptionTranslation(PROJECT, DATASET, TABLE);
@@ -1148,7 +1214,8 @@ public class BigQueryImplTest {
 
   @Test
   public void testDeleteTableFromTableId() throws IOException {
-    when(bigqueryRpcMock.deleteTableSkipExceptionTranslation(PROJECT, DATASET, TABLE)).thenReturn(true);
+    when(bigqueryRpcMock.deleteTableSkipExceptionTranslation(PROJECT, DATASET, TABLE))
+        .thenReturn(true);
     bigquery = options.getService();
     assertTrue(bigquery.delete(TABLE_ID));
     verify(bigqueryRpcMock).deleteTableSkipExceptionTranslation(PROJECT, DATASET, TABLE);
@@ -1157,7 +1224,8 @@ public class BigQueryImplTest {
   @Test
   public void testDeleteTableFromTableIdWithProject() throws IOException {
     TableId tableId = TABLE_ID.setProjectId(OTHER_PROJECT);
-    when(bigqueryRpcMock.deleteTableSkipExceptionTranslation(OTHER_PROJECT, DATASET, TABLE)).thenReturn(true);
+    when(bigqueryRpcMock.deleteTableSkipExceptionTranslation(OTHER_PROJECT, DATASET, TABLE))
+        .thenReturn(true);
     BigQueryOptions bigQueryOptions =
         createBigQueryOptionsForProject(OTHER_PROJECT, rpcFactoryMock);
     bigquery = bigQueryOptions.getService();
@@ -1168,7 +1236,8 @@ public class BigQueryImplTest {
   @Test
   public void testDeleteTableFromTableIdWithoutProject() throws IOException {
     TableId tableId = TableId.of("", TABLE_ID.getDataset(), TABLE_ID.getTable());
-    when(bigqueryRpcMock.deleteTableSkipExceptionTranslation(PROJECT, DATASET, TABLE)).thenReturn(true);
+    when(bigqueryRpcMock.deleteTableSkipExceptionTranslation(PROJECT, DATASET, TABLE))
+        .thenReturn(true);
     BigQueryOptions bigQueryOptions = createBigQueryOptionsForProject(PROJECT, rpcFactoryMock);
     bigquery = bigQueryOptions.getService();
     assertTrue(bigquery.delete(tableId));
@@ -1177,7 +1246,8 @@ public class BigQueryImplTest {
 
   @Test
   public void testDeleteModel() throws IOException {
-    when(bigqueryRpcMock.deleteModelSkipExceptionTranslation(PROJECT, DATASET, MODEL)).thenReturn(true);
+    when(bigqueryRpcMock.deleteModelSkipExceptionTranslation(PROJECT, DATASET, MODEL))
+        .thenReturn(true);
     bigquery = options.getService();
     assertTrue(bigquery.delete(ModelId.of(DATASET, MODEL)));
     verify(bigqueryRpcMock).deleteModelSkipExceptionTranslation(PROJECT, DATASET, MODEL);
@@ -1198,7 +1268,8 @@ public class BigQueryImplTest {
     bigquery = bigQueryOptions.getService();
     Model actualModel = bigquery.update(updateModelInfo);
     assertEquals(new Model(bigquery, new ModelInfo.BuilderImpl(updateModelInfo)), actualModel);
-    verify(bigqueryRpcMock).patchSkipExceptionTranslation(updateModelInfo.toPb(), EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .patchSkipExceptionTranslation(updateModelInfo.toPb(), EMPTY_RPC_OPTIONS);
   }
 
   @Test
@@ -1212,7 +1283,8 @@ public class BigQueryImplTest {
     bigquery = bigQueryOptions.getService();
     Table table = bigquery.update(updatedTableInfo);
     assertEquals(new Table(bigquery, new TableInfo.BuilderImpl(updatedTableInfo)), table);
-    verify(bigqueryRpcMock).patchSkipExceptionTranslation(updatedTableInfo.toPb(), EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .patchSkipExceptionTranslation(updatedTableInfo.toPb(), EMPTY_RPC_OPTIONS);
   }
 
   @Test
@@ -1239,7 +1311,8 @@ public class BigQueryImplTest {
     TableInfo tableInfo = TABLE_INFO.setProjectId(PROJECT);
     TableId tableId = TableId.of("", TABLE_ID.getDataset(), TABLE_ID.getTable());
     tableInfo.toBuilder().setTableId(tableId);
-    when(bigqueryRpcMock.patchSkipExceptionTranslation(tableInfo.toPb(), EMPTY_RPC_OPTIONS)).thenReturn(tableInfo.toPb());
+    when(bigqueryRpcMock.patchSkipExceptionTranslation(tableInfo.toPb(), EMPTY_RPC_OPTIONS))
+        .thenReturn(tableInfo.toPb());
     BigQueryOptions bigQueryOptions = createBigQueryOptionsForProject(PROJECT, rpcFactoryMock);
     bigquery = bigQueryOptions.getService();
     Table table = bigquery.update(tableInfo);
@@ -1252,7 +1325,8 @@ public class BigQueryImplTest {
     TableInfo updatedTableInfo = TABLE_INFO.toBuilder().setDescription("newDescription").build();
     TableInfo updatedTableInfoWithProject =
         TABLE_INFO_WITH_PROJECT.toBuilder().setDescription("newDescription").build();
-    when(bigqueryRpcMock.patchSkipExceptionTranslation(eq(updatedTableInfoWithProject.toPb()), capturedOptions.capture()))
+    when(bigqueryRpcMock.patchSkipExceptionTranslation(
+            eq(updatedTableInfoWithProject.toPb()), capturedOptions.capture()))
         .thenReturn(updatedTableInfoWithProject.toPb());
     bigquery = options.getService();
     Table table = bigquery.update(updatedTableInfo, TABLE_OPTION_FIELDS);
@@ -1264,7 +1338,8 @@ public class BigQueryImplTest {
     assertEquals(
         new Table(bigquery, new TableInfo.BuilderImpl(updatedTableInfoWithProject)), table);
     verify(bigqueryRpcMock)
-        .patchSkipExceptionTranslation(eq(updatedTableInfoWithProject.toPb()), capturedOptions.capture());
+        .patchSkipExceptionTranslation(
+            eq(updatedTableInfoWithProject.toPb()), capturedOptions.capture());
   }
 
   @Test
@@ -1272,7 +1347,8 @@ public class BigQueryImplTest {
     TableInfo updatedTableInfo = TABLE_INFO.toBuilder().setDescription("newDescription").build();
     TableInfo updatedTableInfoWithProject =
         TABLE_INFO_WITH_PROJECT.toBuilder().setDescription("newDescription").build();
-    when(bigqueryRpcMock.patchSkipExceptionTranslation(eq(updatedTableInfoWithProject.toPb()), capturedOptions.capture()))
+    when(bigqueryRpcMock.patchSkipExceptionTranslation(
+            eq(updatedTableInfoWithProject.toPb()), capturedOptions.capture()))
         .thenReturn(updatedTableInfoWithProject.toPb());
     bigquery = options.getService();
     Table table = bigquery.update(updatedTableInfo, BigQuery.TableOption.autodetectSchema(true));
@@ -1282,7 +1358,8 @@ public class BigQueryImplTest {
     assertEquals(
         new Table(bigquery, new TableInfo.BuilderImpl(updatedTableInfoWithProject)), table);
     verify(bigqueryRpcMock)
-        .patchSkipExceptionTranslation(eq(updatedTableInfoWithProject.toPb()), capturedOptions.capture());
+        .patchSkipExceptionTranslation(
+            eq(updatedTableInfoWithProject.toPb()), capturedOptions.capture());
   }
 
   @Test
@@ -1335,7 +1412,8 @@ public class BigQueryImplTest {
     assertNull(response.getErrorsFor(1L));
     assertEquals(1, response.getErrorsFor(0L).size());
     assertEquals("ErrorMessage", response.getErrorsFor(0L).get(0).getMessage());
-    verify(bigqueryRpcMock, times(2)).insertAllSkipExceptionTranslation(PROJECT, DATASET, TABLE, requestPb);
+    verify(bigqueryRpcMock, times(2))
+        .insertAllSkipExceptionTranslation(PROJECT, DATASET, TABLE, requestPb);
   }
 
   @Test
@@ -1420,7 +1498,8 @@ public class BigQueryImplTest {
                     new TableDataInsertAllResponse.InsertErrors()
                         .setIndex(0L)
                         .setErrors(ImmutableList.of(new ErrorProto().setMessage("ErrorMessage")))));
-    when(bigqueryRpcMock.insertAllSkipExceptionTranslation(OTHER_PROJECT, DATASET, TABLE, requestPb))
+    when(bigqueryRpcMock.insertAllSkipExceptionTranslation(
+            OTHER_PROJECT, DATASET, TABLE, requestPb))
         .thenReturn(responsePb);
     BigQueryOptions bigQueryOptions =
         createBigQueryOptionsForProject(OTHER_PROJECT, rpcFactoryMock);
@@ -1430,7 +1509,8 @@ public class BigQueryImplTest {
     assertNull(response.getErrorsFor(1L));
     assertEquals(1, response.getErrorsFor(0L).size());
     assertEquals("ErrorMessage", response.getErrorsFor(0L).get(0).getMessage());
-    verify(bigqueryRpcMock).insertAllSkipExceptionTranslation(OTHER_PROJECT, DATASET, TABLE, requestPb);
+    verify(bigqueryRpcMock)
+        .insertAllSkipExceptionTranslation(OTHER_PROJECT, DATASET, TABLE, requestPb);
   }
 
   @Test
@@ -1470,7 +1550,8 @@ public class BigQueryImplTest {
                     new TableDataInsertAllResponse.InsertErrors()
                         .setIndex(0L)
                         .setErrors(ImmutableList.of(new ErrorProto().setMessage("ErrorMessage")))));
-    when(bigqueryRpcMock.insertAllSkipExceptionTranslation("project-different-from-option", DATASET, TABLE, requestPb))
+    when(bigqueryRpcMock.insertAllSkipExceptionTranslation(
+            "project-different-from-option", DATASET, TABLE, requestPb))
         .thenReturn(responsePb);
     BigQueryOptions bigQueryOptions =
         createBigQueryOptionsForProject(OTHER_PROJECT, rpcFactoryMock);
@@ -1480,47 +1561,56 @@ public class BigQueryImplTest {
     assertNull(response.getErrorsFor(1L));
     assertEquals(1, response.getErrorsFor(0L).size());
     assertEquals("ErrorMessage", response.getErrorsFor(0L).get(0).getMessage());
-    verify(bigqueryRpcMock).insertAllSkipExceptionTranslation("project-different-from-option", DATASET, TABLE, requestPb);
+    verify(bigqueryRpcMock)
+        .insertAllSkipExceptionTranslation(
+            "project-different-from-option", DATASET, TABLE, requestPb);
   }
 
   @Test
   public void testListTableData() throws IOException {
-    when(bigqueryRpcMock.listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.listTableDataSkipExceptionTranslation(
+            PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
         .thenReturn(TABLE_DATA_PB);
     bigquery = options.getService();
     Page<FieldValueList> page = bigquery.listTableData(DATASET, TABLE);
     assertEquals(CURSOR, page.getNextPageToken());
     assertArrayEquals(TABLE_DATA.toArray(), Iterables.toArray(page.getValues(), List.class));
-    verify(bigqueryRpcMock).listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS);
   }
 
   @Test
   public void testListTableDataFromTableId() throws IOException {
-    when(bigqueryRpcMock.listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.listTableDataSkipExceptionTranslation(
+            PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
         .thenReturn(TABLE_DATA_PB);
     bigquery = options.getService();
     Page<FieldValueList> page = bigquery.listTableData(TableId.of(DATASET, TABLE));
     assertEquals(CURSOR, page.getNextPageToken());
     assertArrayEquals(TABLE_DATA.toArray(), Iterables.toArray(page.getValues(), List.class));
-    verify(bigqueryRpcMock).listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS);
   }
 
   @Test
   public void testListTableDataFromTableIdWithProject() throws IOException {
     TableId tableId = TABLE_ID.setProjectId(OTHER_PROJECT);
-    when(bigqueryRpcMock.listTableDataSkipExceptionTranslation(OTHER_PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.listTableDataSkipExceptionTranslation(
+            OTHER_PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
         .thenReturn(TABLE_DATA_PB);
     BigQueryOptions bigQueryOptions = createBigQueryOptionsForProject(PROJECT, rpcFactoryMock);
     bigquery = bigQueryOptions.getService();
     Page<FieldValueList> page = bigquery.listTableData(tableId);
     assertEquals(CURSOR, page.getNextPageToken());
     assertArrayEquals(TABLE_DATA.toArray(), Iterables.toArray(page.getValues(), List.class));
-    verify(bigqueryRpcMock).listTableDataSkipExceptionTranslation(OTHER_PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .listTableDataSkipExceptionTranslation(OTHER_PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS);
   }
 
   @Test
   public void testListTableDataWithOptions() throws IOException {
-    when(bigqueryRpcMock.listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, TABLE_DATA_LIST_OPTIONS))
+    when(bigqueryRpcMock.listTableDataSkipExceptionTranslation(
+            PROJECT, DATASET, TABLE, TABLE_DATA_LIST_OPTIONS))
         .thenReturn(TABLE_DATA_PB);
     bigquery = options.getService();
     Page<FieldValueList> page =
@@ -1532,7 +1622,8 @@ public class BigQueryImplTest {
             TABLE_DATA_LIST_START_INDEX);
     assertEquals(CURSOR, page.getNextPageToken());
     assertArrayEquals(TABLE_DATA.toArray(), Iterables.toArray(page.getValues(), List.class));
-    verify(bigqueryRpcMock).listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, TABLE_DATA_LIST_OPTIONS);
+    verify(bigqueryRpcMock)
+        .listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, TABLE_DATA_LIST_OPTIONS);
   }
 
   @Test
@@ -1549,7 +1640,8 @@ public class BigQueryImplTest {
             TABLE_DATA_LIST_PAGE_TOKEN,
             TABLE_DATA_LIST_START_INDEX);
     assertEquals(CURSOR, page.getNextPageToken());
-    verify(bigqueryRpcMock).listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, TABLE_DATA_LIST_OPTIONS);
+    verify(bigqueryRpcMock)
+        .listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, TABLE_DATA_LIST_OPTIONS);
     assertArrayEquals(TABLE_DATA.toArray(), Iterables.toArray(page.getValues(), List.class));
     Map<BigQueryRpc.Option, ?> SECOND_TABLE_DATA_LIST_OPTIONS =
         ImmutableMap.of(BigQueryRpc.Option.PAGE_TOKEN, CURSOR, BigQueryRpc.Option.START_INDEX, 0L);
@@ -1562,11 +1654,14 @@ public class BigQueryImplTest {
                         new TableRow().setF(ImmutableList.of(new TableCell().setV("Value3"))),
                         new TableRow().setF(ImmutableList.of(new TableCell().setV("Value4"))))))
         .when(bigqueryRpcMock)
-        .listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, SECOND_TABLE_DATA_LIST_OPTIONS);
+        .listTableDataSkipExceptionTranslation(
+            PROJECT, DATASET, TABLE, SECOND_TABLE_DATA_LIST_OPTIONS);
     assertTrue(page.hasNextPage());
     page = page.getNextPage();
     assertNull(page.getNextPageToken());
-    verify(bigqueryRpcMock).listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, SECOND_TABLE_DATA_LIST_OPTIONS);
+    verify(bigqueryRpcMock)
+        .listTableDataSkipExceptionTranslation(
+            PROJECT, DATASET, TABLE, SECOND_TABLE_DATA_LIST_OPTIONS);
   }
 
   // The "minimally initialized" Job that lets Job.fromPb run without throwing.
@@ -1583,20 +1678,22 @@ public class BigQueryImplTest {
     JobId jobId = JobId.of(id);
     String query = "SELECT * in FOO";
 
-    when(bigqueryRpcMock.createSkipExceptionTranslation(jobCapture.capture(), eq(EMPTY_RPC_OPTIONS)))
+    when(bigqueryRpcMock.createSkipExceptionTranslation(
+            jobCapture.capture(), eq(EMPTY_RPC_OPTIONS)))
         .thenReturn(newJobPb());
 
     bigquery = options.getService();
     assertThat(bigquery.create(JobInfo.of(jobId, QueryJobConfiguration.of(query)))).isNotNull();
     assertThat(jobCapture.getValue().getJobReference().getJobId()).isEqualTo(id);
-    verify(bigqueryRpcMock).createSkipExceptionTranslation(jobCapture.capture(), eq(EMPTY_RPC_OPTIONS));
+    verify(bigqueryRpcMock)
+        .createSkipExceptionTranslation(jobCapture.capture(), eq(EMPTY_RPC_OPTIONS));
   }
 
   @Test
   public void testCreateJobFailureShouldRetry() throws IOException {
     // TODO(NOW): Need to update verify that the new exceptions ar ebeing retried also.
-    // TODO(NOW): public boolean delete(JobId jobId) { is not being tested
-    when(bigqueryRpcMock.createSkipExceptionTranslation(jobCapture.capture(), eq(EMPTY_RPC_OPTIONS)))
+    when(bigqueryRpcMock.createSkipExceptionTranslation(
+            jobCapture.capture(), eq(EMPTY_RPC_OPTIONS)))
         .thenThrow(new BigQueryException(500, "InternalError"))
         .thenThrow(new BigQueryException(502, "Bad Gateway"))
         .thenThrow(new BigQueryException(503, "Service Unavailable"))
@@ -1615,7 +1712,8 @@ public class BigQueryImplTest {
             .getService();
 
     ((BigQueryImpl) bigquery).create(JobInfo.of(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY));
-    verify(bigqueryRpcMock, times(6)).createSkipExceptionTranslation(jobCapture.capture(), eq(EMPTY_RPC_OPTIONS));
+    verify(bigqueryRpcMock, times(6))
+        .createSkipExceptionTranslation(jobCapture.capture(), eq(EMPTY_RPC_OPTIONS));
   }
 
   @Test
@@ -1630,7 +1728,8 @@ public class BigQueryImplTest {
                 .build());
 
     Map<BigQueryRpc.Option, ?> bigQueryRpcOptions = optionMap(bigQueryRetryConfigOption);
-    when(bigqueryRpcMock.createSkipExceptionTranslation(jobCapture.capture(), eq(bigQueryRpcOptions)))
+    when(bigqueryRpcMock.createSkipExceptionTranslation(
+            jobCapture.capture(), eq(bigQueryRpcOptions)))
         .thenThrow(
             new BigQueryException(
                 400, RATE_LIMIT_ERROR_MSG)) // retrial on based on RATE_LIMIT_EXCEEDED_MSG
@@ -1647,17 +1746,19 @@ public class BigQueryImplTest {
 
     ((BigQueryImpl) bigquery)
         .create(JobInfo.of(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY), bigQueryRetryConfigOption);
-    verify(bigqueryRpcMock, times(3)).createSkipExceptionTranslation(jobCapture.capture(), eq(bigQueryRpcOptions));
+    verify(bigqueryRpcMock, times(3))
+        .createSkipExceptionTranslation(jobCapture.capture(), eq(bigQueryRpcOptions));
   }
 
   @Test
-  public void testCreateJobWithBigQueryRetryConfigFailureShouldNotRetry() throws IOException  {
+  public void testCreateJobWithBigQueryRetryConfigFailureShouldNotRetry() throws IOException {
     // Validate create job with BigQueryRetryConfig that does not retry on rate limit error message.
     JobOption bigQueryRetryConfigOption =
         JobOption.bigQueryRetryConfig(BigQueryRetryConfig.newBuilder().build());
 
     Map<BigQueryRpc.Option, ?> bigQueryRpcOptions = optionMap(bigQueryRetryConfigOption);
-    when(bigqueryRpcMock.createSkipExceptionTranslation(jobCapture.capture(), eq(bigQueryRpcOptions)))
+    when(bigqueryRpcMock.createSkipExceptionTranslation(
+            jobCapture.capture(), eq(bigQueryRpcOptions)))
         .thenThrow(new BigQueryException(400, RATE_LIMIT_ERROR_MSG));
 
     bigquery = options.getService();
@@ -1677,7 +1778,8 @@ public class BigQueryImplTest {
     }
     // Verify that getQueryResults is attempted only once and not retried since the error message
     // does not match.
-    verify(bigqueryRpcMock, times(1)).createSkipExceptionTranslation(jobCapture.capture(), eq(bigQueryRpcOptions));
+    verify(bigqueryRpcMock, times(1))
+        .createSkipExceptionTranslation(jobCapture.capture(), eq(bigQueryRpcOptions));
   }
 
   @Test
@@ -1685,7 +1787,8 @@ public class BigQueryImplTest {
     // Validate create job with RetryOptions.
     JobOption retryOptions = JobOption.retryOptions(RetryOption.maxAttempts(4));
     Map<BigQueryRpc.Option, ?> bigQueryRpcOptions = optionMap(retryOptions);
-    when(bigqueryRpcMock.createSkipExceptionTranslation(jobCapture.capture(), eq(bigQueryRpcOptions)))
+    when(bigqueryRpcMock.createSkipExceptionTranslation(
+            jobCapture.capture(), eq(bigQueryRpcOptions)))
         .thenThrow(new BigQueryException(500, "InternalError"))
         .thenThrow(new BigQueryException(502, "Bad Gateway"))
         .thenThrow(new BigQueryException(503, "Service Unavailable"))
@@ -1701,7 +1804,8 @@ public class BigQueryImplTest {
 
     ((BigQueryImpl) bigquery)
         .create(JobInfo.of(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY), retryOptions);
-    verify(bigqueryRpcMock, times(4)).createSkipExceptionTranslation(jobCapture.capture(), eq(bigQueryRpcOptions));
+    verify(bigqueryRpcMock, times(4))
+        .createSkipExceptionTranslation(jobCapture.capture(), eq(bigQueryRpcOptions));
   }
 
   @Test
@@ -1709,7 +1813,8 @@ public class BigQueryImplTest {
     // Validate create job with RetryOptions that only attempts once (no retry).
     JobOption retryOptions = JobOption.retryOptions(RetryOption.maxAttempts(1));
     Map<BigQueryRpc.Option, ?> bigQueryRpcOptions = optionMap(retryOptions);
-    when(bigqueryRpcMock.createSkipExceptionTranslation(jobCapture.capture(), eq(bigQueryRpcOptions)))
+    when(bigqueryRpcMock.createSkipExceptionTranslation(
+            jobCapture.capture(), eq(bigQueryRpcOptions)))
         .thenThrow(new BigQueryException(500, "InternalError"))
         .thenReturn(newJobPb());
 
@@ -1728,11 +1833,12 @@ public class BigQueryImplTest {
     } catch (BigQueryException e) {
       assertNotNull(e.getMessage());
     }
-    verify(bigqueryRpcMock, times(1)).createSkipExceptionTranslation(jobCapture.capture(), eq(bigQueryRpcOptions));
+    verify(bigqueryRpcMock, times(1))
+        .createSkipExceptionTranslation(jobCapture.capture(), eq(bigQueryRpcOptions));
   }
 
   @Test
-  public void testCreateJobWithSelectedFields() throws IOException  {
+  public void testCreateJobWithSelectedFields() throws IOException {
     when(bigqueryRpcMock.createSkipExceptionTranslation(
             any(com.google.api.services.bigquery.model.Job.class), capturedOptions.capture()))
         .thenReturn(newJobPb());
@@ -1748,7 +1854,8 @@ public class BigQueryImplTest {
         .asList()
         .containsExactly("jobReference", "configuration", "user_email");
     verify(bigqueryRpcMock)
-        .createSkipExceptionTranslation(any(com.google.api.services.bigquery.model.Job.class), capturedOptions.capture());
+        .createSkipExceptionTranslation(
+            any(com.google.api.services.bigquery.model.Job.class), capturedOptions.capture());
   }
 
   @Test
@@ -1757,7 +1864,8 @@ public class BigQueryImplTest {
     JobId jobId = JobId.of(id);
     String query = "SELECT * in FOO";
 
-    when(bigqueryRpcMock.createSkipExceptionTranslation(jobCapture.capture(), eq(EMPTY_RPC_OPTIONS)))
+    when(bigqueryRpcMock.createSkipExceptionTranslation(
+            jobCapture.capture(), eq(EMPTY_RPC_OPTIONS)))
         .thenThrow(new BigQueryException(409, "already exists, for some reason"));
 
     bigquery = options.getService();
@@ -1767,7 +1875,8 @@ public class BigQueryImplTest {
     } catch (BigQueryException e) {
       assertThat(jobCapture.getValue().getJobReference().getJobId()).isEqualTo(id);
     }
-    verify(bigqueryRpcMock).createSkipExceptionTranslation(jobCapture.capture(), eq(EMPTY_RPC_OPTIONS));
+    verify(bigqueryRpcMock)
+        .createSkipExceptionTranslation(jobCapture.capture(), eq(EMPTY_RPC_OPTIONS));
   }
 
   @Test
@@ -1782,7 +1891,8 @@ public class BigQueryImplTest {
           }
         };
 
-    when(bigqueryRpcMock.createSkipExceptionTranslation(jobCapture.capture(), eq(EMPTY_RPC_OPTIONS)))
+    when(bigqueryRpcMock.createSkipExceptionTranslation(
+            jobCapture.capture(), eq(EMPTY_RPC_OPTIONS)))
         .thenThrow(new BigQueryException(409, "already exists, for some reason"));
     when(bigqueryRpcMock.getJobSkipExceptionTranslation(
             any(String.class), eq(id), eq((String) null), eq(EMPTY_RPC_OPTIONS)))
@@ -1791,9 +1901,11 @@ public class BigQueryImplTest {
     bigquery = options.getService();
     ((BigQueryImpl) bigquery).create(JobInfo.of(QueryJobConfiguration.of(query)), idProvider);
     assertThat(jobCapture.getValue().getJobReference().getJobId()).isEqualTo(id);
-    verify(bigqueryRpcMock).createSkipExceptionTranslation(jobCapture.capture(), eq(EMPTY_RPC_OPTIONS));
     verify(bigqueryRpcMock)
-        .getJobSkipExceptionTranslation(any(String.class), eq(id), eq((String) null), eq(EMPTY_RPC_OPTIONS));
+        .createSkipExceptionTranslation(jobCapture.capture(), eq(EMPTY_RPC_OPTIONS));
+    verify(bigqueryRpcMock)
+        .getJobSkipExceptionTranslation(
+            any(String.class), eq(id), eq((String) null), eq(EMPTY_RPC_OPTIONS));
   }
 
   @Test
@@ -1802,7 +1914,8 @@ public class BigQueryImplTest {
     final String id = "testCreateJobTryGet-id";
     String query = "SELECT * in FOO";
 
-    when(bigqueryRpcMock.createSkipExceptionTranslation(jobCapture.capture(), eq(EMPTY_RPC_OPTIONS)))
+    when(bigqueryRpcMock.createSkipExceptionTranslation(
+            jobCapture.capture(), eq(EMPTY_RPC_OPTIONS)))
         .thenThrow(
             new BigQueryException(
                 409,
@@ -1820,9 +1933,11 @@ public class BigQueryImplTest {
         ((BigQueryImpl) bigquery).create(JobInfo.of(JobId.of(id), QueryJobConfiguration.of(query)));
     assertThat(job).isNotNull();
     assertThat(jobCapture.getValue().getJobReference().getJobId()).isEqualTo(id);
-    verify(bigqueryRpcMock).createSkipExceptionTranslation(jobCapture.capture(), eq(EMPTY_RPC_OPTIONS));
     verify(bigqueryRpcMock)
-        .getJobSkipExceptionTranslation(any(String.class), eq(id), eq((String) null), eq(withStatisticOption));
+        .createSkipExceptionTranslation(jobCapture.capture(), eq(EMPTY_RPC_OPTIONS));
+    verify(bigqueryRpcMock)
+        .getJobSkipExceptionTranslation(
+            any(String.class), eq(id), eq((String) null), eq(withStatisticOption));
   }
 
   @Test
@@ -1831,7 +1946,8 @@ public class BigQueryImplTest {
         JobInfo.newBuilder(QUERY_JOB_CONFIGURATION.setProjectId(OTHER_PROJECT))
             .setJobId(JobId.of(OTHER_PROJECT, JOB))
             .build();
-    when(bigqueryRpcMock.createSkipExceptionTranslation(eq(jobInfo.toPb()), capturedOptions.capture()))
+    when(bigqueryRpcMock.createSkipExceptionTranslation(
+            eq(jobInfo.toPb()), capturedOptions.capture()))
         .thenReturn(jobInfo.toPb());
     BigQueryOptions bigQueryOptions =
         createBigQueryOptionsForProject(OTHER_PROJECT, rpcFactoryMock);
@@ -1843,7 +1959,18 @@ public class BigQueryImplTest {
     assertTrue(selector.contains("configuration"));
     assertTrue(selector.contains("user_email"));
     assertEquals(37, selector.length());
-    verify(bigqueryRpcMock).createSkipExceptionTranslation(eq(jobInfo.toPb()), capturedOptions.capture());
+    verify(bigqueryRpcMock)
+        .createSkipExceptionTranslation(eq(jobInfo.toPb()), capturedOptions.capture());
+  }
+
+  @Test
+  public void testDeleteJob() throws IOException {
+    JobId jobId = JobId.newBuilder().setJob(JOB).setProject(PROJECT).setLocation(LOCATION).build();
+    when(bigqueryRpcMock.deleteJobSkipExceptionTranslation(PROJECT, JOB, LOCATION))
+        .thenReturn(true);
+    bigquery = options.getService();
+    assertTrue(bigquery.delete(jobId));
+    verify(bigqueryRpcMock).deleteJobSkipExceptionTranslation(PROJECT, JOB, LOCATION);
   }
 
   @Test
@@ -1864,7 +1991,8 @@ public class BigQueryImplTest {
     bigquery = options.getService();
     Job job = bigquery.getJob(JOB);
     assertEquals(new Job(bigquery, new JobInfo.BuilderImpl(COMPLETE_COPY_JOB)), job);
-    verify(bigqueryRpcMock).getJobSkipExceptionTranslation(PROJECT, JOB, LOCATION, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getJobSkipExceptionTranslation(PROJECT, JOB, LOCATION, EMPTY_RPC_OPTIONS);
   }
 
   @Test
@@ -1880,7 +2008,8 @@ public class BigQueryImplTest {
 
   @Test
   public void testGetJobNotFoundWhenThrowIsEnabled() throws IOException {
-    when(bigqueryRpcMock.getJobSkipExceptionTranslation(PROJECT, "job-not-found", null, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.getJobSkipExceptionTranslation(
+            PROJECT, "job-not-found", null, EMPTY_RPC_OPTIONS))
         .thenReturn(null)
         .thenThrow(new BigQueryException(404, "Job not found"));
     options.setThrowNotFound(true);
@@ -1891,7 +2020,8 @@ public class BigQueryImplTest {
     } catch (BigQueryException ex) {
       Assert.assertNotNull(ex.getMessage());
     }
-    verify(bigqueryRpcMock).getJobSkipExceptionTranslation(PROJECT, "job-not-found", null, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getJobSkipExceptionTranslation(PROJECT, "job-not-found", null, EMPTY_RPC_OPTIONS);
   }
 
   @Test
@@ -1912,32 +2042,37 @@ public class BigQueryImplTest {
     bigquery = options.getService();
     Job job = bigquery.getJob(JobId.of(JOB));
     assertEquals(new Job(bigquery, new JobInfo.BuilderImpl(COMPLETE_COPY_JOB)), job);
-    verify(bigqueryRpcMock).getJobSkipExceptionTranslation(PROJECT, JOB, LOCATION, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getJobSkipExceptionTranslation(PROJECT, JOB, LOCATION, EMPTY_RPC_OPTIONS);
   }
 
   @Test
   public void testGetJobFromJobIdWithProject() throws IOException {
     JobId jobId = JobId.of(OTHER_PROJECT, JOB);
     JobInfo jobInfo = COPY_JOB.setProjectId(OTHER_PROJECT);
-    when(bigqueryRpcMock.getJobSkipExceptionTranslation(OTHER_PROJECT, JOB, null, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.getJobSkipExceptionTranslation(
+            OTHER_PROJECT, JOB, null, EMPTY_RPC_OPTIONS))
         .thenReturn(jobInfo.toPb());
     bigquery = options.getService();
     Job job = bigquery.getJob(jobId);
     assertEquals(new Job(bigquery, new JobInfo.BuilderImpl(jobInfo)), job);
-    verify(bigqueryRpcMock).getJobSkipExceptionTranslation(OTHER_PROJECT, JOB, null, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getJobSkipExceptionTranslation(OTHER_PROJECT, JOB, null, EMPTY_RPC_OPTIONS);
   }
 
   @Test
   public void testGetJobFromJobIdWithProjectWithLocation() throws IOException {
     JobId jobId = JobId.of(OTHER_PROJECT, JOB);
     JobInfo jobInfo = COPY_JOB.setProjectId(OTHER_PROJECT);
-    when(bigqueryRpcMock.getJobSkipExceptionTranslation(OTHER_PROJECT, JOB, LOCATION, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.getJobSkipExceptionTranslation(
+            OTHER_PROJECT, JOB, LOCATION, EMPTY_RPC_OPTIONS))
         .thenReturn(jobInfo.toPb());
     BigQueryOptions options = createBigQueryOptionsForProjectWithLocation(PROJECT, rpcFactoryMock);
     bigquery = options.getService();
     Job job = bigquery.getJob(jobId);
     assertEquals(new Job(bigquery, new JobInfo.BuilderImpl(jobInfo)), job);
-    verify(bigqueryRpcMock).getJobSkipExceptionTranslation(OTHER_PROJECT, JOB, LOCATION, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getJobSkipExceptionTranslation(OTHER_PROJECT, JOB, LOCATION, EMPTY_RPC_OPTIONS);
   }
 
   @Test
@@ -1958,7 +2093,8 @@ public class BigQueryImplTest {
                     return job.toPb();
                   }
                 }));
-    when(bigqueryRpcMock.listJobsSkipExceptionTranslation(PROJECT, EMPTY_RPC_OPTIONS)).thenReturn(result);
+    when(bigqueryRpcMock.listJobsSkipExceptionTranslation(PROJECT, EMPTY_RPC_OPTIONS))
+        .thenReturn(result);
     Page<Job> page = bigquery.listJobs();
     assertEquals(CURSOR, page.getNextPageToken());
     assertArrayEquals(jobList.toArray(), Iterables.toArray(page.getValues(), Job.class));
@@ -1983,7 +2119,8 @@ public class BigQueryImplTest {
                     return job.toPb();
                   }
                 }));
-    when(bigqueryRpcMock.listJobsSkipExceptionTranslation(PROJECT, JOB_LIST_OPTIONS)).thenReturn(result);
+    when(bigqueryRpcMock.listJobsSkipExceptionTranslation(PROJECT, JOB_LIST_OPTIONS))
+        .thenReturn(result);
     Page<Job> page =
         bigquery.listJobs(
             JOB_LIST_ALL_USERS, JOB_LIST_STATE_FILTER, JOB_LIST_PAGE_TOKEN, JOB_LIST_PAGE_SIZE);
@@ -2010,7 +2147,8 @@ public class BigQueryImplTest {
                     return job.toPb();
                   }
                 }));
-    when(bigqueryRpcMock.listJobsSkipExceptionTranslation(eq(PROJECT), capturedOptions.capture())).thenReturn(result);
+    when(bigqueryRpcMock.listJobsSkipExceptionTranslation(eq(PROJECT), capturedOptions.capture()))
+        .thenReturn(result);
     Page<Job> page = bigquery.listJobs(JOB_LIST_OPTION_FIELD);
     assertEquals(CURSOR, page.getNextPageToken());
     assertArrayEquals(jobList.toArray(), Iterables.toArray(page.getValues(), Job.class));
@@ -2023,7 +2161,8 @@ public class BigQueryImplTest {
     assertTrue(selector.contains("errorResult"));
     assertTrue(selector.contains(")"));
     assertEquals(75, selector.length());
-    verify(bigqueryRpcMock).listJobsSkipExceptionTranslation(eq(PROJECT), capturedOptions.capture());
+    verify(bigqueryRpcMock)
+        .listJobsSkipExceptionTranslation(eq(PROJECT), capturedOptions.capture());
   }
 
   @Test
@@ -2095,12 +2234,15 @@ public class BigQueryImplTest {
       assertThat(row.get(1).getLongValue()).isEqualTo(1);
     }
     verify(bigqueryRpcMock)
-        .createSkipExceptionTranslation(JOB_INFO.toPb(), Collections.<BigQueryRpc.Option, Object>emptyMap());
+        .createSkipExceptionTranslation(
+            JOB_INFO.toPb(), Collections.<BigQueryRpc.Option, Object>emptyMap());
     verify(bigqueryRpcMock)
-        .getQueryResultsSkipExceptionTranslation(PROJECT, JOB, null, optionMap(Job.DEFAULT_QUERY_WAIT_OPTIONS));
+        .getQueryResultsSkipExceptionTranslation(
+            PROJECT, JOB, null, optionMap(Job.DEFAULT_QUERY_WAIT_OPTIONS));
 
     verify(bigqueryRpcMock)
-        .listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, Collections.<BigQueryRpc.Option, Object>emptyMap());
+        .listTableDataSkipExceptionTranslation(
+            PROJECT, DATASET, TABLE, Collections.<BigQueryRpc.Option, Object>emptyMap());
   }
 
   @Test
@@ -2139,7 +2281,8 @@ public class BigQueryImplTest {
     assertEquals(QUERY_JOB_CONFIGURATION_FOR_QUERY.useQueryCache(), requestPb.getUseQueryCache());
     assertNull(requestPb.getLocation());
 
-    verify(bigqueryRpcMock).queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture());
+    verify(bigqueryRpcMock)
+        .queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture());
   }
 
   @Test
@@ -2179,7 +2322,8 @@ public class BigQueryImplTest {
     assertEquals(QUERY_JOB_CONFIGURATION_FOR_QUERY.useQueryCache(), requestPb.getUseQueryCache());
     assertEquals(LOCATION, requestPb.getLocation());
 
-    verify(bigqueryRpcMock).queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture());
+    verify(bigqueryRpcMock)
+        .queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture());
   }
 
   @Test
@@ -2192,7 +2336,8 @@ public class BigQueryImplTest {
             .setId(JOB)
             .setStatus(new com.google.api.services.bigquery.model.JobStatus().setState("DONE"));
     responseJob.getConfiguration().getQuery().setDestinationTable(TABLE_ID.toPb());
-    when(bigqueryRpcMock.getJobSkipExceptionTranslation(PROJECT, JOB, null, EMPTY_RPC_OPTIONS)).thenReturn(responseJob);
+    when(bigqueryRpcMock.getJobSkipExceptionTranslation(PROJECT, JOB, null, EMPTY_RPC_OPTIONS))
+        .thenReturn(responseJob);
     when(bigqueryRpcMock.listTableDataSkipExceptionTranslation(
             PROJECT, DATASET, TABLE, optionMap(BigQuery.TableDataListOption.pageToken(CURSOR))))
         .thenReturn(
@@ -2233,7 +2378,8 @@ public class BigQueryImplTest {
     verify(bigqueryRpcMock)
         .listTableDataSkipExceptionTranslation(
             PROJECT, DATASET, TABLE, optionMap(BigQuery.TableDataListOption.pageToken(CURSOR)));
-    verify(bigqueryRpcMock).queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture());
+    verify(bigqueryRpcMock)
+        .queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture());
   }
 
   @Test
@@ -2267,11 +2413,13 @@ public class BigQueryImplTest {
     when(bigqueryRpcMock.queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture()))
         .thenReturn(queryResponsePb);
     responseJob.getConfiguration().getQuery().setDestinationTable(TABLE_ID.toPb());
-    when(bigqueryRpcMock.getJobSkipExceptionTranslation(PROJECT, JOB, null, EMPTY_RPC_OPTIONS)).thenReturn(responseJob);
+    when(bigqueryRpcMock.getJobSkipExceptionTranslation(PROJECT, JOB, null, EMPTY_RPC_OPTIONS))
+        .thenReturn(responseJob);
     when(bigqueryRpcMock.getQueryResultsSkipExceptionTranslation(
             PROJECT, JOB, null, optionMap(Job.DEFAULT_QUERY_WAIT_OPTIONS)))
         .thenReturn(queryResultsResponsePb);
-    when(bigqueryRpcMock.listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.listTableDataSkipExceptionTranslation(
+            PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
         .thenReturn(new TableDataList().setRows(ImmutableList.of(TABLE_ROW)).setTotalRows(1L));
 
     bigquery = options.getService();
@@ -2290,11 +2438,14 @@ public class BigQueryImplTest {
         requestPb.getDefaultDataset().getDatasetId());
     assertEquals(QUERY_JOB_CONFIGURATION_FOR_QUERY.useQueryCache(), requestPb.getUseQueryCache());
 
-    verify(bigqueryRpcMock).queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture());
+    verify(bigqueryRpcMock)
+        .queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture());
     verify(bigqueryRpcMock).getJobSkipExceptionTranslation(PROJECT, JOB, null, EMPTY_RPC_OPTIONS);
     verify(bigqueryRpcMock)
-        .getQueryResultsSkipExceptionTranslation(PROJECT, JOB, null, optionMap(Job.DEFAULT_QUERY_WAIT_OPTIONS));
-    verify(bigqueryRpcMock).listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS);
+        .getQueryResultsSkipExceptionTranslation(
+            PROJECT, JOB, null, optionMap(Job.DEFAULT_QUERY_WAIT_OPTIONS));
+    verify(bigqueryRpcMock)
+        .listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS);
   }
 
   @Test
@@ -2346,10 +2497,13 @@ public class BigQueryImplTest {
       assertThat(row.get(1).getLongValue()).isEqualTo(1);
     }
     verify(bigqueryRpcMock)
-        .createSkipExceptionTranslation(JOB_INFO.toPb(), Collections.<BigQueryRpc.Option, Object>emptyMap());
+        .createSkipExceptionTranslation(
+            JOB_INFO.toPb(), Collections.<BigQueryRpc.Option, Object>emptyMap());
     verify(bigqueryRpcMock)
-        .getQueryResultsSkipExceptionTranslation(PROJECT, JOB, null, optionMap(Job.DEFAULT_QUERY_WAIT_OPTIONS));
-    verify(bigqueryRpcMock).listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, optionMap);
+        .getQueryResultsSkipExceptionTranslation(
+            PROJECT, JOB, null, optionMap(Job.DEFAULT_QUERY_WAIT_OPTIONS));
+    verify(bigqueryRpcMock)
+        .listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, optionMap);
   }
 
   @Test
@@ -2404,13 +2558,17 @@ public class BigQueryImplTest {
       assertThat(row.get(1).getLongValue()).isEqualTo(1);
     }
     verify(bigqueryRpcMock)
-        .createSkipExceptionTranslation(JOB_INFO.toPb(), Collections.<BigQueryRpc.Option, Object>emptyMap());
+        .createSkipExceptionTranslation(
+            JOB_INFO.toPb(), Collections.<BigQueryRpc.Option, Object>emptyMap());
     verify(bigqueryRpcMock)
-        .getQueryResultsSkipExceptionTranslation(PROJECT, JOB, null, optionMap(Job.DEFAULT_QUERY_WAIT_OPTIONS));
+        .getQueryResultsSkipExceptionTranslation(
+            PROJECT, JOB, null, optionMap(Job.DEFAULT_QUERY_WAIT_OPTIONS));
     verify(bigqueryRpcMock)
-        .getQueryResultsSkipExceptionTranslation(PROJECT, JOB, null, optionMap(Job.DEFAULT_QUERY_WAIT_OPTIONS));
+        .getQueryResultsSkipExceptionTranslation(
+            PROJECT, JOB, null, optionMap(Job.DEFAULT_QUERY_WAIT_OPTIONS));
     verify(bigqueryRpcMock)
-        .listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, Collections.<BigQueryRpc.Option, Object>emptyMap());
+        .listTableDataSkipExceptionTranslation(
+            PROJECT, DATASET, TABLE, Collections.<BigQueryRpc.Option, Object>emptyMap());
   }
 
   @Test
@@ -2426,13 +2584,15 @@ public class BigQueryImplTest {
             .setPageToken(CURSOR)
             .setTotalBytesProcessed(42L)
             .setTotalRows(BigInteger.valueOf(1L));
-    when(bigqueryRpcMock.getQueryResultsSkipExceptionTranslation(PROJECT, JOB, null, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.getQueryResultsSkipExceptionTranslation(
+            PROJECT, JOB, null, EMPTY_RPC_OPTIONS))
         .thenReturn(responsePb);
     bigquery = options.getService();
     QueryResponse response = bigquery.getQueryResults(queryJob);
     assertEquals(true, response.getCompleted());
     assertEquals(null, response.getSchema());
-    verify(bigqueryRpcMock).getQueryResultsSkipExceptionTranslation(PROJECT, JOB, null, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getQueryResultsSkipExceptionTranslation(PROJECT, JOB, null, EMPTY_RPC_OPTIONS);
   }
 
   @Test
@@ -2449,7 +2609,8 @@ public class BigQueryImplTest {
             .setTotalBytesProcessed(42L)
             .setTotalRows(BigInteger.valueOf(1L));
 
-    when(bigqueryRpcMock.getQueryResultsSkipExceptionTranslation(PROJECT, JOB, null, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.getQueryResultsSkipExceptionTranslation(
+            PROJECT, JOB, null, EMPTY_RPC_OPTIONS))
         .thenThrow(new BigQueryException(500, "InternalError"))
         .thenThrow(new BigQueryException(502, "Bad Gateway"))
         .thenThrow(new BigQueryException(503, "Service Unavailable"))
@@ -2475,7 +2636,8 @@ public class BigQueryImplTest {
     // EMPTY_RPC_OPTIONS) as there is no
     // identifier in this method which will can potentially differ and which can be used to
     // establish idempotency
-    verify(bigqueryRpcMock, times(6)).getQueryResultsSkipExceptionTranslation(PROJECT, JOB, null, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock, times(6))
+        .getQueryResultsSkipExceptionTranslation(PROJECT, JOB, null, EMPTY_RPC_OPTIONS);
   }
 
   @Test
@@ -2491,13 +2653,15 @@ public class BigQueryImplTest {
             .setPageToken(CURSOR)
             .setTotalBytesProcessed(42L)
             .setTotalRows(BigInteger.valueOf(1L));
-    when(bigqueryRpcMock.getQueryResultsSkipExceptionTranslation(OTHER_PROJECT, JOB, null, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.getQueryResultsSkipExceptionTranslation(
+            OTHER_PROJECT, JOB, null, EMPTY_RPC_OPTIONS))
         .thenReturn(responsePb);
     bigquery = options.getService();
     QueryResponse response = bigquery.getQueryResults(queryJob);
     assertTrue(response.getCompleted());
     assertEquals(null, response.getSchema());
-    verify(bigqueryRpcMock).getQueryResultsSkipExceptionTranslation(OTHER_PROJECT, JOB, null, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getQueryResultsSkipExceptionTranslation(OTHER_PROJECT, JOB, null, EMPTY_RPC_OPTIONS);
   }
 
   @Test
@@ -2512,7 +2676,8 @@ public class BigQueryImplTest {
             .setPageToken(CURSOR)
             .setTotalBytesProcessed(42L)
             .setTotalRows(BigInteger.valueOf(1L));
-    when(bigqueryRpcMock.getQueryResultsSkipExceptionTranslation(PROJECT, JOB, null, QUERY_RESULTS_OPTIONS))
+    when(bigqueryRpcMock.getQueryResultsSkipExceptionTranslation(
+            PROJECT, JOB, null, QUERY_RESULTS_OPTIONS))
         .thenReturn(responsePb);
     bigquery = options.getService();
     QueryResponse response =
@@ -2524,7 +2689,8 @@ public class BigQueryImplTest {
             QUERY_RESULTS_OPTION_PAGE_TOKEN);
     assertEquals(true, response.getCompleted());
     assertEquals(null, response.getSchema());
-    verify(bigqueryRpcMock).getQueryResultsSkipExceptionTranslation(PROJECT, JOB, null, QUERY_RESULTS_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getQueryResultsSkipExceptionTranslation(PROJECT, JOB, null, QUERY_RESULTS_OPTIONS);
   }
 
   @Test
@@ -2541,7 +2707,8 @@ public class BigQueryImplTest {
     Dataset dataset = bigquery.getDataset(DATASET);
     assertEquals(
         new Dataset(bigquery, new DatasetInfo.BuilderImpl(DATASET_INFO_WITH_PROJECT)), dataset);
-    verify(bigqueryRpcMock, times(2)).getDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock, times(2))
+        .getDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS);
   }
 
   @Test
@@ -2638,7 +2805,8 @@ public class BigQueryImplTest {
     }
     assertTrue(idempotent);
 
-    verify(bigqueryRpcMock, times(5)).queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture());
+    verify(bigqueryRpcMock, times(5))
+        .queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture());
   }
 
   @Test
@@ -2679,7 +2847,8 @@ public class BigQueryImplTest {
     }
     assertTrue(idempotent);
 
-    verify(bigqueryRpcMock, times(5)).queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture());
+    verify(bigqueryRpcMock, times(5))
+        .queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture());
   }
 
   @Test
@@ -2727,7 +2896,8 @@ public class BigQueryImplTest {
     }
 
     assertTrue(idempotent);
-    verify(bigqueryRpcMock, times(6)).queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture());
+    verify(bigqueryRpcMock, times(6))
+        .queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture());
   }
 
   @Test
@@ -2791,7 +2961,8 @@ public class BigQueryImplTest {
     }
     assertTrue(idempotent);
 
-    verify(bigqueryRpcMock, times(5)).queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture());
+    verify(bigqueryRpcMock, times(5))
+        .queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture());
   }
 
   @Test
@@ -2812,7 +2983,8 @@ public class BigQueryImplTest {
             .setPageToken(null)
             .setErrors(errorProtoList);
 
-    when(bigqueryRpcMock.queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture())).thenReturn(responsePb);
+    when(bigqueryRpcMock.queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture()))
+        .thenReturn(responsePb);
 
     bigquery = options.getService();
     try {
@@ -2828,7 +3000,8 @@ public class BigQueryImplTest {
         QUERY_JOB_CONFIGURATION_FOR_QUERY.getDefaultDataset().getDataset(),
         requestPb.getDefaultDataset().getDatasetId());
     assertEquals(QUERY_JOB_CONFIGURATION_FOR_QUERY.useQueryCache(), requestPb.getUseQueryCache());
-    verify(bigqueryRpcMock).queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture());
+    verify(bigqueryRpcMock)
+        .queryRpcSkipExceptionTranslation(eq(PROJECT), requestPbCapture.capture());
   }
 
   @Test
@@ -2846,27 +3019,32 @@ public class BigQueryImplTest {
 
   @Test
   public void testGetRoutine() throws IOException {
-    when(bigqueryRpcMock.getRoutineSkipExceptionTranslation(PROJECT, DATASET, ROUTINE, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.getRoutineSkipExceptionTranslation(
+            PROJECT, DATASET, ROUTINE, EMPTY_RPC_OPTIONS))
         .thenReturn(ROUTINE_INFO.toPb());
     bigquery = options.getService();
     Routine routine = bigquery.getRoutine(DATASET, ROUTINE);
     assertEquals(new Routine(bigquery, new RoutineInfo.BuilderImpl(ROUTINE_INFO)), routine);
-    verify(bigqueryRpcMock).getRoutineSkipExceptionTranslation(PROJECT, DATASET, ROUTINE, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getRoutineSkipExceptionTranslation(PROJECT, DATASET, ROUTINE, EMPTY_RPC_OPTIONS);
   }
 
   @Test
   public void testGetRoutineWithRountineId() throws IOException {
-    when(bigqueryRpcMock.getRoutineSkipExceptionTranslation(PROJECT, DATASET, ROUTINE, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.getRoutineSkipExceptionTranslation(
+            PROJECT, DATASET, ROUTINE, EMPTY_RPC_OPTIONS))
         .thenReturn(ROUTINE_INFO.toPb());
     bigquery = options.getService();
     Routine routine = bigquery.getRoutine(ROUTINE_ID);
     assertEquals(new Routine(bigquery, new RoutineInfo.BuilderImpl(ROUTINE_INFO)), routine);
-    verify(bigqueryRpcMock).getRoutineSkipExceptionTranslation(PROJECT, DATASET, ROUTINE, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getRoutineSkipExceptionTranslation(PROJECT, DATASET, ROUTINE, EMPTY_RPC_OPTIONS);
   }
 
   @Test
   public void testGetRoutineWithEnabledThrowNotFoundException() throws IOException {
-    when(bigqueryRpcMock.getRoutineSkipExceptionTranslation(PROJECT, DATASET, ROUTINE, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.getRoutineSkipExceptionTranslation(
+            PROJECT, DATASET, ROUTINE, EMPTY_RPC_OPTIONS))
         .thenReturn(null)
         .thenThrow(new BigQueryException(404, "Routine not found"));
     options.setThrowNotFound(true);
@@ -2877,7 +3055,8 @@ public class BigQueryImplTest {
     } catch (BigQueryException ex) {
       assertEquals("Routine not found", ex.getMessage());
     }
-    verify(bigqueryRpcMock).getRoutineSkipExceptionTranslation(PROJECT, DATASET, ROUTINE, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .getRoutineSkipExceptionTranslation(PROJECT, DATASET, ROUTINE, EMPTY_RPC_OPTIONS);
   }
 
   @Test
@@ -2888,14 +3067,16 @@ public class BigQueryImplTest {
             .toBuilder()
             .setDescription("newDescription")
             .build();
-    when(bigqueryRpcMock.updateSkipExceptionTranslation(updatedRoutineInfo.toPb(), EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.updateSkipExceptionTranslation(
+            updatedRoutineInfo.toPb(), EMPTY_RPC_OPTIONS))
         .thenReturn(updatedRoutineInfo.toPb());
     BigQueryOptions bigQueryOptions =
         createBigQueryOptionsForProject(OTHER_PROJECT, rpcFactoryMock);
     bigquery = bigQueryOptions.getService();
     Routine routine = bigquery.update(updatedRoutineInfo);
     assertEquals(new Routine(bigquery, new RoutineInfo.BuilderImpl(updatedRoutineInfo)), routine);
-    verify(bigqueryRpcMock).updateSkipExceptionTranslation(updatedRoutineInfo.toPb(), EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .updateSkipExceptionTranslation(updatedRoutineInfo.toPb(), EMPTY_RPC_OPTIONS);
   }
 
   @Test
@@ -2905,11 +3086,13 @@ public class BigQueryImplTest {
         ImmutableList.of(new Routine(bigquery, new RoutineInfo.BuilderImpl(ROUTINE_INFO)));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Routine>> result =
         Tuple.of(CURSOR, Iterables.transform(routineList, RoutineInfo.TO_PB_FUNCTION));
-    when(bigqueryRpcMock.listRoutinesSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS)).thenReturn(result);
+    when(bigqueryRpcMock.listRoutinesSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS))
+        .thenReturn(result);
     Page<Routine> page = bigquery.listRoutines(DATASET);
     assertEquals(CURSOR, page.getNextPageToken());
     assertArrayEquals(routineList.toArray(), Iterables.toArray(page.getValues(), Routine.class));
-    verify(bigqueryRpcMock).listRoutinesSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .listRoutinesSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS);
   }
 
   @Test
@@ -2919,16 +3102,19 @@ public class BigQueryImplTest {
         ImmutableList.of(new Routine(bigquery, new RoutineInfo.BuilderImpl(ROUTINE_INFO)));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Routine>> result =
         Tuple.of(CURSOR, Iterables.transform(routineList, RoutineInfo.TO_PB_FUNCTION));
-    when(bigqueryRpcMock.listRoutinesSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS)).thenReturn(result);
+    when(bigqueryRpcMock.listRoutinesSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS))
+        .thenReturn(result);
     Page<Routine> page = bigquery.listRoutines(DatasetId.of(PROJECT, DATASET));
     assertEquals(CURSOR, page.getNextPageToken());
     assertArrayEquals(routineList.toArray(), Iterables.toArray(page.getValues(), Routine.class));
-    verify(bigqueryRpcMock).listRoutinesSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .listRoutinesSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS);
   }
 
   @Test
   public void testDeleteRoutine() throws IOException {
-    when(bigqueryRpcMock.deleteRoutineSkipExceptionTranslation(PROJECT, DATASET, ROUTINE)).thenReturn(true);
+    when(bigqueryRpcMock.deleteRoutineSkipExceptionTranslation(PROJECT, DATASET, ROUTINE))
+        .thenReturn(true);
     bigquery = options.getService();
     assertTrue(bigquery.delete(ROUTINE_ID));
     verify(bigqueryRpcMock).deleteRoutineSkipExceptionTranslation(PROJECT, DATASET, ROUTINE);
@@ -2992,7 +3178,8 @@ public class BigQueryImplTest {
         String.format("projects/%s/datasets/%s/tables/%s", PROJECT, DATASET, TABLE);
     final com.google.api.services.bigquery.model.Policy apiPolicy =
         PolicyHelper.convertToApiPolicy(SAMPLE_IAM_POLICY);
-    when(bigqueryRpcMock.getIamPolicySkipExceptionTranslation(resourceId, EMPTY_RPC_OPTIONS)).thenReturn(apiPolicy);
+    when(bigqueryRpcMock.getIamPolicySkipExceptionTranslation(resourceId, EMPTY_RPC_OPTIONS))
+        .thenReturn(apiPolicy);
     bigquery = options.getService();
     Policy policy = bigquery.getIamPolicy(TABLE_ID);
     assertEquals(policy, SAMPLE_IAM_POLICY);
@@ -3005,12 +3192,14 @@ public class BigQueryImplTest {
         String.format("projects/%s/datasets/%s/tables/%s", PROJECT, DATASET, TABLE);
     final com.google.api.services.bigquery.model.Policy apiPolicy =
         PolicyHelper.convertToApiPolicy(SAMPLE_IAM_POLICY);
-    when(bigqueryRpcMock.setIamPolicySkipExceptionTranslation(resourceId, apiPolicy, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.setIamPolicySkipExceptionTranslation(
+            resourceId, apiPolicy, EMPTY_RPC_OPTIONS))
         .thenReturn(apiPolicy);
     bigquery = options.getService();
     Policy returnedPolicy = bigquery.setIamPolicy(TABLE_ID, SAMPLE_IAM_POLICY);
     assertEquals(returnedPolicy, SAMPLE_IAM_POLICY);
-    verify(bigqueryRpcMock).setIamPolicySkipExceptionTranslation(resourceId, apiPolicy, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .setIamPolicySkipExceptionTranslation(resourceId, apiPolicy, EMPTY_RPC_OPTIONS);
   }
 
   @Test
@@ -3022,12 +3211,15 @@ public class BigQueryImplTest {
     final com.google.api.services.bigquery.model.TestIamPermissionsResponse response =
         new com.google.api.services.bigquery.model.TestIamPermissionsResponse()
             .setPermissions(grantedPermissions);
-    when(bigqueryRpcMock.testIamPermissionsSkipExceptionTranslation(resourceId, checkedPermissions, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.testIamPermissionsSkipExceptionTranslation(
+            resourceId, checkedPermissions, EMPTY_RPC_OPTIONS))
         .thenReturn(response);
     bigquery = options.getService();
     List<String> perms = bigquery.testIamPermissions(TABLE_ID, checkedPermissions);
     assertEquals(perms, grantedPermissions);
-    verify(bigqueryRpcMock).testIamPermissionsSkipExceptionTranslation(resourceId, checkedPermissions, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .testIamPermissionsSkipExceptionTranslation(
+            resourceId, checkedPermissions, EMPTY_RPC_OPTIONS);
   }
 
   @Test
@@ -3039,11 +3231,14 @@ public class BigQueryImplTest {
     final com.google.api.services.bigquery.model.TestIamPermissionsResponse response =
         new com.google.api.services.bigquery.model.TestIamPermissionsResponse()
             .setPermissions(null);
-    when(bigqueryRpcMock.testIamPermissionsSkipExceptionTranslation(resourceId, checkedPermissions, EMPTY_RPC_OPTIONS))
+    when(bigqueryRpcMock.testIamPermissionsSkipExceptionTranslation(
+            resourceId, checkedPermissions, EMPTY_RPC_OPTIONS))
         .thenReturn(response);
     bigquery = options.getService();
     List<String> perms = bigquery.testIamPermissions(TABLE_ID, checkedPermissions);
     assertEquals(perms, ImmutableList.of());
-    verify(bigqueryRpcMock).testIamPermissionsSkipExceptionTranslation(resourceId, checkedPermissions, EMPTY_RPC_OPTIONS);
+    verify(bigqueryRpcMock)
+        .testIamPermissionsSkipExceptionTranslation(
+            resourceId, checkedPermissions, EMPTY_RPC_OPTIONS);
   }
 }

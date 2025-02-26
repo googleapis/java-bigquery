@@ -140,7 +140,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @InternalApi("internal to java-bigquery")
-  public Dataset getDatasetSkipExceptionTranslation(String projectId, String datasetId, Map<Option, ?> options) throws IOException {
+  public Dataset getDatasetSkipExceptionTranslation(
+      String projectId, String datasetId, Map<Option, ?> options) throws IOException {
     validateRPC();
     Bigquery.Datasets.Get bqGetRequest =
         bigquery
@@ -166,7 +167,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @InternalApi("internal to java-bigquery")
-  public Tuple<String, Iterable<Dataset>> listDatasetsSkipExceptionTranslation(String projectId, Map<Option, ?> options) throws IOException {
+  public Tuple<String, Iterable<Dataset>> listDatasetsSkipExceptionTranslation(
+      String projectId, Map<Option, ?> options) throws IOException {
     validateRPC();
     DatasetList datasetsList =
         bigquery
@@ -247,7 +249,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @InternalApi("internal to java-bigquery")
-  public Routine createSkipExceptionTranslation(Routine routine, Map<Option, ?> options) throws IOException {
+  public Routine createSkipExceptionTranslation(Routine routine, Map<Option, ?> options)
+      throws IOException {
     validateRPC();
     RoutineReference reference = routine.getRoutineReference();
     return bigquery
@@ -315,7 +318,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @InternalApi("internal to java-bigquery")
-  public boolean deleteDatasetSkipExceptionTranslation(String projectId, String datasetId, Map<Option, ?> options) throws IOException {
+  public boolean deleteDatasetSkipExceptionTranslation(
+      String projectId, String datasetId, Map<Option, ?> options) throws IOException {
     validateRPC();
     bigquery
         .datasets()
@@ -336,7 +340,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @InternalApi("internal to java-bigquery")
-  public Dataset patchSkipExceptionTranslation(Dataset dataset, Map<Option, ?> options) throws IOException {
+  public Dataset patchSkipExceptionTranslation(Dataset dataset, Map<Option, ?> options)
+      throws IOException {
     validateRPC();
     DatasetReference reference = dataset.getDatasetReference();
     Bigquery.Datasets.Patch bqPatchRequest =
@@ -363,7 +368,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @InternalApi("internal to java-bigquery")
-  public Table patchSkipExceptionTranslation(Table table, Map<Option, ?> options) throws IOException {
+  public Table patchSkipExceptionTranslation(Table table, Map<Option, ?> options)
+      throws IOException {
     validateRPC();
     // unset the type, as it is output only
     table.setType(null);
@@ -393,7 +399,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
 
   @InternalApi("internal to java-bigquery")
   public Table getTableSkipExceptionTranslation(
-      String projectId, String datasetId, String tableId, Map<Option, ?> options) throws IOException {
+      String projectId, String datasetId, String tableId, Map<Option, ?> options)
+      throws IOException {
     validateRPC();
     return bigquery
         .tables()
@@ -469,7 +476,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @InternalApi("internal to java-bigquery")
-  public boolean deleteTableSkipExceptionTranslation(String projectId, String datasetId, String tableId) throws IOException {
+  public boolean deleteTableSkipExceptionTranslation(
+      String projectId, String datasetId, String tableId) throws IOException {
     validateRPC();
     bigquery.tables().delete(projectId, datasetId, tableId).execute();
     return true;
@@ -485,7 +493,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @InternalApi("internal to java-bigquery")
-  public Model patchSkipExceptionTranslation(Model model, Map<Option, ?> options) throws IOException {
+  public Model patchSkipExceptionTranslation(Model model, Map<Option, ?> options)
+      throws IOException {
     validateRPC();
     // unset the type, as it is output only
     ModelReference reference = model.getModelReference();
@@ -513,7 +522,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
 
   @InternalApi("internal to java-bigquery")
   public Model getModelSkipExceptionTranslation(
-      String projectId, String datasetId, String modelId, Map<Option, ?> options) throws IOException {
+      String projectId, String datasetId, String modelId, Map<Option, ?> options)
+      throws IOException {
     validateRPC();
     return bigquery
         .models()
@@ -564,7 +574,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @InternalApi("internal to java-bigquery")
-  public boolean deleteModelSkipExceptionTranslation(String projectId, String datasetId, String modelId) throws IOException {
+  public boolean deleteModelSkipExceptionTranslation(
+      String projectId, String datasetId, String modelId) throws IOException {
     validateRPC();
     bigquery.models().delete(projectId, datasetId, modelId).execute();
     return true;
@@ -580,7 +591,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @InternalApi("internal to java-bigquery")
-  public Routine updateSkipExceptionTranslation(Routine routine, Map<Option, ?> options) throws IOException {
+  public Routine updateSkipExceptionTranslation(Routine routine, Map<Option, ?> options)
+      throws IOException {
     validateRPC();
     RoutineReference reference = routine.getRoutineReference();
     return bigquery
@@ -608,7 +620,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
 
   @InternalApi("internal to java-bigquery")
   public Routine getRoutineSkipExceptionTranslation(
-      String projectId, String datasetId, String routineId, Map<Option, ?> options) throws IOException {
+      String projectId, String datasetId, String routineId, Map<Option, ?> options)
+      throws IOException {
     validateRPC();
     return bigquery
         .routines()
@@ -641,9 +654,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
             .setPageToken(Option.PAGE_TOKEN.getString(options))
             .execute();
     Iterable<Routine> routines =
-        routineList.getRoutines() != null
-            ? routineList.getRoutines()
-            : ImmutableList.<Routine>of();
+        routineList.getRoutines() != null ? routineList.getRoutines() : ImmutableList.<Routine>of();
     return Tuple.of(routineList.getNextPageToken(), routines);
   }
 
@@ -661,7 +672,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @InternalApi("internal to java-bigquery")
-  public boolean deleteRoutineSkipExceptionTranslation(String projectId, String datasetId, String routineId) throws IOException {
+  public boolean deleteRoutineSkipExceptionTranslation(
+      String projectId, String datasetId, String routineId) throws IOException {
     validateRPC();
     bigquery.routines().delete(projectId, datasetId, routineId).execute();
     return true;
@@ -679,7 +691,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
 
   @InternalApi("internal to java-bigquery")
   public TableDataInsertAllResponse insertAllSkipExceptionTranslation(
-      String projectId, String datasetId, String tableId, TableDataInsertAllRequest request) throws IOException {
+      String projectId, String datasetId, String tableId, TableDataInsertAllRequest request)
+      throws IOException {
     validateRPC();
     return bigquery
         .tabledata()
@@ -700,7 +713,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
 
   @InternalApi("internal to java-bigquery")
   public TableDataList listTableDataSkipExceptionTranslation(
-      String projectId, String datasetId, String tableId, Map<Option, ?> options) throws IOException {
+      String projectId, String datasetId, String tableId, Map<Option, ?> options)
+      throws IOException {
     validateRPC();
     return bigquery
         .tabledata()
@@ -762,7 +776,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @InternalApi("internal to java-bigquery")
-  public Job getJobSkipExceptionTranslation(String projectId, String jobId, String location, Map<Option, ?> options) throws IOException {
+  public Job getJobSkipExceptionTranslation(
+      String projectId, String jobId, String location, Map<Option, ?> options) throws IOException {
     validateRPC();
     return bigquery
         .jobs()
@@ -787,7 +802,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @InternalApi("internal to java-bigquery")
-  public Job getQueryJobSkipExceptionTranslation(String projectId, String jobId, String location) throws IOException {
+  public Job getQueryJobSkipExceptionTranslation(String projectId, String jobId, String location)
+      throws IOException {
     validateRPC();
     return bigquery
         .jobs()
@@ -807,7 +823,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @InternalApi("internal to java-bigquery")
-  public Tuple<String, Iterable<Job>> listJobsSkipExceptionTranslation(String projectId, Map<Option, ?> options) throws IOException {
+  public Tuple<String, Iterable<Job>> listJobsSkipExceptionTranslation(
+      String projectId, Map<Option, ?> options) throws IOException {
     validateRPC();
     Bigquery.Jobs.List request =
         bigquery
@@ -871,14 +888,10 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @InternalApi("internal to java-bigquery")
-  public boolean cancelSkipExceptionTranslation(String projectId, String jobId, String location) throws IOException {
+  public boolean cancelSkipExceptionTranslation(String projectId, String jobId, String location)
+      throws IOException {
     validateRPC();
-    bigquery
-        .jobs()
-        .cancel(projectId, jobId)
-        .setLocation(location)
-        .setPrettyPrint(false)
-        .execute();
+    bigquery.jobs().cancel(projectId, jobId).setLocation(location).setPrettyPrint(false).execute();
     return true;
   }
 
@@ -892,7 +905,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @InternalApi("internal to java-bigquery")
-  public boolean deleteJobSkipExceptionTranslation(String projectId, String jobName, String location) throws IOException {
+  public boolean deleteJobSkipExceptionTranslation(
+      String projectId, String jobName, String location) throws IOException {
     validateRPC();
     bigquery
         .jobs()
@@ -936,7 +950,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   public GetQueryResultsResponse getQueryResultsWithRowLimit(
       String projectId, String jobId, String location, Integer maxResultPerPage, Long timeoutMs) {
     try {
-      return getQueryResultsWithRowLimitSkipExceptionTranslation(projectId, jobId, location, maxResultPerPage, timeoutMs);
+      return getQueryResultsWithRowLimitSkipExceptionTranslation(
+          projectId, jobId, location, maxResultPerPage, timeoutMs);
     } catch (IOException ex) {
       throw translate(ex);
     }
@@ -944,7 +959,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
 
   @InternalApi("internal to java-bigquery")
   public GetQueryResultsResponse getQueryResultsWithRowLimitSkipExceptionTranslation(
-      String projectId, String jobId, String location, Integer maxResultPerPage, Long timeoutMs) throws IOException {
+      String projectId, String jobId, String location, Integer maxResultPerPage, Long timeoutMs)
+      throws IOException {
     validateRPC();
     return bigquery
         .jobs()
@@ -966,7 +982,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @InternalApi("internal to java-bigquery")
-  public QueryResponse queryRpcSkipExceptionTranslation(String projectId, QueryRequest content) throws IOException {
+  public QueryResponse queryRpcSkipExceptionTranslation(String projectId, QueryRequest content)
+      throws IOException {
     validateRPC();
     return bigquery.jobs().query(projectId, content).execute();
   }
@@ -1069,7 +1086,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @InternalApi("internal to java-bigquery")
-  public Policy getIamPolicySkipExceptionTranslation(String resourceId, Map<Option, ?> options) throws IOException {
+  public Policy getIamPolicySkipExceptionTranslation(String resourceId, Map<Option, ?> options)
+      throws IOException {
     validateRPC();
     GetIamPolicyRequest policyRequest = new GetIamPolicyRequest();
     if (null != Option.REQUESTED_POLICY_VERSION.getLong(options)) {
@@ -1096,7 +1114,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   }
 
   @InternalApi("internal to java-bigquery")
-  public Policy setIamPolicySkipExceptionTranslation(String resourceId, Policy policy, Map<Option, ?> options) throws IOException {
+  public Policy setIamPolicySkipExceptionTranslation(
+      String resourceId, Policy policy, Map<Option, ?> options) throws IOException {
     validateRPC();
     SetIamPolicyRequest policyRequest = new SetIamPolicyRequest().setPolicy(policy);
     return bigquery
