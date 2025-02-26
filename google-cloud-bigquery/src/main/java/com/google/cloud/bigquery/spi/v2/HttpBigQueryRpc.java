@@ -605,7 +605,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       Integer maxResultPerPage,
       String pageToken) {
     try {
-      return listTableDataWithRowLimitSkipExceptionTranslation(projectId, datasetId, tableId, maxResultPerPage, pageToken);
+      return listTableDataWithRowLimitSkipExceptionTranslation(
+          projectId, datasetId, tableId, maxResultPerPage, pageToken);
     } catch (IOException ex) {
       throw translate(ex);
     }
@@ -617,7 +618,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       String datasetId,
       String tableId,
       Integer maxResultPerPage,
-      String pageToken) throws IOException {
+      String pageToken)
+      throws IOException {
     validateRPC();
     return bigquery
         .tabledata()
