@@ -22,6 +22,7 @@ import com.google.cloud.BaseWriteChannel;
 import com.google.cloud.RestorableState;
 import com.google.cloud.RetryHelper;
 import com.google.cloud.WriteChannel;
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
@@ -81,10 +82,10 @@ public class TableDataWriteChannel
       return runWithRetries(
           new Callable<String>() {
             @Override
-            public String call() {
+            public String call() throws IOException {
               return options
                   .getBigQueryRpcV2()
-                  .open(
+                  .openSkipExceptionTranslation(
                       new com.google.api.services.bigquery.model.Job()
                           .setConfiguration(writeChannelConfiguration.toPb())
                           .setJobReference(jobId.toPb()));

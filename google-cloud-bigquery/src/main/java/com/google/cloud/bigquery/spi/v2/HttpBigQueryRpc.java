@@ -802,26 +802,31 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   @Override
   public String open(Job loadJob) {
     try {
-      String builder = options.getResolvedApiaryHost("bigquery");
-      if (!builder.endsWith("/")) {
-        builder += "/";
-      }
-      builder += BASE_RESUMABLE_URI + options.getProjectId() + "/jobs";
-      GenericUrl url = new GenericUrl(builder);
-      url.set("uploadType", "resumable");
-      JsonFactory jsonFactory = bigquery.getJsonFactory();
-      HttpRequestFactory requestFactory = bigquery.getRequestFactory();
-      HttpRequest httpRequest =
-          requestFactory.buildPostRequest(url, new JsonHttpContent(jsonFactory, loadJob));
-      httpRequest.getHeaders().set("X-Upload-Content-Value", "application/octet-stream");
-      HttpResponse response = httpRequest.execute();
-      return response.getHeaders().getLocation();
+      return openSkipExceptionTranslation(loadJob);
     } catch (IOException ex) {
       throw translate(ex);
     }
   }
 
-  @Override
+  @InternalApi("internal to java-bigquery")
+  public String openSkipExceptionTranslation(Job loadJob) throws IOException {
+    String builder = options.getResolvedApiaryHost("bigquery");
+    if (!builder.endsWith("/")) {
+      builder += "/";
+    }
+    builder += BASE_RESUMABLE_URI + options.getProjectId() + "/jobs";
+    GenericUrl url = new GenericUrl(builder);
+    url.set("uploadType", "resumable");
+    JsonFactory jsonFactory = bigquery.getJsonFactory();
+    HttpRequestFactory requestFactory = bigquery.getRequestFactory();
+    HttpRequest httpRequest =
+        requestFactory.buildPostRequest(url, new JsonHttpContent(jsonFactory, loadJob));
+    httpRequest.getHeaders().set("X-Upload-Content-Value", "application/octet-stream");
+    HttpResponse response = httpRequest.execute();
+    return response.getHeaders().getLocation();
+  }
+
+    @Override
   public Job write(
       String uploadId,
       byte[] toWrite,
