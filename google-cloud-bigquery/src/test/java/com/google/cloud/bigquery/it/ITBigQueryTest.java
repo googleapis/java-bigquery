@@ -223,8 +223,6 @@ public class ITBigQueryTest {
       ImmutableMap.of(
           "example-label1", "example-value1",
           "example-label2", "example-value2");
-  private static final List<Integer> INTEGER_ARRAY_FIELD_LIST =
-      new ArrayList<>(Arrays.asList(1, 2, 3, 4));
   private static final Field TIMESTAMP_FIELD_SCHEMA =
       Field.newBuilder("TimestampField", LegacySQLTypeName.TIMESTAMP)
           .setMode(Field.Mode.NULLABLE)
