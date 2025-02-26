@@ -285,15 +285,20 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   @Override
   public Job createJobForQuery(Job job) {
     try {
-      validateRPC();
-      String projectId =
-          job.getJobReference() != null
-              ? job.getJobReference().getProjectId()
-              : this.options.getProjectId();
-      return bigquery.jobs().insert(projectId, job).setPrettyPrint(false).execute();
+      return createJobForQuerySkipExceptionTranslation(job);
     } catch (IOException ex) {
       throw translate(ex);
     }
+  }
+
+  @InternalApi("internal to java-bigquery")
+  public Job createJobForQuerySkipExceptionTranslation(Job job) throws IOException {
+    validateRPC();
+    String projectId =
+        job.getJobReference() != null
+            ? job.getJobReference().getProjectId()
+            : this.options.getProjectId();
+    return bigquery.jobs().insert(projectId, job).setPrettyPrint(false).execute();
   }
 
   @Override
@@ -768,16 +773,10 @@ public class HttpBigQueryRpc implements BigQueryRpc {
         .execute();
   }
 
-    @Override
+  @Override
   public Job getQueryJob(String projectId, String jobId, String location) {
     try {
-      validateRPC();
-      return bigquery
-          .jobs()
-          .get(projectId, jobId)
-          .setPrettyPrint(false)
-          .setLocation(location)
-          .execute();
+      return getQueryJobSkipExceptionTranslation(projectId, jobId, location);
     } catch (IOException ex) {
       BigQueryException serviceException = translate(ex);
       if (serviceException.getCode() == HTTP_NOT_FOUND) {
@@ -785,6 +784,17 @@ public class HttpBigQueryRpc implements BigQueryRpc {
       }
       throw serviceException;
     }
+  }
+
+  @InternalApi("internal to java-bigquery")
+  public Job getQueryJobSkipExceptionTranslation(String projectId, String jobId, String location) throws IOException {
+    validateRPC();
+    return bigquery
+        .jobs()
+        .get(projectId, jobId)
+        .setPrettyPrint(false)
+        .setLocation(location)
+        .execute();
   }
 
   @Override
@@ -872,7 +882,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
     return true;
   }
 
-    @Override
+  @Override
   public boolean deleteJob(String projectId, String jobName, String location) {
     try {
       return deleteJobSkipExceptionTranslation(projectId, jobName, location);
@@ -893,7 +903,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
     return true;
   }
 
-    @Override
+  @Override
   public GetQueryResultsResponse getQueryResults(
       String projectId, String jobId, String location, Map<Option, ?> options) {
     try {
@@ -926,18 +936,24 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   public GetQueryResultsResponse getQueryResultsWithRowLimit(
       String projectId, String jobId, String location, Integer maxResultPerPage, Long timeoutMs) {
     try {
-      validateRPC();
-      return bigquery
-          .jobs()
-          .getQueryResults(projectId, jobId)
-          .setPrettyPrint(false)
-          .setLocation(location)
-          .setMaxResults(Long.valueOf(maxResultPerPage))
-          .setTimeoutMs(timeoutMs)
-          .execute();
+      return getQueryResultsWithRowLimitSkipExceptionTranslation(projectId, jobId, location, maxResultPerPage, timeoutMs);
     } catch (IOException ex) {
       throw translate(ex);
     }
+  }
+
+  @InternalApi("internal to java-bigquery")
+  public GetQueryResultsResponse getQueryResultsWithRowLimitSkipExceptionTranslation(
+      String projectId, String jobId, String location, Integer maxResultPerPage, Long timeoutMs) throws IOException {
+    validateRPC();
+    return bigquery
+        .jobs()
+        .getQueryResults(projectId, jobId)
+        .setPrettyPrint(false)
+        .setLocation(location)
+        .setMaxResults(Long.valueOf(maxResultPerPage))
+        .setTimeoutMs(timeoutMs)
+        .execute();
   }
 
   @Override
@@ -955,7 +971,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
     return bigquery.jobs().query(projectId, content).execute();
   }
 
-    @Override
+  @Override
   public String open(Job loadJob) {
     try {
       return openSkipExceptionTranslation(loadJob);

@@ -466,7 +466,7 @@ class ConnectionImpl implements Connection {
     try {
       results =
           BigQueryRetryHelper.runWithRetries(
-              () -> bigQueryRpc.queryRpc(projectId, queryRequest),
+              () -> bigQueryOptions.getBigQueryRpcV2().queryRpcSkipExceptionTranslation(projectId, queryRequest),
               bigQueryOptions.getRetrySettings(),
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               bigQueryOptions.getClock(),
@@ -916,7 +916,7 @@ class ConnectionImpl implements Connection {
       jobPb =
           runWithRetries(
               () ->
-                  bigQueryRpc.getQueryJob(
+                  bigQueryOptions.getBigQueryRpcV2().getQueryJobSkipExceptionTranslation(
                       completeJobId.getProject(),
                       completeJobId.getJob(),
                       completeJobId.getLocation()),
@@ -1177,7 +1177,7 @@ class ConnectionImpl implements Connection {
         results =
             BigQueryRetryHelper.runWithRetries(
                 () ->
-                    bigQueryRpc.getQueryResultsWithRowLimit(
+                    bigQueryOptions.getBigQueryRpcV2().getQueryResultsWithRowLimitSkipExceptionTranslation(
                         completeJobId.getProject(),
                         completeJobId.getJob(),
                         completeJobId.getLocation(),
@@ -1442,7 +1442,7 @@ class ConnectionImpl implements Connection {
     try {
       queryJob =
           BigQueryRetryHelper.runWithRetries(
-              () -> bigQueryRpc.createJobForQuery(jobPb),
+              () -> bigQueryOptions.getBigQueryRpcV2().createJobForQuerySkipExceptionTranslation(jobPb),
               bigQueryOptions.getRetrySettings(),
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               bigQueryOptions.getClock(),
@@ -1482,7 +1482,7 @@ class ConnectionImpl implements Connection {
     try {
       dryRunJob =
           BigQueryRetryHelper.runWithRetries(
-              () -> bigQueryRpc.createJobForQuery(jobPb),
+              () -> bigQueryOptions.getBigQueryRpcV2().createJobForQuerySkipExceptionTranslation(jobPb),
               bigQueryOptions.getRetrySettings(),
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               bigQueryOptions.getClock(),
