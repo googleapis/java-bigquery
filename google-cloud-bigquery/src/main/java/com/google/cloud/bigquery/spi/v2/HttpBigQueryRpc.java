@@ -207,19 +207,25 @@ public class HttpBigQueryRpc implements BigQueryRpc {
   @Override
   public Table create(Table table, Map<Option, ?> options) {
     try {
-      validateRPC();
-      // unset the type, as it is output only
-      table.setType(null);
-      TableReference reference = table.getTableReference();
-      return bigquery
-          .tables()
-          .insert(reference.getProjectId(), reference.getDatasetId(), table)
-          .setPrettyPrint(false)
-          .setFields(Option.FIELDS.getString(options))
-          .execute();
+      return createSkipExceptionTranslation(table, options);
     } catch (IOException ex) {
       throw translate(ex);
     }
+  }
+
+  @InternalApi("internal to java-bigquery")
+  public Table createSkipExceptionTranslation(Table table, Map<Option, ?> options)
+      throws IOException {
+    validateRPC();
+    // unset the type, as it is output only
+    table.setType(null);
+    TableReference reference = table.getTableReference();
+    return bigquery
+        .tables()
+        .insert(reference.getProjectId(), reference.getDatasetId(), table)
+        .setPrettyPrint(false)
+        .setFields(Option.FIELDS.getString(options))
+        .execute();
   }
 
   @Override

@@ -2936,12 +2936,12 @@ public class BigQueryImplTest {
   public void testWriteWithJob() throws IOException {
     bigquery = options.getService();
     Job job = new Job(bigquery, new JobInfo.BuilderImpl(JOB_INFO));
-    when(bigqueryRpcMock.open(
+    when(bigqueryRpcMock.openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb())))
         .thenReturn(UPLOAD_ID);
-    when(bigqueryRpcMock.write(
+    when(bigqueryRpcMock.writeSkipExceptionTranslation(
             eq(UPLOAD_ID), capturedBuffer.capture(), eq(0), eq(0L), eq(0), eq(true)))
         .thenReturn(job.toPb());
     writer = new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION);
@@ -2949,24 +2949,25 @@ public class BigQueryImplTest {
     assertEquals(job, writer.getJob());
     bigquery.writer(JOB_INFO.getJobId(), LOAD_CONFIGURATION);
     verify(bigqueryRpcMock)
-        .open(
+        .openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb()));
     verify(bigqueryRpcMock)
-        .write(eq(UPLOAD_ID), capturedBuffer.capture(), eq(0), eq(0L), eq(0), eq(true));
+        .writeSkipExceptionTranslation(
+            eq(UPLOAD_ID), capturedBuffer.capture(), eq(0), eq(0L), eq(0), eq(true));
   }
 
   @Test
   public void testWriteChannel() throws IOException {
     bigquery = options.getService();
     Job job = new Job(bigquery, new JobInfo.BuilderImpl(JOB_INFO));
-    when(bigqueryRpcMock.open(
+    when(bigqueryRpcMock.openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb())))
         .thenReturn(UPLOAD_ID);
-    when(bigqueryRpcMock.write(
+    when(bigqueryRpcMock.writeSkipExceptionTranslation(
             eq(UPLOAD_ID), capturedBuffer.capture(), eq(0), eq(0L), eq(0), eq(true)))
         .thenReturn(job.toPb());
     writer = new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION);
@@ -2974,12 +2975,13 @@ public class BigQueryImplTest {
     assertEquals(job, writer.getJob());
     bigquery.writer(LOAD_CONFIGURATION);
     verify(bigqueryRpcMock)
-        .open(
+        .openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb()));
     verify(bigqueryRpcMock)
-        .write(eq(UPLOAD_ID), capturedBuffer.capture(), eq(0), eq(0L), eq(0), eq(true));
+        .writeSkipExceptionTranslation(
+            eq(UPLOAD_ID), capturedBuffer.capture(), eq(0), eq(0L), eq(0), eq(true));
   }
 
   @Test
