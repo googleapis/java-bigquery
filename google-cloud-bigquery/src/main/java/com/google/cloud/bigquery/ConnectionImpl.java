@@ -466,7 +466,10 @@ class ConnectionImpl implements Connection {
     try {
       results =
           BigQueryRetryHelper.runWithRetries(
-              () -> bigQueryRpc.queryRpc(projectId, queryRequest),
+              () ->
+                  bigQueryOptions
+                      .getBigQueryRpcV2()
+                      .queryRpcSkipExceptionTranslation(projectId, queryRequest),
               bigQueryOptions.getRetrySettings(),
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               bigQueryOptions.getClock(),
@@ -916,10 +919,12 @@ class ConnectionImpl implements Connection {
       jobPb =
           runWithRetries(
               () ->
-                  bigQueryRpc.getQueryJob(
-                      completeJobId.getProject(),
-                      completeJobId.getJob(),
-                      completeJobId.getLocation()),
+                  bigQueryOptions
+                      .getBigQueryRpcV2()
+                      .getQueryJobSkipExceptionTranslation(
+                          completeJobId.getProject(),
+                          completeJobId.getJob(),
+                          completeJobId.getLocation()),
               bigQueryOptions.getRetrySettings(),
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               bigQueryOptions.getClock());
@@ -952,7 +957,7 @@ class ConnectionImpl implements Connection {
               () ->
                   bigQueryOptions
                       .getBigQueryRpcV2()
-                      .listTableDataWithRowLimit(
+                      .listTableDataWithRowLimitSkipExceptionTranslation(
                           completeTableId.getProject(),
                           completeTableId.getDataset(),
                           completeTableId.getTable(),
@@ -1177,12 +1182,14 @@ class ConnectionImpl implements Connection {
         results =
             BigQueryRetryHelper.runWithRetries(
                 () ->
-                    bigQueryRpc.getQueryResultsWithRowLimit(
-                        completeJobId.getProject(),
-                        completeJobId.getJob(),
-                        completeJobId.getLocation(),
-                        connectionSettings.getMaxResultPerPage(),
-                        timeoutMs),
+                    bigQueryOptions
+                        .getBigQueryRpcV2()
+                        .getQueryResultsWithRowLimitSkipExceptionTranslation(
+                            completeJobId.getProject(),
+                            completeJobId.getJob(),
+                            completeJobId.getLocation(),
+                            connectionSettings.getMaxResultPerPage(),
+                            timeoutMs),
                 bigQueryOptions.getRetrySettings(),
                 BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
                 bigQueryOptions.getClock(),
@@ -1442,7 +1449,10 @@ class ConnectionImpl implements Connection {
     try {
       queryJob =
           BigQueryRetryHelper.runWithRetries(
-              () -> bigQueryRpc.createJobForQuery(jobPb),
+              () ->
+                  bigQueryOptions
+                      .getBigQueryRpcV2()
+                      .createJobForQuerySkipExceptionTranslation(jobPb),
               bigQueryOptions.getRetrySettings(),
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               bigQueryOptions.getClock(),
@@ -1482,7 +1492,10 @@ class ConnectionImpl implements Connection {
     try {
       dryRunJob =
           BigQueryRetryHelper.runWithRetries(
-              () -> bigQueryRpc.createJobForQuery(jobPb),
+              () ->
+                  bigQueryOptions
+                      .getBigQueryRpcV2()
+                      .createJobForQuerySkipExceptionTranslation(jobPb),
               bigQueryOptions.getRetrySettings(),
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               bigQueryOptions.getClock(),
