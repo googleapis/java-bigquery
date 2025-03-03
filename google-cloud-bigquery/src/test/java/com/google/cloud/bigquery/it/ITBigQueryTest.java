@@ -3925,6 +3925,10 @@ public class ITBigQueryTest {
         (com.google.cloud.bigquery.FieldValueList) rs.getObject("IntegerArrayField");
     assertEquals(4, integerArrayFieldValue.size()); // Array has 4 elements
     assertEquals(3, (integerArrayFieldValue.get(2).getNumericValue()).intValue());
+    List<FieldValue> integerArrayFieldValueList =
+        (List<FieldValue>) rs.getArray("IntegerArrayField").getArray();
+    assertEquals(4, integerArrayFieldValueList.size());
+    assertEquals(3, integerArrayFieldValueList.get(2).getNumericValue().intValue());
 
     assertFalse(rs.next()); // no 3rd row in the table
   }
@@ -4277,6 +4281,19 @@ public class ITBigQueryTest {
         assertEquals(
             (integerArrayFieldValue.get(2).getNumericValue()).intValue(),
             (integerArrayFieldValueColInd.get(2).getNumericValue()).intValue());
+      }
+
+      List<FieldValue> integerArrayFieldValueList =
+          (List<FieldValue>) rs.getArray("IntegerArrayField").getArray();
+      List<FieldValue> integerArrayFieldValueListColInd =
+          (List<FieldValue>) rs.getArray(14).getArray();
+      assertEquals(
+          integerArrayFieldValueList.size(),
+          integerArrayFieldValueListColInd.size()); // Array has 4 elements
+      if (integerArrayFieldValueList.size() == 4) { // as we are picking the third index
+        assertEquals(
+            (integerArrayFieldValueList.get(2).getNumericValue()).intValue(),
+            (integerArrayFieldValueListColInd.get(2).getNumericValue()).intValue());
       }
     }
   }
