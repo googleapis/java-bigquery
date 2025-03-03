@@ -212,6 +212,7 @@ public class BigQueryResultImplTest {
     rowValues.put("time", EXPECTED_TIME.getTime() * 1000);
     rowValues.put("date", DATE_INT);
     rowValues.put("intArray", EXPECTED_INT_ARRAY);
+    rowValues.put("stringArray", STRING_ARRAY);
     buffer.put(new BigQueryResultImpl.Row(rowValues));
 
     Map<String, Object> nullValues = new HashMap<>();
@@ -224,6 +225,7 @@ public class BigQueryResultImplTest {
     nullValues.put("time", null);
     nullValues.put("date", null);
     nullValues.put("intArray", null);
+    nullValues.put("stringArray", null);
     buffer.put(new BigQueryResultImpl.Row(nullValues));
 
     buffer.put(new BigQueryResultImpl.Row(null, true)); // End of buffer marker.
@@ -258,6 +260,8 @@ public class BigQueryResultImplTest {
     assertThat(resultSet.wasNull()).isFalse();
     assertThat(resultSet.getArray("intArray")).isNotNull();
     assertThat(resultSet.wasNull()).isFalse();
+    assertThat(resultSet.getArray("stringArray")).isNotNull();
+    assertThat(resultSet.wasNull()).isFalse();
 
     assertThat(resultSet.next()).isTrue();
     assertThat(resultSet.getObject("string")).isNull();
@@ -283,6 +287,8 @@ public class BigQueryResultImplTest {
     assertThat(resultSet.getDate("date")).isNull();
     assertThat(resultSet.wasNull()).isTrue();
     assertThat(resultSet.getArray("intArray")).isNull();
+    assertThat(resultSet.wasNull()).isTrue();
+    assertThat(resultSet.getArray("stringArray")).isNull();
     assertThat(resultSet.wasNull()).isTrue();
 
     assertThat(resultSet.next()).isFalse();
