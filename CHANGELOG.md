@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.49.0](https://github.com/googleapis/java-bigquery/compare/v2.48.1...v2.49.0) (2025-03-03)
+
+
+### Features
+
+* Next release from main branch is 2.49.0 ([#3706](https://github.com/googleapis/java-bigquery/issues/3706)) ([b46a6cc](https://github.com/googleapis/java-bigquery/commit/b46a6ccc959f8defb145279ea18ff2e4f1bac58f))
+
+
+### Dependencies
+
+* Update dependency com.google.api.grpc:proto-google-cloud-bigqueryconnection-v1 to v2.61.0 ([#3703](https://github.com/googleapis/java-bigquery/issues/3703)) ([53b07b0](https://github.com/googleapis/java-bigquery/commit/53b07b0e77f6ef57c8518df2b106edace679f79a))
+* Update dependency com.google.cloud:google-cloud-datacatalog-bom to v1.65.0 ([#3704](https://github.com/googleapis/java-bigquery/issues/3704)) ([53b68b1](https://github.com/googleapis/java-bigquery/commit/53b68b13a505aa5d38e56032eaeb8c95bf3e9078))
+
 ## [2.48.1](https://github.com/googleapis/java-bigquery/compare/v2.48.0...v2.48.1) (2025-02-26)
 
 
