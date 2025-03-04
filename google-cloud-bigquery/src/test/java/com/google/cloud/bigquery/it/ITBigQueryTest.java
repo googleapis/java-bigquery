@@ -3981,13 +3981,10 @@ public class ITBigQueryTest {
     assertNotNull(rs.getBytes("BytesField"));
     assertEquals(1, rs.getInt("IntegerField"));
     assertEquals(1534680695123L, rs.getTimestamp("TimestampField").getTime());
-    assertEquals(
-        java.sql.Date.valueOf("2018-08-18").toLocalDate(), rs.getDate("DateField").toLocalDate());
+    assertEquals(java.sql.Date.valueOf("2018-08-19"), rs.getDate("DateField"));
     assertTrue(rs.getDouble("FloatField") == 10.1d);
     assertTrue(rs.getDouble("NumericField") == 100.0d);
-    assertEquals(
-        Time.valueOf(LocalTime.of(4, 11, 35, 123456)).toLocalTime(),
-        rs.getTime("TimeField").toLocalTime());
+    assertEquals(Time.valueOf(LocalTime.of(12, 11, 35, 123456)), rs.getTime("TimeField"));
     assertEquals("2018-08-19T12:11:35.123456", rs.getString("DateTimeField"));
     assertEquals("POINT(-122.35022 47.649154)", rs.getString("GeographyField"));
     assertNotNull(rs.getBytes("BytesField_1"));
