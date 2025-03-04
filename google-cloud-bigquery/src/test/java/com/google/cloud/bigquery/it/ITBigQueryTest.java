@@ -3938,7 +3938,7 @@ public class ITBigQueryTest {
     String query =
         "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, FloatField, "
             + "NumericField, TimeField, DateField,  DateTimeField , GeographyField, RecordField.BytesField, RecordField.BooleanField, IntegerArrayField from "
-            + TABLE_ID_FASTQUERY_BQ_RESULTSET.getTable()
+            + TABLE_ID_FASTQUERY_BQ_RESULTSET.getTable(
             + " order by TimestampField";
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder()
@@ -3984,7 +3984,7 @@ public class ITBigQueryTest {
     assertEquals(java.sql.Date.valueOf("2018-08-19"), rs.getDate("DateField"));
     assertTrue(rs.getDouble("FloatField") == 10.1d);
     assertTrue(rs.getDouble("NumericField") == 100.0d);
-    assertEquals(Time.valueOf(LocalTime.of(12, 11, 35, 123456)), rs.getTime("TimeField"));
+    assertEquals(Time.valueOf(LocalTime.of(12, 11, 35, 123456)).toString(), rs.getTime("TimeField").toString());
     assertEquals("2018-08-19T12:11:35.123456", rs.getString("DateTimeField"));
     assertEquals("POINT(-122.35022 47.649154)", rs.getString("GeographyField"));
     assertNotNull(rs.getBytes("BytesField_1"));
