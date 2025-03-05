@@ -16,12 +16,10 @@
 
 package com.google.cloud.bigquery;
 
-import static com.google.cloud.RetryHelper.runWithRetries;
-
 import com.google.cloud.BaseWriteChannel;
 import com.google.cloud.RestorableState;
-import com.google.cloud.RetryHelper;
 import com.google.cloud.WriteChannel;
+import com.google.cloud.bigquery.BigQueryRetryHelper.BigQueryRetryHelperException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -34,6 +32,9 @@ import java.util.concurrent.Callable;
  */
 public class TableDataWriteChannel
     extends BaseWriteChannel<BigQueryOptions, WriteChannelConfiguration> {
+
+  private static final BigQueryRetryConfig EMPTY_RETRY_CONFIG =
+      BigQueryRetryConfig.newBuilder().build();
 
   private Job job;
 
@@ -51,7 +52,7 @@ public class TableDataWriteChannel
   protected void flushBuffer(final int length, final boolean last) {
     try {
       com.google.api.services.bigquery.model.Job jobPb =
-          runWithRetries(
+          BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Job>() {
                 @Override
                 public com.google.api.services.bigquery.model.Job call() throws IOException {
@@ -63,10 +64,10 @@ public class TableDataWriteChannel
               },
               getOptions().getRetrySettings(),
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
-              getOptions().getClock());
+              getOptions().getClock(),
+              EMPTY_RETRY_CONFIG);
       job = jobPb != null ? Job.fromPb(getOptions().getService(), jobPb) : null;
-    } catch (RetryHelper.RetryHelperException e) {
-      // TODO(NOW): All skip translation should use BigQueryRetry instead.
+    } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
     }
   }
@@ -81,7 +82,7 @@ public class TableDataWriteChannel
       final JobId jobId,
       final WriteChannelConfiguration writeChannelConfiguration) {
     try {
-      return runWithRetries(
+      return BigQueryRetryHelper.runWithRetries(
           new Callable<String>() {
             @Override
             public String call() throws IOException {
@@ -95,9 +96,9 @@ public class TableDataWriteChannel
           },
           options.getRetrySettings(),
           BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
-          options.getClock());
-    } catch (RetryHelper.RetryHelperException e) {
-      // TODO(NOW): All skip translation should use BigQueryRetry instead.
+          options.getClock(),
+          EMPTY_RETRY_CONFIG);
+    } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
     }
   }
