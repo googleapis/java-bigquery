@@ -2756,6 +2756,7 @@ public class ITBigQueryTest {
       bigquery.update(tableInfo);
       fail("BigQueryException was expected");
     } catch (BigQueryException e) {
+      // TODO(NOW)
       BigQueryError error = e.getError();
       assertNotNull(error);
       assertEquals("notFound", error.getReason());
@@ -7267,6 +7268,7 @@ public class ITBigQueryTest {
       bigquery.create(tableInfo);
       fail("BigQueryException was expected");
     } catch (BigQueryException e) {
+      // TODO(NOW)
       BigQueryError error = e.getError();
       assertNotNull(error);
       assertEquals("invalid", error.getReason());

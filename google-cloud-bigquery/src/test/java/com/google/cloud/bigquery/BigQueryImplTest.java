@@ -53,6 +53,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -1840,6 +1841,12 @@ public class BigQueryImplTest {
         .thenThrow(new BigQueryException(500, "InternalError"))
         .thenReturn(newJobPb());
 
+    // Job create will attempt to retrieve the job even in the case when the job is created a
+    // returned failure.
+    when(bigqueryRpcMock.getJobSkipExceptionTranslation(
+            nullable(String.class), nullable(String.class), nullable(String.class), Mockito.any()))
+        .thenThrow(new BigQueryException(500, "InternalError"));
+
     bigquery = options.getService();
     bigquery =
         options
@@ -2032,8 +2039,7 @@ public class BigQueryImplTest {
   public void testGetJobNotFoundWhenThrowIsEnabled() throws IOException {
     when(bigqueryRpcMock.getJobSkipExceptionTranslation(
             PROJECT, "job-not-found", null, EMPTY_RPC_OPTIONS))
-        .thenReturn(null)
-        .thenThrow(new BigQueryException(404, "Job not found"));
+        .thenThrow(new IOException("Job not found"));
     options.setThrowNotFound(true);
     bigquery = options.getService();
     try {

@@ -30,6 +30,7 @@ import com.google.api.services.bigquery.model.TableDataList;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.RetryHelper;
 import com.google.cloud.Tuple;
+import com.google.cloud.bigquery.BigQueryRetryHelper.BigQueryRetryHelperException;
 import com.google.cloud.bigquery.JobStatistics.QueryStatistics;
 import com.google.cloud.bigquery.JobStatistics.SessionInfo;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
@@ -917,7 +918,7 @@ class ConnectionImpl implements Connection {
     com.google.api.services.bigquery.model.Job jobPb;
     try {
       jobPb =
-          runWithRetries(
+          BigQueryRetryHelper.runWithRetries(
               () ->
                   bigQueryOptions
                       .getBigQueryRpcV2()
@@ -927,13 +928,20 @@ class ConnectionImpl implements Connection {
                           completeJobId.getLocation()),
               bigQueryOptions.getRetrySettings(),
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
-              bigQueryOptions.getClock());
-      if (bigQueryOptions.getThrowNotFound() && jobPb == null) {
-        throw new BigQueryException(HTTP_NOT_FOUND, "Query job not found");
+              bigQueryOptions.getClock(),
+              BigQueryRetryConfig.newBuilder().build());
+    } catch (BigQueryRetryHelperException e) {
+      if (e.getCause() instanceof BigQueryException) {
+        if (((BigQueryException) e.getCause()).getCode() == HTTP_NOT_FOUND) {
+          if (bigQueryOptions.getThrowNotFound()) {
+            throw new BigQueryException(HTTP_NOT_FOUND, "Query job not found");
+          }
+          return null;
+        }
       }
-    } catch (RetryHelper.RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
     }
+    // getQueryJobSkipExceptionTranslation will never return null so this is safe.
     return Job.fromPb(bigQueryOptions.getService(), jobPb);
   }
 

@@ -66,6 +66,7 @@ public class TableDataWriteChannel
               getOptions().getClock());
       job = jobPb != null ? Job.fromPb(getOptions().getService(), jobPb) : null;
     } catch (RetryHelper.RetryHelperException e) {
+      // TODO(NOW): All skip translation should use BigQueryRetry instead.
       throw BigQueryException.translateAndThrow(e);
     }
   }
@@ -96,6 +97,7 @@ public class TableDataWriteChannel
           BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
           options.getClock());
     } catch (RetryHelper.RetryHelperException e) {
+      // TODO(NOW): All skip translation should use BigQueryRetry instead.
       throw BigQueryException.translateAndThrow(e);
     }
   }
