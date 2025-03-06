@@ -72,6 +72,7 @@ public class SimpleApp {
         // TODO(developer): Handle errors here. Notice that an error do not necessarily mean
         // that the job has completed or was unsuccessful.
         // For more details: https://cloud.google.com/bigquery/troubleshooting-errors
+        throw new RuntimeException("An unhandled error has occurred");
       }
       // [END bigquery_simple_app_query]
 
