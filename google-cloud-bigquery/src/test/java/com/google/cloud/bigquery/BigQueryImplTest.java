@@ -623,7 +623,6 @@ public class BigQueryImplTest {
   public void testGetDatasetNotFoundWhenThrowIsEnabled() throws IOException {
     when(bigqueryRpcMock.getDatasetSkipExceptionTranslation(
             PROJECT, "dataset-not-found", EMPTY_RPC_OPTIONS))
-        .thenReturn(null)
         .thenThrow(new BigQueryException(404, "Dataset not found"));
     options.setThrowNotFound(true);
     bigquery = options.getService();
@@ -975,7 +974,6 @@ public class BigQueryImplTest {
   public void testGetTableNotFoundWhenThrowIsEnabled() throws IOException {
     when(bigqueryRpcMock.getTableSkipExceptionTranslation(
             PROJECT, DATASET, "table-not-found", EMPTY_RPC_OPTIONS))
-        .thenReturn(null)
         .thenThrow(new BigQueryException(404, "Table not found"));
     options.setThrowNotFound(true);
     bigquery = options.getService();
@@ -3073,12 +3071,11 @@ public class BigQueryImplTest {
   public void testGetRoutineWithEnabledThrowNotFoundException() throws IOException {
     when(bigqueryRpcMock.getRoutineSkipExceptionTranslation(
             PROJECT, DATASET, ROUTINE, EMPTY_RPC_OPTIONS))
-        .thenReturn(null)
         .thenThrow(new BigQueryException(404, "Routine not found"));
     options.setThrowNotFound(true);
     bigquery = options.getService();
     try {
-      Routine routine = bigquery.getRoutine(ROUTINE_ID);
+      bigquery.getRoutine(ROUTINE_ID);
       fail();
     } catch (BigQueryException ex) {
       assertEquals("Routine not found", ex.getMessage());
