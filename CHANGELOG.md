@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.49.0](https://github.com/googleapis/java-bigquery/compare/v2.48.1...v2.49.0) (2025-03-07)
+
+
+### Features
+
+* **bigquery:** Implement getArray in BigQueryResultImpl ([#3693](https://github.com/googleapis/java-bigquery/issues/3693)) ([e2a3f2c](https://github.com/googleapis/java-bigquery/commit/e2a3f2c1a1406bf7bc9a035dce3acfde78f0eaa4))
+* Next release from main branch is 2.49.0 ([#3706](https://github.com/googleapis/java-bigquery/issues/3706)) ([b46a6cc](https://github.com/googleapis/java-bigquery/commit/b46a6ccc959f8defb145279ea18ff2e4f1bac58f))
+
+
+### Dependencies
+
+* Update dependency com.google.api.grpc:proto-google-cloud-bigqueryconnection-v1 to v2.61.0 ([#3703](https://github.com/googleapis/java-bigquery/issues/3703)) ([53b07b0](https://github.com/googleapis/java-bigquery/commit/53b07b0e77f6ef57c8518df2b106edace679f79a))
+* Update dependency com.google.cloud:google-cloud-datacatalog-bom to v1.65.0 ([#3704](https://github.com/googleapis/java-bigquery/issues/3704)) ([53b68b1](https://github.com/googleapis/java-bigquery/commit/53b68b13a505aa5d38e56032eaeb8c95bf3e9078))
+* Update dependency com.google.oauth-client:google-oauth-client-java6 to v1.39.0 ([#3710](https://github.com/googleapis/java-bigquery/issues/3710)) ([c0c6352](https://github.com/googleapis/java-bigquery/commit/c0c6352b8d02145fe9513e3e23d316e045360d2d))
+* Update dependency com.google.oauth-client:google-oauth-client-jetty to v1.39.0 ([#3711](https://github.com/googleapis/java-bigquery/issues/3711)) ([43b86e9](https://github.com/googleapis/java-bigquery/commit/43b86e91a664dd9d3edaea7b31b46ac635fb22b0))
+
 ## [2.48.1](https://github.com/googleapis/java-bigquery/compare/v2.48.0...v2.48.1) (2025-02-26)
 
 
