@@ -33,7 +33,9 @@ import com.google.cloud.WriteChannel;
 import com.google.cloud.bigquery.spi.BigQueryRpcFactory;
 import com.google.cloud.bigquery.spi.v2.HttpBigQueryRpc;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Random;
@@ -114,18 +116,19 @@ public class TableDataWriteChannelTest {
   }
 
   @Test
-  public void testCreateRetryableError() throws IOException {
-    BigQueryException exception = new BigQueryException(new SocketException("Socket closed"));
+  public void testCreateRetryableErrors() throws IOException {
     when(bigqueryRpcMock.openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb())))
-        .thenThrow(exception)
+        .thenThrow(new SocketException("Socket closed"))
+        .thenThrow(new UnknownHostException())
+        .thenThrow(new ConnectException())
         .thenReturn(UPLOAD_ID);
     writer = new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION);
     assertTrue(writer.isOpen());
     assertNull(writer.getJob());
-    verify(bigqueryRpcMock, times(2))
+    verify(bigqueryRpcMock, times(4))
         .openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
@@ -134,12 +137,11 @@ public class TableDataWriteChannelTest {
 
   @Test
   public void testCreateNonRetryableError() throws IOException {
-    RuntimeException ex = new RuntimeException("expected");
     when(bigqueryRpcMock.openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb())))
-        .thenThrow(ex);
+        .thenThrow(new RuntimeException("expected"));
     try (TableDataWriteChannel channel =
         new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION)) {
       Assert.fail();
@@ -207,7 +209,7 @@ public class TableDataWriteChannelTest {
   }
 
   @Test
-  public void testWritesAndFlush() throws IOException {
+  public void testWritesAndFlushRetryableErrors() throws IOException {
     when(bigqueryRpcMock.openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
@@ -220,6 +222,9 @@ public class TableDataWriteChannelTest {
             eq(0L),
             eq(DEFAULT_CHUNK_SIZE),
             eq(false)))
+        .thenThrow(new SocketException("Socket closed"))
+        .thenThrow(new UnknownHostException())
+        .thenThrow(new ConnectException())
         .thenReturn(null);
     writer = new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION);
     ByteBuffer[] buffers = new ByteBuffer[DEFAULT_CHUNK_SIZE / MIN_CHUNK_SIZE];
@@ -239,7 +244,48 @@ public class TableDataWriteChannelTest {
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb()));
+    verify(bigqueryRpcMock, times(4))
+        .writeSkipExceptionTranslation(
+            eq(UPLOAD_ID),
+            capturedBuffer.capture(),
+            eq(0),
+            eq(0L),
+            eq(DEFAULT_CHUNK_SIZE),
+            eq(false));
+  }
+
+  @Test
+  public void testWritesAndFlushNonRetryableError() throws IOException {
+    when(bigqueryRpcMock.openSkipExceptionTranslation(
+            new com.google.api.services.bigquery.model.Job()
+                .setJobReference(JOB_INFO.getJobId().toPb())
+                .setConfiguration(LOAD_CONFIGURATION.toPb())))
+        .thenReturn(UPLOAD_ID);
+    when(bigqueryRpcMock.writeSkipExceptionTranslation(
+            eq(UPLOAD_ID),
+            capturedBuffer.capture(),
+            eq(0),
+            eq(0L),
+            eq(DEFAULT_CHUNK_SIZE),
+            eq(false)))
+        .thenThrow(new RuntimeException("expected"));
+    try {
+      writer = new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION);
+      ByteBuffer[] buffers = new ByteBuffer[DEFAULT_CHUNK_SIZE / MIN_CHUNK_SIZE];
+      for (int i = 0; i < buffers.length; i++) {
+        buffers[i] = randomBuffer(MIN_CHUNK_SIZE);
+        assertEquals(MIN_CHUNK_SIZE, writer.write(buffers[i]));
+      }
+      Assert.fail();
+    } catch (RuntimeException expected) {
+      Assert.assertEquals("java.lang.RuntimeException: expected", expected.getMessage());
+    }
     verify(bigqueryRpcMock)
+        .openSkipExceptionTranslation(
+            new com.google.api.services.bigquery.model.Job()
+                .setJobReference(JOB_INFO.getJobId().toPb())
+                .setConfiguration(LOAD_CONFIGURATION.toPb()));
+    verify(bigqueryRpcMock, times(1))
         .writeSkipExceptionTranslation(
             eq(UPLOAD_ID),
             capturedBuffer.capture(),
