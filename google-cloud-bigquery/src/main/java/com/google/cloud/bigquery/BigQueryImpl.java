@@ -509,9 +509,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock(),
               EMPTY_RETRY_CONFIG);
-      // This null check is not strictly necessary as getDatasetSkipExceptionTranslation will never
-      // return null.
-      return answer == null ? null : Dataset.fromPb(this, answer);
+      return Dataset.fromPb(this, answer);
     } catch (BigQueryRetryHelperException e) {
       if (isRetryErrorCodeHttpNotFound(e)) {
         if (getOptions().getThrowNotFound()) {
@@ -865,9 +863,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock(),
               EMPTY_RETRY_CONFIG);
-      // This null check is not strictly necessary as getTableSkipExceptionTranslation will never
-      // return null.
-      return answer == null ? null : Table.fromPb(this, answer);
+      return Table.fromPb(this, answer);
     } catch (BigQueryRetryHelperException e) {
       if (isRetryErrorCodeHttpNotFound(e)) {
         if (getOptions().getThrowNotFound()) {
@@ -909,9 +905,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock(),
               EMPTY_RETRY_CONFIG);
-      // This null check is not strictly necessary as getModelSkipExceptionTranslation will never
-      // return null.
-      return answer == null ? null : Model.fromPb(this, answer);
+      return Model.fromPb(this, answer);
     } catch (BigQueryRetryHelperException e) {
       if (isRetryErrorCodeHttpNotFound(e)) {
         if (getOptions().getThrowNotFound()) {
@@ -953,9 +947,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock(),
               EMPTY_RETRY_CONFIG);
-      // This null check is not strictly necessary as getRoutineSkipExceptionTranslation will never
-      // return null.
-      return answer == null ? null : Routine.fromPb(this, answer);
+      return Routine.fromPb(this, answer);
     } catch (BigQueryRetryHelperException e) {
       if (isRetryErrorCodeHttpNotFound(e)) {
         if (getOptions().getThrowNotFound()) {
@@ -1324,9 +1316,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock(),
               EMPTY_RETRY_CONFIG);
-      // This null check is not strictly necessary as getJobSkipExceptionTranslation will never
-      // return null.
-      return answer == null ? null : Job.fromPb(this, answer);
+      return Job.fromPb(this, answer);
     } catch (BigQueryRetryHelperException e) {
       if (isRetryErrorCodeHttpNotFound(e)) {
         if (getOptions().getThrowNotFound()) {
