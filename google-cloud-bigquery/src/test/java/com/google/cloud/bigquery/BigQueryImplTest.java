@@ -926,7 +926,6 @@ public class BigQueryImplTest {
     String expected = "Model not found";
     when(bigqueryRpcMock.getModelSkipExceptionTranslation(
             PROJECT, DATASET, MODEL, EMPTY_RPC_OPTIONS))
-        .thenReturn(null)
         .thenThrow(new BigQueryException(404, expected));
     options.setThrowNotFound(true);
     bigquery = options.getService();
@@ -1782,6 +1781,12 @@ public class BigQueryImplTest {
             jobCapture.capture(), eq(bigQueryRpcOptions)))
         .thenThrow(new BigQueryException(400, RATE_LIMIT_ERROR_MSG));
 
+    // Job create will attempt to retrieve the job even in the case when the job is created in a
+    // returned failure.
+    when(bigqueryRpcMock.getJobSkipExceptionTranslation(
+            nullable(String.class), nullable(String.class), nullable(String.class), Mockito.any()))
+        .thenThrow(new BigQueryException(500, "InternalError"));
+
     bigquery = options.getService();
     bigquery =
         options
@@ -1839,7 +1844,7 @@ public class BigQueryImplTest {
         .thenThrow(new BigQueryException(500, "InternalError"))
         .thenReturn(newJobPb());
 
-    // Job create will attempt to retrieve the job even in the case when the job is created a
+    // Job create will attempt to retrieve the job even in the case when the job is created in a
     // returned failure.
     when(bigqueryRpcMock.getJobSkipExceptionTranslation(
             nullable(String.class), nullable(String.class), nullable(String.class), Mockito.any()))
