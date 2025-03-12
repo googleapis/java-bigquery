@@ -69,8 +69,8 @@ public class SimpleApp {
         throw new RuntimeException("Job no longer exists");
       } else if (queryJob.getStatus().getExecutionErrors() != null
           && queryJob.getStatus().getExecutionErrors().size() > 0) {
-        // TODO(developer): Handle errors here. Notice that an error do not necessarily mean
-        // that the job has completed or was unsuccessful.
+        // TODO(developer): Handle errors here. An error here do not necessarily mean that the job
+        // has completed or was unsuccessful.
         // For more details: https://cloud.google.com/bigquery/troubleshooting-errors
         throw new RuntimeException("An unhandled error has occurred");
       }
