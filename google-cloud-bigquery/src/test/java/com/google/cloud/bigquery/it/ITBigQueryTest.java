@@ -223,6 +223,10 @@ public class ITBigQueryTest {
       ImmutableMap.of(
           "example-label1", "example-value1",
           "example-label2", "example-value2");
+  private static final Map<String, String> RESOURCE_TAGS =
+      ImmutableMap.of(
+          PROJECT_ID + "/example-key1", "example-value1",
+          PROJECT_ID + "/example-key2", "example-value2");
   private static final Field TIMESTAMP_FIELD_SCHEMA =
       Field.newBuilder("TimestampField", LegacySQLTypeName.TIMESTAMP)
           .setMode(Field.Mode.NULLABLE)
@@ -1278,6 +1282,7 @@ public class ITBigQueryTest {
     assertThat(dataset.getLabels()).containsExactly("a", "b");
     assertThat(dataset.getStorageBillingModel()).isNull();
     assertThat(dataset.getMaxTimeTravelHours()).isNull();
+    assertThat(dataset.getResourceTags()).isNull();
 
     Map<String, String> updateLabels = new HashMap<>();
     updateLabels.put("x", "y");
@@ -1290,15 +1295,47 @@ public class ITBigQueryTest {
                 .setLabels(updateLabels)
                 .setStorageBillingModel("LOGICAL")
                 .setMaxTimeTravelHours(MAX_TIME_TRAVEL_HOURS)
+                .setResourceTags(RESOURCE_TAGS)
                 .build());
     assertThat(updatedDataset.getDescription()).isEqualTo("Updated Description");
     assertThat(updatedDataset.getLabels()).containsExactly("x", "y");
     assertThat(updatedDataset.getStorageBillingModel()).isEqualTo("LOGICAL");
     assertThat(updatedDataset.getMaxTimeTravelHours()).isEqualTo(MAX_TIME_TRAVEL_HOURS);
+    assertThat(updatedDataset.getResourceTags()).isEqualTo(RESOURCE_TAGS);
 
     updatedDataset = bigquery.update(updatedDataset.toBuilder().setLabels(null).build());
     assertThat(updatedDataset.getLabels()).isEmpty();
     assertThat(dataset.delete()).isTrue();
+  }
+
+  @Test
+  public void testUpdateDatasetResourceTags() {
+    Dataset dataset =
+        bigquery.create(
+            DatasetInfo.newBuilder(OTHER_DATASET)
+                .setDescription("Some Description")
+                .setLabels(Collections.singletonMap("a", "b"))
+                .setResourceTags(RESOURCE_TAGS)
+                .build());
+
+    final String updatedKey1 = PROJECT_ID + "/updated-key1";
+    final String updatedValue1 = "updated-value1";
+    final String updatedKey2 = PROJECT_ID + "/updated-key2";
+    final String updatedValue2 = "updated-value2";
+
+    Map<String, String> updatedResourceTags =
+        new HashMap<>(ImmutableMap.of(updatedKey1, updatedValue1, updatedKey2, updatedValue2));
+    updatedResourceTags.put(PROJECT_ID + "/example-key1", null);
+    updatedResourceTags.put(PROJECT_ID + "/example-key2", null);
+
+    assertEquals(dataset.getResourceTags(), RESOURCE_TAGS);
+
+    Dataset updatedDataset =
+        bigquery.update(dataset.toBuilder().setResourceTags(updatedResourceTags).build());
+    assertThat(updatedDataset.getResourceTags())
+        .containsExactly(updatedKey1, updatedValue1, updatedKey2, updatedValue2);
+
+    assertTrue(dataset.delete());
   }
 
   @Test
@@ -1765,6 +1802,23 @@ public class ITBigQueryTest {
     assertEquals(MAX_TIME_TRAVEL_HOURS_DEFAULT, dataset.getMaxTimeTravelHours());
 
     RemoteBigQueryHelper.forceDelete(bigquery, timeTravelDataset);
+  }
+
+  @Test
+  public void testCreateDatasetWithSpecificResourceTags() {
+    String resourceTaggedDataset = RemoteBigQueryHelper.generateDatasetName();
+    DatasetInfo info =
+        DatasetInfo.newBuilder(resourceTaggedDataset)
+            .setDescription(DESCRIPTION)
+            .setLabels(LABELS)
+            .setResourceTags(RESOURCE_TAGS)
+            .build();
+    bigquery.create(info);
+
+    Dataset dataset = bigquery.getDataset(DatasetId.of(resourceTaggedDataset));
+    assertEquals(RESOURCE_TAGS, dataset.getResourceTags());
+
+    RemoteBigQueryHelper.forceDelete(bigquery, resourceTaggedDataset);
   }
 
   @Test
