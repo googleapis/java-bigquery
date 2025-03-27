@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.49.1](https://github.com/googleapis/java-bigquery/compare/v2.49.0...v2.49.1) (2025-03-27)
+
+
+### Bug Fixes
+
+* Add labels to converter for listTables method ([#3735](https://github.com/googleapis/java-bigquery/issues/3735)) ([#3736](https://github.com/googleapis/java-bigquery/issues/3736)) ([8634822](https://github.com/googleapis/java-bigquery/commit/8634822e1836c5ccc0f8d0263ac57ac561578360))
+
 ## [2.49.0](https://github.com/googleapis/java-bigquery/compare/v2.48.1...v2.49.0) (2025-03-20)
 
 
