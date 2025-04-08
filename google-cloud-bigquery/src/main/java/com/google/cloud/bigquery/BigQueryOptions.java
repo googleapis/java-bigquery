@@ -25,6 +25,7 @@ import com.google.cloud.bigquery.spi.BigQueryRpcFactory;
 import com.google.cloud.bigquery.spi.v2.HttpBigQueryRpc;
 import com.google.cloud.http.HttpTransportOptions;
 import com.google.common.collect.ImmutableSet;
+import io.opentelemetry.api.trace.Tracer;
 import java.util.Set;
 
 public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
@@ -39,6 +40,9 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
   private boolean setThrowNotFound;
   private boolean useInt64Timestamps;
   private JobCreationMode defaultJobCreationMode = JobCreationMode.JOB_CREATION_MODE_UNSPECIFIED;
+  private String queryPreviewEnabled = System.getenv("QUERY_PREVIEW_ENABLED");
+  private boolean enableOpenTelemetryTracing;
+  private Tracer openTelemetryTracer;
 
   public static class DefaultBigQueryFactory implements BigQueryFactory {
 
@@ -64,6 +68,8 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
 
     private String location;
     private boolean useInt64Timestamps;
+    private boolean enableOpenTelemetryTracing;
+    private Tracer openTelemetryTracer;
 
     private Builder() {}
 
@@ -90,6 +96,16 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
       return this;
     }
 
+    public Builder setEnableOpenTelemetryTracing(boolean enableOpenTelemetryTracing) {
+      this.enableOpenTelemetryTracing = enableOpenTelemetryTracing;
+      return this;
+    }
+
+    public Builder setOpenTelemetryTracer(Tracer tracer) {
+      this.openTelemetryTracer = tracer;
+      return this;
+    }
+
     @Override
     public BigQueryOptions build() {
       return new BigQueryOptions(this);
@@ -100,6 +116,8 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
     super(BigQueryFactory.class, BigQueryRpcFactory.class, builder, new BigQueryDefaults());
     this.location = builder.location;
     this.useInt64Timestamps = builder.useInt64Timestamps;
+    this.enableOpenTelemetryTracing = builder.enableOpenTelemetryTracing;
+    this.openTelemetryTracer = builder.openTelemetryTracer;
   }
 
   private static class BigQueryDefaults implements ServiceDefaults<BigQuery, BigQueryOptions> {
@@ -169,6 +187,14 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
 
   public JobCreationMode getDefaultJobCreationMode() {
     return defaultJobCreationMode;
+  }
+
+  public boolean isOpenTelemetryTracingEnabled() {
+    return enableOpenTelemetryTracing;
+  }
+
+  public Tracer getOpenTelemetryTracer() {
+    return openTelemetryTracer;
   }
 
   @SuppressWarnings("unchecked")
