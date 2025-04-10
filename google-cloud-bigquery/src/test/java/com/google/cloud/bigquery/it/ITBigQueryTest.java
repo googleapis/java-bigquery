@@ -7511,4 +7511,65 @@ public class ITBigQueryTest {
     assertTrue(remoteTable.getDefinition() instanceof MaterializedViewDefinition);
     assertTrue(remoteTable.delete());
   }
+
+  @Test
+  public void testStoredProcedure() throws InterruptedException {
+    // TODO(NOW)
+    Schema tableSchema =
+        Schema.of(
+            Field.newBuilder("customer_id", LegacySQLTypeName.STRING)
+                .setMode(Field.Mode.NULLABLE)
+                .setDescription("customer_id")
+                .build(),
+            Field.newBuilder("name", LegacySQLTypeName.STRING)
+                .setMode(Field.Mode.NULLABLE)
+                .setDescription("Name")
+                .build());
+
+    String tableName = "test_stored_procedure";
+    TableId tableId = TableId.of(DATASET, tableName);
+    StandardTableDefinition tableDefinition =
+        StandardTableDefinition.newBuilder().setSchema(tableSchema).build();
+    Table createdTable = bigquery.create(TableInfo.of(tableId, tableDefinition));
+
+    // Test Query Parameter by selecting for the bounded Range entry only.
+    String query =
+        String.format(
+            "CREATE OR REPLACE PROCEDURE %s.create_customer(name STRING, OUT id STRING)\n"
+                + "BEGIN\n"
+                + "SET id = GENERATE_UUID();\n"
+                + "INSERT INTO %s.%s (customer_id, name)\n"
+                + "  VALUES(id, name);\n"
+                + "SELECT FORMAT(\"Created customer %%s (%%s)\", id, name);\n"
+                + "END",
+            DATASET, DATASET, tableName);
+
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
+    bigquery.query(config);
+
+    String callQuery =
+        String.format(
+            "--- Create a new customer record.\n"
+                + "DECLARE id STRING;\n"
+                + "CALL %s.create_customer(@name,id);\n"
+                + "\n"
+                + "--- Display the record.\n"
+                + "SELECT * FROM %s.%s\n"
+                + "WHERE customer_id = id;",
+            DATASET, DATASET, tableName);
+    QueryParameterValue nameParameter = QueryParameterValue.string("Jane");
+
+    QueryJobConfiguration callConfig =
+        QueryJobConfiguration.newBuilder(callQuery)
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .addNamedParameter("name", nameParameter)
+            .build();
+    TableResult result = bigquery.query(callConfig);
+
+    for (FieldValueList values : result.iterateAll()) {
+      System.out.println(
+          values.get("Name").getStringValue() + ":" + values.get("customer_id").getStringValue());
+    }
+  }
 }
