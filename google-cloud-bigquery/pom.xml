@@ -208,11 +208,6 @@
       <artifactId>proto-google-cloud-datacatalog-v1</artifactId>
       <scope>test</scope>
     </dependency>
-    <!-- OpenTelemetry -->
-    <dependency>
-      <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-sdk</artifactId>
-    </dependency>
   </dependencies>
 
   <build>
