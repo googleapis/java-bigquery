@@ -1033,9 +1033,9 @@ public class ITBigQueryTest {
 
   private static BigQuery bigquery;
   private static Storage storage;
+  private static OpenTelemetry otel;
 
-  private static class CustomSpanExporter
-      implements io.opentelemetry.sdk.trace.export.SpanExporter {
+  private static class TestSpanExporter implements io.opentelemetry.sdk.trace.export.SpanExporter {
     @Override
     public CompletableResultCode export(Collection<SpanData> collection) {
       if (collection.isEmpty()) {
@@ -1067,6 +1067,13 @@ public class ITBigQueryTest {
     RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
     RemoteStorageHelper storageHelper = RemoteStorageHelper.create();
     Map<String, String> labels = ImmutableMap.of("test-job-name", "test-load-job");
+    SdkTracerProvider tracerProvider =
+        SdkTracerProvider.builder()
+            .addSpanProcessor(SimpleSpanProcessor.create(new TestSpanExporter()))
+            .setSampler(Sampler.alwaysOn())
+            .build();
+    otel = OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).buildAndRegisterGlobal();
+
     bigquery = bigqueryHelper.getOptions().getService();
     storage = storageHelper.getOptions().getService();
     storage.create(BucketInfo.of(BUCKET));
@@ -7540,14 +7547,6 @@ public class ITBigQueryTest {
 
   @Test
   public void testOpenTelemetryTracingDatasets() {
-    SdkTracerProvider tracerProvider =
-        SdkTracerProvider.builder()
-            .addSpanProcessor(SimpleSpanProcessor.create(new CustomSpanExporter()))
-            .setSampler(Sampler.alwaysOn())
-            .build();
-
-    OpenTelemetry otel =
-        OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).buildAndRegisterGlobal();
     Tracer tracer = otel.getTracer("Test Tracer");
     BigQueryOptions otelOptions =
         BigQueryOptions.newBuilder()
@@ -7621,14 +7620,6 @@ public class ITBigQueryTest {
 
   @Test
   public void TestOpenTelemetryTracingTables() {
-    SdkTracerProvider tracerProvider =
-        SdkTracerProvider.builder()
-            .addSpanProcessor(SimpleSpanProcessor.create(new CustomSpanExporter()))
-            .setSampler(Sampler.alwaysOn())
-            .build();
-
-    OpenTelemetry otel =
-        OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).buildAndRegisterGlobal();
     Tracer tracer = otel.getTracer("Test Tracer");
     BigQueryOptions otelOptions =
         BigQueryOptions.newBuilder()
@@ -7673,14 +7664,6 @@ public class ITBigQueryTest {
 
   @Test
   public void testOpenTelemetryTracingQuery() throws InterruptedException {
-    SdkTracerProvider tracerProvider =
-        SdkTracerProvider.builder()
-            .addSpanProcessor(SimpleSpanProcessor.create(new CustomSpanExporter()))
-            .setSampler(Sampler.alwaysOn())
-            .build();
-
-    OpenTelemetry otel =
-        OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).buildAndRegisterGlobal();
     Tracer tracer = otel.getTracer("Test Tracer");
     BigQueryOptions otelOptions =
         BigQueryOptions.newBuilder()
