@@ -445,7 +445,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                   },
                   getRetryOptions(optionsMap) != null
                       ? RetryOption.mergeToSettings(
-                      getOptions().getRetrySettings(), getRetryOptions(optionsMap))
+                          getOptions().getRetrySettings(), getRetryOptions(optionsMap))
                       : getOptions().getRetrySettings(),
                   BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
                   getOptions().getClock(),
@@ -618,7 +618,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     final DatasetId completeDatasetId = datasetId.setProjectId(getOptions().getProjectId());
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
     final Span datasetDelete = otelHelper.datasetDeleteSpan(datasetId, optionsMap);
-    try (Scope datasetDeleteScope = datasetDelete != null ? datasetDelete.makeCurrent() : null){
+    try (Scope datasetDeleteScope = datasetDelete != null ? datasetDelete.makeCurrent() : null) {
       return BigQueryRetryHelper.runWithRetries(
           new Callable<Boolean>() {
             @Override
@@ -1055,7 +1055,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   @Override
   public Page<Table> listTables(String datasetId, TableListOption... options) {
-    Span tablesList = otelHelper.tablesListSpan(DatasetId.of(getOptions().getProjectId(), datasetId), optionMap(options));
+    Span tablesList =
+        otelHelper.tablesListSpan(
+            DatasetId.of(getOptions().getProjectId(), datasetId), optionMap(options));
     try (Scope tablesListScope = tablesList != null ? tablesList.makeCurrent() : null) {
       return listTables(
           DatasetId.of(getOptions().getProjectId(), datasetId), getOptions(), optionMap(options));
@@ -1081,7 +1083,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   @Override
   public Page<Model> listModels(String datasetId, ModelListOption... options) {
-    final Span modelsList = otelHelper.modelsListSpan(DatasetId.of(getOptions().getProjectId(), datasetId), optionMap(options));
+    final Span modelsList =
+        otelHelper.modelsListSpan(
+            DatasetId.of(getOptions().getProjectId(), datasetId), optionMap(options));
     try (Scope modelsListScope = modelsList != null ? modelsList.makeCurrent() : null) {
       return listModels(
           DatasetId.of(getOptions().getProjectId(), datasetId), getOptions(), optionMap(options));
@@ -1107,7 +1111,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   @Override
   public Page<Routine> listRoutines(String datasetId, RoutineListOption... options) {
-    final Span routinesList = otelHelper.routinesListSpan(DatasetId.of(getOptions().getProjectId(), datasetId), optionMap(options));
+    final Span routinesList =
+        otelHelper.routinesListSpan(
+            DatasetId.of(getOptions().getProjectId(), datasetId), optionMap(options));
     try (Scope routinesListScope = routinesList != null ? routinesList.makeCurrent() : null) {
       return listRoutines(
           DatasetId.of(getOptions().getProjectId(), datasetId), getOptions(), optionMap(options));
@@ -1316,7 +1322,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                     @Override
                     public TableDataInsertAllResponse call() throws Exception {
                       return bigQueryRpc.insertAllSkipExceptionTranslation(
-                          tableId.getProject(), tableId.getDataset(), tableId.getTable(),
+                          tableId.getProject(),
+                          tableId.getDataset(),
+                          tableId.getTable(),
                           requestPb);
                     }
                   },
@@ -1723,7 +1731,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   public QueryResponse getQueryResults(JobId jobId, QueryResultsOption... options) {
     Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
     final Span getQueryResults = otelHelper.getQueryResults(jobId, optionsMap);
-    try (Scope getQueryResultsScope = getQueryResults != null ? getQueryResults.makeCurrent() : null) {
+    try (Scope getQueryResultsScope =
+        getQueryResults != null ? getQueryResults.makeCurrent() : null) {
       return getQueryResults(jobId, getOptions(), optionsMap);
     } finally {
       if (getQueryResults != null) {
@@ -1873,7 +1882,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 : tableId.getProject());
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
     final Span testIamPermissions = otelHelper.testIamPermissions(tableId, permissions, optionsMap);
-    try (Scope testIamPermissionsScope = testIamPermissions != null ? testIamPermissions.makeCurrent() : null) {
+    try (Scope testIamPermissionsScope =
+        testIamPermissions != null ? testIamPermissions.makeCurrent() : null) {
       com.google.api.services.bigquery.model.TestIamPermissionsResponse response =
           BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.TestIamPermissionsResponse>() {
