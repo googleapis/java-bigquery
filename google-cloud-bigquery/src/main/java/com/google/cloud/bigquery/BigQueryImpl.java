@@ -51,6 +51,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Scope;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -243,6 +245,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   private final HttpBigQueryRpc bigQueryRpc;
 
+  private final OpenTelemetryHelper otelHelper;
+
   private static final BigQueryRetryConfig EMPTY_RETRY_CONFIG =
       BigQueryRetryConfig.newBuilder().build();
 
@@ -256,6 +260,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   BigQueryImpl(BigQueryOptions options) {
     super(options);
     bigQueryRpc = options.getBigQueryRpcV2();
+    otelHelper = new OpenTelemetryHelper(options);
   }
 
   @Override
@@ -268,7 +273,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                     : datasetInfo.getDatasetId().getProject())
             .toPb();
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    final Span datasetCreate = otelHelper.datasetCreateSpan(datasetInfo, optionsMap);
+    try (Scope datasetCreateScope = datasetCreate != null ? datasetCreate.makeCurrent() : null) {
       return Dataset.fromPb(
           this,
           BigQueryRetryHelper.runWithRetries(
@@ -284,6 +290,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               EMPTY_RETRY_CONFIG));
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (datasetCreate != null) {
+        datasetCreate.end();
+      }
     }
   }
 
@@ -298,7 +308,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             .toPb();
     handleExternalTableSchema(tablePb);
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    final Span tableCreate = otelHelper.tableCreateSpan(tableInfo, optionsMap);
+    try (Scope tableCreateScope = tableCreate != null ? tableCreate.makeCurrent() : null) {
       return Table.fromPb(
           this,
           BigQueryRetryHelper.runWithRetries(
@@ -314,6 +325,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               EMPTY_RETRY_CONFIG));
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (tableCreate != null) {
+        tableCreate.end();
+      }
     }
   }
 
@@ -337,7 +352,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                     : routineInfo.getRoutineId().getProject())
             .toPb();
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    final Span createRoutine = otelHelper.routineCreateSpan(routineInfo, optionsMap);
+    try (Scope createRoutineScope = createRoutine != null ? createRoutine.makeCurrent() : null) {
       return Routine.fromPb(
           this,
           BigQueryRetryHelper.runWithRetries(
@@ -353,6 +369,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               EMPTY_RETRY_CONFIG));
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (createRoutine != null) {
+        createRoutine.end();
+      }
     }
   }
 
@@ -388,6 +408,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     final boolean idRandom = (jobInfo.getJobId() == null);
 
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
+    final Span jobCreate = otelHelper.jobCreateSpan(jobInfo, optionsMap);
     BigQueryException createException;
     // NOTE(pongad): This double-try structure is admittedly odd.
     // translateAndThrow itself throws, and pretends to return an exception only
@@ -396,93 +417,99 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     // Fixing this entails some work on BaseServiceException.translate.
     // Since that affects a bunch of APIs, we should fix this as a separate change.
     final JobId[] finalJobId = new JobId[1];
-    try {
+    try (Scope jobCreateScope = jobCreate != null ? jobCreate.makeCurrent() : null) {
       try {
-        return Job.fromPb(
-            this,
-            BigQueryRetryHelper.runWithRetries(
-                new Callable<com.google.api.services.bigquery.model.Job>() {
-                  @Override
-                  public com.google.api.services.bigquery.model.Job call() throws IOException {
-                    if (idRandom) {
-                      // re-generate a new random job with the same jobInfo when jobId is not
-                      // provided by the user
-                      JobInfo recreatedJobInfo =
-                          jobInfo.toBuilder().setJobId(idProvider.get()).build();
-                      com.google.api.services.bigquery.model.Job newJobPb =
-                          recreatedJobInfo.setProjectId(getOptions().getProjectId()).toPb();
-                      finalJobId[0] = recreatedJobInfo.getJobId();
-                      return bigQueryRpc.createSkipExceptionTranslation(newJobPb, optionsMap);
-                    } else {
-                      com.google.api.services.bigquery.model.Job jobPb =
-                          jobInfo.setProjectId(getOptions().getProjectId()).toPb();
-                      return bigQueryRpc.createSkipExceptionTranslation(jobPb, optionsMap);
+        try {
+          return Job.fromPb(
+              this,
+              BigQueryRetryHelper.runWithRetries(
+                  new Callable<com.google.api.services.bigquery.model.Job>() {
+                    @Override
+                    public com.google.api.services.bigquery.model.Job call() throws IOException {
+                      if (idRandom) {
+                        // re-generate a new random job with the same jobInfo when jobId is not
+                        // provided by the user
+                        JobInfo recreatedJobInfo =
+                            jobInfo.toBuilder().setJobId(idProvider.get()).build();
+                        com.google.api.services.bigquery.model.Job newJobPb =
+                            recreatedJobInfo.setProjectId(getOptions().getProjectId()).toPb();
+                        finalJobId[0] = recreatedJobInfo.getJobId();
+                        return bigQueryRpc.createSkipExceptionTranslation(newJobPb, optionsMap);
+                      } else {
+                        com.google.api.services.bigquery.model.Job jobPb =
+                            jobInfo.setProjectId(getOptions().getProjectId()).toPb();
+                        return bigQueryRpc.createSkipExceptionTranslation(jobPb, optionsMap);
+                      }
                     }
-                  }
-                },
-                getRetryOptions(optionsMap) != null
-                    ? RetryOption.mergeToSettings(
-                        getOptions().getRetrySettings(), getRetryOptions(optionsMap))
-                    : getOptions().getRetrySettings(),
-                BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
-                getOptions().getClock(),
-                getBigQueryRetryConfig(optionsMap) != null
-                    ? getBigQueryRetryConfig(optionsMap)
-                    : DEFAULT_RETRY_CONFIG));
-      } catch (BigQueryRetryHelperException e) {
-        throw BigQueryException.translateAndThrow(e);
+                  },
+                  getRetryOptions(optionsMap) != null
+                      ? RetryOption.mergeToSettings(
+                      getOptions().getRetrySettings(), getRetryOptions(optionsMap))
+                      : getOptions().getRetrySettings(),
+                  BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
+                  getOptions().getClock(),
+                  getBigQueryRetryConfig(optionsMap) != null
+                      ? getBigQueryRetryConfig(optionsMap)
+                      : DEFAULT_RETRY_CONFIG));
+        } catch (BigQueryRetryHelperException e) {
+          throw BigQueryException.translateAndThrow(e);
+        }
+      } catch (BigQueryException e) {
+        createException = e;
       }
-    } catch (BigQueryException e) {
-      createException = e;
-    }
 
-    if (!idRandom) {
-      if (createException instanceof BigQueryException
-          && createException.getCause() != null
-          && createException.getCause().getMessage() != null) {
+      if (!idRandom) {
+        if (createException instanceof BigQueryException
+            && createException.getCause() != null
+            && createException.getCause().getMessage() != null) {
 
-        /*GoogleJsonResponseException createExceptionCause =
-        (GoogleJsonResponseException) createException.getCause();*/
+          /*GoogleJsonResponseException createExceptionCause =
+          (GoogleJsonResponseException) createException.getCause();*/
 
-        Pattern pattern = Pattern.compile(".*Already.*Exists:.*Job.*", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(createException.getCause().getMessage());
+          Pattern pattern = Pattern.compile(".*Already.*Exists:.*Job.*", Pattern.CASE_INSENSITIVE);
+          Matcher matcher = pattern.matcher(createException.getCause().getMessage());
 
-        if (matcher.find()) {
-          // If the Job ALREADY EXISTS, retrieve it.
-          Job job = this.getJob(jobInfo.getJobId(), JobOption.fields(JobField.STATISTICS));
+          if (matcher.find()) {
+            // If the Job ALREADY EXISTS, retrieve it.
+            Job job = this.getJob(jobInfo.getJobId(), JobOption.fields(JobField.STATISTICS));
 
-          long jobCreationTime = job.getStatistics().getCreationTime();
-          long jobMinStaleTime = System.currentTimeMillis();
-          long jobMaxStaleTime =
-              java.time.Instant.ofEpochMilli(jobMinStaleTime)
-                  .minus(1, java.time.temporal.ChronoUnit.DAYS)
-                  .toEpochMilli();
+            long jobCreationTime = job.getStatistics().getCreationTime();
+            long jobMinStaleTime = System.currentTimeMillis();
+            long jobMaxStaleTime =
+                java.time.Instant.ofEpochMilli(jobMinStaleTime)
+                    .minus(1, java.time.temporal.ChronoUnit.DAYS)
+                    .toEpochMilli();
 
-          // Only return the job if it has been created in the past 24 hours.
-          // This is assuming any job older than 24 hours is a valid duplicate JobID
-          // and not a false positive like b/290419183
-          if (jobCreationTime >= jobMaxStaleTime && jobCreationTime <= jobMinStaleTime) {
-            return job;
+            // Only return the job if it has been created in the past 24 hours.
+            // This is assuming any job older than 24 hours is a valid duplicate JobID
+            // and not a false positive like b/290419183
+            if (jobCreationTime >= jobMaxStaleTime && jobCreationTime <= jobMinStaleTime) {
+              return job;
+            }
           }
         }
+        throw createException;
       }
-      throw createException;
-    }
 
-    // If create RPC fails, it's still possible that the job has been successfully
-    // created, and get might work.
-    // We can only do this if we randomly generated the ID. Otherwise we might
-    // mistakenly fetch a job created by someone else.
-    Job job;
-    try {
-      job = getJob(finalJobId[0]);
-    } catch (BigQueryException e) {
-      throw createException;
+      // If create RPC fails, it's still possible that the job has been successfully
+      // created, and get might work.
+      // We can only do this if we randomly generated the ID. Otherwise we might
+      // mistakenly fetch a job created by someone else.
+      Job job;
+      try {
+        job = getJob(finalJobId[0]);
+      } catch (BigQueryException e) {
+        throw createException;
+      }
+      if (job == null) {
+        throw createException;
+      }
+      return job;
+    } finally {
+      if (jobCreate != null) {
+        jobCreate.end();
+      }
     }
-    if (job == null) {
-      throw createException;
-    }
-    return job;
   }
 
   @Override
@@ -494,7 +521,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   public Dataset getDataset(final DatasetId datasetId, DatasetOption... options) {
     final DatasetId completeDatasetId = datasetId.setProjectId(getOptions().getProjectId());
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    final Span datasetGet = otelHelper.datasetGetSpan(completeDatasetId, optionsMap);
+    try (Scope datasetGetScope = datasetGet != null ? datasetGet.makeCurrent() : null) {
       com.google.api.services.bigquery.model.Dataset answer =
           BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Dataset>() {
@@ -517,6 +545,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         return null;
       }
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (datasetGet != null) {
+        datasetGet.end();
+      }
     }
   }
 
@@ -527,7 +559,14 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   @Override
   public Page<Dataset> listDatasets(String projectId, DatasetListOption... options) {
-    return listDatasets(projectId, getOptions(), optionMap(options));
+    final Span datasetsList = otelHelper.datasetsListSpan(projectId, optionMap(options));
+    try (Scope datasetsListScope = datasetsList != null ? datasetsList.makeCurrent() : null) {
+      return listDatasets(projectId, getOptions(), optionMap(options));
+    } finally {
+      if (datasetsList != null) {
+        datasetsList.end();
+      }
+    }
   }
 
   private static Page<Dataset> listDatasets(
@@ -577,7 +616,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   public boolean delete(DatasetId datasetId, DatasetDeleteOption... options) {
     final DatasetId completeDatasetId = datasetId.setProjectId(getOptions().getProjectId());
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    final Span datasetDelete = otelHelper.datasetDeleteSpan(datasetId, optionsMap);
+    try (Scope datasetDeleteScope = datasetDelete != null ? datasetDelete.makeCurrent() : null){
       return BigQueryRetryHelper.runWithRetries(
           new Callable<Boolean>() {
             @Override
@@ -595,6 +635,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         return false;
       }
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (datasetDelete != null) {
+        datasetDelete.end();
+      }
     }
   }
 
@@ -610,7 +654,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             Strings.isNullOrEmpty(tableId.getProject())
                 ? getOptions().getProjectId()
                 : tableId.getProject());
-    try {
+    final Span tableDelete = otelHelper.tableDeleteSpan(completeTableId);
+    try (Scope tableDeleteScope = tableDelete != null ? tableDelete.makeCurrent() : null) {
       return BigQueryRetryHelper.runWithRetries(
           new Callable<Boolean>() {
             @Override
@@ -630,6 +675,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         return false;
       }
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (tableDelete != null) {
+        tableDelete.end();
+      }
     }
   }
 
@@ -640,7 +689,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             Strings.isNullOrEmpty(modelId.getProject())
                 ? getOptions().getProjectId()
                 : modelId.getProject());
-    try {
+    final Span modelDelete = otelHelper.modelDeleteSpan(modelId);
+    try (Scope modelDeleteScope = modelDelete != null ? modelDelete.makeCurrent() : null) {
       return BigQueryRetryHelper.runWithRetries(
           new Callable<Boolean>() {
             @Override
@@ -660,6 +710,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         return false;
       }
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (modelDelete != null) {
+        modelDelete.end();
+      }
     }
   }
 
@@ -670,7 +724,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             Strings.isNullOrEmpty(routineId.getProject())
                 ? getOptions().getProjectId()
                 : routineId.getProject());
-    try {
+    final Span routineDelete = otelHelper.routineDeleteSpan(completeRoutineId);
+    try (Scope routineDeleteScope = routineDelete != null ? routineDelete.makeCurrent() : null) {
       return BigQueryRetryHelper.runWithRetries(
           new Callable<Boolean>() {
             @Override
@@ -690,6 +745,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         return false;
       }
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (routineDelete != null) {
+        routineDelete.end();
+      }
     }
   }
 
@@ -723,7 +782,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     final com.google.api.services.bigquery.model.Dataset datasetPb =
         datasetInfo.setProjectId(getOptions().getProjectId()).toPb();
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    final Span datasetUpdate = otelHelper.datasetUpdateSpan(datasetInfo, optionsMap);
+    try (Scope datasetUpdateScope = datasetUpdate != null ? datasetUpdate.makeCurrent() : null) {
       return Dataset.fromPb(
           this,
           BigQueryRetryHelper.runWithRetries(
@@ -739,6 +799,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               EMPTY_RETRY_CONFIG));
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (datasetUpdate != null) {
+        datasetUpdate.end();
+      }
     }
   }
 
@@ -753,7 +817,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             .toPb();
     handleExternalTableSchema(tablePb);
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    final Span tableUpdate = otelHelper.tableUpdateSpan(tableInfo, optionsMap);
+    try (Scope tableUpdateScope = tableUpdate != null ? tableUpdate.makeCurrent() : null) {
       return Table.fromPb(
           this,
           BigQueryRetryHelper.runWithRetries(
@@ -769,6 +834,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               EMPTY_RETRY_CONFIG));
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (tableUpdate != null) {
+        tableUpdate.end();
+      }
     }
   }
 
@@ -782,7 +851,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                     : modelInfo.getModelId().getProject())
             .toPb();
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    final Span modelUpdate = otelHelper.modelUpdateSpan(modelInfo, optionsMap);
+    try (Scope modelUpdateScope = modelUpdate != null ? modelUpdate.makeCurrent() : null) {
       return Model.fromPb(
           this,
           BigQueryRetryHelper.runWithRetries(
@@ -798,6 +868,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               EMPTY_RETRY_CONFIG));
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (modelUpdate != null) {
+        modelUpdate.end();
+      }
     }
   }
 
@@ -811,7 +885,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                     : routineInfo.getRoutineId().getProject())
             .toPb();
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    final Span routineUpdate = otelHelper.routineUpdateSpan(routineInfo, optionsMap);
+    try (Scope routineUpdateScope = routineUpdate != null ? routineUpdate.makeCurrent() : null) {
       return Routine.fromPb(
           this,
           BigQueryRetryHelper.runWithRetries(
@@ -827,6 +902,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               EMPTY_RETRY_CONFIG));
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (routineUpdate != null) {
+        routineUpdate.end();
+      }
     }
   }
 
@@ -845,7 +924,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 ? getOptions().getProjectId()
                 : tableId.getProject());
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    final Span tableGet = otelHelper.tableGetSpan(tableId, optionsMap);
+    try (Scope tableGetScope = tableGet != null ? tableGet.makeCurrent() : null) {
       com.google.api.services.bigquery.model.Table answer =
           BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Table>() {
@@ -871,6 +951,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         return null;
       }
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (tableGet != null) {
+        tableGet.end();
+      }
     }
   }
 
@@ -887,7 +971,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 ? getOptions().getProjectId()
                 : modelId.getProject());
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    final Span modelGet = otelHelper.modelGetSpan(modelId, optionsMap);
+    try (Scope modelGetScope = modelGet != null ? modelGet.makeCurrent() : null) {
       com.google.api.services.bigquery.model.Model answer =
           BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Model>() {
@@ -913,6 +998,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         return null;
       }
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (modelGet != null) {
+        modelGet.end();
+      }
     }
   }
 
@@ -929,7 +1018,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 ? getOptions().getProjectId()
                 : routineId.getProject());
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    final Span routineGet = otelHelper.routineGetSpan(routineId, optionsMap);
+    try (Scope routineGetScope = routineGet != null ? routineGet.makeCurrent() : null) {
       com.google.api.services.bigquery.model.Routine answer =
           BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Routine>() {
@@ -955,43 +1045,89 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         return null;
       }
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (routineGet != null) {
+        routineGet.end();
+      }
     }
   }
 
   @Override
   public Page<Table> listTables(String datasetId, TableListOption... options) {
-    return listTables(
-        DatasetId.of(getOptions().getProjectId(), datasetId), getOptions(), optionMap(options));
+    Span tablesList = otelHelper.tablesListSpan(DatasetId.of(getOptions().getProjectId(), datasetId), optionMap(options));
+    try (Scope tablesListScope = tablesList != null ? tablesList.makeCurrent() : null) {
+      return listTables(
+          DatasetId.of(getOptions().getProjectId(), datasetId), getOptions(), optionMap(options));
+    } finally {
+      if (tablesList != null) {
+        tablesList.end();
+      }
+    }
   }
 
   @Override
   public Page<Table> listTables(DatasetId datasetId, TableListOption... options) {
     DatasetId completeDatasetId = datasetId.setProjectId(getOptions().getProjectId());
-    return listTables(completeDatasetId, getOptions(), optionMap(options));
+    Span tablesList = otelHelper.tablesListSpan(completeDatasetId, optionMap(options));
+    try (Scope tablesListScope = tablesList != null ? tablesList.makeCurrent() : null) {
+      return listTables(completeDatasetId, getOptions(), optionMap(options));
+    } finally {
+      if (tablesList != null) {
+        tablesList.end();
+      }
+    }
   }
 
   @Override
   public Page<Model> listModels(String datasetId, ModelListOption... options) {
-    return listModels(
-        DatasetId.of(getOptions().getProjectId(), datasetId), getOptions(), optionMap(options));
+    final Span modelsList = otelHelper.modelsListSpan(DatasetId.of(getOptions().getProjectId(), datasetId), optionMap(options));
+    try (Scope modelsListScope = modelsList != null ? modelsList.makeCurrent() : null) {
+      return listModels(
+          DatasetId.of(getOptions().getProjectId(), datasetId), getOptions(), optionMap(options));
+    } finally {
+      if (modelsList != null) {
+        modelsList.end();
+      }
+    }
   }
 
   @Override
   public Page<Model> listModels(DatasetId datasetId, ModelListOption... options) {
     DatasetId completeDatasetId = datasetId.setProjectId(getOptions().getProjectId());
-    return listModels(completeDatasetId, getOptions(), optionMap(options));
+    final Span modelsList = otelHelper.modelsListSpan(completeDatasetId, optionMap(options));
+    try (Scope modelsListScope = modelsList != null ? modelsList.makeCurrent() : null) {
+      return listModels(completeDatasetId, getOptions(), optionMap(options));
+    } finally {
+      if (modelsList != null) {
+        modelsList.end();
+      }
+    }
   }
 
   @Override
   public Page<Routine> listRoutines(String datasetId, RoutineListOption... options) {
-    return listRoutines(
-        DatasetId.of(getOptions().getProjectId(), datasetId), getOptions(), optionMap(options));
+    final Span routinesList = otelHelper.routinesListSpan(DatasetId.of(getOptions().getProjectId(), datasetId), optionMap(options));
+    try (Scope routinesListScope = routinesList != null ? routinesList.makeCurrent() : null) {
+      return listRoutines(
+          DatasetId.of(getOptions().getProjectId(), datasetId), getOptions(), optionMap(options));
+    } finally {
+      if (routinesList != null) {
+        routinesList.end();
+      }
+    }
   }
 
   @Override
   public Page<Routine> listRoutines(DatasetId datasetId, RoutineListOption... options) {
     DatasetId completeDatasetId = datasetId.setProjectId(getOptions().getProjectId());
-    return listRoutines(completeDatasetId, getOptions(), optionMap(options));
+    final Span routinesList = otelHelper.routinesListSpan(completeDatasetId, optionMap(options));
+    try (Scope routinesListScope = routinesList != null ? routinesList.makeCurrent() : null) {
+      return listRoutines(completeDatasetId, getOptions(), optionMap(options));
+    } finally {
+      if (routinesList != null) {
+        routinesList.end();
+      }
+    }
   }
 
   @Override
@@ -1168,33 +1304,41 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     requestPb.setRows(rowsPb);
 
     TableDataInsertAllResponse responsePb;
-    if (allInsertIdsSet[0]) {
-      // allowing retries only if all row insertIds are set (used for deduplication)
-      try {
+    final Span insertAll = otelHelper.insertAllSpan(request);
+    try (Scope insertAllScope = insertAll != null ? insertAll.makeCurrent() : null) {
+      if (allInsertIdsSet[0]) {
+        // allowing retries only if all row insertIds are set (used for deduplication)
+        try {
+          responsePb =
+              BigQueryRetryHelper.runWithRetries(
+                  new Callable<TableDataInsertAllResponse>() {
+                    @Override
+                    public TableDataInsertAllResponse call() throws Exception {
+                      return bigQueryRpc.insertAllSkipExceptionTranslation(
+                          tableId.getProject(), tableId.getDataset(), tableId.getTable(),
+                          requestPb);
+                    }
+                  },
+                  getOptions().getRetrySettings(),
+                  BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
+                  getOptions().getClock(),
+                  EMPTY_RETRY_CONFIG);
+        } catch (BigQueryRetryHelperException e) {
+          throw BigQueryException.translateAndThrow(e);
+        }
+      } else {
+        // Use insertAll that translate the exception as we are not retrying.
         responsePb =
-            BigQueryRetryHelper.runWithRetries(
-                new Callable<TableDataInsertAllResponse>() {
-                  @Override
-                  public TableDataInsertAllResponse call() throws Exception {
-                    return bigQueryRpc.insertAllSkipExceptionTranslation(
-                        tableId.getProject(), tableId.getDataset(), tableId.getTable(), requestPb);
-                  }
-                },
-                getOptions().getRetrySettings(),
-                BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
-                getOptions().getClock(),
-                EMPTY_RETRY_CONFIG);
-      } catch (BigQueryRetryHelperException e) {
-        throw BigQueryException.translateAndThrow(e);
+            bigQueryRpc.insertAll(
+                tableId.getProject(), tableId.getDataset(), tableId.getTable(), requestPb);
       }
-    } else {
-      // Use insertAll that translate the exception as we are not retrying.
-      responsePb =
-          bigQueryRpc.insertAll(
-              tableId.getProject(), tableId.getDataset(), tableId.getTable(), requestPb);
-    }
 
-    return InsertAllResponse.fromPb(responsePb);
+      return InsertAllResponse.fromPb(responsePb);
+    } finally {
+      if (insertAll != null) {
+        insertAll.end();
+      }
+    }
   }
 
   @Override
@@ -1218,11 +1362,18 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   public TableResult listTableData(TableId tableId, Schema schema, TableDataListOption... options) {
     Tuple<? extends Page<FieldValueList>, Long> data =
         listTableData(tableId, schema, getOptions(), optionMap(options));
-    return TableResult.newBuilder()
-        .setSchema(schema)
-        .setTotalRows(data.y())
-        .setPageNoSchema(data.x())
-        .build();
+    final Span tableDataList = otelHelper.tableDataListSpan(tableId, schema, optionMap(options));
+    try (Scope tableDataListScope = tableDataList != null ? tableDataList.makeCurrent() : null) {
+      return TableResult.newBuilder()
+          .setSchema(schema)
+          .setTotalRows(data.y())
+          .setPageNoSchema(data.x())
+          .build();
+    } finally {
+      if (tableDataList != null) {
+        tableDataList.end();
+      }
+    }
   }
 
   private static Tuple<? extends Page<FieldValueList>, Long> listTableData(
@@ -1298,7 +1449,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 jobId.getLocation() == null && getOptions().getLocation() != null
                     ? getOptions().getLocation()
                     : jobId.getLocation());
-    try {
+    final Span jobGet = otelHelper.jobGetSpan(jobId, optionsMap);
+    try (Scope jobGetScope = jobGet != null ? jobGet.makeCurrent() : null) {
       com.google.api.services.bigquery.model.Job answer =
           BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Job>() {
@@ -1324,12 +1476,23 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         return null;
       }
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (jobGet != null) {
+        jobGet.end();
+      }
     }
   }
 
   @Override
   public Page<Job> listJobs(JobListOption... options) {
-    return listJobs(getOptions(), optionMap(options));
+    final Span jobsList = otelHelper.jobsListSpan(optionMap(options));
+    try (Scope jobsListScope = jobsList != null ? jobsList.makeCurrent() : null) {
+      return listJobs(getOptions(), optionMap(options));
+    } finally {
+      if (jobsList != null) {
+        jobsList.end();
+      }
+    }
   }
 
   private static Page<Job> listJobs(
@@ -1380,7 +1543,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 jobId.getLocation() == null && getOptions().getLocation() != null
                     ? getOptions().getLocation()
                     : jobId.getLocation());
-    try {
+    final Span jobCancel = otelHelper.jobCancelSpan(completeJobId);
+    try (Scope jobCancelScope = jobCancel != null ? jobCancel.makeCurrent() : null) {
       return BigQueryRetryHelper.runWithRetries(
           new Callable<Boolean>() {
             @Override
@@ -1398,6 +1562,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         return false;
       }
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (jobCancel != null) {
+        jobCancel.end();
+      }
     }
   }
 
@@ -1431,7 +1599,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       final String projectId, final QueryRequest content, JobOption... options)
       throws InterruptedException {
     com.google.api.services.bigquery.model.QueryResponse results;
-    try {
+    final Span queryRpc = otelHelper.queryRpc(projectId, content, optionMap(options));
+    try (Scope queryRpcScope = queryRpc != null ? queryRpc.makeCurrent() : null) {
       results =
           BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.QueryResponse>() {
@@ -1447,6 +1616,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               DEFAULT_RETRY_CONFIG);
     } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (queryRpc != null) {
+        queryRpc.end();
+      }
     }
 
     if (results.getErrors() != null) {
@@ -1546,7 +1719,14 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   @Override
   public QueryResponse getQueryResults(JobId jobId, QueryResultsOption... options) {
     Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    return getQueryResults(jobId, getOptions(), optionsMap);
+    final Span getQueryResults = otelHelper.getQueryResults(jobId, optionsMap);
+    try (Scope getQueryResultsScope = getQueryResults != null ? getQueryResults.makeCurrent() : null) {
+      return getQueryResults(jobId, getOptions(), optionsMap);
+    } finally {
+      if (getQueryResults != null) {
+        getQueryResults.end();
+      }
+    }
   }
 
   private static QueryResponse getQueryResults(
@@ -1622,8 +1802,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 ? getOptions().getProjectId()
                 : tableId.getProject());
 
-    try {
-      final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
+    final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
+    final Span iamPolicyGet = otelHelper.iamPolicyGet(tableId, optionsMap);
+    try (Scope iamPolicyGetScope = iamPolicyGet != null ? iamPolicyGet.makeCurrent() : null) {
       return convertFromApiPolicy(
           BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Policy>() {
@@ -1639,6 +1820,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               EMPTY_RETRY_CONFIG));
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (iamPolicyGet != null) {
+        iamPolicyGet.end();
+      }
     }
   }
 
@@ -1649,8 +1834,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             Strings.isNullOrEmpty(tableId.getProject())
                 ? getOptions().getProjectId()
                 : tableId.getProject());
-    try {
-      final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
+
+    final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
+    final Span iamPolicySet = otelHelper.iamPolicySet(tableId, policy, optionsMap);
+    try (Scope iamPolicySetScope = iamPolicySet != null ? iamPolicySet.makeCurrent() : null) {
       return convertFromApiPolicy(
           BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Policy>() {
@@ -1666,6 +1853,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               EMPTY_RETRY_CONFIG));
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (iamPolicySet != null) {
+        iamPolicySet.end();
+      }
     }
   }
 
@@ -1677,8 +1868,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             Strings.isNullOrEmpty(tableId.getProject())
                 ? getOptions().getProjectId()
                 : tableId.getProject());
-    try {
-      final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
+    final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
+    final Span testIamPermissions = otelHelper.testIamPermissions(tableId, permissions, optionsMap);
+    try (Scope testIamPermissionsScope = testIamPermissions != null ? testIamPermissions.makeCurrent() : null) {
       com.google.api.services.bigquery.model.TestIamPermissionsResponse response =
           BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.TestIamPermissionsResponse>() {
@@ -1698,6 +1890,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           : ImmutableList.copyOf(response.getPermissions());
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (testIamPermissions != null) {
+        testIamPermissions.end();
+      }
     }
   }
 
