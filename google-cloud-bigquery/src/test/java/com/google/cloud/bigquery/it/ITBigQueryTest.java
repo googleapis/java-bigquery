@@ -141,8 +141,6 @@ import com.google.cloud.bigquery.TimePartitioning;
 import com.google.cloud.bigquery.TimePartitioning.Type;
 import com.google.cloud.bigquery.ViewDefinition;
 import com.google.cloud.bigquery.WriteChannelConfiguration;
-import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
-import com.google.cloud.bigquery.spi.v2.BigQueryRpc.Option;
 import com.google.cloud.bigquery.testing.RemoteBigQueryHelper;
 import com.google.cloud.datacatalog.v1.CreatePolicyTagRequest;
 import com.google.cloud.datacatalog.v1.CreateTaxonomyRequest;
@@ -164,18 +162,16 @@ import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonObject;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
-import io.opentelemetry.sdk.internal.AttributesMap;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
-import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.context.Scope;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -235,7 +231,8 @@ public class ITBigQueryTest {
   private static final String STORAGE_BILLING_MODEL = "LOGICAL";
   private static final Long MAX_TIME_TRAVEL_HOURS = 120L;
   private static final Long MAX_TIME_TRAVEL_HOURS_DEFAULT = 168L;
-  private static final Map<String, Map<AttributeKey<?>, Object>> OTEL_ATTRIBUTES = new HashMap<String, Map<AttributeKey<?>, Object>>();
+  private static final Map<String, Map<AttributeKey<?>, Object>> OTEL_ATTRIBUTES =
+      new HashMap<String, Map<AttributeKey<?>, Object>>();
   private static final Map<String, String> OTEL_PARENT_SPAN_IDS = new HashMap<>();
   private static final Map<String, String> OTEL_SPAN_IDS_TO_NAMES = new HashMap<>();
   private static final String OTEL_PARENT_SPAN_ID = "0000000000000000";
@@ -1037,8 +1034,8 @@ public class ITBigQueryTest {
   private static BigQuery bigquery;
   private static Storage storage;
 
-  private static class CustomSpanExporter implements
-      io.opentelemetry.sdk.trace.export.SpanExporter {
+  private static class CustomSpanExporter
+      implements io.opentelemetry.sdk.trace.export.SpanExporter {
     @Override
     public CompletableResultCode export(Collection<SpanData> collection) {
       if (collection.isEmpty()) {
@@ -7543,15 +7540,28 @@ public class ITBigQueryTest {
 
   @Test
   public void testOpenTelemetryTracingDatasets() {
-    SdkTracerProvider tracerProvider = SdkTracerProvider.builder().addSpanProcessor(
-        SimpleSpanProcessor.create(new CustomSpanExporter())).setSampler(Sampler.alwaysOn()).build();
+    SdkTracerProvider tracerProvider =
+        SdkTracerProvider.builder()
+            .addSpanProcessor(SimpleSpanProcessor.create(new CustomSpanExporter()))
+            .setSampler(Sampler.alwaysOn())
+            .build();
 
-    OpenTelemetry otel = OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).buildAndRegisterGlobal();
+    OpenTelemetry otel =
+        OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).buildAndRegisterGlobal();
     Tracer tracer = otel.getTracer("Test Tracer");
-    BigQueryOptions otelOptions = BigQueryOptions.newBuilder().setEnableOpenTelemetryTracing(true).setOpenTelemetryTracer(tracer).build();
+    BigQueryOptions otelOptions =
+        BigQueryOptions.newBuilder()
+            .setEnableOpenTelemetryTracing(true)
+            .setOpenTelemetryTracer(tracer)
+            .build();
     BigQuery bigquery = otelOptions.getService();
 
-    Span parentSpan = tracer.spanBuilder("Test Parent Span").setNoParent().setAttribute("test-attribute", "test-value").startSpan();
+    Span parentSpan =
+        tracer
+            .spanBuilder("Test Parent Span")
+            .setNoParent()
+            .setAttribute("test-attribute", "test-value")
+            .startSpan();
     String billingModelDataset = RemoteBigQueryHelper.generateDatasetName();
 
     try (Scope parentScope = parentSpan.makeCurrent()) {
@@ -7567,11 +7577,12 @@ public class ITBigQueryTest {
       dataset = bigquery.getDataset(dataset.getDatasetId().getDataset());
       assertNotNull(dataset);
 
-      DatasetInfo updatedInfo = DatasetInfo.newBuilder(billingModelDataset)
-          .setDescription("Updated Description")
-          .setStorageBillingModel(STORAGE_BILLING_MODEL)
-          .setLabels(LABELS)
-          .build();
+      DatasetInfo updatedInfo =
+          DatasetInfo.newBuilder(billingModelDataset)
+              .setDescription("Updated Description")
+              .setStorageBillingModel(STORAGE_BILLING_MODEL)
+              .setLabels(LABELS)
+              .build();
 
       dataset = bigquery.update(updatedInfo, DatasetOption.accessPolicyVersion(2));
       assertEquals(dataset.getDescription(), "Updated Description");
@@ -7580,7 +7591,8 @@ public class ITBigQueryTest {
       parentSpan.end();
       Map<AttributeKey<?>, Object> createMap = OTEL_ATTRIBUTES.get("datasetCreate");
       assertEquals(createMap.get(AttributeKey.stringKey("description")), DESCRIPTION);
-      assertEquals(createMap.get(AttributeKey.stringKey("storageBillingModel")), STORAGE_BILLING_MODEL);
+      assertEquals(
+          createMap.get(AttributeKey.stringKey("storageBillingModel")), STORAGE_BILLING_MODEL);
       assertEquals(createMap.get(AttributeKey.stringKey("defaultCollation")), "null");
 
       Map<AttributeKey<?>, Object> getMap = OTEL_ATTRIBUTES.get("datasetGet");
@@ -7594,9 +7606,14 @@ public class ITBigQueryTest {
       assertEquals(deleteMap.get(AttributeKey.stringKey("datasetId")), billingModelDataset);
 
       // All should be children spans of parentSpan
-      assertEquals(OTEL_SPAN_IDS_TO_NAMES.get(OTEL_PARENT_SPAN_IDS.get("datasetGet")), "Test Parent Span");
-      assertEquals(OTEL_SPAN_IDS_TO_NAMES.get(OTEL_PARENT_SPAN_IDS.get("datasetCreate")), "Test Parent Span");
-      assertEquals(OTEL_SPAN_IDS_TO_NAMES.get(OTEL_PARENT_SPAN_IDS.get("datasetDelete")), "Test Parent Span");
+      assertEquals(
+          OTEL_SPAN_IDS_TO_NAMES.get(OTEL_PARENT_SPAN_IDS.get("datasetGet")), "Test Parent Span");
+      assertEquals(
+          OTEL_SPAN_IDS_TO_NAMES.get(OTEL_PARENT_SPAN_IDS.get("datasetCreate")),
+          "Test Parent Span");
+      assertEquals(
+          OTEL_SPAN_IDS_TO_NAMES.get(OTEL_PARENT_SPAN_IDS.get("datasetDelete")),
+          "Test Parent Span");
       assertEquals(OTEL_PARENT_SPAN_IDS.get("Test Parent Span"), OTEL_PARENT_SPAN_ID);
       RemoteBigQueryHelper.forceDelete(bigquery, billingModelDataset);
     }
@@ -7604,53 +7621,72 @@ public class ITBigQueryTest {
 
   @Test
   public void TestOpenTelemetryTracingTables() {
-    SdkTracerProvider tracerProvider = SdkTracerProvider.builder().addSpanProcessor(
-        SimpleSpanProcessor.create(new CustomSpanExporter())).setSampler(Sampler.alwaysOn()).build();
+    SdkTracerProvider tracerProvider =
+        SdkTracerProvider.builder()
+            .addSpanProcessor(SimpleSpanProcessor.create(new CustomSpanExporter()))
+            .setSampler(Sampler.alwaysOn())
+            .build();
 
-    OpenTelemetry otel = OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).buildAndRegisterGlobal();
+    OpenTelemetry otel =
+        OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).buildAndRegisterGlobal();
     Tracer tracer = otel.getTracer("Test Tracer");
-    BigQueryOptions otelOptions = BigQueryOptions.newBuilder().setEnableOpenTelemetryTracing(true).setOpenTelemetryTracer(tracer).build();
+    BigQueryOptions otelOptions =
+        BigQueryOptions.newBuilder()
+            .setEnableOpenTelemetryTracing(true)
+            .setOpenTelemetryTracer(tracer)
+            .build();
     BigQuery bigquery = otelOptions.getService();
 
     String tableName = "test_otel_table";
     StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
     TableInfo tableInfo =
-          TableInfo.newBuilder(TableId.of(DATASET, tableName), tableDefinition)
-              .setDescription("Some Description")
-              .setLabels(Collections.singletonMap("a", "b"))
-              .build();
-      Table createdTable = bigquery.create(tableInfo);
-      assertThat(createdTable.getDescription()).isEqualTo("Some Description");
-      assertThat(createdTable.getLabels()).containsExactly("a", "b");
+        TableInfo.newBuilder(TableId.of(DATASET, tableName), tableDefinition)
+            .setDescription("Some Description")
+            .setLabels(Collections.singletonMap("a", "b"))
+            .build();
+    Table createdTable = bigquery.create(tableInfo);
+    assertThat(createdTable.getDescription()).isEqualTo("Some Description");
+    assertThat(createdTable.getLabels()).containsExactly("a", "b");
 
-      assertEquals(OTEL_PARENT_SPAN_IDS.get("tableCreate"), OTEL_PARENT_SPAN_ID);
-      assertEquals(OTEL_ATTRIBUTES.get("tableCreate").get(AttributeKey.stringKey("description")), "Some Description");
+    assertEquals(OTEL_PARENT_SPAN_IDS.get("tableCreate"), OTEL_PARENT_SPAN_ID);
+    assertEquals(
+        OTEL_ATTRIBUTES.get("tableCreate").get(AttributeKey.stringKey("description")),
+        "Some Description");
 
-      Map<String, String> updateLabels = new HashMap<>();
-      updateLabels.put("x", "y");
-      updateLabels.put("a", null);
-      Table updatedTable =
-          bigquery.update(
-              createdTable
-                  .toBuilder()
-                  .setDescription("Updated Description")
-                  .setLabels(updateLabels)
-                  .build());
-      assertThat(updatedTable.getDescription()).isEqualTo("Updated Description");
-      assertThat(updatedTable.getLabels()).containsExactly("x", "y");
+    Map<String, String> updateLabels = new HashMap<>();
+    updateLabels.put("x", "y");
+    updateLabels.put("a", null);
+    Table updatedTable =
+        bigquery.update(
+            createdTable.toBuilder()
+                .setDescription("Updated Description")
+                .setLabels(updateLabels)
+                .build());
+    assertThat(updatedTable.getDescription()).isEqualTo("Updated Description");
+    assertThat(updatedTable.getLabels()).containsExactly("x", "y");
 
     assertEquals(OTEL_PARENT_SPAN_IDS.get("tableUpdate"), OTEL_PARENT_SPAN_ID);
-    assertEquals(OTEL_ATTRIBUTES.get("tableUpdate").get(AttributeKey.stringKey("description")), "Updated Description");
+    assertEquals(
+        OTEL_ATTRIBUTES.get("tableUpdate").get(AttributeKey.stringKey("description")),
+        "Updated Description");
   }
 
   @Test
   public void testOpenTelemetryTracingQuery() throws InterruptedException {
-    SdkTracerProvider tracerProvider = SdkTracerProvider.builder().addSpanProcessor(
-        SimpleSpanProcessor.create(new CustomSpanExporter())).setSampler(Sampler.alwaysOn()).build();
+    SdkTracerProvider tracerProvider =
+        SdkTracerProvider.builder()
+            .addSpanProcessor(SimpleSpanProcessor.create(new CustomSpanExporter()))
+            .setSampler(Sampler.alwaysOn())
+            .build();
 
-    OpenTelemetry otel = OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).buildAndRegisterGlobal();
+    OpenTelemetry otel =
+        OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).buildAndRegisterGlobal();
     Tracer tracer = otel.getTracer("Test Tracer");
-    BigQueryOptions otelOptions = BigQueryOptions.newBuilder().setEnableOpenTelemetryTracing(true).setOpenTelemetryTracer(tracer).build();
+    BigQueryOptions otelOptions =
+        BigQueryOptions.newBuilder()
+            .setEnableOpenTelemetryTracing(true)
+            .setOpenTelemetryTracer(tracer)
+            .build();
     BigQuery bigquery = otelOptions.getService();
 
     // Stateless query
