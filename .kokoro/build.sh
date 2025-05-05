@@ -60,10 +60,14 @@ javadoc)
     RETURN_CODE=$?
     ;;
 integration)
-    # Run Unit and Integration Tests with Native Image
-    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative test
-    RETURN_CODE=$?
-    ;;
+    mvn -B ${INTEGRATION_TEST_ARGS} \
+      -ntp \
+      -Penable-integration-tests \
+      -DtrimStackTrace=false \
+      -Dclirr.skip=true \
+      -Denforcer.skip=true \
+      -fae \
+      verify
 graalvm)
     # Run Unit and Integration Tests with Native Image
     mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative test
