@@ -157,7 +157,7 @@
     </dependency>
 
     <!-- Test dependencies -->
-	<dependency>
+    <dependency>
       <groupId>com.google.api</groupId>
       <artifactId>gax</artifactId>
       <classifier>testlib</classifier>
