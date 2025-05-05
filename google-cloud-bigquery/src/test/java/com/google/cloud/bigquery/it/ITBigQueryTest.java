@@ -7588,30 +7588,31 @@ public class ITBigQueryTest {
       assertTrue(bigquery.delete(dataset.getDatasetId()));
     } finally {
       parentSpan.end();
-      Map<AttributeKey<?>, Object> createMap = OTEL_ATTRIBUTES.get("datasetCreate");
+      Map<AttributeKey<?>, Object> createMap = OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_datasetCreate");
       assertEquals(createMap.get(AttributeKey.stringKey("description")), DESCRIPTION);
       assertEquals(
           createMap.get(AttributeKey.stringKey("storageBillingModel")), STORAGE_BILLING_MODEL);
       assertEquals(createMap.get(AttributeKey.stringKey("defaultCollation")), "null");
 
-      Map<AttributeKey<?>, Object> getMap = OTEL_ATTRIBUTES.get("datasetGet");
+      Map<AttributeKey<?>, Object> getMap = OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_datasetGet");
       assertEquals(getMap.get(AttributeKey.stringKey("datasetId")), billingModelDataset);
 
-      Map<AttributeKey<?>, Object> updateMap = OTEL_ATTRIBUTES.get("datasetUpdate");
+      Map<AttributeKey<?>, Object> updateMap = OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_datasetUpdate");
       assertEquals(updateMap.get(AttributeKey.stringKey("description")), "Updated Description");
       assertEquals(updateMap.get(AttributeKey.stringKey("ACCESS_POLICY_VERSION")), "2");
 
-      Map<AttributeKey<?>, Object> deleteMap = OTEL_ATTRIBUTES.get("datasetDelete");
+      Map<AttributeKey<?>, Object> deleteMap = OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_datasetDelete");
       assertEquals(deleteMap.get(AttributeKey.stringKey("datasetId")), billingModelDataset);
 
       // All should be children spans of parentSpan
       assertEquals(
-          OTEL_SPAN_IDS_TO_NAMES.get(OTEL_PARENT_SPAN_IDS.get("datasetGet")), "Test Parent Span");
-      assertEquals(
-          OTEL_SPAN_IDS_TO_NAMES.get(OTEL_PARENT_SPAN_IDS.get("datasetCreate")),
+          OTEL_SPAN_IDS_TO_NAMES.get(OTEL_PARENT_SPAN_IDS.get("JAVA_BQ_SDK_datasetGet")),
           "Test Parent Span");
       assertEquals(
-          OTEL_SPAN_IDS_TO_NAMES.get(OTEL_PARENT_SPAN_IDS.get("datasetDelete")),
+          OTEL_SPAN_IDS_TO_NAMES.get(OTEL_PARENT_SPAN_IDS.get("JAVA_BQ_SDK_datasetCreate")),
+          "Test Parent Span");
+      assertEquals(
+          OTEL_SPAN_IDS_TO_NAMES.get(OTEL_PARENT_SPAN_IDS.get("JAVA_BQ_SDK_datasetDelete")),
           "Test Parent Span");
       assertEquals(OTEL_PARENT_SPAN_IDS.get("Test Parent Span"), OTEL_PARENT_SPAN_ID);
       RemoteBigQueryHelper.forceDelete(bigquery, billingModelDataset);
@@ -7639,9 +7640,9 @@ public class ITBigQueryTest {
     assertThat(createdTable.getDescription()).isEqualTo("Some Description");
     assertThat(createdTable.getLabels()).containsExactly("a", "b");
 
-    assertEquals(OTEL_PARENT_SPAN_IDS.get("tableCreate"), OTEL_PARENT_SPAN_ID);
+    assertEquals(OTEL_PARENT_SPAN_IDS.get("JAVA_BQ_SDK_tableCreate"), OTEL_PARENT_SPAN_ID);
     assertEquals(
-        OTEL_ATTRIBUTES.get("tableCreate").get(AttributeKey.stringKey("description")),
+        OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_tableCreate").get(AttributeKey.stringKey("description")),
         "Some Description");
 
     Map<String, String> updateLabels = new HashMap<>();
@@ -7656,9 +7657,9 @@ public class ITBigQueryTest {
     assertThat(updatedTable.getDescription()).isEqualTo("Updated Description");
     assertThat(updatedTable.getLabels()).containsExactly("x", "y");
 
-    assertEquals(OTEL_PARENT_SPAN_IDS.get("tableUpdate"), OTEL_PARENT_SPAN_ID);
+    assertEquals(OTEL_PARENT_SPAN_IDS.get("JAVA_BQ_SDK_tableUpdate"), OTEL_PARENT_SPAN_ID);
     assertEquals(
-        OTEL_ATTRIBUTES.get("tableUpdate").get(AttributeKey.stringKey("description")),
+        OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_tableUpdate").get(AttributeKey.stringKey("description")),
         "Updated Description");
   }
 
@@ -7678,7 +7679,7 @@ public class ITBigQueryTest {
     assertNotNull(tableResult.getQueryId());
     assertNull(tableResult.getJobId());
 
-    assertNotNull(OTEL_ATTRIBUTES.get("queryRpc"));
+    assertNotNull(OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_queryRpc"));
 
     // Query job
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
@@ -7690,8 +7691,8 @@ public class ITBigQueryTest {
     assertNotNull(result.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
 
-    assertNotNull(OTEL_ATTRIBUTES.get("getQueryResults"));
-    assertNotNull(OTEL_ATTRIBUTES.get("tableDataList"));
-    assertNotNull(OTEL_ATTRIBUTES.get("jobCreate"));
+    assertNotNull(OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_getQueryResults"));
+    assertNotNull(OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_tableDataList"));
+    assertNotNull(OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_jobCreate"));
   }
 }

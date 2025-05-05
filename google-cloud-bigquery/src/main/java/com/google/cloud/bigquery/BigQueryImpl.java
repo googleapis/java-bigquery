@@ -51,6 +51,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import java.io.IOException;
@@ -245,8 +246,6 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   private final HttpBigQueryRpc bigQueryRpc;
 
-  private final OpenTelemetryHelper otelHelper;
-
   private static final BigQueryRetryConfig EMPTY_RETRY_CONFIG =
       BigQueryRetryConfig.newBuilder().build();
 
@@ -260,7 +259,6 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   BigQueryImpl(BigQueryOptions options) {
     super(options);
     bigQueryRpc = options.getBigQueryRpcV2();
-    otelHelper = new OpenTelemetryHelper(options);
   }
 
   @Override
@@ -273,7 +271,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                     : datasetInfo.getDatasetId().getProject())
             .toPb();
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    final Span datasetCreate = otelHelper.datasetCreateSpan(datasetInfo, optionsMap);
+    Span datasetCreate = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      datasetCreate =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_datasetCreate")
+              .setAllAttributes(datasetInfo.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope datasetCreateScope = datasetCreate != null ? datasetCreate.makeCurrent() : null) {
       return Dataset.fromPb(
           this,
@@ -308,7 +316,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             .toPb();
     handleExternalTableSchema(tablePb);
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    final Span tableCreate = otelHelper.tableCreateSpan(tableInfo, optionsMap);
+    Span tableCreate = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      tableCreate =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_tableCreate")
+              .setAllAttributes(tableInfo.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope tableCreateScope = tableCreate != null ? tableCreate.makeCurrent() : null) {
       return Table.fromPb(
           this,
@@ -352,8 +370,18 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                     : routineInfo.getRoutineId().getProject())
             .toPb();
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    final Span createRoutine = otelHelper.routineCreateSpan(routineInfo, optionsMap);
-    try (Scope createRoutineScope = createRoutine != null ? createRoutine.makeCurrent() : null) {
+    Span routineCreate = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      routineCreate =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_routineCreate")
+              .setAllAttributes(routineInfo.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope createRoutineScope = routineCreate != null ? routineCreate.makeCurrent() : null) {
       return Routine.fromPb(
           this,
           BigQueryRetryHelper.runWithRetries(
@@ -370,8 +398,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
     } finally {
-      if (createRoutine != null) {
-        createRoutine.end();
+      if (routineCreate != null) {
+        routineCreate.end();
       }
     }
   }
@@ -408,7 +436,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     final boolean idRandom = (jobInfo.getJobId() == null);
 
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    final Span jobCreate = otelHelper.jobCreateSpan(jobInfo, optionsMap);
+    Span jobCreate = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      jobCreate =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_jobCreate")
+              .setAllAttributes(jobInfo.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     BigQueryException createException;
     // NOTE(pongad): This double-try structure is admittedly odd.
     // translateAndThrow itself throws, and pretends to return an exception only
@@ -521,7 +559,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   public Dataset getDataset(final DatasetId datasetId, DatasetOption... options) {
     final DatasetId completeDatasetId = datasetId.setProjectId(getOptions().getProjectId());
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    final Span datasetGet = otelHelper.datasetGetSpan(completeDatasetId, optionsMap);
+    Span datasetGet = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      datasetGet =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_datasetGet")
+              .setAllAttributes(datasetId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope datasetGetScope = datasetGet != null ? datasetGet.makeCurrent() : null) {
       com.google.api.services.bigquery.model.Dataset answer =
           BigQueryRetryHelper.runWithRetries(
@@ -559,7 +607,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   @Override
   public Page<Dataset> listDatasets(String projectId, DatasetListOption... options) {
-    final Span datasetsList = otelHelper.datasetsListSpan(projectId, optionMap(options));
+    Span datasetsList = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      datasetsList =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_datasetsList")
+              .setAttribute("projectId", projectId)
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope datasetsListScope = datasetsList != null ? datasetsList.makeCurrent() : null) {
       return listDatasets(projectId, getOptions(), optionMap(options));
     } finally {
@@ -616,7 +674,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   public boolean delete(DatasetId datasetId, DatasetDeleteOption... options) {
     final DatasetId completeDatasetId = datasetId.setProjectId(getOptions().getProjectId());
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    final Span datasetDelete = otelHelper.datasetDeleteSpan(datasetId, optionsMap);
+    Span datasetDelete = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      datasetDelete =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_datasetDelete")
+              .setAllAttributes(datasetId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope datasetDeleteScope = datasetDelete != null ? datasetDelete.makeCurrent() : null) {
       return BigQueryRetryHelper.runWithRetries(
           new Callable<Boolean>() {
@@ -654,7 +722,16 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             Strings.isNullOrEmpty(tableId.getProject())
                 ? getOptions().getProjectId()
                 : tableId.getProject());
-    final Span tableDelete = otelHelper.tableDeleteSpan(completeTableId);
+    Span tableDelete = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      tableDelete =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_tableDelete")
+              .setAllAttributes(tableId.getOtelAttributes())
+              .startSpan();
+    }
     try (Scope tableDeleteScope = tableDelete != null ? tableDelete.makeCurrent() : null) {
       return BigQueryRetryHelper.runWithRetries(
           new Callable<Boolean>() {
@@ -689,7 +766,16 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             Strings.isNullOrEmpty(modelId.getProject())
                 ? getOptions().getProjectId()
                 : modelId.getProject());
-    final Span modelDelete = otelHelper.modelDeleteSpan(modelId);
+    Span modelDelete = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      modelDelete =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_modelDelete")
+              .setAllAttributes(modelId.getOtelAttributes())
+              .startSpan();
+    }
     try (Scope modelDeleteScope = modelDelete != null ? modelDelete.makeCurrent() : null) {
       return BigQueryRetryHelper.runWithRetries(
           new Callable<Boolean>() {
@@ -724,7 +810,16 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             Strings.isNullOrEmpty(routineId.getProject())
                 ? getOptions().getProjectId()
                 : routineId.getProject());
-    final Span routineDelete = otelHelper.routineDeleteSpan(completeRoutineId);
+    Span routineDelete = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      routineDelete =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_routineDelete")
+              .setAllAttributes(routineId.getOtelAttributes())
+              .startSpan();
+    }
     try (Scope routineDeleteScope = routineDelete != null ? routineDelete.makeCurrent() : null) {
       return BigQueryRetryHelper.runWithRetries(
           new Callable<Boolean>() {
@@ -782,7 +877,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     final com.google.api.services.bigquery.model.Dataset datasetPb =
         datasetInfo.setProjectId(getOptions().getProjectId()).toPb();
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    final Span datasetUpdate = otelHelper.datasetUpdateSpan(datasetInfo, optionsMap);
+    Span datasetUpdate = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      datasetUpdate =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_datasetUpdate")
+              .setAllAttributes(datasetInfo.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope datasetUpdateScope = datasetUpdate != null ? datasetUpdate.makeCurrent() : null) {
       return Dataset.fromPb(
           this,
@@ -817,7 +922,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             .toPb();
     handleExternalTableSchema(tablePb);
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    final Span tableUpdate = otelHelper.tableUpdateSpan(tableInfo, optionsMap);
+    Span tableUpdate = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      tableUpdate =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_tableUpdate")
+              .setAllAttributes(tableInfo.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope tableUpdateScope = tableUpdate != null ? tableUpdate.makeCurrent() : null) {
       return Table.fromPb(
           this,
@@ -851,7 +966,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                     : modelInfo.getModelId().getProject())
             .toPb();
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    final Span modelUpdate = otelHelper.modelUpdateSpan(modelInfo, optionsMap);
+    Span modelUpdate = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      modelUpdate =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_modelUpdate")
+              .setAllAttributes(modelInfo.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope modelUpdateScope = modelUpdate != null ? modelUpdate.makeCurrent() : null) {
       return Model.fromPb(
           this,
@@ -885,7 +1010,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                     : routineInfo.getRoutineId().getProject())
             .toPb();
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    final Span routineUpdate = otelHelper.routineUpdateSpan(routineInfo, optionsMap);
+    Span routineUpdate = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      routineUpdate =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_routineUpdate")
+              .setAllAttributes(routineInfo.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope routineUpdateScope = routineUpdate != null ? routineUpdate.makeCurrent() : null) {
       return Routine.fromPb(
           this,
@@ -924,7 +1059,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 ? getOptions().getProjectId()
                 : tableId.getProject());
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    final Span tableGet = otelHelper.tableGetSpan(tableId, optionsMap);
+    Span tableGet = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      tableGet =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_tableGet")
+              .setAllAttributes(tableId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope tableGetScope = tableGet != null ? tableGet.makeCurrent() : null) {
       com.google.api.services.bigquery.model.Table answer =
           BigQueryRetryHelper.runWithRetries(
@@ -971,7 +1116,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 ? getOptions().getProjectId()
                 : modelId.getProject());
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    final Span modelGet = otelHelper.modelGetSpan(modelId, optionsMap);
+    Span modelGet = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      modelGet =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_modelGet")
+              .setAllAttributes(modelId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope modelGetScope = modelGet != null ? modelGet.makeCurrent() : null) {
       com.google.api.services.bigquery.model.Model answer =
           BigQueryRetryHelper.runWithRetries(
@@ -1018,7 +1173,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 ? getOptions().getProjectId()
                 : routineId.getProject());
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    final Span routineGet = otelHelper.routineGetSpan(routineId, optionsMap);
+    Span routineGet = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      routineGet =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_routineGet")
+              .setAllAttributes(routineId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope routineGetScope = routineGet != null ? routineGet.makeCurrent() : null) {
       com.google.api.services.bigquery.model.Routine answer =
           BigQueryRetryHelper.runWithRetries(
@@ -1054,9 +1219,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   @Override
   public Page<Table> listTables(String datasetId, TableListOption... options) {
-    Span tablesList =
-        otelHelper.tablesListSpan(
-            DatasetId.of(getOptions().getProjectId(), datasetId), optionMap(options));
+    Span tablesList = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      tablesList =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_tablesList")
+              .setAllAttributes(DatasetId.of(datasetId).getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope tablesListScope = tablesList != null ? tablesList.makeCurrent() : null) {
       return listTables(
           DatasetId.of(getOptions().getProjectId(), datasetId), getOptions(), optionMap(options));
@@ -1070,7 +1243,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   @Override
   public Page<Table> listTables(DatasetId datasetId, TableListOption... options) {
     DatasetId completeDatasetId = datasetId.setProjectId(getOptions().getProjectId());
-    Span tablesList = otelHelper.tablesListSpan(completeDatasetId, optionMap(options));
+    Span tablesList = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      tablesList =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_tablesList")
+              .setAllAttributes(completeDatasetId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope tablesListScope = tablesList != null ? tablesList.makeCurrent() : null) {
       return listTables(completeDatasetId, getOptions(), optionMap(options));
     } finally {
@@ -1082,9 +1265,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   @Override
   public Page<Model> listModels(String datasetId, ModelListOption... options) {
-    final Span modelsList =
-        otelHelper.modelsListSpan(
-            DatasetId.of(getOptions().getProjectId(), datasetId), optionMap(options));
+    Span modelsList = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      modelsList =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_modelsList")
+              .setAllAttributes(DatasetId.of(datasetId).getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope modelsListScope = modelsList != null ? modelsList.makeCurrent() : null) {
       return listModels(
           DatasetId.of(getOptions().getProjectId(), datasetId), getOptions(), optionMap(options));
@@ -1098,7 +1289,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   @Override
   public Page<Model> listModels(DatasetId datasetId, ModelListOption... options) {
     DatasetId completeDatasetId = datasetId.setProjectId(getOptions().getProjectId());
-    final Span modelsList = otelHelper.modelsListSpan(completeDatasetId, optionMap(options));
+    Span modelsList = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      modelsList =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_modelsList")
+              .setAllAttributes(datasetId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope modelsListScope = modelsList != null ? modelsList.makeCurrent() : null) {
       return listModels(completeDatasetId, getOptions(), optionMap(options));
     } finally {
@@ -1110,9 +1311,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   @Override
   public Page<Routine> listRoutines(String datasetId, RoutineListOption... options) {
-    final Span routinesList =
-        otelHelper.routinesListSpan(
-            DatasetId.of(getOptions().getProjectId(), datasetId), optionMap(options));
+    Span routinesList = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      routinesList =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_routinesList")
+              .setAllAttributes(DatasetId.of(datasetId).getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope routinesListScope = routinesList != null ? routinesList.makeCurrent() : null) {
       return listRoutines(
           DatasetId.of(getOptions().getProjectId(), datasetId), getOptions(), optionMap(options));
@@ -1126,7 +1335,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   @Override
   public Page<Routine> listRoutines(DatasetId datasetId, RoutineListOption... options) {
     DatasetId completeDatasetId = datasetId.setProjectId(getOptions().getProjectId());
-    final Span routinesList = otelHelper.routinesListSpan(completeDatasetId, optionMap(options));
+    Span routinesList = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      routinesList =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_routinesList")
+              .setAllAttributes(datasetId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope routinesListScope = routinesList != null ? routinesList.makeCurrent() : null) {
       return listRoutines(completeDatasetId, getOptions(), optionMap(options));
     } finally {
@@ -1310,7 +1529,16 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     requestPb.setRows(rowsPb);
 
     TableDataInsertAllResponse responsePb;
-    final Span insertAll = otelHelper.insertAllSpan(request);
+    Span insertAll = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      insertAll =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_insertAll")
+              .setAllAttributes(request.getOtelAttributes())
+              .startSpan();
+    }
     try (Scope insertAllScope = insertAll != null ? insertAll.makeCurrent() : null) {
       if (allInsertIdsSet[0]) {
         // allowing retries only if all row insertIds are set (used for deduplication)
@@ -1370,7 +1598,18 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   public TableResult listTableData(TableId tableId, Schema schema, TableDataListOption... options) {
     Tuple<? extends Page<FieldValueList>, Long> data =
         listTableData(tableId, schema, getOptions(), optionMap(options));
-    final Span tableDataList = otelHelper.tableDataListSpan(tableId, schema, optionMap(options));
+    Span tableDataList = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      tableDataList =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_tableDataList")
+              .setAllAttributes(tableId.getOtelAttributes())
+              .setAllAttributes(schema.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope tableDataListScope = tableDataList != null ? tableDataList.makeCurrent() : null) {
       return TableResult.newBuilder()
           .setSchema(schema)
@@ -1457,7 +1696,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 jobId.getLocation() == null && getOptions().getLocation() != null
                     ? getOptions().getLocation()
                     : jobId.getLocation());
-    final Span jobGet = otelHelper.jobGetSpan(jobId, optionsMap);
+    Span jobGet = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      jobGet =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_jobGet")
+              .setAllAttributes(jobId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope jobGetScope = jobGet != null ? jobGet.makeCurrent() : null) {
       com.google.api.services.bigquery.model.Job answer =
           BigQueryRetryHelper.runWithRetries(
@@ -1493,7 +1742,16 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   @Override
   public Page<Job> listJobs(JobListOption... options) {
-    final Span jobsList = otelHelper.jobsListSpan(optionMap(options));
+    Span jobsList = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      jobsList =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_jobsList")
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope jobsListScope = jobsList != null ? jobsList.makeCurrent() : null) {
       return listJobs(getOptions(), optionMap(options));
     } finally {
@@ -1551,7 +1809,16 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 jobId.getLocation() == null && getOptions().getLocation() != null
                     ? getOptions().getLocation()
                     : jobId.getLocation());
-    final Span jobCancel = otelHelper.jobCancelSpan(completeJobId);
+    Span jobCancel = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      jobCancel =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_jobCancel")
+              .setAllAttributes(jobId.getOtelAttributes())
+              .startSpan();
+    }
     try (Scope jobCancelScope = jobCancel != null ? jobCancel.makeCurrent() : null) {
       return BigQueryRetryHelper.runWithRetries(
           new Callable<Boolean>() {
@@ -1607,7 +1874,18 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       final String projectId, final QueryRequest content, JobOption... options)
       throws InterruptedException {
     com.google.api.services.bigquery.model.QueryResponse results;
-    final Span queryRpc = otelHelper.queryRpc(projectId, content, optionMap(options));
+    Span queryRpc = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      queryRpc =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_queryRpc")
+              .setAttribute("projectId", projectId)
+              .setAllAttributes(otelAttributesFromQueryRequest(content))
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope queryRpcScope = queryRpc != null ? queryRpc.makeCurrent() : null) {
       results =
           BigQueryRetryHelper.runWithRetries(
@@ -1727,7 +2005,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   @Override
   public QueryResponse getQueryResults(JobId jobId, QueryResultsOption... options) {
     Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    final Span getQueryResults = otelHelper.getQueryResults(jobId, optionsMap);
+    Span getQueryResults = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      getQueryResults =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_getQueryResults")
+              .setAllAttributes(jobId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope getQueryResultsScope =
         getQueryResults != null ? getQueryResults.makeCurrent() : null) {
       return getQueryResults(jobId, getOptions(), optionsMap);
@@ -1812,7 +2100,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 : tableId.getProject());
 
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    final Span iamPolicyGet = otelHelper.iamPolicyGet(tableId, optionsMap);
+    Span iamPolicyGet = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      iamPolicyGet =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_iamPolicyGet")
+              .setAllAttributes(tableId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope iamPolicyGetScope = iamPolicyGet != null ? iamPolicyGet.makeCurrent() : null) {
       return convertFromApiPolicy(
           BigQueryRetryHelper.runWithRetries(
@@ -1845,7 +2143,18 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 : tableId.getProject());
 
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    final Span iamPolicySet = otelHelper.iamPolicySet(tableId, policy, optionsMap);
+    Span iamPolicySet = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      iamPolicySet =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_iamPolicySet")
+              .setAllAttributes(tableId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromPolicy(policy))
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope iamPolicySetScope = iamPolicySet != null ? iamPolicySet.makeCurrent() : null) {
       return convertFromApiPolicy(
           BigQueryRetryHelper.runWithRetries(
@@ -1878,7 +2187,18 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 ? getOptions().getProjectId()
                 : tableId.getProject());
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    final Span testIamPermissions = otelHelper.testIamPermissions(tableId, permissions, optionsMap);
+    Span testIamPermissions = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      testIamPermissions =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("JAVA_BQ_SDK_testIamPermissions")
+              .setAllAttributes(tableId.getOtelAttributes())
+              .setAttribute("permissions", permissions.toString())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     try (Scope testIamPermissionsScope =
         testIamPermissions != null ? testIamPermissions.makeCurrent() : null) {
       com.google.api.services.bigquery.model.TestIamPermissionsResponse response =
@@ -1915,6 +2235,60 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       checkArgument(prev == null, "Duplicate option %s", option);
     }
     return optionMap;
+  }
+
+  private static Attributes otelAttributesFromOptions(Option... options) {
+    Attributes attributes = Attributes.builder().build();
+    for (Option option : options) {
+      attributes =
+          attributes.toBuilder()
+              .put(option.getRpcOption().toString(), option.getValue().toString())
+              .build();
+    }
+    return attributes;
+  }
+
+  private static Attributes otelAttributesFromQueryRequest(QueryRequest request) {
+    return Attributes.builder()
+        .put("continuous", OpenTelemetryHelper.getFieldAsString(request.getContinuous()))
+        .put("createSession", OpenTelemetryHelper.getFieldAsString(request.getCreateSession()))
+        .put("defaultDataset", OpenTelemetryHelper.getFieldAsString(request.getDefaultDataset()))
+        .put(
+            "destinationEncryptionConfiguration",
+            OpenTelemetryHelper.getFieldAsString(request.getDestinationEncryptionConfiguration()))
+        .put("dryRun", OpenTelemetryHelper.getFieldAsString(request.getDryRun()))
+        .put("formatOptions", OpenTelemetryHelper.getFieldAsString(request.getFormatOptions()))
+        .put("jobCreationMode", OpenTelemetryHelper.getFieldAsString(request.getJobCreationMode()))
+        .put("jobTimeoutMs", OpenTelemetryHelper.getFieldAsString(request.getJobTimeoutMs()))
+        .put("kind", OpenTelemetryHelper.getFieldAsString(request.getKind()))
+        .put("labels", OpenTelemetryHelper.getFieldAsString(request.getLabels()))
+        .put("location", OpenTelemetryHelper.getFieldAsString(request.getLocation()))
+        .put("maxResults", OpenTelemetryHelper.getFieldAsString(request.getMaxResults()))
+        .put(
+            "maximumBytesBilled",
+            OpenTelemetryHelper.getFieldAsString(request.getMaximumBytesBilled()))
+        .put("parameterMode", OpenTelemetryHelper.getFieldAsString(request.getParameterMode()))
+        .put("preserveNulls", OpenTelemetryHelper.getFieldAsString(request.getPreserveNulls()))
+        .put("query", OpenTelemetryHelper.getFieldAsString(request.getQuery()))
+        .put("queryParameters", OpenTelemetryHelper.getFieldAsString(request.getQueryParameters()))
+        .put("requestId", OpenTelemetryHelper.getFieldAsString(request.getRequestId()))
+        .put("reservation", OpenTelemetryHelper.getFieldAsString(request.getReservation()))
+        .put("timeoutMs", OpenTelemetryHelper.getFieldAsString(request.getTimeoutMs()))
+        .put("useLegacySql", OpenTelemetryHelper.getFieldAsString(request.getUseLegacySql()))
+        .put("useQueryCache", OpenTelemetryHelper.getFieldAsString(request.getUseQueryCache()))
+        .put(
+            "writeIncrementalResults",
+            OpenTelemetryHelper.getFieldAsString(request.getWriteIncrementalResults()))
+        .build();
+  }
+
+  private static Attributes otelAttributesFromPolicy(Policy policy) {
+    return Attributes.builder()
+        .put("version", OpenTelemetryHelper.getFieldAsString(policy.getVersion()))
+        .put("bindings", OpenTelemetryHelper.getFieldAsString(policy.getBindings()))
+        .put("bindingsList", OpenTelemetryHelper.getFieldAsString(policy.getBindingsList()))
+        .put("etag", OpenTelemetryHelper.getFieldAsString(policy.getEtag()))
+        .build();
   }
 
   static BigQueryRetryConfig getBigQueryRetryConfig(Map<BigQueryRpc.Option, ?> options) {

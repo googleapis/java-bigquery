@@ -27,6 +27,7 @@ import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import io.opentelemetry.api.common.Attributes;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -744,6 +745,40 @@ public class DatasetInfo implements Serializable {
   /** Returns a {@code DatasetInfo} object given it's user-defined id. */
   public static DatasetInfo of(String datasetId) {
     return newBuilder(datasetId).build();
+  }
+
+  public Attributes getOtelAttributes() {
+    return Attributes.builder()
+        .put("datasetId", OpenTelemetryHelper.getFieldAsString(this.getDatasetId().getDataset()))
+        .put(
+            "defaultTableLifetime",
+            OpenTelemetryHelper.getFieldAsString(this.getDefaultTableLifetime()))
+        .put("description", OpenTelemetryHelper.getFieldAsString(this.getDescription()))
+        .put("etag", OpenTelemetryHelper.getFieldAsString(this.getEtag()))
+        .put("friendlyName", OpenTelemetryHelper.getFieldAsString(this.getFriendlyName()))
+        .put("generatedId", OpenTelemetryHelper.getFieldAsString(this.getGeneratedId()))
+        .put("lastModified", OpenTelemetryHelper.getFieldAsString(this.getLastModified()))
+        .put("location", OpenTelemetryHelper.getFieldAsString(this.getLocation()))
+        .put("selfLink", OpenTelemetryHelper.getFieldAsString(this.getSelfLink()))
+        .put("labels", OpenTelemetryHelper.getFieldAsString(this.getLabels()))
+        .put(
+            "defaultEncryptionConfiguration",
+            OpenTelemetryHelper.getFieldAsString(this.getDefaultEncryptionConfiguration()))
+        .put(
+            "defaultPartitionExpirationMs",
+            OpenTelemetryHelper.getFieldAsString(this.getDefaultPartitionExpirationMs()))
+        .put("defaultCollation", OpenTelemetryHelper.getFieldAsString(this.getDefaultCollation()))
+        .put(
+            "externalDatasetReference",
+            OpenTelemetryHelper.getFieldAsString(this.getExternalDatasetReference()))
+        .put(
+            "storageBillingModel",
+            OpenTelemetryHelper.getFieldAsString(this.getStorageBillingModel()))
+        .put(
+            "maxTimeTravelHours",
+            OpenTelemetryHelper.getFieldAsString(this.getMaxTimeTravelHours()))
+        .put("resourceTags", OpenTelemetryHelper.getFieldAsString(this.getResourceTags()))
+        .build();
   }
 
   static DatasetInfo fromPb(Dataset datasetPb) {

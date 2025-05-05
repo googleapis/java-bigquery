@@ -19,6 +19,7 @@ package com.google.cloud.bigquery;
 import com.google.api.services.bigquery.model.Job;
 import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
+import io.opentelemetry.api.common.Attributes;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -374,5 +375,18 @@ public class JobInfo implements Serializable {
 
   static JobInfo fromPb(Job jobPb) {
     return new BuilderImpl(jobPb).build();
+  }
+
+  public Attributes getOtelAttributes() {
+    return Attributes.builder()
+        .put("etag", OpenTelemetryHelper.getFieldAsString(this.getEtag()))
+        .put("generatedId", OpenTelemetryHelper.getFieldAsString(this.getGeneratedId()))
+        .put("jobId", OpenTelemetryHelper.getFieldAsString(this.getJobId().getJob()))
+        .put("selfLink", OpenTelemetryHelper.getFieldAsString(this.getSelfLink()))
+        .put("status", OpenTelemetryHelper.getFieldAsString(this.getStatus()))
+        .put("statistics", OpenTelemetryHelper.getFieldAsString(this.getStatistics()))
+        .put("userEmail", OpenTelemetryHelper.getFieldAsString(this.getUserEmail()))
+        .put("configuration", OpenTelemetryHelper.getFieldAsString(this.getConfiguration()))
+        .build();
   }
 }

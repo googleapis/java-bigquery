@@ -22,6 +22,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import io.opentelemetry.api.common.Attributes;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
@@ -478,5 +479,16 @@ public final class InsertAllRequest implements Serializable {
         && Objects.equals(ignoreUnknownValues, other.ignoreUnknownValues)
         && Objects.equals(skipInvalidRows, other.skipInvalidRows)
         && Objects.equals(templateSuffix, other.templateSuffix);
+  }
+
+  public Attributes getOtelAttributes() {
+    return Attributes.builder()
+        .put("table", OpenTelemetryHelper.getFieldAsString(this.getTable().getTable()))
+        .put("row", OpenTelemetryHelper.getFieldAsString(this.getRows()))
+        .put("templateSuffix", OpenTelemetryHelper.getFieldAsString(this.getTemplateSuffix()))
+        .put(
+            "ignoreUnknownValues", OpenTelemetryHelper.getFieldAsString(this.ignoreUnknownValues()))
+        .put("skipInvalidRows", OpenTelemetryHelper.getFieldAsString(this.skipInvalidRows()))
+        .build();
   }
 }
