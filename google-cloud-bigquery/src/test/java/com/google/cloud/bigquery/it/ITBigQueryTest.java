@@ -7620,7 +7620,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void TestOpenTelemetryTracingTables() {
+  public void testOpenTelemetryTracingTables() {
     Tracer tracer = otel.getTracer("Test Tracer");
     BigQueryOptions otelOptions =
         BigQueryOptions.newBuilder()
