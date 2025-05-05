@@ -25,6 +25,7 @@ import com.google.api.core.BetaApi;
 import com.google.api.services.bigquery.model.Table;
 import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
+import io.opentelemetry.api.common.Attributes;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Map;
@@ -762,5 +763,55 @@ public class TableInfo implements Serializable {
 
   static TableInfo fromPb(Table tablePb) {
     return new BuilderImpl(tablePb).build();
+  }
+
+  public Attributes getOtelAttributes() {
+    return Attributes.builder()
+        .put("etag", OpenTelemetryHelper.getFieldAsString(this.getEtag()))
+        .put("generatedId", OpenTelemetryHelper.getFieldAsString(this.getGeneratedId()))
+        .put("selfLink", OpenTelemetryHelper.getFieldAsString(this.getSelfLink()))
+        .put("tableId", this.getTableId().getTable())
+        .put("friendlyName", OpenTelemetryHelper.getFieldAsString(this.getFriendlyName()))
+        .put("description", OpenTelemetryHelper.getFieldAsString(this.getDescription()))
+        .put("creationTime", OpenTelemetryHelper.getFieldAsString(this.getCreationTime()))
+        .put("expirationTime", OpenTelemetryHelper.getFieldAsString(this.getExpirationTime()))
+        .put("lastModifiedTime", OpenTelemetryHelper.getFieldAsString(this.getLastModifiedTime()))
+        .put("numBytes", OpenTelemetryHelper.getFieldAsString(this.getNumBytes()))
+        .put("numLongTermBytes", OpenTelemetryHelper.getFieldAsString(this.getNumLongTermBytes()))
+        .put(
+            "numTimeTravelPhysicalBytes",
+            OpenTelemetryHelper.getFieldAsString(this.getNumTimeTravelPhysicalBytes()))
+        .put(
+            "numTotalLogicalBytes",
+            OpenTelemetryHelper.getFieldAsString(this.getNumTotalLogicalBytes()))
+        .put(
+            "numActiveLogicalBytes",
+            OpenTelemetryHelper.getFieldAsString(this.getNumActiveLogicalBytes()))
+        .put(
+            "numLongTermLogicalBytes",
+            OpenTelemetryHelper.getFieldAsString(this.getNumLongTermLogicalBytes()))
+        .put(
+            "numTotalPhysicalBytes",
+            OpenTelemetryHelper.getFieldAsString(this.getNumTotalPhysicalBytes()))
+        .put(
+            "numActivePhysicalBytes",
+            OpenTelemetryHelper.getFieldAsString(this.getNumActivePhysicalBytes()))
+        .put(
+            "numLongTermPhysicalBytes",
+            OpenTelemetryHelper.getFieldAsString(this.getNumLongTermPhysicalBytes()))
+        .put("numRows", OpenTelemetryHelper.getFieldAsString(this.getNumRows()))
+        .put("definition", OpenTelemetryHelper.getFieldAsString(this.getDefinition()))
+        .put(
+            "encryptionConfiguration",
+            OpenTelemetryHelper.getFieldAsString(this.getEncryptionConfiguration()))
+        .put("labels", OpenTelemetryHelper.getFieldAsString(this.getLabels()))
+        .put("resourceTags", OpenTelemetryHelper.getFieldAsString(this.getResourceTags()))
+        .put(
+            "requirePartitionFilter",
+            OpenTelemetryHelper.getFieldAsString(this.getRequirePartitionFilter()))
+        .put("defaultCollation", OpenTelemetryHelper.getFieldAsString(this.getDefaultCollation()))
+        .put("cloneDefinition", OpenTelemetryHelper.getFieldAsString(this.getCloneDefinition()))
+        .put("tableConstraints", OpenTelemetryHelper.getFieldAsString(this.getTableConstraints()))
+        .build();
   }
 }

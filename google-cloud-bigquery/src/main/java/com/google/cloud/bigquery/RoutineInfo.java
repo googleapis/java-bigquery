@@ -24,6 +24,7 @@ import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import io.opentelemetry.api.common.Attributes;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
@@ -543,5 +544,31 @@ public class RoutineInfo implements Serializable {
 
   static RoutineInfo fromPb(Routine routinePb) {
     return new BuilderImpl(routinePb).build();
+  }
+
+  public Attributes getOtelAttributes() {
+    return Attributes.builder()
+        .put("routineId", OpenTelemetryHelper.getFieldAsString(this.getRoutineId().getRoutine()))
+        .put("etag", OpenTelemetryHelper.getFieldAsString(this.getEtag()))
+        .put("routineType", OpenTelemetryHelper.getFieldAsString(this.getRoutineType()))
+        .put("creationTime", OpenTelemetryHelper.getFieldAsString(this.getCreationTime()))
+        .put("description", OpenTelemetryHelper.getFieldAsString(this.getDescription()))
+        .put("determinismLevel", OpenTelemetryHelper.getFieldAsString(this.getDeterminismLevel()))
+        .put("lastModifiedTime", OpenTelemetryHelper.getFieldAsString(this.getLastModifiedTime()))
+        .put("language", OpenTelemetryHelper.getFieldAsString(this.getLanguage()))
+        .put("argumentList", OpenTelemetryHelper.getFieldAsString(this.getArguments()))
+        .put("returnType", OpenTelemetryHelper.getFieldAsString(this.getReturnType()))
+        .put("returnableType", OpenTelemetryHelper.getFieldAsString(this.getReturnTableType()))
+        .put(
+            "importedLibrariesList",
+            OpenTelemetryHelper.getFieldAsString(this.getImportedLibraries()))
+        .put("body", OpenTelemetryHelper.getFieldAsString(this.getBody()))
+        .put(
+            "remoteFunctionOptions",
+            OpenTelemetryHelper.getFieldAsString(this.getRemoteFunctionOptions()))
+        .put(
+            "dataGovernanceTyoe",
+            OpenTelemetryHelper.getFieldAsString(this.getDataGovernanceType()))
+        .build();
   }
 }

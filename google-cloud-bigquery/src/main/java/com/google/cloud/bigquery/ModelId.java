@@ -21,6 +21,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 
 import com.google.api.services.bigquery.model.ModelReference;
 import com.google.common.base.Function;
+import io.opentelemetry.api.common.Attributes;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -104,5 +105,13 @@ public final class ModelId implements Serializable {
 
   static ModelId fromPb(ModelReference modelRef) {
     return new ModelId(modelRef.getProjectId(), modelRef.getDatasetId(), modelRef.getModelId());
+  }
+
+  public Attributes getOtelAttributes() {
+    return Attributes.builder()
+        .put("project", this.getProject())
+        .put("dataset", this.getDataset())
+        .put("model", this.getModel())
+        .build();
   }
 }
