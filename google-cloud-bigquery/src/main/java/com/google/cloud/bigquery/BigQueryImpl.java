@@ -566,7 +566,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           getOptions()
               .getOpenTelemetryTracer()
               .spanBuilder("JAVA_BQ_SDK_datasetGet")
-              .setAllAttributes(datasetId.getOtelAttributes())
+              .setAllAttributes(completeDatasetId.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }

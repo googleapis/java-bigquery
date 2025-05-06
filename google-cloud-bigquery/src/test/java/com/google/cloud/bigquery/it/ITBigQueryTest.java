@@ -7595,14 +7595,14 @@ public class ITBigQueryTest {
       assertEquals(createMap.get(AttributeKey.stringKey("defaultCollation")), "null");
 
       Map<AttributeKey<?>, Object> getMap = OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_datasetGet");
-      assertEquals(getMap.get(AttributeKey.stringKey("datasetId")), billingModelDataset);
+      assertEquals(getMap.get(AttributeKey.stringKey("dataset")), billingModelDataset);
 
       Map<AttributeKey<?>, Object> updateMap = OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_datasetUpdate");
       assertEquals(updateMap.get(AttributeKey.stringKey("description")), "Updated Description");
       assertEquals(updateMap.get(AttributeKey.stringKey("ACCESS_POLICY_VERSION")), "2");
 
       Map<AttributeKey<?>, Object> deleteMap = OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_datasetDelete");
-      assertEquals(deleteMap.get(AttributeKey.stringKey("datasetId")), billingModelDataset);
+      assertEquals(deleteMap.get(AttributeKey.stringKey("dataset")), billingModelDataset);
 
       // All should be children spans of parentSpan
       assertEquals(
