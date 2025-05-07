@@ -455,24 +455,26 @@ public class ModelInfo implements Serializable {
     return new BuilderImpl(modelPb).build();
   }
 
+  private static String getFieldAsString(Object field) {
+    return field == null ? "null" : field.toString();
+  }
+
   public Attributes getOtelAttributes() {
     return Attributes.builder()
-        .put("etag", OpenTelemetryHelper.getFieldAsString(this.getEtag()))
-        .put("modelId", OpenTelemetryHelper.getFieldAsString(this.getModelId().getModel()))
-        .put("description", OpenTelemetryHelper.getFieldAsString(this.getDescription()))
-        .put("modelType", OpenTelemetryHelper.getFieldAsString(this.getModelType()))
-        .put("friendlyName", OpenTelemetryHelper.getFieldAsString(this.getFriendlyName()))
-        .put("creationTime", OpenTelemetryHelper.getFieldAsString(this.getCreationTime()))
-        .put("lastModifiedTime", OpenTelemetryHelper.getFieldAsString(this.getLastModifiedTime()))
-        .put("expirationTime", OpenTelemetryHelper.getFieldAsString(this.getExpirationTime()))
-        .put("labels", OpenTelemetryHelper.getFieldAsString(this.getLabels()))
-        .put("location", OpenTelemetryHelper.getFieldAsString(this.getLocation()))
-        .put("trainingRunList", OpenTelemetryHelper.getFieldAsString(this.getTrainingRuns()))
-        .put("featureColumnList", OpenTelemetryHelper.getFieldAsString(this.getFeatureColumns()))
-        .put("labelColumnList", OpenTelemetryHelper.getFieldAsString(this.getLabelColumns()))
-        .put(
-            "encryptionConfiguration",
-            OpenTelemetryHelper.getFieldAsString(this.getEncryptionConfiguration()))
+        .put("etag", getFieldAsString(this.getEtag()))
+        .put("modelId", getFieldAsString(this.getModelId().getModel()))
+        .put("description", getFieldAsString(this.getDescription()))
+        .put("modelType", getFieldAsString(this.getModelType()))
+        .put("friendlyName", getFieldAsString(this.getFriendlyName()))
+        .put("creationTime", getFieldAsString(this.getCreationTime()))
+        .put("lastModifiedTime", getFieldAsString(this.getLastModifiedTime()))
+        .put("expirationTime", getFieldAsString(this.getExpirationTime()))
+        .put("labels", getFieldAsString(this.getLabels()))
+        .put("location", getFieldAsString(this.getLocation()))
+        .put("trainingRunList", getFieldAsString(this.getTrainingRuns()))
+        .put("featureColumnList", getFieldAsString(this.getFeatureColumns()))
+        .put("labelColumnList", getFieldAsString(this.getLabelColumns()))
+        .put("encryptionConfiguration", getFieldAsString(this.getEncryptionConfiguration()))
         .build();
   }
 }

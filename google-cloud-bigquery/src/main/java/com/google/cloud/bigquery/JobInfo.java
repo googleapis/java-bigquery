@@ -377,16 +377,20 @@ public class JobInfo implements Serializable {
     return new BuilderImpl(jobPb).build();
   }
 
+  private static String getFieldAsString(Object field) {
+    return field == null ? "null" : field.toString();
+  }
+
   public Attributes getOtelAttributes() {
     return Attributes.builder()
-        .put("etag", OpenTelemetryHelper.getFieldAsString(this.getEtag()))
-        .put("generatedId", OpenTelemetryHelper.getFieldAsString(this.getGeneratedId()))
-        .put("jobId", OpenTelemetryHelper.getFieldAsString(this.getJobId().getJob()))
-        .put("selfLink", OpenTelemetryHelper.getFieldAsString(this.getSelfLink()))
-        .put("status", OpenTelemetryHelper.getFieldAsString(this.getStatus()))
-        .put("statistics", OpenTelemetryHelper.getFieldAsString(this.getStatistics()))
-        .put("userEmail", OpenTelemetryHelper.getFieldAsString(this.getUserEmail()))
-        .put("configuration", OpenTelemetryHelper.getFieldAsString(this.getConfiguration()))
+        .put("etag", getFieldAsString(this.getEtag()))
+        .put("generatedId", getFieldAsString(this.getGeneratedId()))
+        .put("jobId", getFieldAsString(this.getJobId().getJob()))
+        .put("selfLink", getFieldAsString(this.getSelfLink()))
+        .put("status", getFieldAsString(this.getStatus()))
+        .put("statistics", getFieldAsString(this.getStatistics()))
+        .put("userEmail", getFieldAsString(this.getUserEmail()))
+        .put("configuration", getFieldAsString(this.getConfiguration()))
         .build();
   }
 }

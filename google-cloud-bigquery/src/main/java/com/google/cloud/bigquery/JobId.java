@@ -125,11 +125,15 @@ public abstract class JobId implements Serializable {
         .build();
   }
 
+  private static String getFieldAsString(Object field) {
+    return field == null ? "null" : field.toString();
+  }
+
   public Attributes getOtelAttributes() {
     return Attributes.builder()
-        .put("job", OpenTelemetryHelper.getFieldAsString(this.getJob()))
-        .put("location", OpenTelemetryHelper.getFieldAsString(this.getLocation()))
-        .put("project", OpenTelemetryHelper.getFieldAsString(this.getProject()))
+        .put("job", getFieldAsString(this.getJob()))
+        .put("location", getFieldAsString(this.getLocation()))
+        .put("project", getFieldAsString(this.getProject()))
         .build();
   }
 }
