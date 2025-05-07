@@ -481,14 +481,17 @@ public final class InsertAllRequest implements Serializable {
         && Objects.equals(templateSuffix, other.templateSuffix);
   }
 
+  private static String getFieldAsString(Object field) {
+    return field == null ? "null" : field.toString();
+  }
+
   public Attributes getOtelAttributes() {
     return Attributes.builder()
-        .put("table", OpenTelemetryHelper.getFieldAsString(this.getTable().getTable()))
-        .put("row", OpenTelemetryHelper.getFieldAsString(this.getRows()))
-        .put("templateSuffix", OpenTelemetryHelper.getFieldAsString(this.getTemplateSuffix()))
-        .put(
-            "ignoreUnknownValues", OpenTelemetryHelper.getFieldAsString(this.ignoreUnknownValues()))
-        .put("skipInvalidRows", OpenTelemetryHelper.getFieldAsString(this.skipInvalidRows()))
+        .put("table", getFieldAsString(this.getTable().getTable()))
+        .put("row", getFieldAsString(this.getRows()))
+        .put("templateSuffix", getFieldAsString(this.getTemplateSuffix()))
+        .put("ignoreUnknownValues", getFieldAsString(this.ignoreUnknownValues()))
+        .put("skipInvalidRows", getFieldAsString(this.skipInvalidRows()))
         .build();
   }
 }

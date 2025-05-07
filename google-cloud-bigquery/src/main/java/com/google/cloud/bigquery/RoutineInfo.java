@@ -546,29 +546,27 @@ public class RoutineInfo implements Serializable {
     return new BuilderImpl(routinePb).build();
   }
 
+  private static String getFieldAsString(Object field) {
+    return field == null ? "null" : field.toString();
+  }
+
   public Attributes getOtelAttributes() {
     return Attributes.builder()
-        .put("routineId", OpenTelemetryHelper.getFieldAsString(this.getRoutineId().getRoutine()))
-        .put("etag", OpenTelemetryHelper.getFieldAsString(this.getEtag()))
-        .put("routineType", OpenTelemetryHelper.getFieldAsString(this.getRoutineType()))
-        .put("creationTime", OpenTelemetryHelper.getFieldAsString(this.getCreationTime()))
-        .put("description", OpenTelemetryHelper.getFieldAsString(this.getDescription()))
-        .put("determinismLevel", OpenTelemetryHelper.getFieldAsString(this.getDeterminismLevel()))
-        .put("lastModifiedTime", OpenTelemetryHelper.getFieldAsString(this.getLastModifiedTime()))
-        .put("language", OpenTelemetryHelper.getFieldAsString(this.getLanguage()))
-        .put("argumentList", OpenTelemetryHelper.getFieldAsString(this.getArguments()))
-        .put("returnType", OpenTelemetryHelper.getFieldAsString(this.getReturnType()))
-        .put("returnableType", OpenTelemetryHelper.getFieldAsString(this.getReturnTableType()))
-        .put(
-            "importedLibrariesList",
-            OpenTelemetryHelper.getFieldAsString(this.getImportedLibraries()))
-        .put("body", OpenTelemetryHelper.getFieldAsString(this.getBody()))
-        .put(
-            "remoteFunctionOptions",
-            OpenTelemetryHelper.getFieldAsString(this.getRemoteFunctionOptions()))
-        .put(
-            "dataGovernanceTyoe",
-            OpenTelemetryHelper.getFieldAsString(this.getDataGovernanceType()))
+        .put("routineId", getFieldAsString(this.getRoutineId().getRoutine()))
+        .put("etag", getFieldAsString(this.getEtag()))
+        .put("routineType", getFieldAsString(this.getRoutineType()))
+        .put("creationTime", getFieldAsString(this.getCreationTime()))
+        .put("description", getFieldAsString(this.getDescription()))
+        .put("determinismLevel", getFieldAsString(this.getDeterminismLevel()))
+        .put("lastModifiedTime", getFieldAsString(this.getLastModifiedTime()))
+        .put("language", getFieldAsString(this.getLanguage()))
+        .put("argumentList", getFieldAsString(this.getArguments()))
+        .put("returnType", getFieldAsString(this.getReturnType()))
+        .put("returnableType", getFieldAsString(this.getReturnTableType()))
+        .put("importedLibrariesList", getFieldAsString(this.getImportedLibraries()))
+        .put("body", getFieldAsString(this.getBody()))
+        .put("remoteFunctionOptions", getFieldAsString(this.getRemoteFunctionOptions()))
+        .put("dataGovernanceTyoe", getFieldAsString(this.getDataGovernanceType()))
         .build();
   }
 }

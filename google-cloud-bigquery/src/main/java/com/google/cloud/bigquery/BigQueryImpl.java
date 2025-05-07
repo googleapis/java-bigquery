@@ -2237,6 +2237,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     return optionMap;
   }
 
+  private static String getFieldAsString(Object field) {
+    return field == null ? "null" : field.toString();
+  }
+
   private static Attributes otelAttributesFromOptions(Option... options) {
     Attributes attributes = Attributes.builder().build();
     for (Option option : options) {
@@ -2250,44 +2254,40 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   private static Attributes otelAttributesFromQueryRequest(QueryRequest request) {
     return Attributes.builder()
-        .put("continuous", OpenTelemetryHelper.getFieldAsString(request.getContinuous()))
-        .put("createSession", OpenTelemetryHelper.getFieldAsString(request.getCreateSession()))
-        .put("defaultDataset", OpenTelemetryHelper.getFieldAsString(request.getDefaultDataset()))
+        .put("continuous", getFieldAsString(request.getContinuous()))
+        .put("createSession", getFieldAsString(request.getCreateSession()))
+        .put("defaultDataset", getFieldAsString(request.getDefaultDataset()))
         .put(
             "destinationEncryptionConfiguration",
-            OpenTelemetryHelper.getFieldAsString(request.getDestinationEncryptionConfiguration()))
-        .put("dryRun", OpenTelemetryHelper.getFieldAsString(request.getDryRun()))
-        .put("formatOptions", OpenTelemetryHelper.getFieldAsString(request.getFormatOptions()))
-        .put("jobCreationMode", OpenTelemetryHelper.getFieldAsString(request.getJobCreationMode()))
-        .put("jobTimeoutMs", OpenTelemetryHelper.getFieldAsString(request.getJobTimeoutMs()))
-        .put("kind", OpenTelemetryHelper.getFieldAsString(request.getKind()))
-        .put("labels", OpenTelemetryHelper.getFieldAsString(request.getLabels()))
-        .put("location", OpenTelemetryHelper.getFieldAsString(request.getLocation()))
-        .put("maxResults", OpenTelemetryHelper.getFieldAsString(request.getMaxResults()))
-        .put(
-            "maximumBytesBilled",
-            OpenTelemetryHelper.getFieldAsString(request.getMaximumBytesBilled()))
-        .put("parameterMode", OpenTelemetryHelper.getFieldAsString(request.getParameterMode()))
-        .put("preserveNulls", OpenTelemetryHelper.getFieldAsString(request.getPreserveNulls()))
-        .put("query", OpenTelemetryHelper.getFieldAsString(request.getQuery()))
-        .put("queryParameters", OpenTelemetryHelper.getFieldAsString(request.getQueryParameters()))
-        .put("requestId", OpenTelemetryHelper.getFieldAsString(request.getRequestId()))
-        .put("reservation", OpenTelemetryHelper.getFieldAsString(request.getReservation()))
-        .put("timeoutMs", OpenTelemetryHelper.getFieldAsString(request.getTimeoutMs()))
-        .put("useLegacySql", OpenTelemetryHelper.getFieldAsString(request.getUseLegacySql()))
-        .put("useQueryCache", OpenTelemetryHelper.getFieldAsString(request.getUseQueryCache()))
-        .put(
-            "writeIncrementalResults",
-            OpenTelemetryHelper.getFieldAsString(request.getWriteIncrementalResults()))
+            getFieldAsString(request.getDestinationEncryptionConfiguration()))
+        .put("dryRun", getFieldAsString(request.getDryRun()))
+        .put("formatOptions", getFieldAsString(request.getFormatOptions()))
+        .put("jobCreationMode", getFieldAsString(request.getJobCreationMode()))
+        .put("jobTimeoutMs", getFieldAsString(request.getJobTimeoutMs()))
+        .put("kind", getFieldAsString(request.getKind()))
+        .put("labels", getFieldAsString(request.getLabels()))
+        .put("location", getFieldAsString(request.getLocation()))
+        .put("maxResults", getFieldAsString(request.getMaxResults()))
+        .put("maximumBytesBilled", getFieldAsString(request.getMaximumBytesBilled()))
+        .put("parameterMode", getFieldAsString(request.getParameterMode()))
+        .put("preserveNulls", getFieldAsString(request.getPreserveNulls()))
+        .put("query", getFieldAsString(request.getQuery()))
+        .put("queryParameters", getFieldAsString(request.getQueryParameters()))
+        .put("requestId", getFieldAsString(request.getRequestId()))
+        .put("reservation", getFieldAsString(request.getReservation()))
+        .put("timeoutMs", getFieldAsString(request.getTimeoutMs()))
+        .put("useLegacySql", getFieldAsString(request.getUseLegacySql()))
+        .put("useQueryCache", getFieldAsString(request.getUseQueryCache()))
+        .put("writeIncrementalResults", getFieldAsString(request.getWriteIncrementalResults()))
         .build();
   }
 
   private static Attributes otelAttributesFromPolicy(Policy policy) {
     return Attributes.builder()
-        .put("version", OpenTelemetryHelper.getFieldAsString(policy.getVersion()))
-        .put("bindings", OpenTelemetryHelper.getFieldAsString(policy.getBindings()))
-        .put("bindingsList", OpenTelemetryHelper.getFieldAsString(policy.getBindingsList()))
-        .put("etag", OpenTelemetryHelper.getFieldAsString(policy.getEtag()))
+        .put("version", getFieldAsString(policy.getVersion()))
+        .put("bindings", getFieldAsString(policy.getBindings()))
+        .put("bindingsList", getFieldAsString(policy.getBindingsList()))
+        .put("etag", getFieldAsString(policy.getEtag()))
         .build();
   }
 

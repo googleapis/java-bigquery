@@ -747,37 +747,33 @@ public class DatasetInfo implements Serializable {
     return newBuilder(datasetId).build();
   }
 
+  private static String getFieldAsString(Object field) {
+    return field == null ? "null" : field.toString();
+  }
+
   public Attributes getOtelAttributes() {
     return Attributes.builder()
-        .put("datasetId", OpenTelemetryHelper.getFieldAsString(this.getDatasetId().getDataset()))
-        .put(
-            "defaultTableLifetime",
-            OpenTelemetryHelper.getFieldAsString(this.getDefaultTableLifetime()))
-        .put("description", OpenTelemetryHelper.getFieldAsString(this.getDescription()))
-        .put("etag", OpenTelemetryHelper.getFieldAsString(this.getEtag()))
-        .put("friendlyName", OpenTelemetryHelper.getFieldAsString(this.getFriendlyName()))
-        .put("generatedId", OpenTelemetryHelper.getFieldAsString(this.getGeneratedId()))
-        .put("lastModified", OpenTelemetryHelper.getFieldAsString(this.getLastModified()))
-        .put("location", OpenTelemetryHelper.getFieldAsString(this.getLocation()))
-        .put("selfLink", OpenTelemetryHelper.getFieldAsString(this.getSelfLink()))
-        .put("labels", OpenTelemetryHelper.getFieldAsString(this.getLabels()))
+        .put("datasetId", getFieldAsString(this.getDatasetId().getDataset()))
+        .put("defaultTableLifetime", getFieldAsString(this.getDefaultTableLifetime()))
+        .put("description", getFieldAsString(this.getDescription()))
+        .put("etag", getFieldAsString(this.getEtag()))
+        .put("friendlyName", getFieldAsString(this.getFriendlyName()))
+        .put("generatedId", getFieldAsString(this.getGeneratedId()))
+        .put("lastModified", getFieldAsString(this.getLastModified()))
+        .put("location", getFieldAsString(this.getLocation()))
+        .put("selfLink", getFieldAsString(this.getSelfLink()))
+        .put("labels", getFieldAsString(this.getLabels()))
         .put(
             "defaultEncryptionConfiguration",
-            OpenTelemetryHelper.getFieldAsString(this.getDefaultEncryptionConfiguration()))
+            getFieldAsString(this.getDefaultEncryptionConfiguration()))
         .put(
             "defaultPartitionExpirationMs",
-            OpenTelemetryHelper.getFieldAsString(this.getDefaultPartitionExpirationMs()))
-        .put("defaultCollation", OpenTelemetryHelper.getFieldAsString(this.getDefaultCollation()))
-        .put(
-            "externalDatasetReference",
-            OpenTelemetryHelper.getFieldAsString(this.getExternalDatasetReference()))
-        .put(
-            "storageBillingModel",
-            OpenTelemetryHelper.getFieldAsString(this.getStorageBillingModel()))
-        .put(
-            "maxTimeTravelHours",
-            OpenTelemetryHelper.getFieldAsString(this.getMaxTimeTravelHours()))
-        .put("resourceTags", OpenTelemetryHelper.getFieldAsString(this.getResourceTags()))
+            getFieldAsString(this.getDefaultPartitionExpirationMs()))
+        .put("defaultCollation", getFieldAsString(this.getDefaultCollation()))
+        .put("externalDatasetReference", getFieldAsString(this.getExternalDatasetReference()))
+        .put("storageBillingModel", getFieldAsString(this.getStorageBillingModel()))
+        .put("maxTimeTravelHours", getFieldAsString(this.getMaxTimeTravelHours()))
+        .put("resourceTags", getFieldAsString(this.getResourceTags()))
         .build();
   }
 
