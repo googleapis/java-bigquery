@@ -129,7 +129,7 @@ public abstract class JobId implements Serializable {
     return field == null ? "null" : field.toString();
   }
 
-  public Attributes getOtelAttributes() {
+  protected Attributes getOtelAttributes() {
     return Attributes.builder()
         .put("job", getFieldAsString(this.getJob()))
         .put("location", getFieldAsString(this.getLocation()))

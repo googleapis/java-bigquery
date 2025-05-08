@@ -16,6 +16,7 @@
 
 package com.google.cloud.bigquery;
 
+import com.google.api.core.BetaApi;
 import com.google.cloud.ServiceDefaults;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.ServiceRpc;
@@ -95,11 +96,23 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
       return this;
     }
 
+    /**
+     * Enables OpenTelemetry tracing functionality for this BigQuery instance
+     *
+     * @param enableOpenTelemetryTracing enables OpenTelemetry tracing if true
+     */
+    @BetaApi
     public Builder setEnableOpenTelemetryTracing(boolean enableOpenTelemetryTracing) {
       this.enableOpenTelemetryTracing = enableOpenTelemetryTracing;
       return this;
     }
 
+    /**
+     * Sets the OpenTelemetry tracer for this BigQuery instance to be tracer.
+     *
+     * @param tracer OpenTelemetry tracer to be used
+     */
+    @BetaApi
     public Builder setOpenTelemetryTracer(Tracer tracer) {
       this.openTelemetryTracer = tracer;
       return this;
@@ -181,10 +194,22 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
     return useInt64Timestamps;
   }
 
+  /**
+   * Returns whether this BigQuery instance has OpenTelemetry tracing enabled
+   *
+   * @return true if tracing is enabled, false if not
+   */
+  @BetaApi
   public boolean isOpenTelemetryTracingEnabled() {
     return enableOpenTelemetryTracing;
   }
 
+  /**
+   * Returns the OpenTelemetry tracer used by this BigQuery instance
+   *
+   * @return OpenTelemetry tracer object or {@code null} if not set
+   */
+  @BetaApi
   public Tracer getOpenTelemetryTracer() {
     return openTelemetryTracer;
   }

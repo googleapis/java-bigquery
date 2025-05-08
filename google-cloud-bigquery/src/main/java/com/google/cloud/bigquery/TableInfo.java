@@ -769,34 +769,19 @@ public class TableInfo implements Serializable {
     return field == null ? "null" : field.toString();
   }
 
-  public Attributes getOtelAttributes() {
+  protected Attributes getOtelAttributes() {
     return Attributes.builder()
-        .put("etag", getFieldAsString(this.getEtag()))
+        .putAll(this.getTableId().getOtelAttributes())
         .put("generatedId", getFieldAsString(this.getGeneratedId()))
-        .put("selfLink", getFieldAsString(this.getSelfLink()))
-        .put("tableId", this.getTableId().getTable())
         .put("friendlyName", getFieldAsString(this.getFriendlyName()))
-        .put("description", getFieldAsString(this.getDescription()))
         .put("creationTime", getFieldAsString(this.getCreationTime()))
         .put("expirationTime", getFieldAsString(this.getExpirationTime()))
         .put("lastModifiedTime", getFieldAsString(this.getLastModifiedTime()))
         .put("numBytes", getFieldAsString(this.getNumBytes()))
-        .put("numLongTermBytes", getFieldAsString(this.getNumLongTermBytes()))
-        .put("numTimeTravelPhysicalBytes", getFieldAsString(this.getNumTimeTravelPhysicalBytes()))
-        .put("numTotalLogicalBytes", getFieldAsString(this.getNumTotalLogicalBytes()))
-        .put("numActiveLogicalBytes", getFieldAsString(this.getNumActiveLogicalBytes()))
-        .put("numLongTermLogicalBytes", getFieldAsString(this.getNumLongTermLogicalBytes()))
-        .put("numTotalPhysicalBytes", getFieldAsString(this.getNumTotalPhysicalBytes()))
-        .put("numActivePhysicalBytes", getFieldAsString(this.getNumActivePhysicalBytes()))
-        .put("numLongTermPhysicalBytes", getFieldAsString(this.getNumLongTermPhysicalBytes()))
         .put("numRows", getFieldAsString(this.getNumRows()))
-        .put("definition", getFieldAsString(this.getDefinition()))
-        .put("encryptionConfiguration", getFieldAsString(this.getEncryptionConfiguration()))
         .put("labels", getFieldAsString(this.getLabels()))
         .put("resourceTags", getFieldAsString(this.getResourceTags()))
         .put("requirePartitionFilter", getFieldAsString(this.getRequirePartitionFilter()))
-        .put("defaultCollation", getFieldAsString(this.getDefaultCollation()))
-        .put("cloneDefinition", getFieldAsString(this.getCloneDefinition()))
         .put("tableConstraints", getFieldAsString(this.getTableConstraints()))
         .build();
   }

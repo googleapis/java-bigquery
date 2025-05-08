@@ -116,10 +116,11 @@ public final class TableId implements Serializable {
     return new TableId(tableRef.getProjectId(), tableRef.getDatasetId(), tableRef.getTableId());
   }
 
-  public Attributes getOtelAttributes() {
+  protected Attributes getOtelAttributes() {
     return Attributes.builder()
         .put("project", this.getProject())
         .put("dataset", this.getDataset())
+        .put("db.name", this.getDataset())
         .put("table", this.getTable())
         .build();
   }

@@ -278,7 +278,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       datasetCreate =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_datasetCreate")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.createDataset")
+              .setAttribute("language", "Java")
               .setAllAttributes(datasetInfo.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -323,7 +324,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       tableCreate =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_tableCreate")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.createTable")
+              .setAttribute("language", "Java")
               .setAllAttributes(tableInfo.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -377,7 +379,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       routineCreate =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_routineCreate")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.createRoutine")
+              .setAttribute("language", "Java")
               .setAllAttributes(routineInfo.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -443,8 +446,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       jobCreate =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_jobCreate")
-              .setAllAttributes(jobInfo.getOtelAttributes())
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.createJob")
+              .setAttribute("language", "Java")
+              .setAllAttributes(jobInfo.getJobId().getOtelAttributes())
+              .setAttribute("status", getFieldAsString(jobInfo.getStatus()))
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
@@ -566,7 +571,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       datasetGet =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_datasetGet")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.getDataset")
+              .setAttribute("language", "Java")
               .setAllAttributes(completeDatasetId.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -614,7 +620,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       datasetsList =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_datasetsList")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.listDatasets")
+              .setAttribute("language", "Java")
               .setAttribute("projectId", projectId)
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -681,7 +688,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       datasetDelete =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_datasetDelete")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.deleteDataset")
+              .setAttribute("language", "Java")
               .setAllAttributes(datasetId.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -729,7 +737,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       tableDelete =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_tableDelete")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.deleteTable")
+              .setAttribute("language", "Java")
               .setAllAttributes(tableId.getOtelAttributes())
               .startSpan();
     }
@@ -773,7 +782,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       modelDelete =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_modelDelete")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.deleteModel")
+              .setAttribute("language", "Java")
               .setAllAttributes(modelId.getOtelAttributes())
               .startSpan();
     }
@@ -817,7 +827,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       routineDelete =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_routineDelete")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.deleteRoutine")
+              .setAttribute("language", "Java")
               .setAllAttributes(routineId.getOtelAttributes())
               .startSpan();
     }
@@ -884,7 +895,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       datasetUpdate =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_datasetUpdate")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.updateDataset")
+              .setAttribute("language", "Java")
               .setAllAttributes(datasetInfo.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -929,7 +941,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       tableUpdate =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_tableUpdate")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.updateTable")
+              .setAttribute("language", "Java")
               .setAllAttributes(tableInfo.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -973,7 +986,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       modelUpdate =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_modelUpdate")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.updateModel")
+              .setAttribute("language", "Java")
               .setAllAttributes(modelInfo.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1017,7 +1031,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       routineUpdate =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_routineUpdate")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.updateRoutine")
+              .setAttribute("language", "Java")
               .setAllAttributes(routineInfo.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1066,7 +1081,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       tableGet =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_tableGet")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.getTable")
+              .setAttribute("language", "Java")
               .setAllAttributes(tableId.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1123,7 +1139,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       modelGet =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_modelGet")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.getModel")
+              .setAttribute("language", "Java")
               .setAllAttributes(modelId.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1180,7 +1197,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       routineGet =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_routineGet")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.getRoutine")
+              .setAttribute("language", "Java")
               .setAllAttributes(routineId.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1226,7 +1244,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       tablesList =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_tablesList")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.listTables")
+              .setAttribute("language", "Java")
               .setAllAttributes(DatasetId.of(datasetId).getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1250,7 +1269,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       tablesList =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_tablesList")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.listTables")
+              .setAttribute("language", "Java")
               .setAllAttributes(completeDatasetId.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1272,7 +1292,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       modelsList =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_modelsList")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.listModels")
+              .setAttribute("language", "Java")
               .setAllAttributes(DatasetId.of(datasetId).getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1296,7 +1317,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       modelsList =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_modelsList")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.listModels")
+              .setAttribute("language", "Java")
               .setAllAttributes(datasetId.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1318,7 +1340,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       routinesList =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_routinesList")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.listRoutines")
+              .setAttribute("language", "Java")
               .setAllAttributes(DatasetId.of(datasetId).getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1342,7 +1365,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       routinesList =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_routinesList")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.listRoutines")
+              .setAttribute("language", "Java")
               .setAllAttributes(datasetId.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1536,7 +1560,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       insertAll =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_insertAll")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.insertAll")
+              .setAttribute("language", "Java")
               .setAllAttributes(request.getOtelAttributes())
               .startSpan();
     }
@@ -1605,7 +1630,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       tableDataList =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_tableDataList")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.listTableData")
+              .setAttribute("language", "Java")
               .setAllAttributes(tableId.getOtelAttributes())
               .setAllAttributes(schema.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
@@ -1703,7 +1729,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       jobGet =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_jobGet")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.getJob")
+              .setAttribute("language", "Java")
               .setAllAttributes(jobId.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1749,7 +1776,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       jobsList =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_jobsList")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.listJobs")
+              .setAttribute("language", "Java")
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
@@ -1816,7 +1844,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       jobCancel =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_jobCancel")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.cancelJob")
+              .setAttribute("language", "Java")
               .setAllAttributes(jobId.getOtelAttributes())
               .startSpan();
     }
@@ -1883,7 +1912,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       queryRpc =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_queryRpc")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.queryRpc")
+              .setAttribute("language", "Java")
               .setAttribute("projectId", projectId)
               .setAllAttributes(otelAttributesFromQueryRequest(content))
               .setAllAttributes(otelAttributesFromOptions(options))
@@ -2014,7 +2044,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       getQueryResults =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_getQueryResults")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.getQueryResults")
+              .setAttribute("language", "Java")
               .setAllAttributes(jobId.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -2109,7 +2140,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       iamPolicyGet =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_iamPolicyGet")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.getIamPolicy")
+              .setAttribute("language", "Java")
               .setAllAttributes(tableId.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -2152,7 +2184,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       iamPolicySet =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_iamPolicySet")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.setIamPolicy")
+              .setAttribute("language", "Java")
               .setAllAttributes(tableId.getOtelAttributes())
               .setAllAttributes(otelAttributesFromPolicy(policy))
               .setAllAttributes(otelAttributesFromOptions(options))
@@ -2196,7 +2229,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       testIamPermissions =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("JAVA_BQ_SDK_testIamPermissions")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.testIamPermissions")
+              .setAttribute("language", "Java")
               .setAllAttributes(tableId.getOtelAttributes())
               .setAttribute("permissions", permissions.toString())
               .setAllAttributes(otelAttributesFromOptions(options))
@@ -2260,11 +2294,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         .put("continuous", getFieldAsString(request.getContinuous()))
         .put("createSession", getFieldAsString(request.getCreateSession()))
         .put("defaultDataset", getFieldAsString(request.getDefaultDataset()))
-        .put(
-            "destinationEncryptionConfiguration",
-            getFieldAsString(request.getDestinationEncryptionConfiguration()))
         .put("dryRun", getFieldAsString(request.getDryRun()))
-        .put("formatOptions", getFieldAsString(request.getFormatOptions()))
         .put("jobCreationMode", getFieldAsString(request.getJobCreationMode()))
         .put("jobTimeoutMs", getFieldAsString(request.getJobTimeoutMs()))
         .put("kind", getFieldAsString(request.getKind()))
@@ -2272,8 +2302,6 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         .put("location", getFieldAsString(request.getLocation()))
         .put("maxResults", getFieldAsString(request.getMaxResults()))
         .put("maximumBytesBilled", getFieldAsString(request.getMaximumBytesBilled()))
-        .put("parameterMode", getFieldAsString(request.getParameterMode()))
-        .put("preserveNulls", getFieldAsString(request.getPreserveNulls()))
         .put("query", getFieldAsString(request.getQuery()))
         .put("queryParameters", getFieldAsString(request.getQueryParameters()))
         .put("requestId", getFieldAsString(request.getRequestId()))
@@ -2290,7 +2318,6 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         .put("version", getFieldAsString(policy.getVersion()))
         .put("bindings", getFieldAsString(policy.getBindings()))
         .put("bindingsList", getFieldAsString(policy.getBindingsList()))
-        .put("etag", getFieldAsString(policy.getEtag()))
         .build();
   }
 

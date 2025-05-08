@@ -751,27 +751,18 @@ public class DatasetInfo implements Serializable {
     return field == null ? "null" : field.toString();
   }
 
-  public Attributes getOtelAttributes() {
+  protected Attributes getOtelAttributes() {
     return Attributes.builder()
-        .put("datasetId", getFieldAsString(this.getDatasetId().getDataset()))
+        .putAll(this.getDatasetId().getOtelAttributes())
         .put("defaultTableLifetime", getFieldAsString(this.getDefaultTableLifetime()))
-        .put("description", getFieldAsString(this.getDescription()))
-        .put("etag", getFieldAsString(this.getEtag()))
         .put("friendlyName", getFieldAsString(this.getFriendlyName()))
         .put("generatedId", getFieldAsString(this.getGeneratedId()))
         .put("lastModified", getFieldAsString(this.getLastModified()))
         .put("location", getFieldAsString(this.getLocation()))
-        .put("selfLink", getFieldAsString(this.getSelfLink()))
         .put("labels", getFieldAsString(this.getLabels()))
-        .put(
-            "defaultEncryptionConfiguration",
-            getFieldAsString(this.getDefaultEncryptionConfiguration()))
         .put(
             "defaultPartitionExpirationMs",
             getFieldAsString(this.getDefaultPartitionExpirationMs()))
-        .put("defaultCollation", getFieldAsString(this.getDefaultCollation()))
-        .put("externalDatasetReference", getFieldAsString(this.getExternalDatasetReference()))
-        .put("storageBillingModel", getFieldAsString(this.getStorageBillingModel()))
         .put("maxTimeTravelHours", getFieldAsString(this.getMaxTimeTravelHours()))
         .put("resourceTags", getFieldAsString(this.getResourceTags()))
         .build();

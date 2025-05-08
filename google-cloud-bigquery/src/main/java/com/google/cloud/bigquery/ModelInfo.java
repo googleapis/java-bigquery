@@ -459,11 +459,9 @@ public class ModelInfo implements Serializable {
     return field == null ? "null" : field.toString();
   }
 
-  public Attributes getOtelAttributes() {
+  protected Attributes getOtelAttributes() {
     return Attributes.builder()
-        .put("etag", getFieldAsString(this.getEtag()))
-        .put("modelId", getFieldAsString(this.getModelId().getModel()))
-        .put("description", getFieldAsString(this.getDescription()))
+        .putAll(this.getModelId().getOtelAttributes())
         .put("modelType", getFieldAsString(this.getModelType()))
         .put("friendlyName", getFieldAsString(this.getFriendlyName()))
         .put("creationTime", getFieldAsString(this.getCreationTime()))
@@ -471,10 +469,6 @@ public class ModelInfo implements Serializable {
         .put("expirationTime", getFieldAsString(this.getExpirationTime()))
         .put("labels", getFieldAsString(this.getLabels()))
         .put("location", getFieldAsString(this.getLocation()))
-        .put("trainingRunList", getFieldAsString(this.getTrainingRuns()))
-        .put("featureColumnList", getFieldAsString(this.getFeatureColumns()))
-        .put("labelColumnList", getFieldAsString(this.getLabelColumns()))
-        .put("encryptionConfiguration", getFieldAsString(this.getEncryptionConfiguration()))
         .build();
   }
 }
