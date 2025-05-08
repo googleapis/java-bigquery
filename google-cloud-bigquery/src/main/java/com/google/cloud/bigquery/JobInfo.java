@@ -381,16 +381,18 @@ public class JobInfo implements Serializable {
     return field == null ? "null" : field.toString();
   }
 
-  public Attributes getOtelAttributes() {
+  protected Attributes getOtelAttributes() {
     return Attributes.builder()
-        .put("etag", getFieldAsString(this.getEtag()))
+        .putAll(this.getJobId().getOtelAttributes())
         .put("generatedId", getFieldAsString(this.getGeneratedId()))
-        .put("jobId", getFieldAsString(this.getJobId().getJob()))
-        .put("selfLink", getFieldAsString(this.getSelfLink()))
         .put("status", getFieldAsString(this.getStatus()))
-        .put("statistics", getFieldAsString(this.getStatistics()))
-        .put("userEmail", getFieldAsString(this.getUserEmail()))
-        .put("configuration", getFieldAsString(this.getConfiguration()))
+        .put("creationTime", getFieldAsString(this.getStatistics().getCreationTime()))
+        .put("startTime", getFieldAsString(this.getStatistics().getStartTime()))
+        .put("endTime", getFieldAsString(this.getStatistics().getEndTime()))
+        .put("parentJobId", getFieldAsString(this.getStatistics().getParentJobId()))
+        .put("numChildJobs", getFieldAsString(this.getStatistics().getNumChildJobs()))
+        .put("jobType", getFieldAsString(this.getConfiguration().getType()))
+        .put("jobTimeoutMs", getFieldAsString(this.getConfiguration().toPb().getJobTimeoutMs()))
         .build();
   }
 }

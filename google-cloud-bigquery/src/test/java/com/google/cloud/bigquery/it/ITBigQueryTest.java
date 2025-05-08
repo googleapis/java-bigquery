@@ -7567,7 +7567,7 @@ public class ITBigQueryTest {
       DatasetInfo info =
           DatasetInfo.newBuilder(billingModelDataset)
               .setDescription(DESCRIPTION)
-              .setStorageBillingModel(STORAGE_BILLING_MODEL)
+              .setMaxTimeTravelHours(72L)
               .setLabels(LABELS)
               .build();
 
@@ -7579,7 +7579,7 @@ public class ITBigQueryTest {
       DatasetInfo updatedInfo =
           DatasetInfo.newBuilder(billingModelDataset)
               .setDescription("Updated Description")
-              .setStorageBillingModel(STORAGE_BILLING_MODEL)
+              .setMaxTimeTravelHours(96L)
               .setLabels(LABELS)
               .build();
 
@@ -7588,31 +7588,36 @@ public class ITBigQueryTest {
       assertTrue(bigquery.delete(dataset.getDatasetId()));
     } finally {
       parentSpan.end();
-      Map<AttributeKey<?>, Object> createMap = OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_datasetCreate");
-      assertEquals(createMap.get(AttributeKey.stringKey("description")), DESCRIPTION);
-      assertEquals(
-          createMap.get(AttributeKey.stringKey("storageBillingModel")), STORAGE_BILLING_MODEL);
-      assertEquals(createMap.get(AttributeKey.stringKey("defaultCollation")), "null");
+      Map<AttributeKey<?>, Object> createMap =
+          OTEL_ATTRIBUTES.get("com.google.cloud.bigquery.BigQuery.createDataset");
+      assertEquals(createMap.get(AttributeKey.stringKey("maxTimeTravelHours")), "72");
+      assertEquals(createMap.get(AttributeKey.stringKey("friendlyName")), "null");
 
-      Map<AttributeKey<?>, Object> getMap = OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_datasetGet");
+      Map<AttributeKey<?>, Object> getMap =
+          OTEL_ATTRIBUTES.get("com.google.cloud.bigquery.BigQuery.getDataset");
       assertEquals(getMap.get(AttributeKey.stringKey("dataset")), billingModelDataset);
 
-      Map<AttributeKey<?>, Object> updateMap = OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_datasetUpdate");
-      assertEquals(updateMap.get(AttributeKey.stringKey("description")), "Updated Description");
+      Map<AttributeKey<?>, Object> updateMap =
+          OTEL_ATTRIBUTES.get("com.google.cloud.bigquery.BigQuery.updateDataset");
+      assertEquals(updateMap.get(AttributeKey.stringKey("maxTimeTravelHours")), "96");
       assertEquals(updateMap.get(AttributeKey.stringKey("ACCESS_POLICY_VERSION")), "2");
 
-      Map<AttributeKey<?>, Object> deleteMap = OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_datasetDelete");
+      Map<AttributeKey<?>, Object> deleteMap =
+          OTEL_ATTRIBUTES.get("com.google.cloud.bigquery.BigQuery.deleteDataset");
       assertEquals(deleteMap.get(AttributeKey.stringKey("dataset")), billingModelDataset);
 
       // All should be children spans of parentSpan
       assertEquals(
-          OTEL_SPAN_IDS_TO_NAMES.get(OTEL_PARENT_SPAN_IDS.get("JAVA_BQ_SDK_datasetGet")),
+          OTEL_SPAN_IDS_TO_NAMES.get(
+              OTEL_PARENT_SPAN_IDS.get("com.google.cloud.bigquery.BigQuery.getDataset")),
           "Test Parent Span");
       assertEquals(
-          OTEL_SPAN_IDS_TO_NAMES.get(OTEL_PARENT_SPAN_IDS.get("JAVA_BQ_SDK_datasetCreate")),
+          OTEL_SPAN_IDS_TO_NAMES.get(
+              OTEL_PARENT_SPAN_IDS.get("com.google.cloud.bigquery.BigQuery.createDataset")),
           "Test Parent Span");
       assertEquals(
-          OTEL_SPAN_IDS_TO_NAMES.get(OTEL_PARENT_SPAN_IDS.get("JAVA_BQ_SDK_datasetDelete")),
+          OTEL_SPAN_IDS_TO_NAMES.get(
+              OTEL_PARENT_SPAN_IDS.get("com.google.cloud.bigquery.BigQuery.deleteDataset")),
           "Test Parent Span");
       assertEquals(OTEL_PARENT_SPAN_IDS.get("Test Parent Span"), OTEL_PARENT_SPAN_ID);
       RemoteBigQueryHelper.forceDelete(bigquery, billingModelDataset);
@@ -7634,16 +7639,26 @@ public class ITBigQueryTest {
     TableInfo tableInfo =
         TableInfo.newBuilder(TableId.of(DATASET, tableName), tableDefinition)
             .setDescription("Some Description")
+            .setFriendlyName("friendly name")
             .setLabels(Collections.singletonMap("a", "b"))
             .build();
     Table createdTable = bigquery.create(tableInfo);
     assertThat(createdTable.getDescription()).isEqualTo("Some Description");
     assertThat(createdTable.getLabels()).containsExactly("a", "b");
 
-    assertEquals(OTEL_PARENT_SPAN_IDS.get("JAVA_BQ_SDK_tableCreate"), OTEL_PARENT_SPAN_ID);
     assertEquals(
-        OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_tableCreate").get(AttributeKey.stringKey("description")),
-        "Some Description");
+        OTEL_PARENT_SPAN_IDS.get("com.google.cloud.bigquery.BigQuery.createTable"),
+        OTEL_PARENT_SPAN_ID);
+    assertEquals(
+        OTEL_ATTRIBUTES
+            .get("com.google.cloud.bigquery.BigQuery.createTable")
+            .get(AttributeKey.stringKey("table")),
+        tableName);
+    assertEquals(
+        OTEL_ATTRIBUTES
+            .get("com.google.cloud.bigquery.BigQuery.createTable")
+            .get(AttributeKey.stringKey("friendlyName")),
+        "friendly name");
 
     Map<String, String> updateLabels = new HashMap<>();
     updateLabels.put("x", "y");
@@ -7652,15 +7667,20 @@ public class ITBigQueryTest {
         bigquery.update(
             createdTable.toBuilder()
                 .setDescription("Updated Description")
+                .setFriendlyName("updated friendly name")
                 .setLabels(updateLabels)
                 .build());
     assertThat(updatedTable.getDescription()).isEqualTo("Updated Description");
     assertThat(updatedTable.getLabels()).containsExactly("x", "y");
 
-    assertEquals(OTEL_PARENT_SPAN_IDS.get("JAVA_BQ_SDK_tableUpdate"), OTEL_PARENT_SPAN_ID);
     assertEquals(
-        OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_tableUpdate").get(AttributeKey.stringKey("description")),
-        "Updated Description");
+        OTEL_PARENT_SPAN_IDS.get("com.google.cloud.bigquery.BigQuery.updateTable"),
+        OTEL_PARENT_SPAN_ID);
+    assertEquals(
+        OTEL_ATTRIBUTES
+            .get("com.google.cloud.bigquery.BigQuery.updateTable")
+            .get(AttributeKey.stringKey("friendlyName")),
+        "updated friendly name");
   }
 
   @Test
@@ -7679,7 +7699,7 @@ public class ITBigQueryTest {
     assertNotNull(tableResult.getQueryId());
     assertNull(tableResult.getJobId());
 
-    assertNotNull(OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_queryRpc"));
+    assertNotNull(OTEL_ATTRIBUTES.get("com.google.cloud.bigquery.BigQuery.queryRpc"));
 
     // Query job
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
@@ -7691,8 +7711,8 @@ public class ITBigQueryTest {
     assertNotNull(result.getJobId());
     assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
 
-    assertNotNull(OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_getQueryResults"));
-    assertNotNull(OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_tableDataList"));
-    assertNotNull(OTEL_ATTRIBUTES.get("JAVA_BQ_SDK_jobCreate"));
+    assertNotNull(OTEL_ATTRIBUTES.get("com.google.cloud.bigquery.BigQuery.getQueryResults"));
+    assertNotNull(OTEL_ATTRIBUTES.get("com.google.cloud.bigquery.BigQuery.listTableData"));
+    assertNotNull(OTEL_ATTRIBUTES.get("com.google.cloud.bigquery.BigQuery.createJob"));
   }
 }

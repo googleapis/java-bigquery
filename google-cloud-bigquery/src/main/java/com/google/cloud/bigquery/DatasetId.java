@@ -86,10 +86,11 @@ public final class DatasetId implements Serializable {
     return new DatasetId(datasetRef.getProjectId(), datasetRef.getDatasetId());
   }
 
-  public Attributes getOtelAttributes() {
+  protected Attributes getOtelAttributes() {
     return Attributes.builder()
         .put("project", this.getProject())
         .put("dataset", this.getDataset())
+        .put("db.name", this.getDataset())
         .build();
   }
 }

@@ -107,10 +107,11 @@ public final class ModelId implements Serializable {
     return new ModelId(modelRef.getProjectId(), modelRef.getDatasetId(), modelRef.getModelId());
   }
 
-  public Attributes getOtelAttributes() {
+  protected Attributes getOtelAttributes() {
     return Attributes.builder()
         .put("project", this.getProject())
         .put("dataset", this.getDataset())
+        .put("db.name", this.getDataset())
         .put("model", this.getModel())
         .build();
   }

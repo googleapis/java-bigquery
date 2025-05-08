@@ -550,23 +550,17 @@ public class RoutineInfo implements Serializable {
     return field == null ? "null" : field.toString();
   }
 
-  public Attributes getOtelAttributes() {
+  protected Attributes getOtelAttributes() {
     return Attributes.builder()
-        .put("routineId", getFieldAsString(this.getRoutineId().getRoutine()))
-        .put("etag", getFieldAsString(this.getEtag()))
+        .putAll(this.getRoutineId().getOtelAttributes())
         .put("routineType", getFieldAsString(this.getRoutineType()))
         .put("creationTime", getFieldAsString(this.getCreationTime()))
-        .put("description", getFieldAsString(this.getDescription()))
         .put("determinismLevel", getFieldAsString(this.getDeterminismLevel()))
         .put("lastModifiedTime", getFieldAsString(this.getLastModifiedTime()))
         .put("language", getFieldAsString(this.getLanguage()))
         .put("argumentList", getFieldAsString(this.getArguments()))
         .put("returnType", getFieldAsString(this.getReturnType()))
         .put("returnableType", getFieldAsString(this.getReturnTableType()))
-        .put("importedLibrariesList", getFieldAsString(this.getImportedLibraries()))
-        .put("body", getFieldAsString(this.getBody()))
-        .put("remoteFunctionOptions", getFieldAsString(this.getRemoteFunctionOptions()))
-        .put("dataGovernanceTyoe", getFieldAsString(this.getDataGovernanceType()))
         .build();
   }
 }
