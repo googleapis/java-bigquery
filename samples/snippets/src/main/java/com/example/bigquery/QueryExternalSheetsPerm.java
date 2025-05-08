@@ -37,7 +37,7 @@ import java.io.IOException;
 // Sample to queries an external data source using a permanent table
 public class QueryExternalSheetsPerm {
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws BigQueryException, InterruptedException, IOException  {
     // TODO(developer): Replace these variables before running the sample.
     String datasetName = "MY_DATASET_NAME";
     String tableName = "MY_TABLE_NAME";
@@ -53,8 +53,8 @@ public class QueryExternalSheetsPerm {
   }
 
   public static void queryExternalSheetsPerm(
-      String datasetName, String tableName, String sourceUri, Schema schema, String query) {
-    try {
+      String datasetName, String tableName, String sourceUri, Schema schema, String query) throws BigQueryException, InterruptedException, IOException {
+    // try {
 
       // Create credentials with Drive & BigQuery API scopes.
       // Both APIs must be enabled for your project before running this code.
@@ -91,9 +91,9 @@ public class QueryExternalSheetsPerm {
           .forEach(row -> row.forEach(val -> System.out.printf("%s,", val.toString())));
 
       System.out.println("Query on external permanent table performed successfully.");
-    } catch (BigQueryException | InterruptedException | IOException e) {
-      System.out.println("Query not performed \n" + e.toString());
-    }
+    // } catch (BigQueryException | InterruptedException | IOException e) {
+    //   System.out.println("Query not performed \n" + e.toString());
+    // // }
   }
 }
 // [END bigquery_query_external_sheets_perm]

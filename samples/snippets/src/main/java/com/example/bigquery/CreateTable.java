@@ -17,6 +17,8 @@
 package com.example.bigquery;
 
 // [START bigquery_create_table]
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
@@ -27,6 +29,10 @@ import com.google.cloud.bigquery.StandardTableDefinition;
 import com.google.cloud.bigquery.TableDefinition;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableInfo;
+import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.TableResult;
+import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
 
 public class CreateTable {
 
@@ -43,17 +49,50 @@ public class CreateTable {
 
   public static void createTable(String datasetName, String tableName, Schema schema) {
     try {
+      // Create credentials with Drive & BigQuery API scopes.
+      // Both APIs must be enabled for your project before running this code.
+      GoogleCredentials credentials =
+          ServiceAccountCredentials.getApplicationDefault()
+              .createScoped(
+                  ImmutableSet.of(
+                      "https://www.googleapis.com/auth/bigquery",
+                      "https://www.googleapis.com/auth/drive"));
+
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
-      BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
+      BigQuery bigquery =
+          BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
+      // // Initialize client that will be used to send requests. This client only needs to be created
+      // // once, and can be reused for multiple requests.
+      // BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
       TableId tableId = TableId.of(datasetName, tableName);
       TableDefinition tableDefinition = StandardTableDefinition.of(schema);
       TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build();
 
       bigquery.create(tableInfo);
-      System.out.println("Table created successfully");
-    } catch (BigQueryException e) {
+
+      // TODO(NOW)
+      // String query = String.format("SELECT * FROM %s.INFORMATION_SCHEMA.SESSIONS_BY_USER", datasetName);
+      String query = "SELECT * FROM region-us.INFORMATION_SCHEMA.SESSIONS_BY_USER";
+      // Create the query job.
+      QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query).build();
+
+      // Execute the query.
+      TableResult result = bigquery.query(queryConfig);
+
+      // Print the results.
+      result
+          .iterateAll()
+          .forEach(
+              row -> {
+                System.out.print("creation_time:" + row.get("creation_time").getStringValue());
+                System.out.print(", project_id:" + row.get("project_id").getStringValue());
+                System.out.print(", session_id:" + row.get("session_id").getStringValue());
+                System.out.print(", user_email:" + row.get("user_email").getStringValue());
+                System.out.println();
+              });
+    } catch (BigQueryException | InterruptedException | IOException e) {
       System.out.println("Table was not created. \n" + e.toString());
     }
   }
