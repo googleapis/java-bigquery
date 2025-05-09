@@ -52,6 +52,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Scope;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -269,7 +272,19 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                     : datasetInfo.getDatasetId().getProject())
             .toPb();
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    Span datasetCreate = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      datasetCreate =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.createDataset")
+              .setAttribute("language", "Java")
+              .setAllAttributes(datasetInfo.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope datasetCreateScope = datasetCreate != null ? datasetCreate.makeCurrent() : null) {
       return Dataset.fromPb(
           this,
           BigQueryRetryHelper.runWithRetries(
@@ -285,6 +300,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               EMPTY_RETRY_CONFIG));
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (datasetCreate != null) {
+        datasetCreate.end();
+      }
     }
   }
 
@@ -299,7 +318,19 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             .toPb();
     handleExternalTableSchema(tablePb);
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    Span tableCreate = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      tableCreate =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.createTable")
+              .setAttribute("language", "Java")
+              .setAllAttributes(tableInfo.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope tableCreateScope = tableCreate != null ? tableCreate.makeCurrent() : null) {
       return Table.fromPb(
           this,
           BigQueryRetryHelper.runWithRetries(
@@ -315,6 +346,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               EMPTY_RETRY_CONFIG));
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (tableCreate != null) {
+        tableCreate.end();
+      }
     }
   }
 
@@ -338,7 +373,19 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                     : routineInfo.getRoutineId().getProject())
             .toPb();
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    Span routineCreate = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      routineCreate =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.createRoutine")
+              .setAttribute("language", "Java")
+              .setAllAttributes(routineInfo.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope createRoutineScope = routineCreate != null ? routineCreate.makeCurrent() : null) {
       return Routine.fromPb(
           this,
           BigQueryRetryHelper.runWithRetries(
@@ -354,6 +401,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               EMPTY_RETRY_CONFIG));
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (routineCreate != null) {
+        routineCreate.end();
+      }
     }
   }
 
@@ -389,6 +440,19 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     final boolean idRandom = (jobInfo.getJobId() == null);
 
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
+    Span jobCreate = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      jobCreate =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.createJob")
+              .setAttribute("language", "Java")
+              .setAllAttributes(jobInfo.getJobId().getOtelAttributes())
+              .setAttribute("status", getFieldAsString(jobInfo.getStatus()))
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
     BigQueryException createException;
     // NOTE(pongad): This double-try structure is admittedly odd.
     // translateAndThrow itself throws, and pretends to return an exception only
@@ -397,93 +461,99 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     // Fixing this entails some work on BaseServiceException.translate.
     // Since that affects a bunch of APIs, we should fix this as a separate change.
     final JobId[] finalJobId = new JobId[1];
-    try {
+    try (Scope jobCreateScope = jobCreate != null ? jobCreate.makeCurrent() : null) {
       try {
-        return Job.fromPb(
-            this,
-            BigQueryRetryHelper.runWithRetries(
-                new Callable<com.google.api.services.bigquery.model.Job>() {
-                  @Override
-                  public com.google.api.services.bigquery.model.Job call() throws IOException {
-                    if (idRandom) {
-                      // re-generate a new random job with the same jobInfo when jobId is not
-                      // provided by the user
-                      JobInfo recreatedJobInfo =
-                          jobInfo.toBuilder().setJobId(idProvider.get()).build();
-                      com.google.api.services.bigquery.model.Job newJobPb =
-                          recreatedJobInfo.setProjectId(getOptions().getProjectId()).toPb();
-                      finalJobId[0] = recreatedJobInfo.getJobId();
-                      return bigQueryRpc.createSkipExceptionTranslation(newJobPb, optionsMap);
-                    } else {
-                      com.google.api.services.bigquery.model.Job jobPb =
-                          jobInfo.setProjectId(getOptions().getProjectId()).toPb();
-                      return bigQueryRpc.createSkipExceptionTranslation(jobPb, optionsMap);
+        try {
+          return Job.fromPb(
+              this,
+              BigQueryRetryHelper.runWithRetries(
+                  new Callable<com.google.api.services.bigquery.model.Job>() {
+                    @Override
+                    public com.google.api.services.bigquery.model.Job call() throws IOException {
+                      if (idRandom) {
+                        // re-generate a new random job with the same jobInfo when jobId is not
+                        // provided by the user
+                        JobInfo recreatedJobInfo =
+                            jobInfo.toBuilder().setJobId(idProvider.get()).build();
+                        com.google.api.services.bigquery.model.Job newJobPb =
+                            recreatedJobInfo.setProjectId(getOptions().getProjectId()).toPb();
+                        finalJobId[0] = recreatedJobInfo.getJobId();
+                        return bigQueryRpc.createSkipExceptionTranslation(newJobPb, optionsMap);
+                      } else {
+                        com.google.api.services.bigquery.model.Job jobPb =
+                            jobInfo.setProjectId(getOptions().getProjectId()).toPb();
+                        return bigQueryRpc.createSkipExceptionTranslation(jobPb, optionsMap);
+                      }
                     }
-                  }
-                },
-                getRetryOptions(optionsMap) != null
-                    ? RetryOption.mergeToSettings(
-                        getOptions().getRetrySettings(), getRetryOptions(optionsMap))
-                    : getOptions().getRetrySettings(),
-                BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
-                getOptions().getClock(),
-                getBigQueryRetryConfig(optionsMap) != null
-                    ? getBigQueryRetryConfig(optionsMap)
-                    : DEFAULT_RETRY_CONFIG));
-      } catch (BigQueryRetryHelperException e) {
-        throw BigQueryException.translateAndThrow(e);
+                  },
+                  getRetryOptions(optionsMap) != null
+                      ? RetryOption.mergeToSettings(
+                          getOptions().getRetrySettings(), getRetryOptions(optionsMap))
+                      : getOptions().getRetrySettings(),
+                  BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
+                  getOptions().getClock(),
+                  getBigQueryRetryConfig(optionsMap) != null
+                      ? getBigQueryRetryConfig(optionsMap)
+                      : DEFAULT_RETRY_CONFIG));
+        } catch (BigQueryRetryHelperException e) {
+          throw BigQueryException.translateAndThrow(e);
+        }
+      } catch (BigQueryException e) {
+        createException = e;
       }
-    } catch (BigQueryException e) {
-      createException = e;
-    }
 
-    if (!idRandom) {
-      if (createException instanceof BigQueryException
-          && createException.getCause() != null
-          && createException.getCause().getMessage() != null) {
+      if (!idRandom) {
+        if (createException instanceof BigQueryException
+            && createException.getCause() != null
+            && createException.getCause().getMessage() != null) {
 
-        /*GoogleJsonResponseException createExceptionCause =
-        (GoogleJsonResponseException) createException.getCause();*/
+          /*GoogleJsonResponseException createExceptionCause =
+          (GoogleJsonResponseException) createException.getCause();*/
 
-        Pattern pattern = Pattern.compile(".*Already.*Exists:.*Job.*", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(createException.getCause().getMessage());
+          Pattern pattern = Pattern.compile(".*Already.*Exists:.*Job.*", Pattern.CASE_INSENSITIVE);
+          Matcher matcher = pattern.matcher(createException.getCause().getMessage());
 
-        if (matcher.find()) {
-          // If the Job ALREADY EXISTS, retrieve it.
-          Job job = this.getJob(jobInfo.getJobId(), JobOption.fields(JobField.STATISTICS));
+          if (matcher.find()) {
+            // If the Job ALREADY EXISTS, retrieve it.
+            Job job = this.getJob(jobInfo.getJobId(), JobOption.fields(JobField.STATISTICS));
 
-          long jobCreationTime = job.getStatistics().getCreationTime();
-          long jobMinStaleTime = System.currentTimeMillis();
-          long jobMaxStaleTime =
-              java.time.Instant.ofEpochMilli(jobMinStaleTime)
-                  .minus(1, java.time.temporal.ChronoUnit.DAYS)
-                  .toEpochMilli();
+            long jobCreationTime = job.getStatistics().getCreationTime();
+            long jobMinStaleTime = System.currentTimeMillis();
+            long jobMaxStaleTime =
+                java.time.Instant.ofEpochMilli(jobMinStaleTime)
+                    .minus(1, java.time.temporal.ChronoUnit.DAYS)
+                    .toEpochMilli();
 
-          // Only return the job if it has been created in the past 24 hours.
-          // This is assuming any job older than 24 hours is a valid duplicate JobID
-          // and not a false positive like b/290419183
-          if (jobCreationTime >= jobMaxStaleTime && jobCreationTime <= jobMinStaleTime) {
-            return job;
+            // Only return the job if it has been created in the past 24 hours.
+            // This is assuming any job older than 24 hours is a valid duplicate JobID
+            // and not a false positive like b/290419183
+            if (jobCreationTime >= jobMaxStaleTime && jobCreationTime <= jobMinStaleTime) {
+              return job;
+            }
           }
         }
+        throw createException;
       }
-      throw createException;
-    }
 
-    // If create RPC fails, it's still possible that the job has been successfully
-    // created, and get might work.
-    // We can only do this if we randomly generated the ID. Otherwise we might
-    // mistakenly fetch a job created by someone else.
-    Job job;
-    try {
-      job = getJob(finalJobId[0]);
-    } catch (BigQueryException e) {
-      throw createException;
+      // If create RPC fails, it's still possible that the job has been successfully
+      // created, and get might work.
+      // We can only do this if we randomly generated the ID. Otherwise we might
+      // mistakenly fetch a job created by someone else.
+      Job job;
+      try {
+        job = getJob(finalJobId[0]);
+      } catch (BigQueryException e) {
+        throw createException;
+      }
+      if (job == null) {
+        throw createException;
+      }
+      return job;
+    } finally {
+      if (jobCreate != null) {
+        jobCreate.end();
+      }
     }
-    if (job == null) {
-      throw createException;
-    }
-    return job;
   }
 
   @Override
@@ -495,7 +565,19 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   public Dataset getDataset(final DatasetId datasetId, DatasetOption... options) {
     final DatasetId completeDatasetId = datasetId.setProjectId(getOptions().getProjectId());
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    Span datasetGet = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      datasetGet =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.getDataset")
+              .setAttribute("language", "Java")
+              .setAllAttributes(completeDatasetId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope datasetGetScope = datasetGet != null ? datasetGet.makeCurrent() : null) {
       com.google.api.services.bigquery.model.Dataset answer =
           BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Dataset>() {
@@ -518,6 +600,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         return null;
       }
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (datasetGet != null) {
+        datasetGet.end();
+      }
     }
   }
 
@@ -528,7 +614,25 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   @Override
   public Page<Dataset> listDatasets(String projectId, DatasetListOption... options) {
-    return listDatasets(projectId, getOptions(), optionMap(options));
+    Span datasetsList = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      datasetsList =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.listDatasets")
+              .setAttribute("language", "Java")
+              .setAttribute("projectId", projectId)
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope datasetsListScope = datasetsList != null ? datasetsList.makeCurrent() : null) {
+      return listDatasets(projectId, getOptions(), optionMap(options));
+    } finally {
+      if (datasetsList != null) {
+        datasetsList.end();
+      }
+    }
   }
 
   private static Page<Dataset> listDatasets(
@@ -578,7 +682,19 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   public boolean delete(DatasetId datasetId, DatasetDeleteOption... options) {
     final DatasetId completeDatasetId = datasetId.setProjectId(getOptions().getProjectId());
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    Span datasetDelete = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      datasetDelete =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.deleteDataset")
+              .setAttribute("language", "Java")
+              .setAllAttributes(datasetId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope datasetDeleteScope = datasetDelete != null ? datasetDelete.makeCurrent() : null) {
       return BigQueryRetryHelper.runWithRetries(
           new Callable<Boolean>() {
             @Override
@@ -596,6 +712,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         return false;
       }
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (datasetDelete != null) {
+        datasetDelete.end();
+      }
     }
   }
 
@@ -611,7 +731,18 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             Strings.isNullOrEmpty(tableId.getProject())
                 ? getOptions().getProjectId()
                 : tableId.getProject());
-    try {
+    Span tableDelete = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      tableDelete =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.deleteTable")
+              .setAttribute("language", "Java")
+              .setAllAttributes(tableId.getOtelAttributes())
+              .startSpan();
+    }
+    try (Scope tableDeleteScope = tableDelete != null ? tableDelete.makeCurrent() : null) {
       return BigQueryRetryHelper.runWithRetries(
           new Callable<Boolean>() {
             @Override
@@ -631,6 +762,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         return false;
       }
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (tableDelete != null) {
+        tableDelete.end();
+      }
     }
   }
 
@@ -641,7 +776,18 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             Strings.isNullOrEmpty(modelId.getProject())
                 ? getOptions().getProjectId()
                 : modelId.getProject());
-    try {
+    Span modelDelete = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      modelDelete =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.deleteModel")
+              .setAttribute("language", "Java")
+              .setAllAttributes(modelId.getOtelAttributes())
+              .startSpan();
+    }
+    try (Scope modelDeleteScope = modelDelete != null ? modelDelete.makeCurrent() : null) {
       return BigQueryRetryHelper.runWithRetries(
           new Callable<Boolean>() {
             @Override
@@ -661,6 +807,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         return false;
       }
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (modelDelete != null) {
+        modelDelete.end();
+      }
     }
   }
 
@@ -671,7 +821,18 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             Strings.isNullOrEmpty(routineId.getProject())
                 ? getOptions().getProjectId()
                 : routineId.getProject());
-    try {
+    Span routineDelete = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      routineDelete =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.deleteRoutine")
+              .setAttribute("language", "Java")
+              .setAllAttributes(routineId.getOtelAttributes())
+              .startSpan();
+    }
+    try (Scope routineDeleteScope = routineDelete != null ? routineDelete.makeCurrent() : null) {
       return BigQueryRetryHelper.runWithRetries(
           new Callable<Boolean>() {
             @Override
@@ -691,6 +852,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         return false;
       }
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (routineDelete != null) {
+        routineDelete.end();
+      }
     }
   }
 
@@ -701,6 +866,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             Strings.isNullOrEmpty(jobId.getProject())
                 ? getOptions().getProjectId()
                 : jobId.getProject());
+    Span jobDelete = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      jobDelete =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.deleteJob")
+              .setAttribute("language", "Java")
+              .setAllAttributes(completeJobId.getOtelAttributes())
+              .startSpan();
+    }
     try {
       return BigQueryRetryHelper.runWithRetries(
           new Callable<Boolean>() {
@@ -716,6 +892,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           EMPTY_RETRY_CONFIG);
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (jobDelete != null) {
+        jobDelete.end();
+      }
     }
   }
 
@@ -724,7 +904,19 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     final com.google.api.services.bigquery.model.Dataset datasetPb =
         datasetInfo.setProjectId(getOptions().getProjectId()).toPb();
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    Span datasetUpdate = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      datasetUpdate =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.updateDataset")
+              .setAttribute("language", "Java")
+              .setAllAttributes(datasetInfo.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope datasetUpdateScope = datasetUpdate != null ? datasetUpdate.makeCurrent() : null) {
       return Dataset.fromPb(
           this,
           BigQueryRetryHelper.runWithRetries(
@@ -740,6 +932,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               EMPTY_RETRY_CONFIG));
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (datasetUpdate != null) {
+        datasetUpdate.end();
+      }
     }
   }
 
@@ -754,7 +950,19 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             .toPb();
     handleExternalTableSchema(tablePb);
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    Span tableUpdate = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      tableUpdate =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.updateTable")
+              .setAttribute("language", "Java")
+              .setAllAttributes(tableInfo.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope tableUpdateScope = tableUpdate != null ? tableUpdate.makeCurrent() : null) {
       return Table.fromPb(
           this,
           BigQueryRetryHelper.runWithRetries(
@@ -770,6 +978,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               EMPTY_RETRY_CONFIG));
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (tableUpdate != null) {
+        tableUpdate.end();
+      }
     }
   }
 
@@ -783,7 +995,19 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                     : modelInfo.getModelId().getProject())
             .toPb();
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    Span modelUpdate = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      modelUpdate =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.updateModel")
+              .setAttribute("language", "Java")
+              .setAllAttributes(modelInfo.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope modelUpdateScope = modelUpdate != null ? modelUpdate.makeCurrent() : null) {
       return Model.fromPb(
           this,
           BigQueryRetryHelper.runWithRetries(
@@ -799,6 +1023,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               EMPTY_RETRY_CONFIG));
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (modelUpdate != null) {
+        modelUpdate.end();
+      }
     }
   }
 
@@ -812,7 +1040,19 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                     : routineInfo.getRoutineId().getProject())
             .toPb();
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    Span routineUpdate = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      routineUpdate =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.updateRoutine")
+              .setAttribute("language", "Java")
+              .setAllAttributes(routineInfo.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope routineUpdateScope = routineUpdate != null ? routineUpdate.makeCurrent() : null) {
       return Routine.fromPb(
           this,
           BigQueryRetryHelper.runWithRetries(
@@ -828,6 +1068,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               EMPTY_RETRY_CONFIG));
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (routineUpdate != null) {
+        routineUpdate.end();
+      }
     }
   }
 
@@ -846,7 +1090,19 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 ? getOptions().getProjectId()
                 : tableId.getProject());
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    Span tableGet = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      tableGet =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.getTable")
+              .setAttribute("language", "Java")
+              .setAllAttributes(tableId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope tableGetScope = tableGet != null ? tableGet.makeCurrent() : null) {
       com.google.api.services.bigquery.model.Table answer =
           BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Table>() {
@@ -872,6 +1128,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         return null;
       }
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (tableGet != null) {
+        tableGet.end();
+      }
     }
   }
 
@@ -888,7 +1148,19 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 ? getOptions().getProjectId()
                 : modelId.getProject());
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    Span modelGet = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      modelGet =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.getModel")
+              .setAttribute("language", "Java")
+              .setAllAttributes(modelId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope modelGetScope = modelGet != null ? modelGet.makeCurrent() : null) {
       com.google.api.services.bigquery.model.Model answer =
           BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Model>() {
@@ -914,6 +1186,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         return null;
       }
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (modelGet != null) {
+        modelGet.end();
+      }
     }
   }
 
@@ -930,7 +1206,19 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 ? getOptions().getProjectId()
                 : routineId.getProject());
     final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    try {
+    Span routineGet = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      routineGet =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.getRoutine")
+              .setAttribute("language", "Java")
+              .setAllAttributes(routineId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope routineGetScope = routineGet != null ? routineGet.makeCurrent() : null) {
       com.google.api.services.bigquery.model.Routine answer =
           BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Routine>() {
@@ -956,67 +1244,196 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         return null;
       }
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (routineGet != null) {
+        routineGet.end();
+      }
     }
   }
 
   @Override
   public Page<Table> listTables(String datasetId, TableListOption... options) {
-    return listTables(
-        DatasetId.of(getOptions().getProjectId(), datasetId), getOptions(), optionMap(options));
+    Span tablesList = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      tablesList =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.listTables")
+              .setAttribute("language", "Java")
+              .setAllAttributes(DatasetId.of(datasetId).getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope tablesListScope = tablesList != null ? tablesList.makeCurrent() : null) {
+      return listTables(
+          DatasetId.of(getOptions().getProjectId(), datasetId), getOptions(), optionMap(options));
+    } finally {
+      if (tablesList != null) {
+        tablesList.end();
+      }
+    }
   }
 
   @Override
   public Page<Table> listTables(DatasetId datasetId, TableListOption... options) {
     DatasetId completeDatasetId = datasetId.setProjectId(getOptions().getProjectId());
-    return listTables(completeDatasetId, getOptions(), optionMap(options));
+    Span tablesList = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      tablesList =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.listTables")
+              .setAttribute("language", "Java")
+              .setAllAttributes(completeDatasetId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope tablesListScope = tablesList != null ? tablesList.makeCurrent() : null) {
+      return listTables(completeDatasetId, getOptions(), optionMap(options));
+    } finally {
+      if (tablesList != null) {
+        tablesList.end();
+      }
+    }
   }
 
   @Override
   public Page<Model> listModels(String datasetId, ModelListOption... options) {
-    return listModels(
-        DatasetId.of(getOptions().getProjectId(), datasetId), getOptions(), optionMap(options));
+    Span modelsList = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      modelsList =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.listModels")
+              .setAttribute("language", "Java")
+              .setAllAttributes(DatasetId.of(datasetId).getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope modelsListScope = modelsList != null ? modelsList.makeCurrent() : null) {
+      return listModels(
+          DatasetId.of(getOptions().getProjectId(), datasetId), getOptions(), optionMap(options));
+    } finally {
+      if (modelsList != null) {
+        modelsList.end();
+      }
+    }
   }
 
   @Override
   public Page<Model> listModels(DatasetId datasetId, ModelListOption... options) {
     DatasetId completeDatasetId = datasetId.setProjectId(getOptions().getProjectId());
-    return listModels(completeDatasetId, getOptions(), optionMap(options));
+    Span modelsList = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      modelsList =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.listModels")
+              .setAttribute("language", "Java")
+              .setAllAttributes(datasetId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope modelsListScope = modelsList != null ? modelsList.makeCurrent() : null) {
+      return listModels(completeDatasetId, getOptions(), optionMap(options));
+    } finally {
+      if (modelsList != null) {
+        modelsList.end();
+      }
+    }
   }
 
   @Override
   public Page<Routine> listRoutines(String datasetId, RoutineListOption... options) {
-    return listRoutines(
-        DatasetId.of(getOptions().getProjectId(), datasetId), getOptions(), optionMap(options));
+    Span routinesList = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      routinesList =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.listRoutines")
+              .setAttribute("language", "Java")
+              .setAllAttributes(DatasetId.of(datasetId).getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope routinesListScope = routinesList != null ? routinesList.makeCurrent() : null) {
+      return listRoutines(
+          DatasetId.of(getOptions().getProjectId(), datasetId), getOptions(), optionMap(options));
+    } finally {
+      if (routinesList != null) {
+        routinesList.end();
+      }
+    }
   }
 
   @Override
   public Page<Routine> listRoutines(DatasetId datasetId, RoutineListOption... options) {
     DatasetId completeDatasetId = datasetId.setProjectId(getOptions().getProjectId());
-    return listRoutines(completeDatasetId, getOptions(), optionMap(options));
+    Span routinesList = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      routinesList =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.listRoutines")
+              .setAttribute("language", "Java")
+              .setAllAttributes(datasetId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope routinesListScope = routinesList != null ? routinesList.makeCurrent() : null) {
+      return listRoutines(completeDatasetId, getOptions(), optionMap(options));
+    } finally {
+      if (routinesList != null) {
+        routinesList.end();
+      }
+    }
   }
 
   @Override
   public List<String> listPartitions(TableId tableId) {
-    List<String> partitions = new ArrayList<String>();
-    String partitionsTable = tableId.getTable() + "$__PARTITIONS_SUMMARY__";
-    TableId metaTableId =
-        tableId.getProject() == null
-            ? TableId.of(tableId.getDataset(), partitionsTable)
-            : TableId.of(tableId.getProject(), tableId.getDataset(), partitionsTable);
-    Table metaTable = getTable(metaTableId);
-    Schema metaSchema = metaTable.getDefinition().getSchema();
-    String partition_id = null;
-    for (Field field : metaSchema.getFields()) {
-      if (field.getName().equals("partition_id")) {
-        partition_id = field.getName();
-        break;
+    Span listPartitions = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      listPartitions =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.listPartitions")
+              .setAttribute("language", "Java")
+              .setAllAttributes(tableId.getOtelAttributes())
+              .startSpan();
+    }
+    try (Scope listPartitionsScope = listPartitions != null ? listPartitions.makeCurrent() : null) {
+      List<String> partitions = new ArrayList<String>();
+      String partitionsTable = tableId.getTable() + "$__PARTITIONS_SUMMARY__";
+      TableId metaTableId =
+          tableId.getProject() == null
+              ? TableId.of(tableId.getDataset(), partitionsTable)
+              : TableId.of(tableId.getProject(), tableId.getDataset(), partitionsTable);
+      Table metaTable = getTable(metaTableId);
+      Schema metaSchema = metaTable.getDefinition().getSchema();
+      String partition_id = null;
+      for (Field field : metaSchema.getFields()) {
+        if (field.getName().equals("partition_id")) {
+          partition_id = field.getName();
+          break;
+        }
+      }
+      TableResult result = metaTable.list(metaSchema);
+      for (FieldValueList list : result.iterateAll()) {
+        partitions.add(list.get(partition_id).getStringValue());
+      }
+      return partitions;
+    } finally {
+      if (listPartitions != null) {
+        listPartitions.end();
       }
     }
-    TableResult result = metaTable.list(metaSchema);
-    for (FieldValueList list : result.iterateAll()) {
-      partitions.add(list.get(partition_id).getStringValue());
-    }
-    return partitions;
   }
 
   private static Page<Table> listTables(
@@ -1169,33 +1586,53 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     requestPb.setRows(rowsPb);
 
     TableDataInsertAllResponse responsePb;
-    if (allInsertIdsSet[0]) {
-      // allowing retries only if all row insertIds are set (used for deduplication)
-      try {
-        responsePb =
-            BigQueryRetryHelper.runWithRetries(
-                new Callable<TableDataInsertAllResponse>() {
-                  @Override
-                  public TableDataInsertAllResponse call() throws Exception {
-                    return bigQueryRpc.insertAllSkipExceptionTranslation(
-                        tableId.getProject(), tableId.getDataset(), tableId.getTable(), requestPb);
-                  }
-                },
-                getOptions().getRetrySettings(),
-                BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
-                getOptions().getClock(),
-                EMPTY_RETRY_CONFIG);
-      } catch (BigQueryRetryHelperException e) {
-        throw BigQueryException.translateAndThrow(e);
-      }
-    } else {
-      // Use insertAll that translate the exception as we are not retrying.
-      responsePb =
-          bigQueryRpc.insertAll(
-              tableId.getProject(), tableId.getDataset(), tableId.getTable(), requestPb);
+    Span insertAll = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      insertAll =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.insertAll")
+              .setAttribute("language", "Java")
+              .setAllAttributes(request.getOtelAttributes())
+              .startSpan();
     }
+    try (Scope insertAllScope = insertAll != null ? insertAll.makeCurrent() : null) {
+      if (allInsertIdsSet[0]) {
+        // allowing retries only if all row insertIds are set (used for deduplication)
+        try {
+          responsePb =
+              BigQueryRetryHelper.runWithRetries(
+                  new Callable<TableDataInsertAllResponse>() {
+                    @Override
+                    public TableDataInsertAllResponse call() throws Exception {
+                      return bigQueryRpc.insertAllSkipExceptionTranslation(
+                          tableId.getProject(),
+                          tableId.getDataset(),
+                          tableId.getTable(),
+                          requestPb);
+                    }
+                  },
+                  getOptions().getRetrySettings(),
+                  BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
+                  getOptions().getClock(),
+                  EMPTY_RETRY_CONFIG);
+        } catch (BigQueryRetryHelperException e) {
+          throw BigQueryException.translateAndThrow(e);
+        }
+      } else {
+        // Use insertAll that translate the exception as we are not retrying.
+        responsePb =
+            bigQueryRpc.insertAll(
+                tableId.getProject(), tableId.getDataset(), tableId.getTable(), requestPb);
+      }
 
-    return InsertAllResponse.fromPb(responsePb);
+      return InsertAllResponse.fromPb(responsePb);
+    } finally {
+      if (insertAll != null) {
+        insertAll.end();
+      }
+    }
   }
 
   @Override
@@ -1219,11 +1656,30 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   public TableResult listTableData(TableId tableId, Schema schema, TableDataListOption... options) {
     Tuple<? extends Page<FieldValueList>, Long> data =
         listTableData(tableId, schema, getOptions(), optionMap(options));
-    return TableResult.newBuilder()
-        .setSchema(schema)
-        .setTotalRows(data.y())
-        .setPageNoSchema(data.x())
-        .build();
+    Span tableDataList = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      tableDataList =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.listTableData")
+              .setAttribute("language", "Java")
+              .setAllAttributes(tableId.getOtelAttributes())
+              .setAllAttributes(schema.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope tableDataListScope = tableDataList != null ? tableDataList.makeCurrent() : null) {
+      return TableResult.newBuilder()
+          .setSchema(schema)
+          .setTotalRows(data.y())
+          .setPageNoSchema(data.x())
+          .build();
+    } finally {
+      if (tableDataList != null) {
+        tableDataList.end();
+      }
+    }
   }
 
   private static Tuple<? extends Page<FieldValueList>, Long> listTableData(
@@ -1299,7 +1755,19 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 jobId.getLocation() == null && getOptions().getLocation() != null
                     ? getOptions().getLocation()
                     : jobId.getLocation());
-    try {
+    Span jobGet = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      jobGet =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.getJob")
+              .setAttribute("language", "Java")
+              .setAllAttributes(jobId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope jobGetScope = jobGet != null ? jobGet.makeCurrent() : null) {
       com.google.api.services.bigquery.model.Job answer =
           BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Job>() {
@@ -1325,12 +1793,33 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         return null;
       }
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (jobGet != null) {
+        jobGet.end();
+      }
     }
   }
 
   @Override
   public Page<Job> listJobs(JobListOption... options) {
-    return listJobs(getOptions(), optionMap(options));
+    Span jobsList = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      jobsList =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.listJobs")
+              .setAttribute("language", "Java")
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope jobsListScope = jobsList != null ? jobsList.makeCurrent() : null) {
+      return listJobs(getOptions(), optionMap(options));
+    } finally {
+      if (jobsList != null) {
+        jobsList.end();
+      }
+    }
   }
 
   private static Page<Job> listJobs(
@@ -1381,7 +1870,18 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 jobId.getLocation() == null && getOptions().getLocation() != null
                     ? getOptions().getLocation()
                     : jobId.getLocation());
-    try {
+    Span jobCancel = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      jobCancel =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.cancelJob")
+              .setAttribute("language", "Java")
+              .setAllAttributes(jobId.getOtelAttributes())
+              .startSpan();
+    }
+    try (Scope jobCancelScope = jobCancel != null ? jobCancel.makeCurrent() : null) {
       return BigQueryRetryHelper.runWithRetries(
           new Callable<Boolean>() {
             @Override
@@ -1399,6 +1899,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         return false;
       }
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (jobCancel != null) {
+        jobCancel.end();
+      }
     }
   }
 
@@ -1414,27 +1918,58 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               .build();
     }
 
-    // If all parameters passed in configuration are supported by the query() method on the backend,
-    // put on fast path
-    QueryRequestInfo requestInfo =
-        new QueryRequestInfo(configuration, getOptions().getUseInt64Timestamps());
-    if (requestInfo.isFastQuerySupported(null)) {
-      String projectId = getOptions().getProjectId();
-      QueryRequest content = requestInfo.toPb();
-      if (getOptions().getLocation() != null) {
-        content.setLocation(getOptions().getLocation());
-      }
-      return queryRpc(projectId, content, options);
+    Span querySpan = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      querySpan =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.query")
+              .setAllAttributes(configuration.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
     }
-    // Otherwise, fall back to the existing create query job logic
-    return create(JobInfo.of(configuration), options).getQueryResults();
+    try (Scope queryScope = querySpan != null ? querySpan.makeCurrent() : null) {
+      // If all parameters passed in configuration are supported by the query() method on the
+      // backend,
+      // put on fast path
+      QueryRequestInfo requestInfo =
+          new QueryRequestInfo(configuration, getOptions().getUseInt64Timestamps());
+      if (requestInfo.isFastQuerySupported(null)) {
+        String projectId = getOptions().getProjectId();
+        QueryRequest content = requestInfo.toPb();
+        if (getOptions().getLocation() != null) {
+          content.setLocation(getOptions().getLocation());
+        }
+        return queryRpc(projectId, content, options);
+      }
+      // Otherwise, fall back to the existing create query job logic
+      return create(JobInfo.of(configuration), options).getQueryResults();
+    } finally {
+      if (querySpan != null) {
+        querySpan.end();
+      }
+    }
   }
 
   private TableResult queryRpc(
       final String projectId, final QueryRequest content, JobOption... options)
       throws InterruptedException {
     com.google.api.services.bigquery.model.QueryResponse results;
-    try {
+    Span queryRpc = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      queryRpc =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.queryRpc")
+              .setAttribute("language", "Java")
+              .setAttribute("projectId", projectId)
+              .setAllAttributes(otelAttributesFromQueryRequest(content))
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope queryRpcScope = queryRpc != null ? queryRpc.makeCurrent() : null) {
       results =
           BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.QueryResponse>() {
@@ -1450,6 +1985,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               DEFAULT_RETRY_CONFIG);
     } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (queryRpc != null) {
+        queryRpc.end();
+      }
     }
 
     if (results.getErrors() != null) {
@@ -1519,37 +2058,76 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       throws InterruptedException, JobException {
     Job.checkNotDryRun(configuration, "query");
 
-    // If all parameters passed in configuration are supported by the query() method on the backend,
-    // put on fast path
-    QueryRequestInfo requestInfo =
-        new QueryRequestInfo(configuration, getOptions().getUseInt64Timestamps());
-    if (requestInfo.isFastQuerySupported(jobId)) {
-      // Be careful when setting the projectID in JobId, if a projectID is specified in the JobId,
-      // the job created by the query method will use that project. This may cause the query to
-      // fail with "Access denied" if the project do not have enough permissions to run the job.
-
-      String projectId =
-          jobId.getProject() != null ? jobId.getProject() : getOptions().getProjectId();
-      QueryRequest content = requestInfo.toPb();
-      // Be careful when setting the location, if a location is specified in the BigQueryOption or
-      // JobId the job created by the query method will be in that location, even if the table to be
-      // queried is in a different location. This may cause the query to fail with
-      // "BigQueryException: Not found"
-      if (jobId.getLocation() != null) {
-        content.setLocation(jobId.getLocation());
-      } else if (getOptions().getLocation() != null) {
-        content.setLocation(getOptions().getLocation());
-      }
-
-      return queryRpc(projectId, content, options);
+    Span querySpan = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      querySpan =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.query")
+              .setAllAttributes(configuration.getOtelAttributes())
+              .setAllAttributes(jobId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
     }
-    return create(JobInfo.of(jobId, configuration), options).getQueryResults();
+    try (Scope queryScope = querySpan != null ? querySpan.makeCurrent() : null) {
+      // If all parameters passed in configuration are supported by the query() method on the
+      // backend,
+      // put on fast path
+      QueryRequestInfo requestInfo =
+          new QueryRequestInfo(configuration, getOptions().getUseInt64Timestamps());
+      if (requestInfo.isFastQuerySupported(jobId)) {
+        // Be careful when setting the projectID in JobId, if a projectID is specified in the JobId,
+        // the job created by the query method will use that project. This may cause the query to
+        // fail with "Access denied" if the project do not have enough permissions to run the job.
+
+        String projectId =
+            jobId.getProject() != null ? jobId.getProject() : getOptions().getProjectId();
+        QueryRequest content = requestInfo.toPb();
+        // Be careful when setting the location, if a location is specified in the BigQueryOption or
+        // JobId the job created by the query method will be in that location, even if the table to
+        // be
+        // queried is in a different location. This may cause the query to fail with
+        // "BigQueryException: Not found"
+        if (jobId.getLocation() != null) {
+          content.setLocation(jobId.getLocation());
+        } else if (getOptions().getLocation() != null) {
+          content.setLocation(getOptions().getLocation());
+        }
+
+        return queryRpc(projectId, content, options);
+      }
+      return create(JobInfo.of(jobId, configuration), options).getQueryResults();
+    } finally {
+      if (querySpan != null) {
+        querySpan.end();
+      }
+    }
   }
 
   @Override
   public QueryResponse getQueryResults(JobId jobId, QueryResultsOption... options) {
     Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
-    return getQueryResults(jobId, getOptions(), optionsMap);
+    Span getQueryResults = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      getQueryResults =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.getQueryResults")
+              .setAttribute("language", "Java")
+              .setAllAttributes(jobId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope getQueryResultsScope =
+        getQueryResults != null ? getQueryResults.makeCurrent() : null) {
+      return getQueryResults(jobId, getOptions(), optionsMap);
+    } finally {
+      if (getQueryResults != null) {
+        getQueryResults.end();
+      }
+    }
   }
 
   private static QueryResponse getQueryResults(
@@ -1625,8 +2203,20 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 ? getOptions().getProjectId()
                 : tableId.getProject());
 
-    try {
-      final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
+    final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
+    Span iamPolicyGet = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      iamPolicyGet =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.getIamPolicy")
+              .setAttribute("language", "Java")
+              .setAllAttributes(tableId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope iamPolicyGetScope = iamPolicyGet != null ? iamPolicyGet.makeCurrent() : null) {
       return convertFromApiPolicy(
           BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Policy>() {
@@ -1642,6 +2232,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               EMPTY_RETRY_CONFIG));
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (iamPolicyGet != null) {
+        iamPolicyGet.end();
+      }
     }
   }
 
@@ -1652,8 +2246,22 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             Strings.isNullOrEmpty(tableId.getProject())
                 ? getOptions().getProjectId()
                 : tableId.getProject());
-    try {
-      final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
+
+    final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
+    Span iamPolicySet = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      iamPolicySet =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.setIamPolicy")
+              .setAttribute("language", "Java")
+              .setAllAttributes(tableId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromPolicy(policy))
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope iamPolicySetScope = iamPolicySet != null ? iamPolicySet.makeCurrent() : null) {
       return convertFromApiPolicy(
           BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.Policy>() {
@@ -1669,6 +2277,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               EMPTY_RETRY_CONFIG));
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (iamPolicySet != null) {
+        iamPolicySet.end();
+      }
     }
   }
 
@@ -1680,8 +2292,22 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             Strings.isNullOrEmpty(tableId.getProject())
                 ? getOptions().getProjectId()
                 : tableId.getProject());
-    try {
-      final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
+    final Map<BigQueryRpc.Option, ?> optionsMap = optionMap(options);
+    Span testIamPermissions = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      testIamPermissions =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.testIamPermissions")
+              .setAttribute("language", "Java")
+              .setAllAttributes(tableId.getOtelAttributes())
+              .setAttribute("permissions", permissions.toString())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
+    }
+    try (Scope testIamPermissionsScope =
+        testIamPermissions != null ? testIamPermissions.makeCurrent() : null) {
       com.google.api.services.bigquery.model.TestIamPermissionsResponse response =
           BigQueryRetryHelper.runWithRetries(
               new Callable<com.google.api.services.bigquery.model.TestIamPermissionsResponse>() {
@@ -1701,6 +2327,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           : ImmutableList.copyOf(response.getPermissions());
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (testIamPermissions != null) {
+        testIamPermissions.end();
+      }
     }
   }
 
@@ -1712,6 +2342,51 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       checkArgument(prev == null, "Duplicate option %s", option);
     }
     return optionMap;
+  }
+
+  private static String getFieldAsString(Object field) {
+    return field == null ? "null" : field.toString();
+  }
+
+  private static Attributes otelAttributesFromOptions(Option... options) {
+    Attributes attributes = Attributes.builder().build();
+    for (Option option : options) {
+      attributes =
+          attributes.toBuilder()
+              .put(option.getRpcOption().toString(), option.getValue().toString())
+              .build();
+    }
+    return attributes;
+  }
+
+  private static Attributes otelAttributesFromQueryRequest(QueryRequest request) {
+    return Attributes.builder()
+        .put("continuous", getFieldAsString(request.getContinuous()))
+        .put("createSession", getFieldAsString(request.getCreateSession()))
+        .put("defaultDataset", getFieldAsString(request.getDefaultDataset()))
+        .put("dryRun", getFieldAsString(request.getDryRun()))
+        .put("jobCreationMode", getFieldAsString(request.getJobCreationMode()))
+        .put("jobTimeoutMs", getFieldAsString(request.getJobTimeoutMs()))
+        .put("kind", getFieldAsString(request.getKind()))
+        .put("labels", getFieldAsString(request.getLabels()))
+        .put("location", getFieldAsString(request.getLocation()))
+        .put("maxResults", getFieldAsString(request.getMaxResults()))
+        .put("maximumBytesBilled", getFieldAsString(request.getMaximumBytesBilled()))
+        .put("requestId", getFieldAsString(request.getRequestId()))
+        .put("reservation", getFieldAsString(request.getReservation()))
+        .put("timeoutMs", getFieldAsString(request.getTimeoutMs()))
+        .put("useLegacySql", getFieldAsString(request.getUseLegacySql()))
+        .put("useQueryCache", getFieldAsString(request.getUseQueryCache()))
+        .put("writeIncrementalResults", getFieldAsString(request.getWriteIncrementalResults()))
+        .build();
+  }
+
+  private static Attributes otelAttributesFromPolicy(Policy policy) {
+    return Attributes.builder()
+        .put("version", getFieldAsString(policy.getVersion()))
+        .put("bindings", getFieldAsString(policy.getBindings()))
+        .put("bindingsList", getFieldAsString(policy.getBindingsList()))
+        .build();
   }
 
   static BigQueryRetryConfig getBigQueryRetryConfig(Map<BigQueryRpc.Option, ?> options) {

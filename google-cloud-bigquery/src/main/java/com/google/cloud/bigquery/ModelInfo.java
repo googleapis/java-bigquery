@@ -26,6 +26,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import io.opentelemetry.api.common.Attributes;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
@@ -452,5 +453,22 @@ public class ModelInfo implements Serializable {
 
   static ModelInfo fromPb(Model modelPb) {
     return new BuilderImpl(modelPb).build();
+  }
+
+  private static String getFieldAsString(Object field) {
+    return field == null ? "null" : field.toString();
+  }
+
+  protected Attributes getOtelAttributes() {
+    return Attributes.builder()
+        .putAll(this.getModelId().getOtelAttributes())
+        .put("modelType", getFieldAsString(this.getModelType()))
+        .put("friendlyName", getFieldAsString(this.getFriendlyName()))
+        .put("creationTime", getFieldAsString(this.getCreationTime()))
+        .put("lastModifiedTime", getFieldAsString(this.getLastModifiedTime()))
+        .put("expirationTime", getFieldAsString(this.getExpirationTime()))
+        .put("labels", getFieldAsString(this.getLabels()))
+        .put("location", getFieldAsString(this.getLocation()))
+        .build();
   }
 }
