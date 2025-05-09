@@ -111,7 +111,6 @@ public final class ModelId implements Serializable {
     return Attributes.builder()
         .put("project", this.getProject())
         .put("dataset", this.getDataset())
-        .put("db.name", this.getDataset())
         .put("model", this.getModel())
         .build();
   }

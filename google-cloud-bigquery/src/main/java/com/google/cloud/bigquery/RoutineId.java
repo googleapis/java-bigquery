@@ -114,7 +114,6 @@ public final class RoutineId implements Serializable {
     return Attributes.builder()
         .put("project", this.getProject())
         .put("dataset", this.getDataset())
-        .put("db.name", this.getDataset())
         .put("routine", this.getRoutine())
         .build();
   }

@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import io.opentelemetry.api.common.Attributes;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -1213,4 +1214,25 @@ public final class QueryJobConfiguration extends JobConfiguration {
               return queryParameterPb;
             }
           };
+
+  private static String getFieldAsString(Object field) {
+    return field == null ? "null" : field.toString();
+  }
+
+  public Attributes getOtelAttributes() {
+    return Attributes.builder()
+        .put("destinationTable", getFieldAsString(this.getDestinationTable()))
+        .put("defaultDataset", getFieldAsString(this.getDefaultDataset()))
+        .put("createSession", getFieldAsString(this.createSession()))
+        .put("flattenResults", getFieldAsString(this.flattenResults()))
+        .put("priority", getFieldAsString(this.getPriority()))
+        .put("useQueryCache", getFieldAsString(this.useQueryCache()))
+        .put("dryRun", getFieldAsString(this.dryRun()))
+        .put("jobTimeoutMs", getFieldAsString(this.getJobTimeoutMs()))
+        .put("labels", getFieldAsString(this.getLabels()))
+        .put("connectionProperties", getFieldAsString(this.getConnectionProperties()))
+        .put("jobCreationMode", getFieldAsString(this.getJobCreationMode()))
+        .put("reservation", getFieldAsString(this.getReservation()))
+        .build();
+  }
 }
