@@ -207,7 +207,7 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
    *
    * @return true if tracing is enabled, false if not
    */
-  @BetaApi
+  @BetaApi("Span names and attributes are subject to change without notice")
   public boolean isOpenTelemetryTracingEnabled() {
     return enableOpenTelemetryTracing;
   }
@@ -217,7 +217,7 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
    *
    * @return OpenTelemetry tracer object or {@code null} if not set
    */
-  @BetaApi
+  @BetaApi("Span names and attributes are subject to change without notice")
   public Tracer getOpenTelemetryTracer() {
     return openTelemetryTracer;
   }

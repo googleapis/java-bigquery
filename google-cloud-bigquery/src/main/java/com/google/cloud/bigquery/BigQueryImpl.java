@@ -865,6 +865,17 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             Strings.isNullOrEmpty(jobId.getProject())
                 ? getOptions().getProjectId()
                 : jobId.getProject());
+    Span jobDelete = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      jobDelete =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.deleteJob")
+              .setAttribute("language", "Java")
+              .setAllAttributes(completeJobId.getOtelAttributes())
+              .startSpan();
+    }
     try {
       return BigQueryRetryHelper.runWithRetries(
           new Callable<Boolean>() {
@@ -880,6 +891,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           EMPTY_RETRY_CONFIG);
     } catch (BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (jobDelete != null) {
+        jobDelete.end();
+      }
     }
   }
 
@@ -1381,26 +1396,43 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   @Override
   public List<String> listPartitions(TableId tableId) {
-    List<String> partitions = new ArrayList<String>();
-    String partitionsTable = tableId.getTable() + "$__PARTITIONS_SUMMARY__";
-    TableId metaTableId =
-        tableId.getProject() == null
-            ? TableId.of(tableId.getDataset(), partitionsTable)
-            : TableId.of(tableId.getProject(), tableId.getDataset(), partitionsTable);
-    Table metaTable = getTable(metaTableId);
-    Schema metaSchema = metaTable.getDefinition().getSchema();
-    String partition_id = null;
-    for (Field field : metaSchema.getFields()) {
-      if (field.getName().equals("partition_id")) {
-        partition_id = field.getName();
-        break;
+    Span listPartitions = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      listPartitions =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.listPartitions")
+              .setAttribute("language", "Java")
+              .setAllAttributes(tableId.getOtelAttributes())
+              .startSpan();
+    }
+    try (Scope listPartitionsScope = listPartitions != null ? listPartitions.makeCurrent() : null) {
+      List<String> partitions = new ArrayList<String>();
+      String partitionsTable = tableId.getTable() + "$__PARTITIONS_SUMMARY__";
+      TableId metaTableId =
+          tableId.getProject() == null
+              ? TableId.of(tableId.getDataset(), partitionsTable)
+              : TableId.of(tableId.getProject(), tableId.getDataset(), partitionsTable);
+      Table metaTable = getTable(metaTableId);
+      Schema metaSchema = metaTable.getDefinition().getSchema();
+      String partition_id = null;
+      for (Field field : metaSchema.getFields()) {
+        if (field.getName().equals("partition_id")) {
+          partition_id = field.getName();
+          break;
+        }
+      }
+      TableResult result = metaTable.list(metaSchema);
+      for (FieldValueList list : result.iterateAll()) {
+        partitions.add(list.get(partition_id).getStringValue());
+      }
+      return partitions;
+    } finally {
+      if (listPartitions != null) {
+        listPartitions.end();
       }
     }
-    TableResult result = metaTable.list(metaSchema);
-    for (FieldValueList list : result.iterateAll()) {
-      partitions.add(list.get(partition_id).getStringValue());
-    }
-    return partitions;
   }
 
   private static Page<Table> listTables(
@@ -1883,20 +1915,38 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
             .setJobCreationMode(getOptions().getDefaultJobCreationMode())
             .build();
 
-    // If all parameters passed in configuration are supported by the query() method on the backend,
-    // put on fast path
-    QueryRequestInfo requestInfo =
-        new QueryRequestInfo(configuration, getOptions().getUseInt64Timestamps());
-    if (requestInfo.isFastQuerySupported(null)) {
-      String projectId = getOptions().getProjectId();
-      QueryRequest content = requestInfo.toPb();
-      if (getOptions().getLocation() != null) {
-        content.setLocation(getOptions().getLocation());
-      }
-      return queryRpc(projectId, content, options);
+    Span querySpan = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      querySpan =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.query")
+              .setAllAttributes(configuration.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
     }
-    // Otherwise, fall back to the existing create query job logic
-    return create(JobInfo.of(configuration), options).getQueryResults();
+    try (Scope queryScope = querySpan != null ? querySpan.makeCurrent() : null) {
+      // If all parameters passed in configuration are supported by the query() method on the
+      // backend,
+      // put on fast path
+      QueryRequestInfo requestInfo =
+          new QueryRequestInfo(configuration, getOptions().getUseInt64Timestamps());
+      if (requestInfo.isFastQuerySupported(null)) {
+        String projectId = getOptions().getProjectId();
+        QueryRequest content = requestInfo.toPb();
+        if (getOptions().getLocation() != null) {
+          content.setLocation(getOptions().getLocation());
+        }
+        return queryRpc(projectId, content, options);
+      }
+      // Otherwise, fall back to the existing create query job logic
+      return create(JobInfo.of(configuration), options).getQueryResults();
+    } finally {
+      if (querySpan != null) {
+        querySpan.end();
+      }
+    }
   }
 
   private TableResult queryRpc(
@@ -2005,31 +2055,51 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       throws InterruptedException, JobException {
     Job.checkNotDryRun(configuration, "query");
 
-    // If all parameters passed in configuration are supported by the query() method on the backend,
-    // put on fast path
-    QueryRequestInfo requestInfo =
-        new QueryRequestInfo(configuration, getOptions().getUseInt64Timestamps());
-    if (requestInfo.isFastQuerySupported(jobId)) {
-      // Be careful when setting the projectID in JobId, if a projectID is specified in the JobId,
-      // the job created by the query method will use that project. This may cause the query to
-      // fail with "Access denied" if the project do not have enough permissions to run the job.
-
-      String projectId =
-          jobId.getProject() != null ? jobId.getProject() : getOptions().getProjectId();
-      QueryRequest content = requestInfo.toPb();
-      // Be careful when setting the location, if a location is specified in the BigQueryOption or
-      // JobId the job created by the query method will be in that location, even if the table to be
-      // queried is in a different location. This may cause the query to fail with
-      // "BigQueryException: Not found"
-      if (jobId.getLocation() != null) {
-        content.setLocation(jobId.getLocation());
-      } else if (getOptions().getLocation() != null) {
-        content.setLocation(getOptions().getLocation());
-      }
-
-      return queryRpc(projectId, content, options);
+    Span querySpan = null;
+    if (getOptions().isOpenTelemetryTracingEnabled()
+        && getOptions().getOpenTelemetryTracer() != null) {
+      querySpan =
+          getOptions()
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.query")
+              .setAllAttributes(configuration.getOtelAttributes())
+              .setAllAttributes(jobId.getOtelAttributes())
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
     }
-    return create(JobInfo.of(jobId, configuration), options).getQueryResults();
+    try (Scope queryScope = querySpan != null ? querySpan.makeCurrent() : null) {
+      // If all parameters passed in configuration are supported by the query() method on the
+      // backend,
+      // put on fast path
+      QueryRequestInfo requestInfo =
+          new QueryRequestInfo(configuration, getOptions().getUseInt64Timestamps());
+      if (requestInfo.isFastQuerySupported(jobId)) {
+        // Be careful when setting the projectID in JobId, if a projectID is specified in the JobId,
+        // the job created by the query method will use that project. This may cause the query to
+        // fail with "Access denied" if the project do not have enough permissions to run the job.
+
+        String projectId =
+            jobId.getProject() != null ? jobId.getProject() : getOptions().getProjectId();
+        QueryRequest content = requestInfo.toPb();
+        // Be careful when setting the location, if a location is specified in the BigQueryOption or
+        // JobId the job created by the query method will be in that location, even if the table to
+        // be
+        // queried is in a different location. This may cause the query to fail with
+        // "BigQueryException: Not found"
+        if (jobId.getLocation() != null) {
+          content.setLocation(jobId.getLocation());
+        } else if (getOptions().getLocation() != null) {
+          content.setLocation(getOptions().getLocation());
+        }
+
+        return queryRpc(projectId, content, options);
+      }
+      return create(JobInfo.of(jobId, configuration), options).getQueryResults();
+    } finally {
+      if (querySpan != null) {
+        querySpan.end();
+      }
+    }
   }
 
   @Override
@@ -2299,8 +2369,6 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         .put("location", getFieldAsString(request.getLocation()))
         .put("maxResults", getFieldAsString(request.getMaxResults()))
         .put("maximumBytesBilled", getFieldAsString(request.getMaximumBytesBilled()))
-        .put("query", getFieldAsString(request.getQuery()))
-        .put("queryParameters", getFieldAsString(request.getQueryParameters()))
         .put("requestId", getFieldAsString(request.getRequestId()))
         .put("reservation", getFieldAsString(request.getReservation()))
         .put("timeoutMs", getFieldAsString(request.getTimeoutMs()))
