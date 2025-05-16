@@ -25,6 +25,7 @@ import com.google.api.core.BetaApi;
 import com.google.api.services.bigquery.model.Table;
 import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
+import io.opentelemetry.api.common.Attributes;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Map;
@@ -762,5 +763,20 @@ public class TableInfo implements Serializable {
 
   static TableInfo fromPb(Table tablePb) {
     return new BuilderImpl(tablePb).build();
+  }
+
+  private static String getFieldAsString(Object field) {
+    return field == null ? "null" : field.toString();
+  }
+
+  protected Attributes getOtelAttributes() {
+    return Attributes.builder()
+        .putAll(this.getTableId().getOtelAttributes())
+        .put("creationTime", getFieldAsString(this.getCreationTime()))
+        .put("expirationTime", getFieldAsString(this.getExpirationTime()))
+        .put("lastModifiedTime", getFieldAsString(this.getLastModifiedTime()))
+        .put("numBytes", getFieldAsString(this.getNumBytes()))
+        .put("numRows", getFieldAsString(this.getNumRows()))
+        .build();
   }
 }
