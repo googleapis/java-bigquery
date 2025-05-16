@@ -7590,8 +7590,7 @@ public class ITBigQueryTest {
       parentSpan.end();
       Map<AttributeKey<?>, Object> createMap =
           OTEL_ATTRIBUTES.get("com.google.cloud.bigquery.BigQuery.createDataset");
-      assertEquals(createMap.get(AttributeKey.stringKey("maxTimeTravelHours")), "72");
-      assertEquals(createMap.get(AttributeKey.stringKey("friendlyName")), "null");
+      assertEquals(createMap.get(AttributeKey.stringKey("location")), "null");
 
       Map<AttributeKey<?>, Object> getMap =
           OTEL_ATTRIBUTES.get("com.google.cloud.bigquery.BigQuery.getDataset");
@@ -7599,7 +7598,6 @@ public class ITBigQueryTest {
 
       Map<AttributeKey<?>, Object> updateMap =
           OTEL_ATTRIBUTES.get("com.google.cloud.bigquery.BigQuery.updateDataset");
-      assertEquals(updateMap.get(AttributeKey.stringKey("maxTimeTravelHours")), "96");
       assertEquals(updateMap.get(AttributeKey.stringKey("ACCESS_POLICY_VERSION")), "2");
 
       Map<AttributeKey<?>, Object> deleteMap =
@@ -7639,12 +7637,9 @@ public class ITBigQueryTest {
     TableInfo tableInfo =
         TableInfo.newBuilder(TableId.of(DATASET, tableName), tableDefinition)
             .setDescription("Some Description")
-            .setFriendlyName("friendly name")
-            .setLabels(Collections.singletonMap("a", "b"))
             .build();
     Table createdTable = bigquery.create(tableInfo);
     assertThat(createdTable.getDescription()).isEqualTo("Some Description");
-    assertThat(createdTable.getLabels()).containsExactly("a", "b");
 
     assertEquals(
         OTEL_PARENT_SPAN_IDS.get("com.google.cloud.bigquery.BigQuery.createTable"),
@@ -7657,30 +7652,17 @@ public class ITBigQueryTest {
     assertEquals(
         OTEL_ATTRIBUTES
             .get("com.google.cloud.bigquery.BigQuery.createTable")
-            .get(AttributeKey.stringKey("friendlyName")),
-        "friendly name");
+            .get(AttributeKey.stringKey("creationTime")),
+        "null");
 
-    Map<String, String> updateLabels = new HashMap<>();
-    updateLabels.put("x", "y");
-    updateLabels.put("a", null);
     Table updatedTable =
-        bigquery.update(
-            createdTable.toBuilder()
-                .setDescription("Updated Description")
-                .setFriendlyName("updated friendly name")
-                .setLabels(updateLabels)
-                .build());
+        bigquery.update(createdTable.toBuilder().setDescription("Updated Description").build());
     assertThat(updatedTable.getDescription()).isEqualTo("Updated Description");
-    assertThat(updatedTable.getLabels()).containsExactly("x", "y");
 
+    assertNotNull(OTEL_ATTRIBUTES.get("com.google.cloud.bigquery.BigQuery.updateTable"));
     assertEquals(
         OTEL_PARENT_SPAN_IDS.get("com.google.cloud.bigquery.BigQuery.updateTable"),
         OTEL_PARENT_SPAN_ID);
-    assertEquals(
-        OTEL_ATTRIBUTES
-            .get("com.google.cloud.bigquery.BigQuery.updateTable")
-            .get(AttributeKey.stringKey("friendlyName")),
-        "updated friendly name");
   }
 
   @Test

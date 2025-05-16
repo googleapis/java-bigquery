@@ -772,17 +772,11 @@ public class TableInfo implements Serializable {
   protected Attributes getOtelAttributes() {
     return Attributes.builder()
         .putAll(this.getTableId().getOtelAttributes())
-        .put("generatedId", getFieldAsString(this.getGeneratedId()))
-        .put("friendlyName", getFieldAsString(this.getFriendlyName()))
         .put("creationTime", getFieldAsString(this.getCreationTime()))
         .put("expirationTime", getFieldAsString(this.getExpirationTime()))
         .put("lastModifiedTime", getFieldAsString(this.getLastModifiedTime()))
         .put("numBytes", getFieldAsString(this.getNumBytes()))
         .put("numRows", getFieldAsString(this.getNumRows()))
-        .put("labels", getFieldAsString(this.getLabels()))
-        .put("resourceTags", getFieldAsString(this.getResourceTags()))
-        .put("requirePartitionFilter", getFieldAsString(this.getRequirePartitionFilter()))
-        .put("tableConstraints", getFieldAsString(this.getTableConstraints()))
         .build();
   }
 }

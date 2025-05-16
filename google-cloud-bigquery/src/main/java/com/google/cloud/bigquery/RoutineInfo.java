@@ -555,12 +555,7 @@ public class RoutineInfo implements Serializable {
         .putAll(this.getRoutineId().getOtelAttributes())
         .put("routineType", getFieldAsString(this.getRoutineType()))
         .put("creationTime", getFieldAsString(this.getCreationTime()))
-        .put("determinismLevel", getFieldAsString(this.getDeterminismLevel()))
         .put("lastModifiedTime", getFieldAsString(this.getLastModifiedTime()))
-        .put("language", getFieldAsString(this.getLanguage()))
-        .put("argumentList", getFieldAsString(this.getArguments()))
-        .put("returnType", getFieldAsString(this.getReturnType()))
-        .put("returnableType", getFieldAsString(this.getReturnTableType()))
         .build();
   }
 }

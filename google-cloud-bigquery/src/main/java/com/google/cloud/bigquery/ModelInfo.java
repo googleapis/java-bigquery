@@ -463,11 +463,9 @@ public class ModelInfo implements Serializable {
     return Attributes.builder()
         .putAll(this.getModelId().getOtelAttributes())
         .put("modelType", getFieldAsString(this.getModelType()))
-        .put("friendlyName", getFieldAsString(this.getFriendlyName()))
         .put("creationTime", getFieldAsString(this.getCreationTime()))
         .put("lastModifiedTime", getFieldAsString(this.getLastModifiedTime()))
         .put("expirationTime", getFieldAsString(this.getExpirationTime()))
-        .put("labels", getFieldAsString(this.getLabels()))
         .put("location", getFieldAsString(this.getLocation()))
         .build();
   }

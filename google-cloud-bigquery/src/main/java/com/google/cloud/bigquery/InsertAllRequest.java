@@ -488,10 +488,7 @@ public final class InsertAllRequest implements Serializable {
   public Attributes getOtelAttributes() {
     return Attributes.builder()
         .put("table", getFieldAsString(this.getTable().getTable()))
-        .put("row", getFieldAsString(this.getRows()))
         .put("templateSuffix", getFieldAsString(this.getTemplateSuffix()))
-        .put("ignoreUnknownValues", getFieldAsString(this.ignoreUnknownValues()))
-        .put("skipInvalidRows", getFieldAsString(this.skipInvalidRows()))
         .build();
   }
 }
