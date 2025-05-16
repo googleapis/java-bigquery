@@ -1222,17 +1222,8 @@ public final class QueryJobConfiguration extends JobConfiguration {
   public Attributes getOtelAttributes() {
     return Attributes.builder()
         .put("destinationTable", getFieldAsString(this.getDestinationTable()))
-        .put("defaultDataset", getFieldAsString(this.getDefaultDataset()))
-        .put("createSession", getFieldAsString(this.createSession()))
-        .put("flattenResults", getFieldAsString(this.flattenResults()))
-        .put("priority", getFieldAsString(this.getPriority()))
         .put("useQueryCache", getFieldAsString(this.useQueryCache()))
         .put("dryRun", getFieldAsString(this.dryRun()))
-        .put("jobTimeoutMs", getFieldAsString(this.getJobTimeoutMs()))
-        .put("labels", getFieldAsString(this.getLabels()))
-        .put("connectionProperties", getFieldAsString(this.getConnectionProperties()))
-        .put("jobCreationMode", getFieldAsString(this.getJobCreationMode()))
-        .put("reservation", getFieldAsString(this.getReservation()))
         .build();
   }
 }

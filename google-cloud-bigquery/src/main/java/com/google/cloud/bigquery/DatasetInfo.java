@@ -754,17 +754,8 @@ public class DatasetInfo implements Serializable {
   protected Attributes getOtelAttributes() {
     return Attributes.builder()
         .putAll(this.getDatasetId().getOtelAttributes())
-        .put("defaultTableLifetime", getFieldAsString(this.getDefaultTableLifetime()))
-        .put("friendlyName", getFieldAsString(this.getFriendlyName()))
-        .put("generatedId", getFieldAsString(this.getGeneratedId()))
         .put("lastModified", getFieldAsString(this.getLastModified()))
         .put("location", getFieldAsString(this.getLocation()))
-        .put("labels", getFieldAsString(this.getLabels()))
-        .put(
-            "defaultPartitionExpirationMs",
-            getFieldAsString(this.getDefaultPartitionExpirationMs()))
-        .put("maxTimeTravelHours", getFieldAsString(this.getMaxTimeTravelHours()))
-        .put("resourceTags", getFieldAsString(this.getResourceTags()))
         .build();
   }
 

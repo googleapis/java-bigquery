@@ -384,15 +384,10 @@ public class JobInfo implements Serializable {
   protected Attributes getOtelAttributes() {
     return Attributes.builder()
         .putAll(this.getJobId().getOtelAttributes())
-        .put("generatedId", getFieldAsString(this.getGeneratedId()))
-        .put("status", getFieldAsString(this.getStatus()))
         .put("creationTime", getFieldAsString(this.getStatistics().getCreationTime()))
         .put("startTime", getFieldAsString(this.getStatistics().getStartTime()))
         .put("endTime", getFieldAsString(this.getStatistics().getEndTime()))
-        .put("parentJobId", getFieldAsString(this.getStatistics().getParentJobId()))
-        .put("numChildJobs", getFieldAsString(this.getStatistics().getNumChildJobs()))
         .put("jobType", getFieldAsString(this.getConfiguration().getType()))
-        .put("jobTimeoutMs", getFieldAsString(this.getConfiguration().toPb().getJobTimeoutMs()))
         .build();
   }
 }
