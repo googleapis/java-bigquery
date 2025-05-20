@@ -462,11 +462,11 @@ public class ModelInfo implements Serializable {
   protected Attributes getOtelAttributes() {
     return Attributes.builder()
         .putAll(this.getModelId().getOtelAttributes())
-        .put("modelType", getFieldAsString(this.getModelType()))
-        .put("creationTime", getFieldAsString(this.getCreationTime()))
-        .put("lastModifiedTime", getFieldAsString(this.getLastModifiedTime()))
-        .put("expirationTime", getFieldAsString(this.getExpirationTime()))
-        .put("location", getFieldAsString(this.getLocation()))
+        .put("bq.model.type", getFieldAsString(this.getModelType()))
+        .put("bq.model.creation_time", getFieldAsString(this.getCreationTime()))
+        .put("bq.model.last_modified_time", getFieldAsString(this.getLastModifiedTime()))
+        .put("bq.model.expiration_time", getFieldAsString(this.getExpirationTime()))
+        .put("bq.model.location", getFieldAsString(this.getLocation()))
         .build();
   }
 }

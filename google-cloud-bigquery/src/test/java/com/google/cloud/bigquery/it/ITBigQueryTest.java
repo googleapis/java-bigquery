@@ -7590,19 +7590,19 @@ public class ITBigQueryTest {
       parentSpan.end();
       Map<AttributeKey<?>, Object> createMap =
           OTEL_ATTRIBUTES.get("com.google.cloud.bigquery.BigQuery.createDataset");
-      assertEquals(createMap.get(AttributeKey.stringKey("location")), "null");
+      assertEquals(createMap.get(AttributeKey.stringKey("bq.dataset.location")), "null");
 
       Map<AttributeKey<?>, Object> getMap =
           OTEL_ATTRIBUTES.get("com.google.cloud.bigquery.BigQuery.getDataset");
-      assertEquals(getMap.get(AttributeKey.stringKey("dataset")), billingModelDataset);
+      assertEquals(getMap.get(AttributeKey.stringKey("bq.dataset.id")), billingModelDataset);
 
       Map<AttributeKey<?>, Object> updateMap =
           OTEL_ATTRIBUTES.get("com.google.cloud.bigquery.BigQuery.updateDataset");
-      assertEquals(updateMap.get(AttributeKey.stringKey("ACCESS_POLICY_VERSION")), "2");
+      assertEquals(updateMap.get(AttributeKey.stringKey("bq.option.ACCESS_POLICY_VERSION")), "2");
 
       Map<AttributeKey<?>, Object> deleteMap =
           OTEL_ATTRIBUTES.get("com.google.cloud.bigquery.BigQuery.deleteDataset");
-      assertEquals(deleteMap.get(AttributeKey.stringKey("dataset")), billingModelDataset);
+      assertEquals(deleteMap.get(AttributeKey.stringKey("bq.dataset.id")), billingModelDataset);
 
       // All should be children spans of parentSpan
       assertEquals(
@@ -7647,12 +7647,12 @@ public class ITBigQueryTest {
     assertEquals(
         OTEL_ATTRIBUTES
             .get("com.google.cloud.bigquery.BigQuery.createTable")
-            .get(AttributeKey.stringKey("table")),
+            .get(AttributeKey.stringKey("bq.table.id")),
         tableName);
     assertEquals(
         OTEL_ATTRIBUTES
             .get("com.google.cloud.bigquery.BigQuery.createTable")
-            .get(AttributeKey.stringKey("creationTime")),
+            .get(AttributeKey.stringKey("bq.table.creation_time")),
         "null");
 
     Table updatedTable =

@@ -754,8 +754,8 @@ public class DatasetInfo implements Serializable {
   protected Attributes getOtelAttributes() {
     return Attributes.builder()
         .putAll(this.getDatasetId().getOtelAttributes())
-        .put("lastModified", getFieldAsString(this.getLastModified()))
-        .put("location", getFieldAsString(this.getLocation()))
+        .put("bq.dataset.lastModified", getFieldAsString(this.getLastModified()))
+        .put("bq.dataset.location", getFieldAsString(this.getLocation()))
         .build();
   }
 

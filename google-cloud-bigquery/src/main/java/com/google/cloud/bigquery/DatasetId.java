@@ -88,8 +88,8 @@ public final class DatasetId implements Serializable {
 
   protected Attributes getOtelAttributes() {
     return Attributes.builder()
-        .put("project", this.getProject())
-        .put("dataset", this.getDataset())
+        .put("bq.dataset.project", this.getProject())
+        .put("bq.dataset.id", this.getDataset())
         .build();
   }
 }

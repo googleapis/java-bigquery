@@ -444,7 +444,6 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               .getOpenTelemetryTracer()
               .spanBuilder("com.google.cloud.bigquery.BigQuery.createJob")
               .setAllAttributes(jobInfo.getJobId().getOtelAttributes())
-              .setAttribute("status", getFieldAsString(jobInfo.getStatus()))
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
@@ -615,7 +614,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           getOptions()
               .getOpenTelemetryTracer()
               .spanBuilder("com.google.cloud.bigquery.BigQuery.listDatasets")
-              .setAttribute("projectId", projectId)
+              .setAttribute("bq.dataset.project_id", projectId)
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
@@ -1637,7 +1636,6 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               .getOpenTelemetryTracer()
               .spanBuilder("com.google.cloud.bigquery.BigQuery.listTableData")
               .setAllAttributes(tableId.getOtelAttributes())
-              .setAllAttributes(schema.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
@@ -1734,7 +1732,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           getOptions()
               .getOpenTelemetryTracer()
               .spanBuilder("com.google.cloud.bigquery.BigQuery.getJob")
-              .setAllAttributes(jobId.getOtelAttributes())
+              .setAllAttributes(completeJobId.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
@@ -1847,7 +1845,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           getOptions()
               .getOpenTelemetryTracer()
               .spanBuilder("com.google.cloud.bigquery.BigQuery.cancelJob")
-              .setAllAttributes(jobId.getOtelAttributes())
+              .setAllAttributes(completeJobId.getOtelAttributes())
               .startSpan();
     }
     try (Scope jobCancelScope = jobCancel != null ? jobCancel.makeCurrent() : null) {
@@ -1892,7 +1890,6 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           getOptions()
               .getOpenTelemetryTracer()
               .spanBuilder("com.google.cloud.bigquery.BigQuery.query")
-              .setAllAttributes(configuration.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
@@ -1930,7 +1927,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           getOptions()
               .getOpenTelemetryTracer()
               .spanBuilder("com.google.cloud.bigquery.BigQuery.queryRpc")
-              .setAttribute("projectId", projectId)
+              .setAttribute("bq.query.project_id", projectId)
               .setAllAttributes(otelAttributesFromQueryRequest(content))
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -2031,7 +2028,6 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           getOptions()
               .getOpenTelemetryTracer()
               .spanBuilder("com.google.cloud.bigquery.BigQuery.query")
-              .setAllAttributes(configuration.getOtelAttributes())
               .setAllAttributes(jobId.getOtelAttributes())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -2264,7 +2260,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
               .getOpenTelemetryTracer()
               .spanBuilder("com.google.cloud.bigquery.BigQuery.testIamPermissions")
               .setAllAttributes(tableId.getOtelAttributes())
-              .setAttribute("permissions", permissions.toString())
+              .setAttribute("bq.iam.permissions", permissions.toString())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
@@ -2315,7 +2311,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     for (Option option : options) {
       attributes =
           attributes.toBuilder()
-              .put(option.getRpcOption().toString(), option.getValue().toString())
+              .put("bq.option." + option.getRpcOption().toString(), option.getValue().toString())
               .build();
     }
     return attributes;
@@ -2323,19 +2319,19 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
 
   private static Attributes otelAttributesFromQueryRequest(QueryRequest request) {
     return Attributes.builder()
-        .put("dryRun", getFieldAsString(request.getDryRun()))
-        .put("jobCreationMode", getFieldAsString(request.getJobCreationMode()))
-        .put("kind", getFieldAsString(request.getKind()))
-        .put("location", getFieldAsString(request.getLocation()))
-        .put("requestId", getFieldAsString(request.getRequestId()))
-        .put("useQueryCache", getFieldAsString(request.getUseQueryCache()))
+        .put("bq.query.dry_run", getFieldAsString(request.getDryRun()))
+        .put("bq.query.job_creation_mode", getFieldAsString(request.getJobCreationMode()))
+        .put("bq.query.kind", getFieldAsString(request.getKind()))
+        .put("bq.query.location", getFieldAsString(request.getLocation()))
+        .put("bq.query.request_id", getFieldAsString(request.getRequestId()))
+        .put("bq.query.use_query_cache", getFieldAsString(request.getUseQueryCache()))
         .build();
   }
 
   private static Attributes otelAttributesFromPolicy(Policy policy) {
     return Attributes.builder()
-        .put("version", getFieldAsString(policy.getVersion()))
-        .put("bindings", getFieldAsString(policy.getBindings()))
+        .put("bq.policy.version", getFieldAsString(policy.getVersion()))
+        .put("bq.policy.bindings", getFieldAsString(policy.getBindings()))
         .build();
   }
 

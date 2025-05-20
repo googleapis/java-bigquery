@@ -109,9 +109,9 @@ public final class ModelId implements Serializable {
 
   protected Attributes getOtelAttributes() {
     return Attributes.builder()
-        .put("project", this.getProject())
-        .put("dataset", this.getDataset())
-        .put("model", this.getModel())
+        .put("bq.model.project", this.getProject())
+        .put("bq.model.dataset", this.getDataset())
+        .put("bq.model.id", this.getModel())
         .build();
   }
 }

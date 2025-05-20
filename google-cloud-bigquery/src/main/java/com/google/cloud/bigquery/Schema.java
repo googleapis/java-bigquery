@@ -22,7 +22,6 @@ import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableSchema;
 import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
-import io.opentelemetry.api.common.Attributes;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
@@ -99,14 +98,5 @@ public final class Schema implements Serializable {
       fields = Collections.emptyList();
     }
     return Schema.of(FieldList.fromPb(fields));
-  }
-
-  public Attributes getOtelAttributes() {
-    Attributes attributes = Attributes.builder().build();
-    for (Field field : this.getFields()) {
-      attributes =
-          attributes.toBuilder().put("Field: " + field.getName(), field.toString()).build();
-    }
-    return attributes;
   }
 }

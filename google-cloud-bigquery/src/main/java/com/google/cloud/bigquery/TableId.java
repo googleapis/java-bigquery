@@ -118,9 +118,9 @@ public final class TableId implements Serializable {
 
   protected Attributes getOtelAttributes() {
     return Attributes.builder()
-        .put("project", this.getProject())
-        .put("dataset", this.getDataset())
-        .put("table", this.getTable())
+        .put("bq.table.project", this.getProject())
+        .put("bq.table.dataset", this.getDataset())
+        .put("bq.table.id", this.getTable())
         .build();
   }
 }
