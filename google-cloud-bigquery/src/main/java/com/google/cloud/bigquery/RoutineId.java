@@ -112,9 +112,9 @@ public final class RoutineId implements Serializable {
 
   protected Attributes getOtelAttributes() {
     return Attributes.builder()
-        .put("project", this.getProject())
-        .put("dataset", this.getDataset())
-        .put("routine", this.getRoutine())
+        .put("bq.routine.project", this.getProject())
+        .put("bq.routine.dataset", this.getDataset())
+        .put("bq.routine.id", this.getRoutine())
         .build();
   }
 }

@@ -772,11 +772,11 @@ public class TableInfo implements Serializable {
   protected Attributes getOtelAttributes() {
     return Attributes.builder()
         .putAll(this.getTableId().getOtelAttributes())
-        .put("creationTime", getFieldAsString(this.getCreationTime()))
-        .put("expirationTime", getFieldAsString(this.getExpirationTime()))
-        .put("lastModifiedTime", getFieldAsString(this.getLastModifiedTime()))
-        .put("numBytes", getFieldAsString(this.getNumBytes()))
-        .put("numRows", getFieldAsString(this.getNumRows()))
+        .put("bq.table.creation_time", getFieldAsString(this.getCreationTime()))
+        .put("bq.table.expiration_time", getFieldAsString(this.getExpirationTime()))
+        .put("bq.table.last_modified_time", getFieldAsString(this.getLastModifiedTime()))
+        .put("bq.table.num_bytes", getFieldAsString(this.getNumBytes()))
+        .put("bq.table.num_rows", getFieldAsString(this.getNumRows()))
         .build();
   }
 }

@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import io.opentelemetry.api.common.Attributes;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -1214,16 +1213,4 @@ public final class QueryJobConfiguration extends JobConfiguration {
               return queryParameterPb;
             }
           };
-
-  private static String getFieldAsString(Object field) {
-    return field == null ? "null" : field.toString();
-  }
-
-  public Attributes getOtelAttributes() {
-    return Attributes.builder()
-        .put("destinationTable", getFieldAsString(this.getDestinationTable()))
-        .put("useQueryCache", getFieldAsString(this.useQueryCache()))
-        .put("dryRun", getFieldAsString(this.dryRun()))
-        .build();
-  }
 }

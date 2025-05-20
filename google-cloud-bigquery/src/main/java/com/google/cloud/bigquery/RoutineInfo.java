@@ -553,9 +553,9 @@ public class RoutineInfo implements Serializable {
   protected Attributes getOtelAttributes() {
     return Attributes.builder()
         .putAll(this.getRoutineId().getOtelAttributes())
-        .put("routineType", getFieldAsString(this.getRoutineType()))
-        .put("creationTime", getFieldAsString(this.getCreationTime()))
-        .put("lastModifiedTime", getFieldAsString(this.getLastModifiedTime()))
+        .put("bq.routine.type", getFieldAsString(this.getRoutineType()))
+        .put("bq.routine.creation_time", getFieldAsString(this.getCreationTime()))
+        .put("bq.routine.last_modified_time", getFieldAsString(this.getLastModifiedTime()))
         .build();
   }
 }

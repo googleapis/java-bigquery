@@ -131,9 +131,9 @@ public abstract class JobId implements Serializable {
 
   protected Attributes getOtelAttributes() {
     return Attributes.builder()
-        .put("job", getFieldAsString(this.getJob()))
-        .put("location", getFieldAsString(this.getLocation()))
-        .put("project", getFieldAsString(this.getProject()))
+        .put("bq.job.id", getFieldAsString(this.getJob()))
+        .put("bq.job.location", getFieldAsString(this.getLocation()))
+        .put("bq.job.project", getFieldAsString(this.getProject()))
         .build();
   }
 }
