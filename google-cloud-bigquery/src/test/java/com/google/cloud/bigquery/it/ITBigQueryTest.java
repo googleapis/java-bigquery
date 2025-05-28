@@ -1249,7 +1249,8 @@ public class ITBigQueryTest {
             accessPolicyOption);
     assertThat(dataset).isNotNull();
 
-    Dataset remoteDataset = bigquery.getDataset(accessPolicyDataset, accessPolicyOption, viewOption);
+    Dataset remoteDataset =
+        bigquery.getDataset(accessPolicyDataset, accessPolicyOption, viewOption);
     assertNotNull(remoteDataset);
     assertEquals(dataset.getDescription(), remoteDataset.getDescription());
     assertNotNull(remoteDataset.getCreationTime());
@@ -1366,7 +1367,8 @@ public class ITBigQueryTest {
                 .setLabels(null)
                 .setAcl(acls)
                 .build(),
-            datasetOption, updateModeOption);
+            datasetOption,
+            updateModeOption);
     assertNotNull(updatedDataset);
     assertEquals(updatedDataset.getDescription(), "Updated Description");
     assertThat(updatedDataset.getLabels().isEmpty());
