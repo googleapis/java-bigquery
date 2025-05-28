@@ -78,9 +78,9 @@ public interface BigQuery extends Service<BigQueryOptions> {
   }
 
   enum DatasetView {
-    FULL("full"),
-    METADATA("metadata"),
-    ACL("acl");
+    FULL("FULL"),
+    METADATA("METADATA"),
+    ACL("ACL");
 
     private final String view;
 
@@ -90,14 +90,14 @@ public interface BigQuery extends Service<BigQueryOptions> {
 
     @Override
     public String toString() {
-      return view.toUpperCase();
+      return view;
     }
   }
 
   enum DatasetUpdateMode {
-    UPDATE_FULL("update_full"),
-    UPDATE_METADATA("update_metadata"),
-    UPDATE_ACL("update_acl");
+    UPDATE_FULL("UPDATE_FULL"),
+    UPDATE_METADATA("UPDATE_METADATA"),
+    UPDATE_ACL("UPDATE_ACL");
 
     private final String updateMode;
 
@@ -107,7 +107,7 @@ public interface BigQuery extends Service<BigQueryOptions> {
 
     @Override
     public String toString() {
-      return updateMode.toUpperCase();
+      return updateMode;
     }
   }
 
