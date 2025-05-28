@@ -38,6 +38,7 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
   // set the option ThrowNotFound when you want to throw the exception when the value not found
   private boolean setThrowNotFound;
   private boolean useInt64Timestamps;
+  private String queryPreviewEnabled = null;
   private JobCreationMode jobCreationMode = JobCreationMode.JOB_CREATION_MODE_UNSPECIFIED;
 
   public static class DefaultBigQueryFactory implements BigQueryFactory {
@@ -139,12 +140,22 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
     return location;
   }
 
+  @Deprecated
+  public boolean isQueryPreviewEnabled() {
+    return queryPreviewEnabled != null && queryPreviewEnabled.equalsIgnoreCase("TRUE");
+  }
+
   public void setThrowNotFound(boolean setThrowNotFound) {
     this.setThrowNotFound = setThrowNotFound;
   }
 
   public void setUseInt64Timestamps(boolean useInt64Timestamps) {
     this.useInt64Timestamps = useInt64Timestamps;
+  }
+
+  @Deprecated
+  public void setQueryPreviewEnabled(String queryPreviewEnabled) {
+    this.queryPreviewEnabled = queryPreviewEnabled;
   }
 
   public void setJobCreationMode(JobCreationMode jobCreationMode) {
