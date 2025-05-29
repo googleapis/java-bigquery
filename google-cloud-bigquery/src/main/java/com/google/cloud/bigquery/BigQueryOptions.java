@@ -38,8 +38,7 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
   // set the option ThrowNotFound when you want to throw the exception when the value not found
   private boolean setThrowNotFound;
   private boolean useInt64Timestamps;
-  private String queryPreviewEnabled = null;
-  private JobCreationMode jobCreationMode = JobCreationMode.JOB_CREATION_MODE_UNSPECIFIED;
+  private JobCreationMode defaultJobCreationMode = JobCreationMode.JOB_CREATION_MODE_UNSPECIFIED;
 
   public static class DefaultBigQueryFactory implements BigQueryFactory {
 
@@ -142,7 +141,7 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
 
   @Deprecated
   public boolean isQueryPreviewEnabled() {
-    return queryPreviewEnabled != null && queryPreviewEnabled.equalsIgnoreCase("TRUE");
+    return false;
   }
 
   public void setThrowNotFound(boolean setThrowNotFound) {
@@ -154,12 +153,10 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
   }
 
   @Deprecated
-  public void setQueryPreviewEnabled(String queryPreviewEnabled) {
-    this.queryPreviewEnabled = queryPreviewEnabled;
-  }
+  public void setQueryPreviewEnabled(String queryPreviewEnabled) {}
 
-  public void setJobCreationMode(JobCreationMode jobCreationMode) {
-    this.jobCreationMode = jobCreationMode;
+  public void setDefaultJobCreationMode(JobCreationMode jobCreationMode) {
+    this.defaultJobCreationMode = jobCreationMode;
   }
 
   public boolean getThrowNotFound() {
@@ -170,8 +167,8 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
     return useInt64Timestamps;
   }
 
-  public JobCreationMode getJobCreationMode() {
-    return jobCreationMode;
+  public JobCreationMode getDefaultJobCreationMode() {
+    return defaultJobCreationMode;
   }
 
   @SuppressWarnings("unchecked")

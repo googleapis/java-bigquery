@@ -16,19 +16,20 @@
 
 package com.example.bigquery;
 
-// [START bigquery_query_shortquery]
+// [START bigquery_query_job_optional]
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.QueryJobConfiguration.JobCreationMode;
 import com.google.cloud.bigquery.TableResult;
 
 // Sample demonstrating short mode query execution.
 //
-// While this feature is still in preview, it is controlled by
-// setting the environment variable QUERY_PREVIEW_ENABLED=TRUE
-// to request short mode execution.
+// This feature is controlled by setting the defaultJobCreationMode
+// field in the BigQueryOptions used for the client. JOB_CREATION_OPTIONAL
+// allows for the execution of queries without creating a job.
 public class QueryShortMode {
 
   public static void main(String[] args) {
@@ -43,7 +44,9 @@ public class QueryShortMode {
     try {
       // Initialize client that will be used to send requests. This client only needs
       // to be created once, and can be reused for multiple requests.
-      BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
+      BigQueryOptions options = BigQueryOptions.getDefaultInstance();
+      options.setDefaultJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL);
+      BigQuery bigquery = options.getService();
 
       // Execute the query. The returned TableResult provides access information
       // about the query execution as well as query results.
@@ -72,4 +75,4 @@ public class QueryShortMode {
     }
   }
 }
-// [END bigquery_query_shortquery]
+// [END bigquery_query_job_optional]

@@ -3484,7 +3484,7 @@ public class ITBigQueryTest {
     final int rowLimit = 5000;
     final String QUERY =
         "SELECT * FROM bigquery-public-data.new_york_taxi_trips.tlc_yellow_trips_2017 LIMIT %s";
-    bigquery.getOptions().setJobCreationMode(JobCreationMode.JOB_CREATION_REQUIRED);
+    bigquery.getOptions().setDefaultJobCreationMode(JobCreationMode.JOB_CREATION_REQUIRED);
     // Job timeout is somewhat arbitrary - just ensures that fast query is not used.
     // min result size and page row count ratio ensure that the ReadAPI is used.
     ConnectionSettings connectionSettingsReadAPIEnabledFastQueryDisabled =
@@ -7087,18 +7087,18 @@ public class ITBigQueryTest {
     BigQuery bigQuery = bigqueryHelper.getOptions().getService();
 
     // Stateless query should have no job id.
-    bigQuery.getOptions().setJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL);
+    bigQuery.getOptions().setDefaultJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL);
     TableResult tableResult = executeSimpleQuery(bigQuery);
     assertNotNull(tableResult.getQueryId());
     assertNull(tableResult.getJobId());
 
     // Job creation takes over, no query id is created.
-    bigQuery.getOptions().setJobCreationMode(JobCreationMode.JOB_CREATION_REQUIRED);
+    bigQuery.getOptions().setDefaultJobCreationMode(JobCreationMode.JOB_CREATION_REQUIRED);
     tableResult = executeSimpleQuery(bigQuery);
     assertNull(tableResult.getQueryId());
     assertNotNull(tableResult.getJobId());
 
-    bigQuery.getOptions().setJobCreationMode(JobCreationMode.JOB_CREATION_MODE_UNSPECIFIED);
+    bigQuery.getOptions().setDefaultJobCreationMode(JobCreationMode.JOB_CREATION_MODE_UNSPECIFIED);
     tableResult = executeSimpleQuery(bigQuery);
     assertNotNull(tableResult.getQueryId());
     assertNotNull(tableResult.getJobId());
@@ -7124,7 +7124,7 @@ public class ITBigQueryTest {
     RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
     BigQuery bigQuery = bigqueryHelper.getOptions().getService();
     // Allow queries to be stateless.
-    bigQuery.getOptions().setJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL);
+    bigQuery.getOptions().setDefaultJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL);
     String query = "SELECT 1 as one";
     QueryJobConfiguration configStateless = QueryJobConfiguration.newBuilder(query).build();
     TableResult result = bigQuery.query(configStateless);
@@ -7176,7 +7176,7 @@ public class ITBigQueryTest {
               table.getTableId().getTable());
 
       // Test stateless query when BigQueryOption location matches dataset location.
-      bigQuery.getOptions().setJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL);
+      bigQuery.getOptions().setDefaultJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL);
       TableResult tb = bigQuery.query(QueryJobConfiguration.of(query));
       assertNull(tb.getJobId());
 
@@ -7186,7 +7186,7 @@ public class ITBigQueryTest {
             bigqueryHelper.getOptions().toBuilder().setLocation(wrongLocation).build().getService();
         bigQueryWrongLocation
             .getOptions()
-            .setJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL);
+            .setDefaultJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL);
         bigQueryWrongLocation.query(QueryJobConfiguration.of(query));
         fail("querying a table with wrong location shouldn't work");
       } catch (BigQueryException e) {

@@ -1407,7 +1407,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     Job.checkNotDryRun(configuration, "query");
 
     configuration =
-        configuration.toBuilder().setJobCreationMode(getOptions().getJobCreationMode()).build();
+        configuration.toBuilder()
+            .setJobCreationMode(getOptions().getDefaultJobCreationMode())
+            .build();
 
     // If all parameters passed in configuration are supported by the query() method on the backend,
     // put on fast path
