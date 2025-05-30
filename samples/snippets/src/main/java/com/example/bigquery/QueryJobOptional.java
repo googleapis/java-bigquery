@@ -30,22 +30,22 @@ import com.google.cloud.bigquery.TableResult;
 // This feature is controlled by setting the defaultJobCreationMode
 // field in the BigQueryOptions used for the client. JOB_CREATION_OPTIONAL
 // allows for the execution of queries without creating a job.
-public class QueryShortMode {
+public class QueryJobOptional {
 
   public static void main(String[] args) {
     String query =
         "SELECT name, gender, SUM(number) AS total FROM "
             + "bigquery-public-data.usa_names.usa_1910_2013 GROUP BY "
             + "name, gender ORDER BY total DESC LIMIT 10";
-    queryShortMode(query);
+    queryJobOptional(query);
   }
 
-  public static void queryShortMode(String query) {
+  public static void queryJobOptional(String query) {
     try {
       // Initialize client that will be used to send requests. This client only needs
       // to be created once, and can be reused for multiple requests.
       BigQueryOptions options = BigQueryOptions.getDefaultInstance();
-      options.setDefaultJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL);
+      options.setDefaultJobCreationMode(QueryJobConfiguration.JobCreationMode.JOB_CREATION_OPTIONAL);
       BigQuery bigquery = options.getService();
 
       // Execute the query. The returned TableResult provides access information
