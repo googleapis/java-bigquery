@@ -78,6 +78,7 @@ public interface BigQuery extends Service<BigQueryOptions> {
   }
 
   enum DatasetView {
+    DATASET_VIEW_UNSPECIFIED("DATASET_VIEW_UNSPECIFIED"),
     FULL("FULL"),
     METADATA("METADATA"),
     ACL("ACL");
@@ -95,6 +96,7 @@ public interface BigQuery extends Service<BigQueryOptions> {
   }
 
   enum DatasetUpdateMode {
+    UPDATE_MODE_UNSPECIFIED("UPDATE_MODE_UNSPECIFIED"),
     UPDATE_FULL("UPDATE_FULL"),
     UPDATE_METADATA("UPDATE_METADATA"),
     UPDATE_ACL("UPDATE_ACL");
