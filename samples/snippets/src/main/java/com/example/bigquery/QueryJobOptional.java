@@ -45,7 +45,7 @@ public class QueryJobOptional {
       // Initialize client that will be used to send requests. This client only needs
       // to be created once, and can be reused for multiple requests.
       BigQueryOptions options = BigQueryOptions.getDefaultInstance();
-      options.setDefaultJobCreationMode(QueryJobConfiguration.JobCreationMode.JOB_CREATION_OPTIONAL);
+      options.setDefaultJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL);
       BigQuery bigquery = options.getService();
 
       // Execute the query. The returned TableResult provides access information
