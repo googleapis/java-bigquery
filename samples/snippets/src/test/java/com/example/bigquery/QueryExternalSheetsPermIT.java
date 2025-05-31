@@ -33,7 +33,9 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore
+import com.google.cloud.bigquery.BigQueryException;
+import java.io.IOException;
+
 public class QueryExternalSheetsPermIT {
 
   private final Logger log = Logger.getLogger(this.getClass().getName());
@@ -43,6 +45,7 @@ public class QueryExternalSheetsPermIT {
   private PrintStream originalPrintStream;
 
   private static final String BIGQUERY_DATASET_NAME = requireEnvVar("BIGQUERY_DATASET_NAME");
+  private static final String PROJECT_ID = requireEnvVar("GOOGLE_CLOUD_PROJECT");
 
   private static String requireEnvVar(String varName) {
     String value = System.getenv(varName);
@@ -79,7 +82,7 @@ public class QueryExternalSheetsPermIT {
   }
 
   @Test
-  public void testQueryExternalSheetsPerm() {
+  public void testQueryExternalSheetsPerm() throws BigQueryException, InterruptedException, IOException {
     String sourceUri =
         "https://docs.google.com/spreadsheets/d/1i_QCL-7HcSyUZmIbP9E6lO_T5u3HnpLe7dnpHaijg_E/edit?usp=sharing";
     Schema schema =
