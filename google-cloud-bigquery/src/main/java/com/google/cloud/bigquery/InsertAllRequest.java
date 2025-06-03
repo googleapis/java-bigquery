@@ -487,8 +487,8 @@ public final class InsertAllRequest implements Serializable {
 
   public Attributes getOtelAttributes() {
     return Attributes.builder()
-        .put("table", getFieldAsString(this.getTable().getTable()))
-        .put("templateSuffix", getFieldAsString(this.getTemplateSuffix()))
+        .put("bq.insert_all.table", getFieldAsString(this.getTable().getTable()))
+        .put("bq.insert_all.template_suffix", getFieldAsString(this.getTemplateSuffix()))
         .build();
   }
 }

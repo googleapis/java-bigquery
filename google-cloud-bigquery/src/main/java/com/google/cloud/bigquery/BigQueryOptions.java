@@ -41,7 +41,6 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
   private boolean setThrowNotFound;
   private boolean useInt64Timestamps;
   private JobCreationMode defaultJobCreationMode = JobCreationMode.JOB_CREATION_MODE_UNSPECIFIED;
-  private String queryPreviewEnabled = System.getenv("QUERY_PREVIEW_ENABLED");
   private boolean enableOpenTelemetryTracing;
   private Tracer openTelemetryTracer;
 
