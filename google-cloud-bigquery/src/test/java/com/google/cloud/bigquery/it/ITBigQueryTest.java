@@ -7676,7 +7676,7 @@ public class ITBigQueryTest {
     BigQuery bigquery = otelOptions.getService();
 
     // Stateless query
-    bigquery.getOptions().setQueryPreviewEnabled("TRUE");
+    bigquery.getOptions().setDefaultJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL);
     TableResult tableResult = executeSimpleQuery(bigquery);
     assertNotNull(tableResult.getQueryId());
     assertNull(tableResult.getJobId());
