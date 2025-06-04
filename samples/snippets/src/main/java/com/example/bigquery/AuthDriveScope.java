@@ -42,17 +42,29 @@ public class AuthDriveScope {
                     "https://www.googleapis.com/auth/bigquery",
                     "https://www.googleapis.com/auth/drive"));
 
+    // TODO(NOW)
+    // if (ServiceAccountCredentials.getApplicationDefault().equals(credentials)) {
+    //   System.out.println("CHUONGPH: equal error: \n");
+    //   throw new IOException();
+    // } else {
+    //   System.out.println("CHUONGPH: not equal error: \n");
+    //   throw new IOException();
+    // }
+
     try {
       // Initialize client that will be used to send requests. This client only needs to be created
       // once, and can be reused for multiple requests.
       BigQuery bigquery =
           BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
 
+      // System.out.println("CHUONGPH: Scopes \n" + BigQueryOptions.newBuilder().setCredentials(credentials).build().getScopes());
+
       // Use the client.
       System.out.println("Auth succeeded with multiple scopes. Datasets:");
       for (Dataset dataset : bigquery.listDatasets().iterateAll()) {
         System.out.printf("Dataset: %s%n", dataset.getDatasetId().getDataset());
       }
+      // throw new IOException();
     } catch (BigQueryException e) {
       System.out.println("Auth failed due to error: \n" + e.toString());
     }
