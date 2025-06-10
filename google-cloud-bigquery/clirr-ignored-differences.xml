@@ -5,7 +5,7 @@
   <difference>
     <differenceType>7004</differenceType>
     <className>com/google/cloud/bigquery/BigQueryRetryHelper</className>
-    <method>com.google.cloud.bigquery.V runWithRetries(java.util.concurrent.Callable, com.google.api.gax.retrying.RetrySettings, com.google.api.gax.retrying.ResultRetryAlgorithm, com.google.api.core.ApiClock, com.google.cloud.bigquery.BigQueryRetryConfig)</method>
+    <method>java.lang.Object runWithRetries(java.util.concurrent.Callable, com.google.api.gax.retrying.RetrySettings, com.google.api.gax.retrying.ResultRetryAlgorithm, com.google.api.core.ApiClock, com.google.cloud.bigquery.BigQueryRetryConfig)</method>
     <justification>A Tracer object is needed to use Otel and runWithRetries is only called in a few files, so it should be fine to update the signature</justification>
   </difference>
   <difference>
