@@ -29,6 +29,9 @@ import com.google.cloud.bigquery.BigQuery.QueryResultsOption;
 import com.google.cloud.bigquery.BigQuery.TableDataListOption;
 import com.google.cloud.bigquery.JobConfiguration.Type;
 import com.google.common.collect.ImmutableList;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Scope;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.time.Duration;
@@ -172,7 +175,21 @@ public class Job extends JobInfo {
    */
   public boolean exists() {
     checkNotDryRun("exists");
-    return bigquery.getJob(getJobId(), JobOption.fields()) != null;
+    Span exists = null;
+    if (options.isOpenTelemetryTracingEnabled() && options.getOpenTelemetryTracer() != null) {
+      exists =
+          options
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.Job.exists")
+              .startSpan();
+    }
+    try (Scope existsScope = exists != null ? exists.makeCurrent() : null) {
+      return bigquery.getJob(getJobId(), JobOption.fields()) != null;
+    } finally {
+      if (exists != null) {
+        exists.end();
+      }
+    }
   }
 
   /**
@@ -193,8 +210,22 @@ public class Job extends JobInfo {
    */
   public boolean isDone() {
     checkNotDryRun("isDone");
-    Job job = bigquery.getJob(getJobId(), JobOption.fields(BigQuery.JobField.STATUS));
-    return job == null || JobStatus.State.DONE.equals(job.getStatus().getState());
+    Span isDone = null;
+    if (options.isOpenTelemetryTracingEnabled() && options.getOpenTelemetryTracer() != null) {
+      isDone =
+          options
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.Job.isDone")
+              .startSpan();
+    }
+    try (Scope isDoneScope = isDone != null ? isDone.makeCurrent() : null) {
+      Job job = bigquery.getJob(getJobId(), JobOption.fields(BigQuery.JobField.STATUS));
+      return job == null || JobStatus.State.DONE.equals(job.getStatus().getState());
+    } finally {
+      if (isDone != null) {
+        isDone.end();
+      }
+    }
   }
 
   /** See {@link #waitFor(BigQueryRetryConfig, RetryOption...)} */
@@ -329,47 +360,64 @@ public class Job extends JobInfo {
       }
     }
 
-    QueryResponse response =
-        waitForQueryResults(
-            DEFAULT_JOB_WAIT_SETTINGS,
-            DEFAULT_RETRY_CONFIG,
-            waitOptions.toArray(new QueryResultsOption[0]));
-
-    // Get the job resource to determine if it has errored.
-    Job job = this;
-    if (job.getStatus() == null || !JobStatus.State.DONE.equals(job.getStatus().getState())) {
-      job = reload();
+    Span getQueryResults = null;
+    if (this.options.isOpenTelemetryTracingEnabled()
+        && this.options.getOpenTelemetryTracer() != null) {
+      getQueryResults =
+          this.options
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.Job.getQueryResults")
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
     }
-    if (job.getStatus() != null && job.getStatus().getError() != null) {
-      throw new BigQueryException(
-          job.getStatus().getExecutionErrors() == null
-              ? ImmutableList.of(job.getStatus().getError())
-              : ImmutableList.copyOf(job.getStatus().getExecutionErrors()));
-    }
+    try (Scope getQueryResultsScope =
+        getQueryResults != null ? getQueryResults.makeCurrent() : null) {
+      QueryResponse response =
+          waitForQueryResults(
+              DEFAULT_JOB_WAIT_SETTINGS,
+              DEFAULT_RETRY_CONFIG,
+              waitOptions.toArray(new QueryResultsOption[0]));
 
-    // If there are no rows in the result, this may have been a DDL query.
-    // Listing table data might fail, such as with CREATE VIEW queries.
-    // Avoid a tabledata.list API request by returning an empty TableResult.
-    if (response.getTotalRows() == 0) {
-      TableResult emptyTableResult =
-          TableResult.newBuilder()
-              .setSchema(response.getSchema())
-              .setJobId(job.getJobId())
-              .setTotalRows(0L)
-              .setPageNoSchema(new PageImpl<FieldValueList>(null, "", null))
-              .build();
-      return emptyTableResult;
-    }
+      // Get the job resource to determine if it has errored.
+      Job job = this;
+      if (job.getStatus() == null || !JobStatus.State.DONE.equals(job.getStatus().getState())) {
+        job = reload();
+      }
+      if (job.getStatus() != null && job.getStatus().getError() != null) {
+        throw new BigQueryException(
+            job.getStatus().getExecutionErrors() == null
+                ? ImmutableList.of(job.getStatus().getError())
+                : ImmutableList.copyOf(job.getStatus().getExecutionErrors()));
+      }
 
-    TableId table =
-        ((QueryJobConfiguration) getConfiguration()).getDestinationTable() == null
-            ? ((QueryJobConfiguration) job.getConfiguration()).getDestinationTable()
-            : ((QueryJobConfiguration) getConfiguration()).getDestinationTable();
-    TableResult tableResult =
-        bigquery.listTableData(
-            table, response.getSchema(), listOptions.toArray(new TableDataListOption[0]));
-    TableResult tableResultWithJobId = tableResult.toBuilder().setJobId(job.getJobId()).build();
-    return tableResultWithJobId;
+      // If there are no rows in the result, this may have been a DDL query.
+      // Listing table data might fail, such as with CREATE VIEW queries.
+      // Avoid a tabledata.list API request by returning an empty TableResult.
+      if (response.getTotalRows() == 0) {
+        TableResult emptyTableResult =
+            TableResult.newBuilder()
+                .setSchema(response.getSchema())
+                .setJobId(job.getJobId())
+                .setTotalRows(0L)
+                .setPageNoSchema(new PageImpl<FieldValueList>(null, "", null))
+                .build();
+        return emptyTableResult;
+      }
+
+      TableId table =
+          ((QueryJobConfiguration) getConfiguration()).getDestinationTable() == null
+              ? ((QueryJobConfiguration) job.getConfiguration()).getDestinationTable()
+              : ((QueryJobConfiguration) getConfiguration()).getDestinationTable();
+      TableResult tableResult =
+          bigquery.listTableData(
+              table, response.getSchema(), listOptions.toArray(new TableDataListOption[0]));
+      TableResult tableResultWithJobId = tableResult.toBuilder().setJobId(job.getJobId()).build();
+      return tableResultWithJobId;
+    } finally {
+      if (getQueryResults != null) {
+        getQueryResults.end();
+      }
+    }
   }
 
   private QueryResponse waitForQueryResults(
@@ -382,7 +430,17 @@ public class Job extends JobInfo {
           "Waiting for query results is supported only for " + Type.QUERY + " jobs");
     }
 
-    try {
+    Span waitForQueryResults = null;
+    if (options.isOpenTelemetryTracingEnabled() && options.getOpenTelemetryTracer() != null) {
+      waitForQueryResults =
+          options
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.Job.waitForQueryResults")
+              .setAllAttributes(otelAttributesFromOptions(resultsOptions))
+              .startSpan();
+    }
+    try (Scope waitForQueryResultsScope =
+        waitForQueryResults != null ? waitForQueryResults.makeCurrent() : null) {
       return BigQueryRetryHelper.runWithRetries(
           new Callable<QueryResponse>() {
             @Override
@@ -401,14 +459,43 @@ public class Job extends JobInfo {
             }
           },
           options.getClock(),
-          bigQueryRetryConfig);
+          bigQueryRetryConfig,
+          options.isOpenTelemetryTracingEnabled(),
+          options.getOpenTelemetryTracer());
     } catch (BigQueryRetryHelper.BigQueryRetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (waitForQueryResults != null) {
+        waitForQueryResults.end();
+      }
     }
   }
 
   private Job waitForJob(RetrySettings waitSettings) throws InterruptedException {
-    try {
+    Span waitForJob = null;
+    if (options.isOpenTelemetryTracingEnabled() && options.getOpenTelemetryTracer() != null) {
+      waitForJob =
+          this.options
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.Job.waitForJob")
+              .setAttribute(
+                  "bq.job.wait_settings.total_timeout",
+                  getFieldAsString(waitSettings.getTotalTimeoutDuration()))
+              .setAttribute(
+                  "bq.job.wait_settings.initial_retry_delay",
+                  getFieldAsString(waitSettings.getInitialRetryDelayDuration()))
+              .setAttribute(
+                  "bq.job.wait_settings.max_retry_delay",
+                  getFieldAsString(waitSettings.getMaxRetryDelayDuration()))
+              .setAttribute(
+                  "bq.job.wait_settings.initial_rpc_timeout",
+                  getFieldAsString(waitSettings.getInitialRpcTimeoutDuration()))
+              .setAttribute(
+                  "bq.job.wait_settings.max_rpc_timeout",
+                  getFieldAsString(waitSettings.getMaxRpcTimeoutDuration()))
+              .startSpan();
+    }
+    try (Scope waitForJobScope = waitForJob != null ? waitForJob.makeCurrent() : null) {
       return RetryHelper.poll(
           new Callable<Job>() {
             @Override
@@ -433,6 +520,10 @@ public class Job extends JobInfo {
           options.getClock());
     } catch (ExecutionException e) {
       throw BigQueryException.translateAndThrow(e);
+    } finally {
+      if (waitForJob != null) {
+        waitForJob.end();
+      }
     }
   }
 
@@ -463,14 +554,31 @@ public class Job extends JobInfo {
    */
   public Job reload(JobOption... options) {
     checkNotDryRun("reload");
-    Job job = bigquery.getJob(getJobId(), options);
-    if (job != null && job.getStatus().getError() != null) {
-      throw new BigQueryException(
-          job.getStatus().getExecutionErrors() == null
-              ? ImmutableList.of(job.getStatus().getError())
-              : ImmutableList.copyOf(job.getStatus().getExecutionErrors()));
+    Span reload = null;
+    if (this.options.isOpenTelemetryTracingEnabled()
+        && this.options.getOpenTelemetryTracer() != null) {
+      reload =
+          this.options
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.Job.reload")
+              .setAllAttributes(otelAttributesFromOptions(options))
+              .startSpan();
     }
-    return job;
+
+    try (Scope reloadScope = reload != null ? reload.makeCurrent() : null) {
+      Job job = bigquery.getJob(getJobId(), options);
+      if (job != null && job.getStatus().getError() != null) {
+        throw new BigQueryException(
+            job.getStatus().getExecutionErrors() == null
+                ? ImmutableList.of(job.getStatus().getError())
+                : ImmutableList.copyOf(job.getStatus().getExecutionErrors()));
+      }
+      return job;
+    } finally {
+      if (reload != null) {
+        reload.end();
+      }
+    }
   }
 
   /**
@@ -492,7 +600,22 @@ public class Job extends JobInfo {
    */
   public boolean cancel() {
     checkNotDryRun("cancel");
-    return bigquery.cancel(getJobId());
+    Span cancel = null;
+    if (options.isOpenTelemetryTracingEnabled() && options.getOpenTelemetryTracer() != null) {
+      cancel =
+          options
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.Job.cancel")
+              .startSpan();
+    }
+
+    try (Scope cancelScope = cancel != null ? cancel.makeCurrent() : null) {
+      return bigquery.cancel(getJobId());
+    } finally {
+      if (cancel != null) {
+        cancel.end();
+      }
+    }
   }
 
   private void checkNotDryRun(String op) {
@@ -555,5 +678,20 @@ public class Job extends JobInfo {
 
   static Job fromPb(BigQuery bigquery, com.google.api.services.bigquery.model.Job jobPb) {
     return new Job(bigquery, new JobInfo.BuilderImpl(jobPb));
+  }
+
+  private static Attributes otelAttributesFromOptions(Option... options) {
+    Attributes attributes = Attributes.builder().build();
+    for (Option option : options) {
+      attributes =
+          attributes.toBuilder()
+              .put(option.getRpcOption().toString(), option.getValue().toString())
+              .build();
+    }
+    return attributes;
+  }
+
+  private static String getFieldAsString(Object field) {
+    return field == null ? "null" : field.toString();
   }
 }
