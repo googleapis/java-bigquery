@@ -240,17 +240,6 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <encoding>UTF-8</encoding>
-          <fork>true</fork>
-          <compilerArgs>
-            <arg>-J--add-opens=java.base/java.nio=org.apache.arrow.memory.core,ALL-UNNAMED</arg>
-          </compilerArgs>
-        </configuration>
-      </plugin>
-      <plugin>
         <!-- Allow script to run, so we can run benchmarks. -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
@@ -286,6 +275,27 @@
   </build>
 
   <profiles>
+    <profile>
+      <id>arrow-config</id>
+      <activation>
+        <jdk>[9,)</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <encoding>UTF-8</encoding>
+              <fork>true</fork>
+              <compilerArgs>
+                <arg>-J--add-opens=java.base/java.nio=org.apache.arrow.memory.core,ALL-UNNAMED</arg>
+              </compilerArgs>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>java17</id>
       <activation>
