@@ -306,19 +306,34 @@ public class Job extends JobInfo {
   private Job waitForInternal(BigQueryRetryConfig bigQueryRetryConfig, RetryOption... waitOptions)
       throws InterruptedException {
     checkNotDryRun("waitFor");
-    Object completedJobResponse;
-    if (getConfiguration().getType() == Type.QUERY) {
-      completedJobResponse =
-          waitForQueryResults(
-              RetryOption.mergeToSettings(DEFAULT_JOB_WAIT_SETTINGS, waitOptions),
-              bigQueryRetryConfig,
-              DEFAULT_QUERY_WAIT_OPTIONS);
-    } else {
-      completedJobResponse =
-          waitForJob(RetryOption.mergeToSettings(DEFAULT_QUERY_JOB_WAIT_SETTINGS, waitOptions));
+    Span waitFor = null;
+    if (this.options.isOpenTelemetryTracingEnabled()
+        && this.options.getOpenTelemetryTracer() != null) {
+      waitFor =
+          this.options
+              .getOpenTelemetryTracer()
+              .spanBuilder("com.google.cloud.bigquery.Job.waitFor")
+              .startSpan();
     }
+    try (Scope waitForScope = waitFor != null ? waitFor.makeCurrent() : null) {
+      Object completedJobResponse;
+      if (getConfiguration().getType() == Type.QUERY) {
+        completedJobResponse =
+            waitForQueryResults(
+                RetryOption.mergeToSettings(DEFAULT_JOB_WAIT_SETTINGS, waitOptions),
+                bigQueryRetryConfig,
+                DEFAULT_QUERY_WAIT_OPTIONS);
+      } else {
+        completedJobResponse =
+            waitForJob(RetryOption.mergeToSettings(DEFAULT_QUERY_JOB_WAIT_SETTINGS, waitOptions));
+      }
 
-    return completedJobResponse == null ? null : reload();
+      return completedJobResponse == null ? null : reload();
+    } finally {
+      if (waitFor != null) {
+        waitFor.end();
+      }
+    }
   }
 
   /**
@@ -335,30 +350,6 @@ public class Job extends JobInfo {
   public TableResult getQueryResults(QueryResultsOption... options)
       throws InterruptedException, JobException {
     checkNotDryRun("getQueryResults");
-    if (getConfiguration().getType() != Type.QUERY) {
-      throw new UnsupportedOperationException(
-          "Getting query results is supported only for " + Type.QUERY + " jobs");
-    }
-
-    List<QueryResultsOption> waitOptions =
-        new ArrayList<>(Arrays.asList(DEFAULT_QUERY_WAIT_OPTIONS));
-    List<TableDataListOption> listOptions = new ArrayList<>();
-    for (QueryResultsOption option : options) {
-      switch (option.getRpcOption()) {
-        case MAX_RESULTS:
-          listOptions.add(TableDataListOption.pageSize((Long) option.getValue()));
-          break;
-        case PAGE_TOKEN:
-          listOptions.add(TableDataListOption.pageToken((String) option.getValue()));
-          break;
-        case START_INDEX:
-          listOptions.add(TableDataListOption.startIndex((Long) option.getValue()));
-          break;
-        case TIMEOUT:
-          waitOptions.add(QueryResultsOption.maxWaitTime((Long) option.getValue()));
-          break;
-      }
-    }
 
     Span getQueryResults = null;
     if (this.options.isOpenTelemetryTracingEnabled()
@@ -372,6 +363,32 @@ public class Job extends JobInfo {
     }
     try (Scope getQueryResultsScope =
         getQueryResults != null ? getQueryResults.makeCurrent() : null) {
+
+      if (getConfiguration().getType() != Type.QUERY) {
+        throw new UnsupportedOperationException(
+            "Getting query results is supported only for " + Type.QUERY + " jobs");
+      }
+
+      List<QueryResultsOption> waitOptions =
+          new ArrayList<>(Arrays.asList(DEFAULT_QUERY_WAIT_OPTIONS));
+      List<TableDataListOption> listOptions = new ArrayList<>();
+      for (QueryResultsOption option : options) {
+        switch (option.getRpcOption()) {
+          case MAX_RESULTS:
+            listOptions.add(TableDataListOption.pageSize((Long) option.getValue()));
+            break;
+          case PAGE_TOKEN:
+            listOptions.add(TableDataListOption.pageToken((String) option.getValue()));
+            break;
+          case START_INDEX:
+            listOptions.add(TableDataListOption.startIndex((Long) option.getValue()));
+            break;
+          case TIMEOUT:
+            waitOptions.add(QueryResultsOption.maxWaitTime((Long) option.getValue()));
+            break;
+        }
+      }
+
       QueryResponse response =
           waitForQueryResults(
               DEFAULT_JOB_WAIT_SETTINGS,

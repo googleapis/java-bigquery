@@ -52,7 +52,6 @@ public class BigQueryRetryHelper extends RetryHelper {
       runWithRetries =
           openTelemetryTracer
               .spanBuilder("com.google.cloud.bigquery.BigQueryRetryHelper.runWithRetries")
-              .setAttribute("bq.retry.retry_settings", retrySettings.toString())
               .startSpan();
     }
     try (Scope runWithRetriesScope = runWithRetries != null ? runWithRetries.makeCurrent() : null) {
