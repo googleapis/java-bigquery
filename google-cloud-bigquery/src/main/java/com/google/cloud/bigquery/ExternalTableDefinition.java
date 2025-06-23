@@ -215,6 +215,45 @@ public abstract class ExternalTableDefinition extends TableDefinition {
 
     abstract Builder setMaxStalenessInner(String maxStaleness);
 
+    /**
+     * Time zone used when parsing timestamp values that do not have specific time zone information
+     * (e.g. 2024-04-20 12:34:56). The expected format is a IANA timezone string (e.g.
+     * America/Los_Angeles).
+     */
+    public abstract Builder setTimeZone(String timeZone);
+
+    /** Format used to parse DATE values. Supports C-style and SQL-style values. */
+    public abstract Builder setDateFormat(String dateFormat);
+
+    /** Format used to parse DATETIME values. Supports C-style and SQL-style values. */
+    public abstract Builder setDatetimeFormat(String datetimeFormat);
+
+    /** Format used to parse TIME values. Supports C-style and SQL-style values. */
+    public abstract Builder setTimeFormat(String timeFormat);
+
+    /** Format used to parse TIMESTAMP values. Supports C-style and SQL-style values. */
+    public abstract Builder setTimestampFormat(String timestampFormat);
+
+    /**
+     * Controls the strategy used to match loaded columns to the schema. If not set, a sensible
+     * default is chosen based on how the schema is provided. If autodetect is used, then columns
+     * are matched by name. Otherwise, columns are matched by position. This is done to keep the
+     * behavior backward-compatible. Acceptable values are: POSITION - matches by position. This
+     * assumes that the columns are ordered the same way as the schema. NAME - matches by name. This
+     * reads the header row as column names and reorders columns to match the field names in the
+     * schema.
+     */
+    public abstract Builder setSourceColumnMatch(String sourceColumnMatch);
+
+    /**
+     * A list of strings represented as SQL NULL value in a CSV file. null_marker and null_markers
+     * can't be set at the same time. If null_marker is set, null_markers has to be not set. If
+     * null_markers is set, null_marker has to be not set. If both null_marker and null_markers are
+     * set at the same time, a user error would be thrown. Any strings listed in null_markers,
+     * including empty string would be interpreted as SQL NULL. This applies to all column types.
+     */
+    public abstract Builder setNullMarkers(List<String> nullMarkers);
+
     /** Creates an {@code ExternalTableDefinition} object. */
     @Override
     public abstract ExternalTableDefinition build();
@@ -373,6 +412,37 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     return getHivePartitioningOptionsInner();
   }
 
+  /**
+   * Returns the time zone used when parsing timestamp values that don't have specific time zone
+   * information.
+   */
+  @Nullable
+  public abstract String getTimeZone();
+
+  /** Returns the format used to parse DATE values. */
+  @Nullable
+  public abstract String getDateFormat();
+
+  /** Returns the format used to parse DATETIME values. */
+  @Nullable
+  public abstract String getDatetimeFormat();
+
+  /** Returns the format used to parse TIME values. */
+  @Nullable
+  public abstract String getTimeFormat();
+
+  /** Returns the format used to parse TIMESTAMP values. */
+  @Nullable
+  public abstract String getTimestampFormat();
+
+  /** Returns the strategy used to match loaded columns to the schema, either POSITION or NAME. */
+  @Nullable
+  public abstract String getSourceColumnMatch();
+
+  /** Returns a list of strings represented as SQL NULL value in a CSV file. */
+  @Nullable
+  public abstract List<String> getNullMarkers();
+
   @Nullable
   abstract HivePartitioningOptions getHivePartitioningOptionsInner();
 
@@ -453,6 +523,27 @@ public abstract class ExternalTableDefinition extends TableDefinition {
 
     if (getMetadataCacheMode() != null) {
       externalConfigurationPb.setMetadataCacheMode(getMetadataCacheMode());
+    }
+    if (getTimeZone() != null) {
+      externalConfigurationPb.setTimeZone(getTimeZone());
+    }
+    if (getDateFormat() != null) {
+      externalConfigurationPb.setDateFormat(getDateFormat());
+    }
+    if (getDatetimeFormat() != null) {
+      externalConfigurationPb.setDatetimeFormat(getDatetimeFormat());
+    }
+    if (getTimeFormat() != null) {
+      externalConfigurationPb.setTimeFormat(getTimeFormat());
+    }
+    if (getTimestampFormat() != null) {
+      externalConfigurationPb.setTimestampFormat(getTimestampFormat());
+    }
+    if (getSourceColumnMatch() != null) {
+      externalConfigurationPb.getCsvOptions().setSourceColumnMatch(getSourceColumnMatch());
+    }
+    if (getNullMarkers() != null) {
+      externalConfigurationPb.getCsvOptions().setNullMarkers(getNullMarkers());
     }
 
     return externalConfigurationPb;
@@ -654,6 +745,30 @@ public abstract class ExternalTableDefinition extends TableDefinition {
       if (tablePb.getMaxStaleness() != null) {
         builder.setMaxStaleness(tablePb.getMaxStaleness());
       }
+      if (externalDataConfiguration.getTimeZone() != null) {
+        builder.setTimeZone(externalDataConfiguration.getTimeZone());
+      }
+      if (externalDataConfiguration.getDateFormat() != null) {
+        builder.setDateFormat(externalDataConfiguration.getDateFormat());
+      }
+      if (externalDataConfiguration.getDatetimeFormat() != null) {
+        builder.setDatetimeFormat(externalDataConfiguration.getDatetimeFormat());
+      }
+      if (externalDataConfiguration.getTimeFormat() != null) {
+        builder.setTimeFormat(externalDataConfiguration.getTimeFormat());
+      }
+      if (externalDataConfiguration.getTimestampFormat() != null) {
+        builder.setTimestampFormat(externalDataConfiguration.getTimestampFormat());
+      }
+      if (externalDataConfiguration.getCsvOptions() != null) {
+        if (externalDataConfiguration.getCsvOptions().getSourceColumnMatch() != null) {
+          builder.setSourceColumnMatch(
+              externalDataConfiguration.getCsvOptions().getSourceColumnMatch());
+        }
+        if (externalDataConfiguration.getCsvOptions().getNullMarkers() != null) {
+          builder.setNullMarkers(externalDataConfiguration.getCsvOptions().getNullMarkers());
+        }
+      }
     }
     return builder.build();
   }
@@ -723,6 +838,30 @@ public abstract class ExternalTableDefinition extends TableDefinition {
 
     if (externalDataConfiguration.getMetadataCacheMode() != null) {
       builder.setMetadataCacheMode(externalDataConfiguration.getMetadataCacheMode());
+    }
+    if (externalDataConfiguration.getTimeZone() != null) {
+      builder.setTimeZone(externalDataConfiguration.getTimeZone());
+    }
+    if (externalDataConfiguration.getDateFormat() != null) {
+      builder.setDateFormat(externalDataConfiguration.getDateFormat());
+    }
+    if (externalDataConfiguration.getDatetimeFormat() != null) {
+      builder.setDatetimeFormat(externalDataConfiguration.getDatetimeFormat());
+    }
+    if (externalDataConfiguration.getTimeFormat() != null) {
+      builder.setTimeFormat(externalDataConfiguration.getTimeFormat());
+    }
+    if (externalDataConfiguration.getTimestampFormat() != null) {
+      builder.setTimestampFormat(externalDataConfiguration.getTimeFormat());
+    }
+    if (externalDataConfiguration.getCsvOptions() != null) {
+      if (externalDataConfiguration.getCsvOptions().getSourceColumnMatch() != null) {
+        builder.setSourceColumnMatch(
+            externalDataConfiguration.getCsvOptions().getSourceColumnMatch());
+      }
+      if (externalDataConfiguration.getCsvOptions().getNullMarkers() != null) {
+        builder.setNullMarkers(externalDataConfiguration.getCsvOptions().getNullMarkers());
+      }
     }
 
     return builder.build();

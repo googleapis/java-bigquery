@@ -77,6 +77,13 @@ public class LoadJobConfigurationTest {
 
   private static final String KEY = "session_id";
   private static final String VALUE = "session_id_1234567890";
+  private static final String TIME_ZONE = "America/Los_Angeles";
+  private static final String DATE_FORMAT = "YYYY-MM-DD";
+  private static final String DATETIME_FORMAT = "YYYY-MM-DD HH:MI:SS";
+  private static final String TIME_FORMAT = "HH:MI:SS";
+  private static final String TIMESTAMP_FORMAT = "YYYY-MM-DD HH:MI:SS";
+  private static final String SOURCE_COLUMN_MATCH = "POSITION";
+  private static final List<String> NULL_MARKERS = ImmutableList.of("SQL NULL", "SQL NULL");
   private static final ConnectionProperty CONNECTION_PROPERTY =
       ConnectionProperty.newBuilder().setKey(KEY).setValue(VALUE).build();
   private static final List<ConnectionProperty> CONNECTION_PROPERTIES =
@@ -110,6 +117,13 @@ public class LoadJobConfigurationTest {
           .setConnectionProperties(CONNECTION_PROPERTIES)
           .setCreateSession(CREATE_SESSION)
           .setReservation(RESERVATION)
+          .setTimeZone(TIME_ZONE)
+          .setDateFormat(DATE_FORMAT)
+          .setDatetimeFormat(DATETIME_FORMAT)
+          .setTimeFormat(TIME_FORMAT)
+          .setTimestampFormat(TIMESTAMP_FORMAT)
+          .setSourceColumnMatch(SOURCE_COLUMN_MATCH)
+          .setNullMarkers(NULL_MARKERS)
           .build();
 
   private static final DatastoreBackupOptions BACKUP_OPTIONS =
@@ -271,5 +285,12 @@ public class LoadJobConfigurationTest {
     assertEquals(expected.getConnectionProperties(), value.getConnectionProperties());
     assertEquals(expected.getCreateSession(), value.getCreateSession());
     assertEquals(expected.getReservation(), value.getReservation());
+    assertEquals(expected.getTimeZone(), value.getTimeZone());
+    assertEquals(expected.getDateFormat(), value.getDateFormat());
+    assertEquals(expected.getDatetimeFormat(), value.getDatetimeFormat());
+    assertEquals(expected.getTimeFormat(), value.getTimeFormat());
+    assertEquals(expected.getTimestampFormat(), value.getTimestampFormat());
+    assertEquals(expected.getSourceColumnMatch(), value.getSourceColumnMatch());
+    assertEquals(expected.getNullMarkers(), value.getNullMarkers());
   }
 }
