@@ -170,14 +170,13 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "DatasetService")
               .setAttribute("bq.rpc.method", "GetDataset")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqGetRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
 
     Dataset dataset = bqGetRequest.execute();
     if (getDataset != null) {
-      getDataset.setAttribute("bq.rpc.response", dataset.toPrettyString());
+      getDataset.setAttribute("bq.rpc.response.id", dataset.getId());
       getDataset.end();
     }
     return dataset;
@@ -218,7 +217,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.method", "ListDatasets")
               .setAttribute("bq.rpc.system", "http")
               .setAttribute("bq.rpc.page_token", datasetsListRequest.getPageToken())
-              .setAttribute("bq.rpc.request_method", datasetsListRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
@@ -226,6 +224,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
     DatasetList datasetsList = datasetsListRequest.execute();
     Iterable<DatasetList.Datasets> datasets = datasetsList.getDatasets();
     if (listDatasets != null) {
+      listDatasets.setAttribute("bq.rpc.next_page_token", datasetsList.getNextPageToken());
       listDatasets.end();
     }
     return Tuple.of(
@@ -269,13 +268,12 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "DatasetService")
               .setAttribute("bq.rpc.method", "InsertDataset")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqCreateRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
     Dataset datasetResponse = bqCreateRequest.execute();
     if (createDataset != null) {
-      createDataset.setAttribute("bq.rpc.response", datasetResponse.toPrettyString());
+      createDataset.setAttribute("bq.rpc.response.id", datasetResponse.getId());
       createDataset.end();
     }
     return datasetResponse;
@@ -315,13 +313,12 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "TableService")
               .setAttribute("bq.rpc.method", "InsertTable")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqCreateRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
     Table tableResponse = bqCreateRequest.execute();
     if (createTable != null) {
-      createTable.setAttribute("bq.rpc.response", tableResponse.toPrettyString());
+      createTable.setAttribute("bq.rpc.response.id", tableResponse.getId());
       createTable.end();
     }
     return tableResponse;
@@ -359,13 +356,13 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "RoutineService")
               .setAttribute("bq.rpc.method", "InsertRoutine")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqCreateRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
     Routine routineResponse = bqCreateRequest.execute();
     if (createRoutine != null) {
-      createRoutine.setAttribute("bq.rpc.response", routineResponse.toPrettyString());
+      createRoutine.setAttribute(
+          "bq.rpc.response.routine.id", routineResponse.getRoutineReference().getRoutineId());
       createRoutine.end();
     }
     return routineResponse;
@@ -405,13 +402,13 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "JobService")
               .setAttribute("bq.rpc.method", "InsertJob")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqCreateRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
     Job jobResponse = bqCreateRequest.execute();
     if (createJob != null) {
-      createJob.setAttribute("bq.rpc.response", jobResponse.toPrettyString());
+      createJob.setAttribute("bq.rpc.response.id", jobResponse.getId());
+      createJob.setAttribute("bq.rpc.response.job.status", jobResponse.getStatus().getState());
       createJob.end();
     }
     return jobResponse;
@@ -447,12 +444,12 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "JobService")
               .setAttribute("bq.rpc.method", "InsertJob")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqCreateRequest.getRequestMethod())
               .startSpan();
     }
     Job jobResponse = bqCreateRequest.execute();
     if (createJob != null) {
-      createJob.setAttribute("bq.rpc.response", jobResponse.toPrettyString());
+      createJob.setAttribute("bq.rpc.response.id", jobResponse.getId());
+      createJob.setAttribute("bq.rpc.response.job.status", jobResponse.getStatus().getState());
       createJob.end();
     }
     return jobResponse;
@@ -493,7 +490,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "DatasetService")
               .setAttribute("bq.rpc.method", "DeleteDataset")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqDeleteRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
@@ -542,13 +538,12 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "DatasetService")
               .setAttribute("bq.rpc.method", "PatchDataset")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqPatchRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
     Dataset datasetResponse = bqPatchRequest.execute();
     if (patchDataset != null) {
-      patchDataset.setAttribute("bq.rpc.response", datasetResponse.toPrettyString());
+      patchDataset.setAttribute("bq.rpc.response.id", datasetResponse.getId());
       patchDataset.end();
     }
     return datasetResponse;
@@ -590,13 +585,12 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "TableService")
               .setAttribute("bq.rpc.method", "PatchTable")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqPatchRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
     Table tableResponse = bqPatchRequest.execute();
     if (patchTable != null) {
-      patchTable.setAttribute("bq.rpc.response", tableResponse.toPrettyString());
+      patchTable.setAttribute("bq.rpc.response.id", tableResponse.getId());
       patchTable.end();
     }
     return tableResponse;
@@ -640,13 +634,12 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "TableService")
               .setAttribute("bq.rpc.method", "GetTable")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqGetRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
     Table tableResponse = bqGetRequest.execute();
     if (getTable != null) {
-      getTable.setAttribute("bq.rpc.response", tableResponse.toPrettyString());
+      getTable.setAttribute("bq.rpc.response.id", tableResponse.getId());
       getTable.end();
     }
     return tableResponse;
@@ -693,12 +686,12 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.method", "ListTables")
               .setAttribute("bq.rpc.system", "http")
               .setAttribute("bq.rpc.page_token", tableListRequest.getPageToken())
-              .setAttribute("bq.rpc.request_method", tableListRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
     TableList tableResponse = tableListRequest.execute();
     if (listTables != null) {
+      listTables.setAttribute("bq.rpc.next_page_token", tableResponse.getNextPageToken());
       listTables.end();
     }
 
@@ -756,7 +749,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "TableService")
               .setAttribute("bq.rpc.method", "DeleteTable")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqDeleteRequest.getRequestMethod())
               .startSpan();
     }
     bqDeleteRequest.execute();
@@ -800,13 +792,13 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "ModelService")
               .setAttribute("bq.rpc.method", "PatchModel")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqPatchRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
     Model modelResponse = bqPatchRequest.execute();
     if (patchModel != null) {
-      patchModel.setAttribute("bq.rpc.response", modelResponse.toPrettyString());
+      patchModel.setAttribute(
+          "bq.rpc.response.model.id", modelResponse.getModelReference().getModelId());
       patchModel.end();
     }
     return modelResponse;
@@ -849,13 +841,13 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "ModelService")
               .setAttribute("bq.rpc.method", "GetModel")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqGetRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
     Model modelResponse = bqGetRequest.execute();
     if (getModel != null) {
-      getModel.setAttribute("bq.rpc.response", modelResponse.toPrettyString());
+      getModel.setAttribute(
+          "bq.rpc.response.model.id", modelResponse.getModelReference().getModelId());
       getModel.end();
     }
     return modelResponse;
@@ -895,12 +887,12 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.method", "ListModels")
               .setAttribute("bq.rpc.system", "http")
               .setAttribute("bq.rpc.page_token", modelListRequest.getPageToken())
-              .setAttribute("bq.rpc.request_method", modelListRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
     ListModelsResponse modelResponse = modelListRequest.execute();
     if (listModels != null) {
+      listModels.setAttribute("bq.rpc.next_page_token", modelResponse.getNextPageToken());
       listModels.end();
     }
 
@@ -940,7 +932,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "ModelService")
               .setAttribute("bq.rpc.method", "DeleteModel")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqDeleteRequest.getRequestMethod())
               .startSpan();
     }
     bqDeleteRequest.execute();
@@ -986,13 +977,13 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "RoutineService")
               .setAttribute("bq.rpc.method", "UpdateRoutine")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqUpdateRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
     Routine routineResponse = bqUpdateRequest.execute();
     if (updateRoutine != null) {
-      updateRoutine.setAttribute("bq.rpc.response", routineResponse.toPrettyString());
+      updateRoutine.setAttribute(
+          "bq.rpc.response.routine.id", routineResponse.getRoutineReference().getRoutineId());
       updateRoutine.end();
     }
     return routineResponse;
@@ -1035,13 +1026,13 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "RoutineService")
               .setAttribute("bq.rpc.method", "GetRoutine")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqGetRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
     Routine routineResponse = bqGetRequest.execute();
     if (getRoutine != null) {
-      getRoutine.setAttribute("bq.rpc.response", routineResponse.toPrettyString());
+      getRoutine.setAttribute(
+          "bq.rpc.response.routine.id", routineResponse.getRoutineReference().getRoutineId());
       getRoutine.end();
     }
     return routineResponse;
@@ -1081,12 +1072,12 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.method", "ListRoutines")
               .setAttribute("bq.rpc.system", "http")
               .setAttribute("bq.rpc.page_token", routineListRequest.getPageToken())
-              .setAttribute("bq.rpc.request_method", routineListRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
     ListRoutinesResponse routineResponse = routineListRequest.execute();
     if (listRoutines != null) {
+      listRoutines.setAttribute("bq.rpc.next_page_token", routineResponse.getNextPageToken());
       listRoutines.end();
     }
     Iterable<Routine> routines =
@@ -1127,7 +1118,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "RoutineService")
               .setAttribute("bq.rpc.method", "ListRoutines")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqDeleteRequest.getRequestMethod())
               .startSpan();
     }
     bqDeleteRequest.execute();
@@ -1169,12 +1159,10 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "TableDataService")
               .setAttribute("bq.rpc.method", "InsertAll")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", insertAllRequest.getRequestMethod())
               .startSpan();
     }
     TableDataInsertAllResponse insertAllResponse = insertAllRequest.execute();
     if (insertAll != null) {
-      insertAll.setAttribute("bq.rpc.response", insertAllResponse.toPrettyString());
       insertAll.end();
     }
     return insertAllResponse;
@@ -1219,7 +1207,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.method", "List")
               .setAttribute("bq.rpc.system", "http")
               .setAttribute("bq.rpc.page_token", bqListRequest.getPageToken())
-              .setAttribute("bq.rpc.request_method", bqListRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
@@ -1274,7 +1261,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.method", "List")
               .setAttribute("bq.rpc.system", "http")
               .setAttribute("bq.rpc.page_token", bqListRequest.getPageToken())
-              .setAttribute("bq.rpc.request_method", bqListRequest.getRequestMethod())
               .startSpan();
     }
     TableDataList bqListResponse = bqListRequest.execute();
@@ -1320,13 +1306,13 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "JobService")
               .setAttribute("bq.rpc.method", "GetJob")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqGetRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
     Job jobResponse = bqGetRequest.execute();
     if (getJob != null) {
-      getJob.setAttribute("bq.rpc.response", jobResponse.toPrettyString());
+      getJob.setAttribute("bq.rpc.response.id", jobResponse.getId());
+      getJob.setAttribute("bq.rpc.response.job.status", jobResponse.getStatus().getState());
       getJob.end();
     }
     return jobResponse;
@@ -1363,12 +1349,12 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "JobService")
               .setAttribute("bq.rpc.method", "GetJob")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqGetRequest.getRequestMethod())
               .startSpan();
     }
     Job jobResponse = bqGetRequest.execute();
     if (getJob != null) {
-      getJob.setAttribute("bq.rpc.response", jobResponse.toPrettyString());
+      getJob.setAttribute("bq.rpc.response.id", jobResponse.getId());
+      getJob.setAttribute("bq.rpc.response.job.status", jobResponse.getStatus().getState());
       getJob.end();
     }
     return jobResponse;
@@ -1418,12 +1404,12 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.method", "ListJobs")
               .setAttribute("bq.rpc.system", "http")
               .setAttribute("bq.rpc.page_token", request.getPageToken())
-              .setAttribute("bq.rpc.request_method", request.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
     JobList jobsList = request.execute();
     if (listJobs != null) {
+      listJobs.setAttribute("bq.rpc.next_page_token", jobsList.getNextPageToken());
       listJobs.end();
     }
 
@@ -1486,7 +1472,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "JobService")
               .setAttribute("bq.rpc.method", "CancelJob")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqCancelRequest.getRequestMethod())
               .startSpan();
     }
     bqCancelRequest.execute();
@@ -1523,7 +1508,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "JobService")
               .setAttribute("bq.rpc.method", "DeleteJob")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqDeleteRequest.getRequestMethod())
               .startSpan();
     }
     bqDeleteRequest.execute();
@@ -1573,7 +1557,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.method", "GetQueryResults")
               .setAttribute("bq.rpc.system", "http")
               .setAttribute("bq.rpc.page_token", queryRequest.getPageToken())
-              .setAttribute("bq.rpc.request_method", queryRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
@@ -1622,7 +1605,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.method", "GetQueryResults")
               .setAttribute("bq.rpc.system", "http")
               .setAttribute("bq.rpc.page_token", queryRequest.getPageToken())
-              .setAttribute("bq.rpc.request_method", queryRequest.getRequestMethod())
               .startSpan();
     }
 
@@ -1659,7 +1641,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "JobService")
               .setAttribute("bq.rpc.method", "Query")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", queryRequest.getRequestMethod())
               .startSpan();
     }
 
@@ -1793,14 +1774,12 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "TableService")
               .setAttribute("bq.rpc.method", "GetIamPolicy")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqGetRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
 
     Policy bqGetResponse = bqGetRequest.execute();
     if (getIamPolicy != null) {
-      getIamPolicy.setAttribute("bq.rpc.response", bqGetResponse.toPrettyString());
       getIamPolicy.end();
     }
     return bqGetResponse;
@@ -1834,14 +1813,12 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "TableService")
               .setAttribute("bq.rpc.method", "SetIamPolicy")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqSetRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
 
     Policy bqSetResponse = bqSetRequest.execute();
     if (setIamPolicy != null) {
-      setIamPolicy.setAttribute("bq.rpc.response", bqSetResponse.toPrettyString());
       setIamPolicy.end();
     }
     return bqSetResponse;
@@ -1876,14 +1853,12 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "TableService")
               .setAttribute("bq.rpc.method", "SetIamPolicy")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.request_method", bqTestRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
 
     TestIamPermissionsResponse bqTestResponse = bqTestRequest.execute();
     if (testIamPermissions != null) {
-      testIamPermissions.setAttribute("bq.rpc.response", bqTestResponse.toPrettyString());
       testIamPermissions.end();
     }
     return bqTestResponse;
