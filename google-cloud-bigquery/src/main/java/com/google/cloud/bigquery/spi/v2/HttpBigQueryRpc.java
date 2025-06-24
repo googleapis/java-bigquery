@@ -170,8 +170,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "DatasetService")
               .setAttribute("bq.rpc.method", "GetDataset")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqGetRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqGetRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqGetRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -220,8 +218,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.method", "ListDatasets")
               .setAttribute("bq.rpc.system", "http")
               .setAttribute("bq.rpc.page_token", datasetsListRequest.getPageToken())
-              .setAttribute("bq.rpc.access_token", datasetsListRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", datasetsListRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", datasetsListRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -273,8 +269,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "DatasetService")
               .setAttribute("bq.rpc.method", "InsertDataset")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqCreateRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqCreateRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqCreateRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -321,8 +315,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "TableService")
               .setAttribute("bq.rpc.method", "InsertTable")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqCreateRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqCreateRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqCreateRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -367,8 +359,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "RoutineService")
               .setAttribute("bq.rpc.method", "InsertRoutine")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqCreateRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqCreateRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqCreateRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -415,8 +405,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "JobService")
               .setAttribute("bq.rpc.method", "InsertJob")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqCreateRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqCreateRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqCreateRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -459,8 +447,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "JobService")
               .setAttribute("bq.rpc.method", "InsertJob")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqCreateRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqCreateRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqCreateRequest.getRequestMethod())
               .startSpan();
     }
@@ -507,8 +493,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "DatasetService")
               .setAttribute("bq.rpc.method", "DeleteDataset")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqDeleteRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqDeleteRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqDeleteRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -558,8 +542,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "DatasetService")
               .setAttribute("bq.rpc.method", "PatchDataset")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqPatchRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqPatchRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqPatchRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -608,8 +590,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "TableService")
               .setAttribute("bq.rpc.method", "PatchTable")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqPatchRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqPatchRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqPatchRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -660,8 +640,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "TableService")
               .setAttribute("bq.rpc.method", "GetTable")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqGetRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqGetRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqGetRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -715,8 +693,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.method", "ListTables")
               .setAttribute("bq.rpc.system", "http")
               .setAttribute("bq.rpc.page_token", tableListRequest.getPageToken())
-              .setAttribute("bq.rpc.access_token", tableListRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", tableListRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", tableListRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -780,8 +756,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "TableService")
               .setAttribute("bq.rpc.method", "DeleteTable")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqDeleteRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqDeleteRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqDeleteRequest.getRequestMethod())
               .startSpan();
     }
@@ -826,8 +800,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "ModelService")
               .setAttribute("bq.rpc.method", "PatchModel")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqPatchRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqPatchRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqPatchRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -877,8 +849,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "ModelService")
               .setAttribute("bq.rpc.method", "GetModel")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqGetRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqGetRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqGetRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -925,8 +895,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.method", "ListModels")
               .setAttribute("bq.rpc.system", "http")
               .setAttribute("bq.rpc.page_token", modelListRequest.getPageToken())
-              .setAttribute("bq.rpc.access_token", modelListRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", modelListRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", modelListRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -972,8 +940,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "ModelService")
               .setAttribute("bq.rpc.method", "DeleteModel")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqDeleteRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqDeleteRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqDeleteRequest.getRequestMethod())
               .startSpan();
     }
@@ -1020,8 +986,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "RoutineService")
               .setAttribute("bq.rpc.method", "UpdateRoutine")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqUpdateRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqUpdateRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqUpdateRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1071,8 +1035,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "RoutineService")
               .setAttribute("bq.rpc.method", "GetRoutine")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqGetRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqGetRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqGetRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1119,8 +1081,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.method", "ListRoutines")
               .setAttribute("bq.rpc.system", "http")
               .setAttribute("bq.rpc.page_token", routineListRequest.getPageToken())
-              .setAttribute("bq.rpc.access_token", routineListRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", routineListRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", routineListRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1167,8 +1127,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "RoutineService")
               .setAttribute("bq.rpc.method", "ListRoutines")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqDeleteRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqDeleteRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqDeleteRequest.getRequestMethod())
               .startSpan();
     }
@@ -1211,8 +1169,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "TableDataService")
               .setAttribute("bq.rpc.method", "InsertAll")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", insertAllRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", insertAllRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", insertAllRequest.getRequestMethod())
               .startSpan();
     }
@@ -1263,8 +1219,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.method", "List")
               .setAttribute("bq.rpc.system", "http")
               .setAttribute("bq.rpc.page_token", bqListRequest.getPageToken())
-              .setAttribute("bq.rpc.access_token", bqListRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqListRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqListRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1320,8 +1274,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.method", "List")
               .setAttribute("bq.rpc.system", "http")
               .setAttribute("bq.rpc.page_token", bqListRequest.getPageToken())
-              .setAttribute("bq.rpc.access_token", bqListRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqListRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqListRequest.getRequestMethod())
               .startSpan();
     }
@@ -1368,8 +1320,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "JobService")
               .setAttribute("bq.rpc.method", "GetJob")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqGetRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqGetRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqGetRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1413,8 +1363,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "JobService")
               .setAttribute("bq.rpc.method", "GetJob")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqGetRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqGetRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqGetRequest.getRequestMethod())
               .startSpan();
     }
@@ -1470,8 +1418,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.method", "ListJobs")
               .setAttribute("bq.rpc.system", "http")
               .setAttribute("bq.rpc.page_token", request.getPageToken())
-              .setAttribute("bq.rpc.access_token", request.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", request.getOauthToken())
               .setAttribute("bq.rpc.request_method", request.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1540,8 +1486,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "JobService")
               .setAttribute("bq.rpc.method", "CancelJob")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqCancelRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqCancelRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqCancelRequest.getRequestMethod())
               .startSpan();
     }
@@ -1579,8 +1523,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "JobService")
               .setAttribute("bq.rpc.method", "DeleteJob")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqDeleteRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqDeleteRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqDeleteRequest.getRequestMethod())
               .startSpan();
     }
@@ -1631,8 +1573,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.method", "GetQueryResults")
               .setAttribute("bq.rpc.system", "http")
               .setAttribute("bq.rpc.page_token", queryRequest.getPageToken())
-              .setAttribute("bq.rpc.access_token", queryRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", queryRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", queryRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1682,8 +1622,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.method", "GetQueryResults")
               .setAttribute("bq.rpc.system", "http")
               .setAttribute("bq.rpc.page_token", queryRequest.getPageToken())
-              .setAttribute("bq.rpc.access_token", queryRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", queryRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", queryRequest.getRequestMethod())
               .startSpan();
     }
@@ -1721,8 +1659,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "JobService")
               .setAttribute("bq.rpc.method", "Query")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", queryRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", queryRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", queryRequest.getRequestMethod())
               .startSpan();
     }
@@ -1857,8 +1793,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "TableService")
               .setAttribute("bq.rpc.method", "GetIamPolicy")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqGetRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqGetRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqGetRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1900,8 +1834,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "TableService")
               .setAttribute("bq.rpc.method", "SetIamPolicy")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqSetRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqSetRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqSetRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
@@ -1944,8 +1876,6 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setAttribute("bq.rpc.service", "TableService")
               .setAttribute("bq.rpc.method", "SetIamPolicy")
               .setAttribute("bq.rpc.system", "http")
-              .setAttribute("bq.rpc.access_token", bqTestRequest.getAccessToken())
-              .setAttribute("bq.rpc.oauth_token", bqTestRequest.getOauthToken())
               .setAttribute("bq.rpc.request_method", bqTestRequest.getRequestMethod())
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
