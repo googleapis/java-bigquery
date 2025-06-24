@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.google.cloud.bigquery.JobInfo.CreateDisposition;
 import com.google.cloud.bigquery.JobInfo.SchemaUpdateOption;
 import com.google.cloud.bigquery.JobInfo.WriteDisposition;
+import com.google.cloud.bigquery.LoadJobConfiguration.SourceColumnMatch;
 import com.google.cloud.bigquery.TimePartitioning.Type;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -82,7 +83,7 @@ public class LoadJobConfigurationTest {
   private static final String DATETIME_FORMAT = "YYYY-MM-DD HH:MI:SS";
   private static final String TIME_FORMAT = "HH:MI:SS";
   private static final String TIMESTAMP_FORMAT = "YYYY-MM-DD HH:MI:SS";
-  private static final String SOURCE_COLUMN_MATCH = "POSITION";
+  private static final SourceColumnMatch SOURCE_COLUMN_MATCH = SourceColumnMatch.POSITION;
   private static final List<String> NULL_MARKERS = ImmutableList.of("SQL NULL", "SQL NULL");
   private static final ConnectionProperty CONNECTION_PROPERTY =
       ConnectionProperty.newBuilder().setKey(KEY).setValue(VALUE).build();

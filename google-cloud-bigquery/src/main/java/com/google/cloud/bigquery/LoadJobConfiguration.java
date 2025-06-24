@@ -68,8 +68,25 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
   private final String datetimeFormat;
   private final String timeFormat;
   private final String timestampFormat;
-  private final String sourceColumnMatch;
+  private final SourceColumnMatch sourceColumnMatch;
   private final List<String> nullMarkers;
+
+  public enum SourceColumnMatch {
+    SOURCE_COLUMN_MATCH_UNSPECIFIED("SOURCE_COLUMN_MATCH_UNSPECIFIED"),
+    POSITION("POSITION"),
+    NAME("NAME");
+
+    private final String option;
+
+    SourceColumnMatch(String option) {
+      this.option = option;
+    }
+
+    @Override
+    public String toString() {
+      return option;
+    }
+  }
 
   public static final class Builder extends JobConfiguration.Builder<LoadJobConfiguration, Builder>
       implements LoadConfiguration.Builder {
@@ -107,7 +124,7 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
     private String datetimeFormat;
     private String timeFormat;
     private String timestampFormat;
-    private String sourceColumnMatch;
+    private SourceColumnMatch sourceColumnMatch;
     private List<String> nullMarkers;
 
     private Builder() {
@@ -275,7 +292,8 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
         this.timestampFormat = loadConfigurationPb.getTimestampFormat();
       }
       if (loadConfigurationPb.getSourceColumnMatch() != null) {
-        this.sourceColumnMatch = loadConfigurationPb.getSourceColumnMatch();
+        this.sourceColumnMatch =
+            SourceColumnMatch.valueOf(loadConfigurationPb.getSourceColumnMatch());
       }
       if (loadConfigurationPb.getNullMarkers() != null) {
         this.nullMarkers = loadConfigurationPb.getNullMarkers();
@@ -530,7 +548,7 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
      * are matched by name. Otherwise, columns are matched by position. This is done to keep the
      * behavior backward-compatible.
      */
-    public Builder setSourceColumnMatch(String sourceColumnMatch) {
+    public Builder setSourceColumnMatch(SourceColumnMatch sourceColumnMatch) {
       this.sourceColumnMatch = sourceColumnMatch;
       return this;
     }
@@ -768,7 +786,7 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
   }
 
   /** Returns the strategy used to match loaded columns to the schema, either POSITION or NAME. */
-  public String getSourceColumnMatch() {
+  public SourceColumnMatch getSourceColumnMatch() {
     return sourceColumnMatch;
   }
 
@@ -955,7 +973,7 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
       loadConfigurationPb.setTimestampFormat(timestampFormat);
     }
     if (sourceColumnMatch != null) {
-      loadConfigurationPb.setSourceColumnMatch(sourceColumnMatch);
+      loadConfigurationPb.setSourceColumnMatch(sourceColumnMatch.toString());
     }
     if (nullMarkers != null) {
       loadConfigurationPb.setNullMarkers(nullMarkers);

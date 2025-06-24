@@ -57,6 +57,22 @@ public abstract class ExternalTableDefinition extends TableDefinition {
 
   private static final long serialVersionUID = -5951580238459622025L;
 
+  public enum SourceColumnMatch {
+    POSITION("POSITION"),
+    NAME("NAME");
+
+    private final String option;
+
+    SourceColumnMatch(String option) {
+      this.option = option;
+    }
+
+    @Override
+    public String toString() {
+      return option;
+    }
+  }
+
   @AutoValue.Builder
   public abstract static class Builder
       extends TableDefinition.Builder<ExternalTableDefinition, Builder> {
@@ -243,7 +259,7 @@ public abstract class ExternalTableDefinition extends TableDefinition {
      * reads the header row as column names and reorders columns to match the field names in the
      * schema.
      */
-    public abstract Builder setSourceColumnMatch(String sourceColumnMatch);
+    public abstract Builder setSourceColumnMatch(SourceColumnMatch sourceColumnMatch);
 
     /**
      * A list of strings represented as SQL NULL value in a CSV file. null_marker and null_markers
@@ -437,7 +453,7 @@ public abstract class ExternalTableDefinition extends TableDefinition {
 
   /** Returns the strategy used to match loaded columns to the schema, either POSITION or NAME. */
   @Nullable
-  public abstract String getSourceColumnMatch();
+  public abstract SourceColumnMatch getSourceColumnMatch();
 
   /** Returns a list of strings represented as SQL NULL value in a CSV file. */
   @Nullable
@@ -540,7 +556,9 @@ public abstract class ExternalTableDefinition extends TableDefinition {
       externalConfigurationPb.setTimestampFormat(getTimestampFormat());
     }
     if (getSourceColumnMatch() != null) {
-      externalConfigurationPb.getCsvOptions().setSourceColumnMatch(getSourceColumnMatch());
+      externalConfigurationPb
+          .getCsvOptions()
+          .setSourceColumnMatch(getSourceColumnMatch().toString());
     }
     if (getNullMarkers() != null) {
       externalConfigurationPb.getCsvOptions().setNullMarkers(getNullMarkers());
@@ -763,7 +781,8 @@ public abstract class ExternalTableDefinition extends TableDefinition {
       if (externalDataConfiguration.getCsvOptions() != null) {
         if (externalDataConfiguration.getCsvOptions().getSourceColumnMatch() != null) {
           builder.setSourceColumnMatch(
-              externalDataConfiguration.getCsvOptions().getSourceColumnMatch());
+              SourceColumnMatch.valueOf(
+                  externalDataConfiguration.getCsvOptions().getSourceColumnMatch()));
         }
         if (externalDataConfiguration.getCsvOptions().getNullMarkers() != null) {
           builder.setNullMarkers(externalDataConfiguration.getCsvOptions().getNullMarkers());
@@ -857,7 +876,8 @@ public abstract class ExternalTableDefinition extends TableDefinition {
     if (externalDataConfiguration.getCsvOptions() != null) {
       if (externalDataConfiguration.getCsvOptions().getSourceColumnMatch() != null) {
         builder.setSourceColumnMatch(
-            externalDataConfiguration.getCsvOptions().getSourceColumnMatch());
+            SourceColumnMatch.valueOf(
+                externalDataConfiguration.getCsvOptions().getSourceColumnMatch()));
       }
       if (externalDataConfiguration.getCsvOptions().getNullMarkers() != null) {
         builder.setNullMarkers(externalDataConfiguration.getCsvOptions().getNullMarkers());
