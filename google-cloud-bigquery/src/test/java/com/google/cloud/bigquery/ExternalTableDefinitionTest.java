@@ -68,7 +68,7 @@ public class ExternalTableDefinitionTest {
   private static final String TIME_FORMAT = "HH:MI:SS";
   private static final String TIMESTAMP_FORMAT = "YYYY-MM-DD HH:MI:SS";
   private static final SourceColumnMatch SOURCE_COLUMN_MATCH = SourceColumnMatch.POSITION;
-  private static final List<String> NULL_MARKERS = ImmutableList.of("SQL NULL", "SQL NULL");
+  private static final List<String> NULL_MARKERS = ImmutableList.of("SQL NULL", "TEST_MARKER");
   private static final ExternalTableDefinition EXTERNAL_TABLE_DEFINITION =
       ExternalTableDefinition.newBuilder(SOURCE_URIS, TABLE_SCHEMA, CSV_OPTIONS)
           .setFileSetSpecType("FILE_SET_SPEC_TYPE_FILE_SYSTEM_MATCH")
