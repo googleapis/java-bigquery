@@ -176,7 +176,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
 
     Dataset dataset = bqGetRequest.execute();
     if (getDataset != null) {
-      getDataset.setAttribute("bq.rpc.response.id", dataset.getId());
+      getDataset.setAttribute("bq.rpc.response.dataset.id", dataset.getId());
       getDataset.end();
     }
     return dataset;
@@ -273,7 +273,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
     }
     Dataset datasetResponse = bqCreateRequest.execute();
     if (createDataset != null) {
-      createDataset.setAttribute("bq.rpc.response.id", datasetResponse.getId());
+      createDataset.setAttribute("bq.rpc.response.dataset.id", datasetResponse.getId());
       createDataset.end();
     }
     return datasetResponse;
@@ -318,7 +318,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
     }
     Table tableResponse = bqCreateRequest.execute();
     if (createTable != null) {
-      createTable.setAttribute("bq.rpc.response.id", tableResponse.getId());
+      createTable.setAttribute("bq.rpc.response.table.id", tableResponse.getId());
       createTable.end();
     }
     return tableResponse;
@@ -407,8 +407,9 @@ public class HttpBigQueryRpc implements BigQueryRpc {
     }
     Job jobResponse = bqCreateRequest.execute();
     if (createJob != null) {
-      createJob.setAttribute("bq.rpc.response.id", jobResponse.getId());
-      createJob.setAttribute("bq.rpc.response.job.status", jobResponse.getStatus().getState());
+      createJob.setAttribute("bq.rpc.response.job.id", jobResponse.getId());
+      createJob.setAttribute(
+          "bq.rpc.response.job.status.state", jobResponse.getStatus().getState());
       createJob.end();
     }
     return jobResponse;
@@ -448,8 +449,9 @@ public class HttpBigQueryRpc implements BigQueryRpc {
     }
     Job jobResponse = bqCreateRequest.execute();
     if (createJob != null) {
-      createJob.setAttribute("bq.rpc.response.id", jobResponse.getId());
-      createJob.setAttribute("bq.rpc.response.job.status", jobResponse.getStatus().getState());
+      createJob.setAttribute("bq.rpc.response.job.id", jobResponse.getId());
+      createJob.setAttribute(
+          "bq.rpc.response.job.status.state", jobResponse.getStatus().getState());
       createJob.end();
     }
     return jobResponse;
@@ -543,7 +545,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
     }
     Dataset datasetResponse = bqPatchRequest.execute();
     if (patchDataset != null) {
-      patchDataset.setAttribute("bq.rpc.response.id", datasetResponse.getId());
+      patchDataset.setAttribute("bq.rpc.response.dataset.id", datasetResponse.getId());
       patchDataset.end();
     }
     return datasetResponse;
@@ -590,7 +592,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
     }
     Table tableResponse = bqPatchRequest.execute();
     if (patchTable != null) {
-      patchTable.setAttribute("bq.rpc.response.id", tableResponse.getId());
+      patchTable.setAttribute("bq.rpc.response.table.id", tableResponse.getId());
       patchTable.end();
     }
     return tableResponse;
@@ -639,7 +641,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
     }
     Table tableResponse = bqGetRequest.execute();
     if (getTable != null) {
-      getTable.setAttribute("bq.rpc.response.id", tableResponse.getId());
+      getTable.setAttribute("bq.rpc.response.table.id", tableResponse.getId());
       getTable.end();
     }
     return tableResponse;
@@ -1311,8 +1313,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
     }
     Job jobResponse = bqGetRequest.execute();
     if (getJob != null) {
-      getJob.setAttribute("bq.rpc.response.id", jobResponse.getId());
-      getJob.setAttribute("bq.rpc.response.job.status", jobResponse.getStatus().getState());
+      getJob.setAttribute("bq.rpc.response.job.id", jobResponse.getId());
+      getJob.setAttribute("bq.rpc.response.job.status.state", jobResponse.getStatus().getState());
       getJob.end();
     }
     return jobResponse;
@@ -1353,8 +1355,8 @@ public class HttpBigQueryRpc implements BigQueryRpc {
     }
     Job jobResponse = bqGetRequest.execute();
     if (getJob != null) {
-      getJob.setAttribute("bq.rpc.response.id", jobResponse.getId());
-      getJob.setAttribute("bq.rpc.response.job.status", jobResponse.getStatus().getState());
+      getJob.setAttribute("bq.rpc.response.job.id", jobResponse.getId());
+      getJob.setAttribute("bq.rpc.response.job.status.state", jobResponse.getStatus().getState());
       getJob.end();
     }
     return jobResponse;
