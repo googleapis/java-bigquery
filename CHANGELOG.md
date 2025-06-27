@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.53.0](https://github.com/googleapis/java-bigquery/compare/v2.52.0...v2.53.0) (2025-06-27)
+
+
+### Features
+
+* **bigquery:** Add OpenTelemetry support to BQ rpcs ([#3860](https://github.com/googleapis/java-bigquery/issues/3860)) ([e2d23c1](https://github.com/googleapis/java-bigquery/commit/e2d23c1b15f2c48a4113f82b920f5c29c4b5dfea))
+
+
+### Dependencies
+
+* Update dependency com.google.api.grpc:proto-google-cloud-bigqueryconnection-v1 to v2.69.0 ([#3870](https://github.com/googleapis/java-bigquery/issues/3870)) ([a7f1007](https://github.com/googleapis/java-bigquery/commit/a7f1007b5242da2c0adebbb309a908d7d4db5974))
+
 ## [2.52.0](https://github.com/googleapis/java-bigquery/compare/v2.51.0...v2.52.0) (2025-06-25)
 
 
