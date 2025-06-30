@@ -19,9 +19,12 @@ package com.google.cloud.bigquery;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
+import com.google.api.core.ApiFunction;
 import com.google.api.services.bigquery.model.ExternalDataConfiguration;
 import com.google.api.services.bigquery.model.Table;
 import com.google.auto.value.AutoValue;
+import com.google.cloud.StringEnumType;
+import com.google.cloud.StringEnumValue;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -57,19 +60,43 @@ public abstract class ExternalTableDefinition extends TableDefinition {
 
   private static final long serialVersionUID = -5951580238459622025L;
 
-  public enum SourceColumnMatch {
-    POSITION("POSITION"),
-    NAME("NAME");
+  public static final class SourceColumnMatch extends StringEnumValue {
+    private static final long serialVersionUID = 818920627219751207L;
+    private static final ApiFunction<String, SourceColumnMatch> CONSTRUCTOR =
+        new ApiFunction<String, SourceColumnMatch>() {
+          @Override
+          public SourceColumnMatch apply(String constant) {
+            return new SourceColumnMatch(constant);
+          }
+        };
 
-    private final String option;
+    private static final StringEnumType<SourceColumnMatch> type =
+        new StringEnumType<SourceColumnMatch>(SourceColumnMatch.class, CONSTRUCTOR);
 
-    SourceColumnMatch(String option) {
-      this.option = option;
+    public static final SourceColumnMatch POSITION = type.createAndRegister("POSITION");
+
+    public static final SourceColumnMatch NAME = type.createAndRegister("NAME");
+
+    private SourceColumnMatch(String constant) {
+      super(constant);
     }
 
-    @Override
-    public String toString() {
-      return option;
+    /**
+     * Get the SourceColumnMatch for the given String constant, and throw an exception if the
+     * constant is not recognized.
+     */
+    public static SourceColumnMatch valueOfStrict(String constant) {
+      return type.valueOfStrict(constant);
+    }
+
+    /** Get the SourceColumnMatch for the given String constant, and allow unrecognized values. */
+    public static SourceColumnMatch valueOf(String constant) {
+      return type.valueOf(constant);
+    }
+
+    /** Return the known values for SourceColumnMatch. */
+    public static SourceColumnMatch[] values() {
+      return type.values();
     }
   }
 
