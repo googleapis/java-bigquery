@@ -228,9 +228,11 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
             CsvOptions.newBuilder()
                 .setEncoding(loadConfigurationPb.getEncoding())
                 .setFieldDelimiter(loadConfigurationPb.getFieldDelimiter())
-                .setPreserveAsciiControlCharacters(
-                    loadConfigurationPb.getPreserveAsciiControlCharacters())
                 .setQuote(loadConfigurationPb.getQuote());
+        if (loadConfigurationPb.getPreserveAsciiControlCharacters() != null) {
+          builder.setPreserveAsciiControlCharacters(
+              loadConfigurationPb.getPreserveAsciiControlCharacters());
+        }
         if (loadConfigurationPb.getAllowJaggedRows() != null) {
           builder.setAllowJaggedRows(loadConfigurationPb.getAllowJaggedRows());
         }
