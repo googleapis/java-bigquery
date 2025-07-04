@@ -1083,9 +1083,7 @@ public class ITBigQueryTest {
         BlobInfo.newBuilder(BUCKET, LOAD_FILE).setContentType("text/plain").build(),
         CSV_CONTENT.getBytes(StandardCharsets.UTF_8));
     storage.create(
-        BlobInfo.newBuilder(BUCKET, LOAD_FILE_NULL)
-            .setContentType("text/plain")
-            .build(),
+        BlobInfo.newBuilder(BUCKET, LOAD_FILE_NULL).setContentType("text/plain").build(),
         CSV_CONTENT_NULL.getBytes(StandardCharsets.UTF_8));
     storage.create(
         BlobInfo.newBuilder(BUCKET, LOAD_FILE_FLEXIBLE_COLUMN_NAME)
@@ -6633,8 +6631,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testLoadJobPreserveAsciiControlCharacters()
-      throws InterruptedException {
+  public void testLoadJobPreserveAsciiControlCharacters() throws InterruptedException {
     String destinationTableName = "test_load_job_preserve_ascii_control_characters";
     TableId destinationTable = TableId.of(DATASET, destinationTableName);
 
