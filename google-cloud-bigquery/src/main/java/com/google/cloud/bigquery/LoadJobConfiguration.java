@@ -219,6 +219,7 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
         this.nullMarker = loadConfigurationPb.getNullMarker();
       }
       if (loadConfigurationPb.getAllowJaggedRows() != null
+          || loadConfigurationPb.getPreserveAsciiControlCharacters() != null
           || loadConfigurationPb.getAllowQuotedNewlines() != null
           || loadConfigurationPb.getEncoding() != null
           || loadConfigurationPb.getFieldDelimiter() != null
