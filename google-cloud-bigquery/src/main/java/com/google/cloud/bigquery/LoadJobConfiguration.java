@@ -228,6 +228,8 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
             CsvOptions.newBuilder()
                 .setEncoding(loadConfigurationPb.getEncoding())
                 .setFieldDelimiter(loadConfigurationPb.getFieldDelimiter())
+                .setPreserveAsciiControlCharacters(
+                    loadConfigurationPb.getPreserveAsciiControlCharacters())
                 .setQuote(loadConfigurationPb.getQuote());
         if (loadConfigurationPb.getAllowJaggedRows() != null) {
           builder.setAllowJaggedRows(loadConfigurationPb.getAllowJaggedRows());
@@ -907,6 +909,7 @@ public final class LoadJobConfiguration extends JobConfiguration implements Load
           .setAllowJaggedRows(csvOptions.allowJaggedRows())
           .setAllowQuotedNewlines(csvOptions.allowQuotedNewLines())
           .setEncoding(csvOptions.getEncoding())
+          .setPreserveAsciiControlCharacters(csvOptions.getPreserveAsciiControlCharacters())
           .setQuote(csvOptions.getQuote());
       if (csvOptions.getSkipLeadingRows() != null) {
         // todo(mziccard) remove checked cast or comment when #1044 is closed
