@@ -50,7 +50,8 @@ public class EnableOpenTelemetryTracingWithParentSpanIT {
 
   @Test
   public void testCreateJob() {
-    EnableOpenTelemetryTracingWithParentSpan.enableOpenTelemetryWithParentSpan("Sample Test Tracer");
+    EnableOpenTelemetryTracingWithParentSpan.enableOpenTelemetryWithParentSpan(
+        "Sample Test Tracer");
 
     assertThat(bout.toString()).contains("Parent Span was captured!");
     assertThat(bout.toString()).contains("Child Span was captured!");

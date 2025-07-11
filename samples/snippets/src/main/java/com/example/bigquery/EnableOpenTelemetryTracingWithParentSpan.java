@@ -20,22 +20,21 @@ package com.example.bigquery;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Dataset;
-import com.google.cloud.bigquery.DatasetId;
 import com.google.cloud.bigquery.DatasetInfo;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Collection;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 public class EnableOpenTelemetryTracingWithParentSpan {
 
@@ -47,7 +46,8 @@ public class EnableOpenTelemetryTracingWithParentSpan {
 
   // Create a SpanExporter to determine how to handle captured Span data.
   // See more at https://opentelemetry.io/docs/languages/java/sdk/#spanexporter
-  private static class SampleSpanExporter implements io.opentelemetry.sdk.trace.export.SpanExporter {
+  private static class SampleSpanExporter
+      implements io.opentelemetry.sdk.trace.export.SpanExporter {
     @Override
     public CompletableResultCode export(Collection<SpanData> collection) {
       // Export data. This data can be sent out of process via netowork calls, though
@@ -92,9 +92,8 @@ public class EnableOpenTelemetryTracingWithParentSpan {
             .build();
 
     // Create global OpenTelemetry instance using the TracerProvider.
-    OpenTelemetry otel = OpenTelemetrySdk.builder()
-        .setTracerProvider(tracerProvider)
-        .buildAndRegisterGlobal();
+    OpenTelemetry otel =
+        OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).buildAndRegisterGlobal();
 
     // Create Tracer instance from the global OpenTelemetry object. Tracers are used to create
     // Spans. There can be multiple Tracers in a global OpenTelemetry instance.
@@ -126,17 +125,26 @@ public class EnableOpenTelemetryTracingWithParentSpan {
       // finally block ensures that Spans are cleaned up properly.
       parentSpan.end();
 
-      if (OTEL_ATTRIBUTES.get("Sample Parent Span").get(AttributeKey.stringKey("sample-parent-attribute")) == "sample-parent-value") {
+      if (OTEL_ATTRIBUTES
+              .get("Sample Parent Span")
+              .get(AttributeKey.stringKey("sample-parent-attribute"))
+          == "sample-parent-value") {
         System.out.println("Parent Span was captured!");
       } else {
         System.out.println("Parent Span was not captured!");
       }
-      if (OTEL_ATTRIBUTES.get("Sample Child Span").get(AttributeKey.stringKey("sample-child-attribute")) == "sample-child-value") {
+      if (OTEL_ATTRIBUTES
+              .get("Sample Child Span")
+              .get(AttributeKey.stringKey("sample-child-attribute"))
+          == "sample-child-value") {
         System.out.println("Child Span was captured!");
       } else {
         System.out.println("Child Span was not captured!");
       }
-      if (OTEL_ATTRIBUTES.get("Sample Child Span").get(AttributeKey.stringKey("sample-child-attribute")) == "sample-child-value") {
+      if (OTEL_ATTRIBUTES
+              .get("Sample Child Span")
+              .get(AttributeKey.stringKey("sample-child-attribute"))
+          == "sample-child-value") {
         System.out.println("Child Span was captured!");
       } else {
         System.out.println("Child Span was not captured!");
@@ -158,9 +166,7 @@ public class EnableOpenTelemetryTracingWithParentSpan {
             .setAttribute("sample-child-attribute", "sample-child-value")
             .startSpan();
 
-    DatasetInfo info =
-        DatasetInfo.newBuilder(datasetId)
-            .build();
+    DatasetInfo info = DatasetInfo.newBuilder(datasetId).build();
 
     Dataset dataset = bigquery.create(info);
   }
