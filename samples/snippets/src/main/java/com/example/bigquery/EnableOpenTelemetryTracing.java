@@ -91,7 +91,7 @@ public class EnableOpenTelemetryTracing {
 
     // Create global OpenTelemetry instance using the TracerProvider.
     OpenTelemetry otel =
-        OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).buildAndRegisterGlobal();
+        OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).build();
 
     // Create Tracer instance from the global OpenTelemetry object. Tracers are used to create
     // Spans. There can be multiple Tracers in a global OpenTelemetry instance.
