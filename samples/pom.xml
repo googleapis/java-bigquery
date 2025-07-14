@@ -43,18 +43,6 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-<!--  <dependencyManagement>-->
-<!--    <dependencies>-->
-<!--      <dependency>-->
-<!--        <groupId>io.opentelemetry</groupId>-->
-<!--        <artifactId>opentelemetry-bom</artifactId>-->
-<!--        <version>1.48.0</version>-->
-<!--        <type>pom</type>-->
-<!--        <scope>import</scope>-->
-<!--      </dependency>-->
-<!--    </dependencies>-->
-<!--  </dependencyManagement>-->
-
   <modules>
     <module>install-without-bom</module>
     <module>snapshot</module>
