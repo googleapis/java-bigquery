@@ -51,33 +51,6 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-
-      <dependency>
-        <groupId>io.opentelemetry</groupId>
-        <artifactId>opentelemetry-api</artifactId>
-        <version>1.46.0</version>
-      </dependency>
-      <dependency>
-        <groupId>io.opentelemetry</groupId>
-        <artifactId>opentelemetry-context</artifactId>
-        <version>1.46.0</version>
-      </dependency>
-      <dependency>
-        <groupId>io.opentelemetry</groupId>
-        <artifactId>opentelemetry-sdk</artifactId>
-        <version>1.46.0</version>
-      </dependency>
-      <dependency>
-        <groupId>io.opentelemetry</groupId>
-        <artifactId>opentelemetry-sdk-common</artifactId>
-        <version>1.46.0</version>
-      </dependency>
-      <dependency>
-        <groupId>io.opentelemetry</groupId>
-        <artifactId>opentelemetry-sdk-trace</artifactId>
-        <version>1.46.0</version>
-      </dependency>
-
     </dependencies>
   </dependencyManagement>
 
@@ -85,6 +58,31 @@
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-bigquery</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-api</artifactId>
+      <version>1.46.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-context</artifactId>
+      <version>1.46.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-sdk</artifactId>
+      <version>1.46.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-sdk-common</artifactId>
+      <version>1.46.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-sdk-trace</artifactId>
+      <version>1.46.0</version>
     </dependency>
     <!-- [END bigquery_java_dependencies] -->
     <!-- [END bigquery_install_with_bom] -->

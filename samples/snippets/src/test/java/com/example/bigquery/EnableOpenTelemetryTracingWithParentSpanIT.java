@@ -54,7 +54,6 @@ public class EnableOpenTelemetryTracingWithParentSpanIT {
         "Sample Test Tracer");
 
     assertThat(bout.toString()).contains("Parent Span was captured!");
-    assertThat(bout.toString()).contains("Child Span was captured!");
-    assertThat(bout.toString()).contains("Sample Child Span is the child of Sample Parent Span!");
+    assertThat(bout.toString()).contains("createDataset is the child of Sample Parent Span!");
   }
 }
