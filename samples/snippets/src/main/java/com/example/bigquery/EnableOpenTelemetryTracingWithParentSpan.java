@@ -37,11 +37,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class EnableOpenTelemetryTracingWithParentSpan {
-
-  // Data structures for captured Span data
+  // Maps Span names to their attribute maps.
   private static final Map<String, Map<AttributeKey<?>, Object>> OTEL_ATTRIBUTES =
       new HashMap<String, Map<AttributeKey<?>, Object>>();
+  // Maps Span names to their parent Span IDs.
   private static final Map<String, String> OTEL_PARENT_SPAN_IDS = new HashMap<>();
+  // Maps Span IDs to their Span names.
   private static final Map<String, String> OTEL_SPAN_IDS_TO_NAMES = new HashMap<>();
 
   // Create a SpanExporter to determine how to handle captured Span data.
@@ -51,7 +52,7 @@ public class EnableOpenTelemetryTracingWithParentSpan {
     @Override
     public CompletableResultCode export(Collection<SpanData> collection) {
       // Export data. This data can be sent out of process via netowork calls, though
-      // for this example a local map is used.
+      // for this example local data structures are used.
       if (collection.isEmpty()) {
         // No span data was collected.
         return CompletableResultCode.ofFailure();
@@ -80,7 +81,8 @@ public class EnableOpenTelemetryTracingWithParentSpan {
   }
 
   public static void main(String[] args) {
-    enableOpenTelemetryWithParentSpan("Sample Tracer");
+    final String tracerName = "Sample Tracer";
+    enableOpenTelemetryWithParentSpan(tracerName);
   }
 
   public static void enableOpenTelemetryWithParentSpan(String tracerName) {
@@ -109,56 +111,57 @@ public class EnableOpenTelemetryTracingWithParentSpan {
             .build();
     BigQuery bigquery = otelOptions.getService();
 
-    // Create the root parent Span. setNoParent() ensures that it is a parent Span.
     // TODO(developer): Replace Span and attribute names.
+    final String parentSpanName = "Sample Parent Span";
+    final String attributeKey = "sample-parent-attribute";
+    final String attributeValue = "sample-parent-value";
+    final String datasetId = "sampleDatasetId";
+
+    // Create the root parent Span. setNoParent() ensures that it is a parent Span with a Span ID
+    // of 0.
     Span parentSpan =
         tracer
-            .spanBuilder("Sample Parent Span")
+            .spanBuilder(parentSpanName)
             .setNoParent()
-            .setAttribute("sample-parent-attribute", "sample-parent-value")
+            .setAttribute(attributeKey, attributeValue)
             .startSpan();
 
-    // Wrap nested functions in try-catch-finally block to pass on the Span Context.
+    // The Span Context is automatically passed on to any functions called within the scope of the
+    // try block. parentSpan.makeCurrent() sets parentSpan to be the parent of any Spans created in
+    // this scope, or the scope of any functions called within this scope.
     try (Scope parentScope = parentSpan.makeCurrent()) {
-      createDataset(bigquery, tracer, "sample-dataset-id");
+      DatasetInfo info = DatasetInfo.newBuilder(datasetId).build();
+      Dataset dataset = bigquery.create(info);
     } finally {
       // finally block ensures that Spans are cleaned up properly.
       parentSpan.end();
 
-      if (OTEL_ATTRIBUTES
-              .get("Sample Parent Span")
-              .get(AttributeKey.stringKey("sample-parent-attribute"))
-          == "sample-parent-value") {
+      // Unpack attribute maps to get attribute keys and values.
+      Map<AttributeKey<?>, Object> parentSpanAttributes = OTEL_ATTRIBUTES.get(parentSpanName);
+      Object parentSpanAttributeValue =
+          parentSpanAttributes.get(AttributeKey.stringKey(attributeKey));
+      if (parentSpanAttributeValue == attributeValue) {
         System.out.println("Parent Span was captured!");
       } else {
         System.out.println("Parent Span was not captured!");
       }
-      if (OTEL_ATTRIBUTES
-              .get("Sample Child Span")
-              .get(AttributeKey.stringKey("sample-child-attribute"))
-          == "sample-child-value") {
-        System.out.println("Child Span was captured!");
-      } else {
-        System.out.println("Child Span was not captured!");
-      }
-      if (OTEL_ATTRIBUTES
-              .get("Sample Child Span")
-              .get(AttributeKey.stringKey("sample-child-attribute"))
-          == "sample-child-value") {
-        System.out.println("Child Span was captured!");
-      } else {
-        System.out.println("Child Span was not captured!");
-      }
-      String childSpanParentId = OTEL_PARENT_SPAN_IDS.get("Sample Child Span");
+
+      String childSpanParentId =
+          OTEL_PARENT_SPAN_IDS.get("com.google.cloud.bigquery.BigQuery.createDataset");
       String parentSpanId = OTEL_SPAN_IDS_TO_NAMES.get(childSpanParentId);
-      if (parentSpanId == "Sample Parent Span") {
-        System.out.println("Sample Child Span is the child of Sample Parent Span!");
+      if (OTEL_SPAN_IDS_TO_NAMES.get(childSpanParentId) == parentSpanName) {
+        System.out.println("createDataset is the child of Sample Parent Span!");
+      } else {
+        System.out.println("createDataset is not the child of Parent!");
       }
+
+      bigquery.delete(datasetId);
     }
   }
 
-  public static void createDataset(BigQuery bigquery, Tracer tracer, String datasetId) {
-    // Parent Span Context is passed on here.
+  public static void createDataset(BigQuery bigquery, String datasetId, Tracer tracer) {
+    // Parent Span Context is automatically passed on here. childSpan's parent Span is set to be
+    // parentSpan.
     Span childSpan =
         tracer
             .spanBuilder("Sample Child Span")
