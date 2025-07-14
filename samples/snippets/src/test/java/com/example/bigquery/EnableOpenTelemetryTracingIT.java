@@ -18,8 +18,16 @@ package com.example.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.exporter.logging.LoggingSpanExporter;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
+import io.opentelemetry.sdk.trace.samplers.Sampler;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.After;
@@ -36,8 +44,10 @@ public class EnableOpenTelemetryTracingIT {
   public void setUp() {
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
-    originalPrintStream = System.out;
-    System.setOut(out);
+    originalPrintStream = System.err;
+    System.setErr(out);
+    ConsoleHandler ch = new ConsoleHandler();
+    log.addHandler(ch);
   }
 
   @After
@@ -49,9 +59,23 @@ public class EnableOpenTelemetryTracingIT {
   }
 
   @Test
-  public void testCreateJob() {
-    EnableOpenTelemetryTracing.enableOpenTelemetry("Sample Test Tracer");
+  public void testEnableOpenTelemetryTracing() {
+    final String tracerName = "testSampleTracer";
+    final String datasetId = "testSampleDatasetId";
 
-    assertThat(bout.toString()).contains("createDataset Span was captured!");
+    SdkTracerProvider tracerProvider =
+        SdkTracerProvider.builder()
+            .addSpanProcessor(SimpleSpanProcessor.builder(LoggingSpanExporter.create()).build())
+            .setSampler(Sampler.alwaysOn())
+            .build();
+
+    OpenTelemetry otel = OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).build();
+
+    final Tracer tracer = otel.getTracer(tracerName);
+
+    EnableOpenTelemetryTracing.enableOpenTelemetry(tracer, datasetId);
+
+    assertThat(bout.toString()).contains("com.google.cloud.bigquery.BigQuery.createDataset");
+    assertThat(bout.toString()).contains("com.google.cloud.bigquery.BigQuery.deleteDataset");
   }
 }
