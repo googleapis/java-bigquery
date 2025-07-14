@@ -80,10 +80,12 @@ public class EnableOpenTelemetryTracingWithParentSpan {
   }
 
   public static void main(String[] args) {
-    enableOpenTelemetryWithParentSpan("Sample Tracer");
+    // TODO(developer): Replace these variables before running the sample.
+    String datasetName = "MY_DATASET_NAME";
+    enableOpenTelemetryWithParentSpan("Sample Tracer", datasetName);
   }
 
-  public static void enableOpenTelemetryWithParentSpan(String tracerName) {
+  public static void enableOpenTelemetryWithParentSpan(String tracerName, String datasetName) {
     // Create TracerProvider using the custom SpanExporter.
     SdkTracerProvider tracerProvider =
         SdkTracerProvider.builder()
@@ -120,31 +122,34 @@ public class EnableOpenTelemetryTracingWithParentSpan {
 
     // Wrap nested functions in try-catch-finally block to pass on the Span Context.
     try (Scope parentScope = parentSpan.makeCurrent()) {
-      createDataset(bigquery, tracer, "sample-dataset-id");
+      createDataset(bigquery, tracer, datasetName);
     } finally {
       // finally block ensures that Spans are cleaned up properly.
       parentSpan.end();
 
-      if (OTEL_ATTRIBUTES
-              .get("Sample Parent Span")
-              .get(AttributeKey.stringKey("sample-parent-attribute"))
-          == "sample-parent-value") {
+      if (OTEL_ATTRIBUTES.containsKey("Sample Parent Span")
+          && OTEL_ATTRIBUTES
+                  .get("Sample Parent Span")
+                  .get(AttributeKey.stringKey("sample-parent-attribute"))
+              == "sample-parent-value") {
         System.out.println("Parent Span was captured!");
       } else {
         System.out.println("Parent Span was not captured!");
       }
-      if (OTEL_ATTRIBUTES
-              .get("Sample Child Span")
-              .get(AttributeKey.stringKey("sample-child-attribute"))
-          == "sample-child-value") {
+      if (OTEL_ATTRIBUTES.containsKey("Sample Child Span")
+          && OTEL_ATTRIBUTES
+                  .get("Sample Child Span")
+                  .get(AttributeKey.stringKey("sample-child-attribute"))
+              == "sample-child-value") {
         System.out.println("Child Span was captured!");
       } else {
         System.out.println("Child Span was not captured!");
       }
-      if (OTEL_ATTRIBUTES
-              .get("Sample Child Span")
-              .get(AttributeKey.stringKey("sample-child-attribute"))
-          == "sample-child-value") {
+      if (OTEL_ATTRIBUTES.containsKey("Sample Child Span")
+          && OTEL_ATTRIBUTES
+                  .get("Sample Child Span")
+                  .get(AttributeKey.stringKey("sample-child-attribute"))
+              == "sample-child-value") {
         System.out.println("Child Span was captured!");
       } else {
         System.out.println("Child Span was not captured!");
