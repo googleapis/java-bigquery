@@ -80,13 +80,6 @@
       <artifactId>google-oauth-client-jetty</artifactId>
       <version>1.39.0</version>
     </dependency>
-    <dependency>
-      <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-bom</artifactId>
-      <version>1.48.0</version>
-      <type>pom</type>
-      <scope>import</scope>
-    </dependency>
 
     <!-- [END bigquery-enduser-installed-packages] -->
 
