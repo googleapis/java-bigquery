@@ -22,88 +22,50 @@ import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Dataset;
 import com.google.cloud.bigquery.DatasetInfo;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Logger;
 
 public class EnableOpenTelemetryTracingWithParentSpan {
-  // Maps Span names to their attribute maps.
-  private static final Map<String, Map<AttributeKey<?>, Object>> OTEL_ATTRIBUTES =
-      new HashMap<String, Map<AttributeKey<?>, Object>>();
-  // Maps Span names to their parent Span IDs.
-  private static final Map<String, String> OTEL_PARENT_SPAN_IDS = new HashMap<>();
-  // Maps Span IDs to their Span names.
-  private static final Map<String, String> OTEL_SPAN_IDS_TO_NAMES = new HashMap<>();
-
-  // Create a SpanExporter to determine how to handle captured Span data.
-  // See more at https://opentelemetry.io/docs/languages/java/sdk/#spanexporter
-  private static class SampleSpanExporter
-      implements io.opentelemetry.sdk.trace.export.SpanExporter {
-
-    // TODO(developer): Replace export output before running the sample.
-    @Override
-    public CompletableResultCode export(Collection<SpanData> collection) {
-      // Export data. This data can be sent out of process via netowork calls, though
-      // for this example local data structures are used.
-      if (collection.isEmpty()) {
-        // No span data was collected.
-        return CompletableResultCode.ofFailure();
-      }
-
-      for (SpanData data : collection) {
-        OTEL_ATTRIBUTES.put(data.getName(), data.getAttributes().asMap());
-        OTEL_PARENT_SPAN_IDS.put(data.getName(), data.getParentSpanId());
-        OTEL_SPAN_IDS_TO_NAMES.put(data.getSpanId(), data.getName());
-      }
-      return CompletableResultCode.ofSuccess();
-    }
-
-    // TODO(developer): Replace these functions to suit your needs.
-    @Override
-    public CompletableResultCode flush() {
-      // Export any data that has been queued up but not yet exported.
-      return CompletableResultCode.ofSuccess();
-    }
-
-    @Override
-    public CompletableResultCode shutdown() {
-      // Shut down the exporter and clean up any resources.
-      return CompletableResultCode.ofSuccess();
-    }
-  }
+  private static final Logger log =
+      Logger.getLogger(EnableOpenTelemetryTracingWithParentSpan.class.getName());
 
   public static void main(String[] args) {
-    // TODO(developer): Replace Tracer name
-    final String tracerName = "Sample Tracer";
-    enableOpenTelemetryWithParentSpan(tracerName);
-  }
+    // Set logging to System.err.
+    ConsoleHandler ch = new ConsoleHandler();
+    log.addHandler(ch);
 
-  public static void enableOpenTelemetryWithParentSpan(String tracerName) {
-    // Create TracerProvider using the custom SpanExporter.
+    // TODO(developer): Replace values before running the sample.
+    final String tracerName = "Sample Tracer";
+    final String parentSpanName = "Sample Parent Span";
+    final String datasetId = "sampleDatasetId";
+
+    // Create TracerProvider that exports to a logger.
     SdkTracerProvider tracerProvider =
         SdkTracerProvider.builder()
-            .addSpanProcessor(SimpleSpanProcessor.create(new SampleSpanExporter()))
+            .addSpanProcessor(SimpleSpanProcessor.builder(LoggingSpanExporter.create()).build())
             .setSampler(Sampler.alwaysOn())
             .build();
 
-    // Create global OpenTelemetry instance using the TracerProvider.
-    OpenTelemetry otel =
-        OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).build();
+    // Create OpenTelemetry instance using the TracerProvider.
+    OpenTelemetry otel = OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).build();
 
     // Create Tracer instance from the global OpenTelemetry object. Tracers are used to create
     // Spans. There can be multiple Tracers in a global OpenTelemetry instance.
     final Tracer tracer = otel.getTracer(tracerName);
+    enableOpenTelemetryWithParentSpan(tracer, parentSpanName, datasetId);
+  }
 
+  public static void enableOpenTelemetryWithParentSpan(
+      Tracer tracer, String parentSpanName, String datasetId) {
     // Create BigQuery client to trace. EnableOpenTelemetryTracing and OpenTelemetryTracer must
     // be set to enable tracing.
     BigQueryOptions otelOptions =
@@ -113,11 +75,7 @@ public class EnableOpenTelemetryTracingWithParentSpan {
             .build();
     BigQuery bigquery = otelOptions.getService();
 
-    // TODO(developer): Replace Span and attribute names.
-    final String parentSpanName = "Sample Parent Span";
-    final String attributeKey = "sample-parent-attribute";
-    final String attributeValue = "sample-parent-value";
-    final String datasetId = "sampleDatasetId";
+    LocalDate currentDate = LocalDate.now();
 
     // Create the root parent Span. setNoParent() ensures that it is a parent Span with a Span ID
     // of 0.
@@ -125,7 +83,7 @@ public class EnableOpenTelemetryTracingWithParentSpan {
         tracer
             .spanBuilder(parentSpanName)
             .setNoParent()
-            .setAttribute(attributeKey, attributeValue)
+            .setAttribute("current_date", currentDate.toString())
             .startSpan();
 
     // The Span Context is automatically passed on to any functions called within the scope of the
@@ -137,26 +95,6 @@ public class EnableOpenTelemetryTracingWithParentSpan {
     } finally {
       // finally block ensures that Spans are cleaned up properly.
       parentSpan.end();
-
-      // Unpack attribute maps to get attribute keys and values.
-      Map<AttributeKey<?>, Object> parentSpanAttributes = OTEL_ATTRIBUTES.get(parentSpanName);
-      Object parentSpanAttributeValue =
-          parentSpanAttributes.get(AttributeKey.stringKey(attributeKey));
-      if (parentSpanAttributeValue == attributeValue) {
-        System.out.println("Parent Span was captured!");
-      } else {
-        System.out.println("Parent Span was not captured!");
-      }
-
-      String childSpanParentId =
-          OTEL_PARENT_SPAN_IDS.get("com.google.cloud.bigquery.BigQuery.createDataset");
-      String parentSpanId = OTEL_SPAN_IDS_TO_NAMES.get(childSpanParentId);
-      if (OTEL_SPAN_IDS_TO_NAMES.get(childSpanParentId) == parentSpanName) {
-        System.out.println("createDataset is the child of Sample Parent Span!");
-      } else {
-        System.out.println("createDataset is not the child of Parent!");
-      }
-
       bigquery.delete(datasetId);
     }
   }

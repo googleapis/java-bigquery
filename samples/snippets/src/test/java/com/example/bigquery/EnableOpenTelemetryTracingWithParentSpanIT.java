@@ -18,8 +18,17 @@ package com.example.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.exporter.logging.LoggingSpanExporter;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
+import io.opentelemetry.sdk.trace.samplers.Sampler;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.time.LocalDate;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.After;
@@ -36,8 +45,10 @@ public class EnableOpenTelemetryTracingWithParentSpanIT {
   public void setUp() {
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
-    originalPrintStream = System.out;
-    System.setOut(out);
+    originalPrintStream = System.err;
+    System.setErr(out);
+    ConsoleHandler ch = new ConsoleHandler();
+    log.addHandler(ch);
   }
 
   @After
@@ -49,11 +60,27 @@ public class EnableOpenTelemetryTracingWithParentSpanIT {
   }
 
   @Test
-  public void testCreateJob() {
-    EnableOpenTelemetryTracingWithParentSpan.enableOpenTelemetryWithParentSpan(
-        "Sample Test Tracer");
+  public void testEnableOpenTelemetryWithParentSpan() {
+    final String tracerName = "testSampleTracer";
+    final String parentSpanName = "testSampleParentSpan";
+    final String datasetId = "testSampleDatasetId";
+    final LocalDate currentDate = LocalDate.now();
 
-    assertThat(bout.toString()).contains("Parent Span was captured!");
-    assertThat(bout.toString()).contains("createDataset is the child of Sample Parent Span!");
+    SdkTracerProvider tracerProvider =
+        SdkTracerProvider.builder()
+            .addSpanProcessor(SimpleSpanProcessor.builder(LoggingSpanExporter.create()).build())
+            .setSampler(Sampler.alwaysOn())
+            .build();
+
+    OpenTelemetry otel = OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).build();
+
+    final Tracer tracer = otel.getTracer(tracerName);
+
+    EnableOpenTelemetryTracingWithParentSpan.enableOpenTelemetryWithParentSpan(
+        tracer, parentSpanName, datasetId);
+
+    assertThat(bout.toString()).contains(parentSpanName);
+    assertThat(bout.toString())
+        .contains(String.format("AttributesMap{data={current_date=%s}", currentDate.toString()));
   }
 }

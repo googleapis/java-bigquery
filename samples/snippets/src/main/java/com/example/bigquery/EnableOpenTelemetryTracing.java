@@ -22,81 +22,45 @@ import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Dataset;
 import com.google.cloud.bigquery.DatasetInfo;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.context.Scope;
+import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Logger;
 
 public class EnableOpenTelemetryTracing {
-  // Maps Span names to their Span IDs.
-  private static final Map<String, String> OTEL_SPAN_IDS = new HashMap<>();
-
-  // Create a SpanExporter to determine how to handle captured Span data.
-  // See more at https://opentelemetry.io/docs/languages/java/sdk/#spanexporter
-  private static class SampleSpanExporter
-      implements io.opentelemetry.sdk.trace.export.SpanExporter {
-
-    // TODO(developer): Replace export output before running the sample.
-    @Override
-    public CompletableResultCode export(Collection<SpanData> collection) {
-      // Export data. This data can be sent out of process via netowork calls, though
-      // for this example local data structures are used.
-      if (collection.isEmpty()) {
-        // No span data was collected.
-        return CompletableResultCode.ofFailure();
-      }
-
-      for (SpanData data : collection) {
-        OTEL_SPAN_IDS.put(data.getName(), data.getSpanId());
-      }
-      return CompletableResultCode.ofSuccess();
-    }
-
-    // TODO(developer): Replace these functions to suit your needs.
-    @Override
-    public CompletableResultCode flush() {
-      // Export any data that has been queued up but not yet exported.
-      return CompletableResultCode.ofSuccess();
-    }
-
-    @Override
-    public CompletableResultCode shutdown() {
-      // Shut down the exporter and clean up any resources.
-      return CompletableResultCode.ofSuccess();
-    }
-  }
+  private static final Logger log = Logger.getLogger(EnableOpenTelemetryTracing.class.getName());
 
   public static void main(String[] args) {
-    // TODO(developer): Replace Tracer name
-    final String tracerName = "Sample Tracer";
-    enableOpenTelemetry(tracerName);
-  }
+    // Set logging to System.err.
+    ConsoleHandler ch = new ConsoleHandler();
+    log.addHandler(ch);
 
-  public static void enableOpenTelemetry(String tracerName) {
-    // Create TracerProvider using the custom SpanExporter.
+    // TODO(developer): Replace values before running the sample.
+    final String tracerName = "Sample Tracer";
+    final String datasetId = "sampleDatasetId";
+
+    // Create TracerProvider that exports to a logger.
     SdkTracerProvider tracerProvider =
         SdkTracerProvider.builder()
-            .addSpanProcessor(SimpleSpanProcessor.create(new SampleSpanExporter()))
+            .addSpanProcessor(SimpleSpanProcessor.builder(LoggingSpanExporter.create()).build())
             .setSampler(Sampler.alwaysOn())
             .build();
 
     // Create global OpenTelemetry instance using the TracerProvider.
-    OpenTelemetry otel =
-        OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).build();
+    OpenTelemetry otel = OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).build();
 
-    // Create Tracer instance from the global OpenTelemetry object. Tracers are used to create
-    // Spans. There can be multiple Tracers in a global OpenTelemetry instance.
+    // Create Tracer instance from the OpenTelemetry object. Tracers are used to create
+    // Spans. There can be multiple Tracers in an OpenTelemetry instance.
     Tracer tracer = otel.getTracer(tracerName);
 
+    enableOpenTelemetry(tracer, datasetId);
+  }
+
+  public static void enableOpenTelemetry(Tracer tracer, String datasetId) {
     // Create BigQuery client to trace. EnableOpenTelemetryTracing and OpenTelemetryTracer must
     // be set to enable tracing.
     BigQueryOptions otelOptions =
@@ -107,13 +71,8 @@ public class EnableOpenTelemetryTracing {
     BigQuery bigquery = otelOptions.getService();
 
     // Create dataset.
-    final String datasetId = "sampleDatasetId";
     DatasetInfo info = DatasetInfo.newBuilder(datasetId).build();
     Dataset dataset = bigquery.create(info);
-
-    if (OTEL_SPAN_IDS.containsKey("com.google.cloud.bigquery.BigQuery.createDataset")) {
-      System.out.println("createDataset Span was captured!");
-    }
 
     bigquery.delete(datasetId);
   }
