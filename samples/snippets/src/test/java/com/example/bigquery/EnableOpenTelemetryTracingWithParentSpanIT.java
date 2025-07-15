@@ -18,6 +18,7 @@ package com.example.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.cloud.bigquery.testing.RemoteBigQueryHelper;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
@@ -54,8 +55,8 @@ public class EnableOpenTelemetryTracingWithParentSpanIT {
   @After
   public void tearDown() {
     // restores print statements in the original method
-    System.out.flush();
-    System.setOut(originalPrintStream);
+    System.err.flush();
+    System.setErr(originalPrintStream);
     log.log(Level.INFO, "\n" + bout.toString());
   }
 
@@ -63,7 +64,7 @@ public class EnableOpenTelemetryTracingWithParentSpanIT {
   public void testEnableOpenTelemetryWithParentSpan() {
     final String tracerName = "testSampleTracer";
     final String parentSpanName = "testSampleParentSpan";
-    final String datasetId = "testSampleDatasetId";
+    final String datasetId = RemoteBigQueryHelper.generateDatasetName();
     final LocalDate currentDate = LocalDate.now();
 
     SdkTracerProvider tracerProvider =
