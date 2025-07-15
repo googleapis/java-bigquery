@@ -70,11 +70,16 @@ public class EnableOpenTelemetryTracing {
             .build();
     BigQuery bigquery = otelOptions.getService();
 
-    // Create dataset.
-    DatasetInfo info = DatasetInfo.newBuilder(datasetId).build();
-    Dataset dataset = bigquery.create(info);
-
-    bigquery.delete(datasetId);
+    try {
+      // Create dataset.
+      DatasetInfo info = DatasetInfo.newBuilder(datasetId).build();
+      Dataset dataset = bigquery.create(info);
+    } catch (Exception e) {
+      System.out.println(
+          String.format("Failed to create dataset: %s: %s", e.toString(), e.getMessage()));
+    } finally {
+      bigquery.delete(datasetId);
+    }
   }
 }
 // [END bigquery_enable_otel_tracing]

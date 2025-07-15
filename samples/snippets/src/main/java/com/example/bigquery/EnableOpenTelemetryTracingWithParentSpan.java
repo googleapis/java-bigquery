@@ -92,6 +92,9 @@ public class EnableOpenTelemetryTracingWithParentSpan {
     try (Scope parentScope = parentSpan.makeCurrent()) {
       DatasetInfo info = DatasetInfo.newBuilder(datasetId).build();
       Dataset dataset = bigquery.create(info);
+    } catch (Exception e) {
+      System.out.println(
+          String.format("Failed to create dataset: %s: %s", e.toString(), e.getMessage()));
     } finally {
       // finally block ensures that Spans are cleaned up properly.
       parentSpan.end();
