@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.53.1](https://github.com/googleapis/java-bigquery/compare/v2.53.0...v2.53.1) (2025-07-18)
+
+
+### Dependencies
+
+* Update dependency com.google.api.grpc:proto-google-cloud-bigqueryconnection-v1 to v2.70.0 ([#3890](https://github.com/googleapis/java-bigquery/issues/3890)) ([84207e2](https://github.com/googleapis/java-bigquery/commit/84207e297eec75bcb4f1cc1b64423d7c2ddd6c30))
+
 ## [2.53.0](https://github.com/googleapis/java-bigquery/compare/v2.52.0...v2.53.0) (2025-07-14)
 
 
