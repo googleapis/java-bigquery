@@ -21,25 +21,20 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.cloud.bigquery.testing.RemoteBigQueryHelper;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.trace.SdkTracerProvider;
-import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
-import io.opentelemetry.sdk.trace.export.SpanExporter;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.common.CompletableResultCode;
-import java.util.Collection;
+import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.logging.ConsoleHandler;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import java.util.logging.SimpleFormatter;
-import java.util.logging.StreamHandler;
 
 public class EnableOpenTelemetryTracingIT {
   private final Logger log = Logger.getLogger(this.getClass().getName());
@@ -47,7 +42,8 @@ public class EnableOpenTelemetryTracingIT {
   private PrintStream out;
   private PrintStream originalPrintStream;
 
-  private static class ConsoleSpanExporter implements io.opentelemetry.sdk.trace.export.SpanExporter {
+  private static class ConsoleSpanExporter
+      implements io.opentelemetry.sdk.trace.export.SpanExporter {
     @Override
     public CompletableResultCode export(Collection<SpanData> collection) {
       if (collection.isEmpty()) {
@@ -74,21 +70,13 @@ public class EnableOpenTelemetryTracingIT {
   public void setUp() {
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
-    //originalPrintStream = System.err;
-    //System.setErr(out);
-    //ConsoleHandler ch = new ConsoleHandler();
-    //log.addHandler(ch);
     originalPrintStream = System.out;
     System.setOut(out);
-    //log.setUseParentHandlers(false);
-    //log.addHandler(new StreamHandler(out, new SimpleFormatter()));
   }
 
   @After
   public void tearDown() {
     // restores print statements in the original method
-    //System.err.flush();
-    //System.setErr(originalPrintStream);
     System.out.flush();
     System.setOut(originalPrintStream);
     log.log(Level.INFO, "\n" + bout.toString());
