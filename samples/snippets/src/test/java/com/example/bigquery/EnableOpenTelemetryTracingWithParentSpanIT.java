@@ -26,6 +26,10 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
+import io.opentelemetry.sdk.trace.export.SpanExporter;
+import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.sdk.common.CompletableResultCode;
+import java.util.Collection;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.time.LocalDate;
@@ -42,21 +46,48 @@ public class EnableOpenTelemetryTracingWithParentSpanIT {
   private PrintStream out;
   private PrintStream originalPrintStream;
 
+  private static class ConsoleSpanExporter implements io.opentelemetry.sdk.trace.export.SpanExporter {
+    @Override
+    public CompletableResultCode export(Collection<SpanData> collection) {
+      if (collection.isEmpty()) {
+        return CompletableResultCode.ofFailure();
+      }
+      for (SpanData data : collection) {
+        System.out.println(data);
+      }
+      return CompletableResultCode.ofSuccess();
+    }
+
+    @Override
+    public CompletableResultCode flush() {
+      return CompletableResultCode.ofSuccess();
+    }
+
+    @Override
+    public CompletableResultCode shutdown() {
+      return CompletableResultCode.ofSuccess();
+    }
+  }
+
   @Before
   public void setUp() {
     bout = new ByteArrayOutputStream();
     out = new PrintStream(bout);
-    originalPrintStream = System.err;
-    System.setErr(out);
-    ConsoleHandler ch = new ConsoleHandler();
-    log.addHandler(ch);
+    //originalPrintStream = System.err;
+    //System.setErr(out);
+    //ConsoleHandler ch = new ConsoleHandler();
+    //log.addHandler(ch);
+    originalPrintStream = System.out;
+    System.setOut(out);
   }
 
   @After
   public void tearDown() {
     // restores print statements in the original method
-    System.err.flush();
-    System.setErr(originalPrintStream);
+    //System.err.flush();
+    //System.setErr(originalPrintStream);
+    System.out.flush();
+    System.setOut(originalPrintStream);
     log.log(Level.INFO, "\n" + bout.toString());
   }
 
@@ -69,7 +100,7 @@ public class EnableOpenTelemetryTracingWithParentSpanIT {
 
     SdkTracerProvider tracerProvider =
         SdkTracerProvider.builder()
-            .addSpanProcessor(SimpleSpanProcessor.builder(LoggingSpanExporter.create()).build())
+            .addSpanProcessor(SimpleSpanProcessor.builder(new ConsoleSpanExporter()).build())
             .setSampler(Sampler.alwaysOn())
             .build();
 
