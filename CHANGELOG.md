@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.54.0](https://github.com/googleapis/java-bigquery/compare/v2.53.0...v2.54.0) (2025-07-26)
+
+
+### Features
+
+* **bigquery:** Add OpenTelemetry Samples ([#3899](https://github.com/googleapis/java-bigquery/issues/3899)) ([e3d9ed9](https://github.com/googleapis/java-bigquery/commit/e3d9ed92ca5d9b58b5747960d74f895ed8733ebf))
+* **bigquery:** Add otel metrics to request headers ([#3900](https://github.com/googleapis/java-bigquery/issues/3900)) ([4071e4c](https://github.com/googleapis/java-bigquery/commit/4071e4cb2547b236183fd4fbb92c73f074cf2fa0))
+
+
+### Dependencies
+
+* Update dependency com.google.api.grpc:proto-google-cloud-bigqueryconnection-v1 to v2.70.0 ([#3890](https://github.com/googleapis/java-bigquery/issues/3890)) ([84207e2](https://github.com/googleapis/java-bigquery/commit/84207e297eec75bcb4f1cc1b64423d7c2ddd6c30))
+* Update dependency io.opentelemetry:opentelemetry-api to v1.52.0 ([#3902](https://github.com/googleapis/java-bigquery/issues/3902)) ([772407b](https://github.com/googleapis/java-bigquery/commit/772407b12f4da005f79eafc944d4c53f0eec5c27))
+
 ## [2.53.0](https://github.com/googleapis/java-bigquery/compare/v2.52.0...v2.53.0) (2025-07-14)
 
 
