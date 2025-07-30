@@ -31,7 +31,10 @@
   },
   {
     "name":"org.apache.arrow.memory.DefaultAllocationManagerFactory",
-    "fields":[{"name":"FACTORY"}]
+    "allDeclaredFields":true,
+    "queryAllDeclaredFields":true,
+    "queryAllDeclaredMethods":true,
+    "queryAllDeclaredConstructors":true
   },
   {
     "name":"org.apache.arrow.vector.types.pojo.ArrowType",
@@ -49,6 +52,18 @@
     "name":"org.apache.arrow.vector.types.pojo.ArrowType$PrimitiveType",
     "allDeclaredFields":true,
     "queryAllDeclaredMethods":true
+  },
+  {
+    "name": "org.apache.arrow.vector.types.pojo.DictionaryEncoding",
+    "allDeclaredFields": true
+  },
+  {
+    "name": "org.apache.arrow.vector.types.pojo.Field",
+    "allDeclaredFields": true
+  },
+  {
+    "name": "org.apache.arrow.vector.types.pojo.Schema",
+    "allDeclaredFields": true
   },
   {
     "name":"io.netty.buffer.AbstractReferenceCountedByteBuf",
