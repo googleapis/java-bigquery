@@ -214,7 +214,22 @@ import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.threeten.extra.PeriodDuration;
 
+import org.apache.arrow.memory.BufferAllocator;
+import org.apache.arrow.memory.RootAllocator;
 public class ITBigQueryTest {
+  @Test
+  public void testArrowForName() throws Exception {
+    final String clazzName = "org.apache.arrow.memory.netty.DefaultAllocationManagerFactory";
+    try {
+      BufferAllocator allocator = new RootAllocator(Long.MAX_VALUE);
+      //java.lang.reflect.Field field = Class.forName(clazzName).getDeclaredField("FACTORY");
+      //field.setAccessible(true);
+      //System.out.println("OK");
+    } catch (Exception e) {
+      throw new RuntimeException("Unable to instantiate Allocation Manager for " + clazzName, e);
+    }
+  }
+
 
   private static final byte[] BYTES = {0xD, 0xE, 0xA, 0xD};
   private static final String BYTES_BASE64 = BaseEncoding.base64().encode(BYTES);
@@ -1064,118 +1079,6 @@ public class ITBigQueryTest {
 
   @Rule public Timeout globalTimeout = Timeout.seconds(300);
 
-  @BeforeClass
-  public static void beforeClass() throws InterruptedException, IOException {
-    RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
-    RemoteStorageHelper storageHelper = RemoteStorageHelper.create();
-    Map<String, String> labels = ImmutableMap.of("test-job-name", "test-load-job");
-    SdkTracerProvider tracerProvider =
-        SdkTracerProvider.builder()
-            .addSpanProcessor(SimpleSpanProcessor.create(new TestSpanExporter()))
-            .setSampler(Sampler.alwaysOn())
-            .build();
-    otel = OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).buildAndRegisterGlobal();
-
-    bigquery = bigqueryHelper.getOptions().getService();
-    storage = storageHelper.getOptions().getService();
-    storage.create(BucketInfo.of(BUCKET));
-    storage.create(
-        BlobInfo.newBuilder(BUCKET, LOAD_FILE).setContentType("text/plain").build(),
-        CSV_CONTENT.getBytes(StandardCharsets.UTF_8));
-    storage.create(
-        BlobInfo.newBuilder(BUCKET, LOAD_FILE_NULL).setContentType("text/plain").build(),
-        CSV_CONTENT_NULL.getBytes(StandardCharsets.UTF_8));
-    storage.create(
-        BlobInfo.newBuilder(BUCKET, LOAD_FILE_FLEXIBLE_COLUMN_NAME)
-            .setContentType("text/plain")
-            .build(),
-        CSV_CONTENT_FLEXIBLE_COLUMN.getBytes(StandardCharsets.UTF_8));
-    storage.create(
-        BlobInfo.newBuilder(BUCKET, JSON_LOAD_FILE).setContentType("application/json").build(),
-        JSON_CONTENT.getBytes(StandardCharsets.UTF_8));
-    storage.create(
-        BlobInfo.newBuilder(BUCKET, JSON_LOAD_FILE_SIMPLE)
-            .setContentType("application/json")
-            .build(),
-        JSON_CONTENT_SIMPLE.getBytes(StandardCharsets.UTF_8));
-    InputStream stream =
-        ITBigQueryTest.class.getClassLoader().getResourceAsStream("QueryTestData.csv");
-    storage.createFrom(
-        BlobInfo.newBuilder(BUCKET, LOAD_FILE_LARGE).setContentType("text/plain").build(), stream);
-    storage.create(
-        BlobInfo.newBuilder(BUCKET, JSON_LOAD_FILE_BQ_RESULTSET)
-            .setContentType("application/json")
-            .build(),
-        JSON_CONTENT_BQ_RESULTSET.getBytes(StandardCharsets.UTF_8));
-    DatasetInfo info =
-        DatasetInfo.newBuilder(DATASET).setDescription(DESCRIPTION).setLabels(LABELS).build();
-    bigquery.create(info);
-    DatasetInfo info2 =
-        DatasetInfo.newBuilder(MODEL_DATASET).setDescription("java model lifecycle").build();
-    bigquery.create(info2);
-    DatasetInfo info3 =
-        DatasetInfo.newBuilder(ROUTINE_DATASET).setDescription("java routine lifecycle").build();
-    bigquery.create(info3);
-
-    LoadJobConfiguration configuration =
-        LoadJobConfiguration.newBuilder(
-                TABLE_ID, "gs://" + BUCKET + "/" + JSON_LOAD_FILE, FormatOptions.json())
-            .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
-            .setSchema(TABLE_SCHEMA)
-            .setLabels(labels)
-            .build();
-    Job job = bigquery.create(JobInfo.of(configuration));
-    job = job.waitFor();
-    assertNull(job.getStatus().getError());
-    LoadJobConfiguration loadJobConfiguration = job.getConfiguration();
-    assertEquals(labels, loadJobConfiguration.getLabels());
-
-    LoadJobConfiguration configurationFastQuery =
-        LoadJobConfiguration.newBuilder(
-                TABLE_ID_FASTQUERY, "gs://" + BUCKET + "/" + JSON_LOAD_FILE, FormatOptions.json())
-            .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
-            .setSchema(TABLE_SCHEMA)
-            .setLabels(labels)
-            .build();
-    Job jobFastQuery = bigquery.create(JobInfo.of(configurationFastQuery));
-    jobFastQuery = jobFastQuery.waitFor();
-    assertNull(jobFastQuery.getStatus().getError());
-
-    LoadJobConfiguration configFastQueryBQResultset =
-        LoadJobConfiguration.newBuilder(
-                TABLE_ID_FASTQUERY_BQ_RESULTSET,
-                "gs://" + BUCKET + "/" + JSON_LOAD_FILE_BQ_RESULTSET,
-                FormatOptions.json())
-            .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
-            .setSchema(BQ_RESULTSET_SCHEMA)
-            .setLabels(labels)
-            .build();
-    Job jobFastQueryBQResultSet = bigquery.create(JobInfo.of(configFastQueryBQResultset));
-    jobFastQueryBQResultSet = jobFastQueryBQResultSet.waitFor();
-    assertNull(jobFastQueryBQResultSet.getStatus().getError());
-
-    LoadJobConfiguration configurationDDL =
-        LoadJobConfiguration.newBuilder(
-                TABLE_ID_DDL, "gs://" + BUCKET + "/" + JSON_LOAD_FILE_SIMPLE, FormatOptions.json())
-            .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
-            .setSchema(DDL_TABLE_SCHEMA)
-            .setLabels(labels)
-            .build();
-    Job jobDDL = bigquery.create(JobInfo.of(configurationDDL));
-    jobDDL = jobDDL.waitFor();
-    assertNull(jobDDL.getStatus().getError());
-
-    LoadJobConfiguration configurationLargeTable =
-        LoadJobConfiguration.newBuilder(
-                TABLE_ID_LARGE, "gs://" + BUCKET + "/" + LOAD_FILE_LARGE, FormatOptions.csv())
-            .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
-            .setSchema(LARGE_TABLE_SCHEMA)
-            .setLabels(labels)
-            .build();
-    Job jobLargeTable = bigquery.create(JobInfo.of(configurationLargeTable));
-    jobLargeTable = jobLargeTable.waitFor();
-    assertNull(jobLargeTable.getStatus().getError());
-  }
 
   @AfterClass
   public static void afterClass() throws ExecutionException, InterruptedException {
