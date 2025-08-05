@@ -8,6 +8,12 @@
     "fields":[{"name":"directArenas"}]
   },
   {
+    "name":"org.apache.arrow.memory.RootAllocator",
+    "queryAllDeclaredMethods":true,
+    "allDeclaredFields":true,
+    "queryAllDeclaredConstructors":true
+  },
+  {
     "name":"io.netty.util.internal.shaded.org.jctools.queues.MpscChunkedArrayQueue",
     "queryAllDeclaredMethods":true,
     "allDeclaredFields":true,
