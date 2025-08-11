@@ -3,6 +3,12 @@
     "includes":[
       {
         "pattern":"\\Qorg/apache/arrow/memory/DefaultAllocationManagerFactory.class\\E"
+      },
+      {
+        "pattern":"\\Qorg/apache/arrow/memory/netty/DefaultAllocationManagerFactory.class\\E"
+      },
+      {
+        "pattern":"\\Qorg/apache/arrow/memory/unsafe/DefaultAllocationManagerFactory.class\\E"
       }
     ]
   },

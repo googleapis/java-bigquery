@@ -73,6 +73,20 @@
     "queryAllDeclaredConstructors":true
   },
   {
+    "name":"org.apache.arrow.memory.RootAllocator",
+    "allDeclaredFields":true,
+    "queryAllDeclaredFields":true,
+    "queryAllDeclaredMethods":true,
+    "queryAllDeclaredConstructors":true
+  },
+  {
+    "name":"org.apache.arrow.memory.DefaultAllocationManagerFactory",
+    "allDeclaredFields":true,
+    "queryAllDeclaredFields":true,
+    "queryAllDeclaredMethods":true,
+    "queryAllDeclaredConstructors":true
+  },
+  {
     "name":"org.apache.arrow.vector.types.pojo.ArrowType",
     "allDeclaredFields":true,
     "queryAllDeclaredMethods":true,
