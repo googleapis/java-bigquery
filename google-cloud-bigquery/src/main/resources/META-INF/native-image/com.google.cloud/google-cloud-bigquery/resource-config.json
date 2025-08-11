@@ -2,5 +2,8 @@
   "resources":{
     "includes":[{
       "pattern":"\\Qorg/apache/arrow/memory/DefaultAllocationManagerFactory.class\\E"
-    }]}
+    },
+      {
+        "pattern":"\\Qcom/google/api/client/googleapis/google-api-client.properties\\E"
+      }]}
 }
