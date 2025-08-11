@@ -29,6 +29,42 @@
     "name":"java.nio.DirectByteBuffer",
     "methods":[{"name":"<init>","parameterTypes":["long","int"] }]
   },
+
+  {
+    "name":"org.apache.arrow.memory.BaseAllocator",
+    "allDeclaredFields":true,
+    "queryAllDeclaredFields":true,
+    "queryAllDeclaredMethods":true,
+    "queryAllDeclaredConstructors":true
+  },
+  {
+    "name":"org.apache.arrow.memory.BaseAllocator$Config",
+    "allDeclaredFields":true,
+    "queryAllDeclaredFields":true,
+    "queryAllDeclaredMethods":true,
+    "queryAllDeclaredConstructors":true
+  },
+  {
+    "name":"org.apache.arrow.memory.DefaultAllocationManagerOption",
+    "allDeclaredFields":true,
+    "queryAllDeclaredFields":true,
+    "queryAllDeclaredMethods":true,
+    "queryAllDeclaredConstructors":true
+  },
+  {
+    "name":"org.apache.arrow.memory.netty.NettyAllocationManager$1",
+    "allDeclaredFields":true,
+    "queryAllDeclaredFields":true,
+    "queryAllDeclaredMethods":true,
+    "queryAllDeclaredConstructors":true
+  },
+  {
+    "name":"org.apache.arrow.memory.netty.DefaultAllocationManagerFactory",
+    "allDeclaredFields":true,
+    "queryAllDeclaredFields":true,
+    "queryAllDeclaredMethods":true,
+    "queryAllDeclaredConstructors":true
+  },
   {
     "name":"org.apache.arrow.memory.DefaultAllocationManagerFactory",
     "allDeclaredFields":true,

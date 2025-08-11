@@ -219,6 +219,7 @@ import org.apache.arrow.memory.RootAllocator;
 public class ITBigQueryTest {
   @Test
   public void testArrowForName() throws Exception {
+    // mvn test -Pnative '-Dtest=com.google.cloud.bigquery.it.ITBigQueryTest#testArrowForName' -DtrimStackTrace=false
     final String clazzName = "org.apache.arrow.memory.netty.DefaultAllocationManagerFactory";
     try {
       BufferAllocator allocator = new RootAllocator(Long.MAX_VALUE);
