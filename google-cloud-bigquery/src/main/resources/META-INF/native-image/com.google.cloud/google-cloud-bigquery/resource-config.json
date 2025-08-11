@@ -1,9 +1,20 @@
 {
   "resources":{
-    "includes":[{
-      "pattern":"\\Qorg/apache/arrow/memory/DefaultAllocationManagerFactory.class\\E"
-    },
+    "includes":[
       {
-        "pattern":"\\Qcom/google/api/client/googleapis/google-api-client.properties\\E"
-      }]}
+        "pattern":"\\Qorg/apache/arrow/memory/DefaultAllocationManagerFactory.class\\E"
+      }
+    ]
+  },
+  "globs":[
+      {
+        "glob": "org/apache/arrow/memory/DefaultAllocationManagerFactory.class"
+      },
+      {
+        "glob": "org/apache/arrow/memory/netty/DefaultAllocationManagerFactory.class"
+      },
+      {
+        "glob": "org/apache/arrow/memory/unsafe/DefaultAllocationManagerFactory.class"
+      }
+   ]
 }
