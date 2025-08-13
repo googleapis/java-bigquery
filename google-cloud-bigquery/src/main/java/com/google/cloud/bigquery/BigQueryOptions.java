@@ -17,6 +17,8 @@
 package com.google.cloud.bigquery;
 
 import com.google.api.core.BetaApi;
+import com.google.cloud.BaseService;
+import com.google.cloud.ExceptionHandler;
 import com.google.cloud.ServiceDefaults;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.ServiceRpc;
@@ -43,6 +45,7 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
   private JobCreationMode defaultJobCreationMode = JobCreationMode.JOB_CREATION_MODE_UNSPECIFIED;
   private boolean enableOpenTelemetryTracing;
   private Tracer openTelemetryTracer;
+  private ExceptionHandler exceptionHandler;
 
   public static class DefaultBigQueryFactory implements BigQueryFactory {
 
@@ -70,11 +73,14 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
     private boolean useInt64Timestamps;
     private boolean enableOpenTelemetryTracing;
     private Tracer openTelemetryTracer;
+    private boolean customExceptionHandler;
+    private ExceptionHandler.Builder exceptionHandlerBuilder;
 
     private Builder() {}
 
     private Builder(BigQueryOptions options) {
       super(options);
+      customExceptionHandler = false;
     }
 
     @Override
@@ -118,6 +124,24 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
       return this;
     }
 
+    public Builder abortOn(Class<? extends Exception> exception) {
+      if (!customExceptionHandler) {
+        exceptionHandlerBuilder = ExceptionHandler.newBuilder();
+        customExceptionHandler = true;
+      }
+      this.exceptionHandlerBuilder.abortOn(exception);
+      return this;
+    }
+
+    public Builder retryOn(Class<? extends Exception> exception) {
+      if (!customExceptionHandler) {
+        exceptionHandlerBuilder = ExceptionHandler.newBuilder();
+        customExceptionHandler = true;
+      }
+      this.exceptionHandlerBuilder.retryOn(exception);
+      return this;
+    }
+
     @Override
     public BigQueryOptions build() {
       return new BigQueryOptions(this);
@@ -130,6 +154,15 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
     this.useInt64Timestamps = builder.useInt64Timestamps;
     this.enableOpenTelemetryTracing = builder.enableOpenTelemetryTracing;
     this.openTelemetryTracer = builder.openTelemetryTracer;
+    if (builder.customExceptionHandler) {
+      this.exceptionHandler =
+          builder
+              .exceptionHandlerBuilder
+              .addInterceptors(BaseService.EXCEPTION_HANDLER_INTERCEPTOR)
+              .build();
+    } else {
+      this.exceptionHandler = BigQueryBaseService.DEFAULT_BIGQUERY_EXCEPTION_HANDLER;
+    }
   }
 
   private static class BigQueryDefaults implements ServiceDefaults<BigQuery, BigQueryOptions> {
@@ -219,6 +252,10 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
   @BetaApi("Span names and attributes are subject to change without notice")
   public Tracer getOpenTelemetryTracer() {
     return openTelemetryTracer;
+  }
+
+  public ExceptionHandler getExceptionHandler() {
+    return exceptionHandler;
   }
 
   @SuppressWarnings("unchecked")
