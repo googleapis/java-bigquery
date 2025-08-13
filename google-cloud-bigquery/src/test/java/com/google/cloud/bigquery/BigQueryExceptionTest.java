@@ -199,7 +199,7 @@ public class BigQueryExceptionTest {
   @Test
   public void testCustomExceptionHandler() throws java.io.IOException {
     BigQueryOptions defaultOptions =
-        BigQueryOptions.getDefaultInstance().toBuilder()
+        BigQueryOptions.newBuilder()
             .setProjectId("project-id")
             .abortOn(RuntimeException.class)
             .retryOn(java.util.EmptyStackException.class)
