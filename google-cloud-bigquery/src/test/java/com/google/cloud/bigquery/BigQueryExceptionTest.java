@@ -33,7 +33,6 @@ import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpResponseException;
 import com.google.cloud.BaseServiceException;
 import com.google.cloud.RetryHelper.RetryHelperException;
-import com.google.cloud.ServiceOptions;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
 import com.google.cloud.bigquery.spi.v2.HttpBigQueryRpc;
 import java.io.IOException;
@@ -170,7 +169,7 @@ public class BigQueryExceptionTest {
   @Test
   public void testDefaultExceptionHandler() throws java.io.IOException {
     BigQueryOptions defaultOptions =
-        BigQueryOptions.newBuilder().setProjectId(ServiceOptions.getDefaultProjectId()).build();
+        BigQueryOptions.newBuilder().setProjectId("project-id").build();
     DatasetInfo info = DatasetInfo.newBuilder("dataset").build();
     Dataset dataset = null;
 
@@ -201,7 +200,7 @@ public class BigQueryExceptionTest {
   public void testCustomExceptionHandler() throws java.io.IOException {
     BigQueryOptions defaultOptions =
         BigQueryOptions.getDefaultInstance().toBuilder()
-            .setProjectId(ServiceOptions.getDefaultProjectId())
+            .setProjectId("project-id")
             .abortOn(RuntimeException.class)
             .retryOn(java.util.EmptyStackException.class)
             .build();
