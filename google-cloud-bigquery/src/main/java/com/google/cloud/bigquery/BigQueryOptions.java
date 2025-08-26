@@ -17,6 +17,7 @@
 package com.google.cloud.bigquery;
 
 import com.google.api.core.BetaApi;
+import com.google.api.gax.retrying.ResultRetryAlgorithm;
 import com.google.cloud.BaseService;
 import com.google.cloud.ExceptionHandler;
 import com.google.cloud.ServiceDefaults;
@@ -45,7 +46,7 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
   private JobCreationMode defaultJobCreationMode = JobCreationMode.JOB_CREATION_MODE_UNSPECIFIED;
   private boolean enableOpenTelemetryTracing;
   private Tracer openTelemetryTracer;
-  private ExceptionHandler exceptionHandler;
+  private ResultRetryAlgorithm<?> resultRetryAlgorithm;
 
   public static class DefaultBigQueryFactory implements BigQueryFactory {
 
@@ -74,7 +75,7 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
     private boolean enableOpenTelemetryTracing;
     private Tracer openTelemetryTracer;
     private boolean customExceptionHandler;
-    private ExceptionHandler.Builder exceptionHandlerBuilder;
+    private ResultRetryAlgorithm<?> resultRetryAlgorithm;
 
     private Builder() {}
 
@@ -124,21 +125,8 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
       return this;
     }
 
-    public Builder abortOn(Class<? extends Exception> exception) {
-      if (!customExceptionHandler) {
-        exceptionHandlerBuilder = ExceptionHandler.newBuilder();
-        customExceptionHandler = true;
-      }
-      this.exceptionHandlerBuilder.abortOn(exception);
-      return this;
-    }
-
-    public Builder retryOn(Class<? extends Exception> exception) {
-      if (!customExceptionHandler) {
-        exceptionHandlerBuilder = ExceptionHandler.newBuilder();
-        customExceptionHandler = true;
-      }
-      this.exceptionHandlerBuilder.retryOn(exception);
+    public Builder setResultRetryAlgorithm(ResultRetryAlgorithm<?> resultRetryAlgorithm) {
+      this.resultRetryAlgorithm = resultRetryAlgorithm;
       return this;
     }
 
@@ -154,14 +142,10 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
     this.useInt64Timestamps = builder.useInt64Timestamps;
     this.enableOpenTelemetryTracing = builder.enableOpenTelemetryTracing;
     this.openTelemetryTracer = builder.openTelemetryTracer;
-    if (builder.customExceptionHandler) {
-      this.exceptionHandler =
-          builder
-              .exceptionHandlerBuilder
-              .addInterceptors(BaseService.EXCEPTION_HANDLER_INTERCEPTOR)
-              .build();
+    if (builder.resultRetryAlgorithm != null) {
+      this.resultRetryAlgorithm = builder.resultRetryAlgorithm;
     } else {
-      this.exceptionHandler = BigQueryBaseService.DEFAULT_BIGQUERY_EXCEPTION_HANDLER;
+      this.resultRetryAlgorithm = BigQueryBaseService.DEFAULT_BIGQUERY_EXCEPTION_HANDLER;
     }
   }
 
@@ -254,8 +238,8 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
     return openTelemetryTracer;
   }
 
-  public ExceptionHandler getExceptionHandler() {
-    return exceptionHandler;
+  public ResultRetryAlgorithm<?> getResultRetryAlgorithm() {
+    return resultRetryAlgorithm;
   }
 
   @SuppressWarnings("unchecked")

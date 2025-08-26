@@ -32,6 +32,7 @@ import static org.mockito.Mockito.when;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpResponseException;
 import com.google.cloud.BaseServiceException;
+import com.google.cloud.ExceptionHandler;
 import com.google.cloud.RetryHelper.RetryHelperException;
 import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
 import com.google.cloud.bigquery.spi.v2.HttpBigQueryRpc;
@@ -201,8 +202,13 @@ public class BigQueryExceptionTest {
     BigQueryOptions defaultOptions =
         BigQueryOptions.newBuilder()
             .setProjectId("project-id")
-            .abortOn(RuntimeException.class)
-            .retryOn(java.util.EmptyStackException.class)
+            .setResultRetryAlgorithm(
+                ExceptionHandler.newBuilder()
+                    .abortOn(RuntimeException.class)
+                    .retryOn(java.util.EmptyStackException.class)
+                    .addInterceptors(BigQueryBaseService.EXCEPTION_HANDLER_INTERCEPTOR)
+                    .build()
+            )
             .build();
     DatasetInfo info = DatasetInfo.newBuilder("dataset").build();
     Dataset dataset = null;

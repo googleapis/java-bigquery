@@ -77,7 +77,7 @@ public class TableDataWriteChannel
                 }
               },
               getOptions().getRetrySettings(),
-              getOptions().getExceptionHandler(),
+              getOptions().getResultRetryAlgorithm(),
               getOptions().getClock(),
               EMPTY_RETRY_CONFIG,
               getOptions().isOpenTelemetryTracingEnabled(),
@@ -126,7 +126,7 @@ public class TableDataWriteChannel
             }
           },
           options.getRetrySettings(),
-          options.getExceptionHandler(),
+          options.getResultRetryAlgorithm(),
           options.getClock(),
           EMPTY_RETRY_CONFIG,
           options.isOpenTelemetryTracingEnabled(),
