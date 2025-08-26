@@ -18,8 +18,6 @@ package com.google.cloud.bigquery;
 
 import com.google.api.core.BetaApi;
 import com.google.api.gax.retrying.ResultRetryAlgorithm;
-import com.google.cloud.BaseService;
-import com.google.cloud.ExceptionHandler;
 import com.google.cloud.ServiceDefaults;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.ServiceRpc;

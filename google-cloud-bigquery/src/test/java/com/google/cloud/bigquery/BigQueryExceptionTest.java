@@ -207,8 +207,7 @@ public class BigQueryExceptionTest {
                     .abortOn(RuntimeException.class)
                     .retryOn(java.util.EmptyStackException.class)
                     .addInterceptors(BigQueryBaseService.EXCEPTION_HANDLER_INTERCEPTOR)
-                    .build()
-            )
+                    .build())
             .build();
     DatasetInfo info = DatasetInfo.newBuilder("dataset").build();
     Dataset dataset = null;
