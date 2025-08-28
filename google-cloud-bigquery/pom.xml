@@ -45,10 +45,12 @@
     <dependency>
       <groupId>org.checkerframework</groupId>
       <artifactId>checker-compat-qual</artifactId>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.checkerframework</groupId>
       <artifactId>checker-qual</artifactId>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>com.google.auth</groupId>
@@ -61,6 +63,7 @@
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
       <artifactId>jsr305</artifactId>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>com.google.apis</groupId>
@@ -122,6 +125,7 @@
     <dependency>
       <groupId>com.google.errorprone</groupId>
       <artifactId>error_prone_annotations</artifactId>
+      <optional>true</optional>
     </dependency>
 
     <!-- OpenTelemetry -->
