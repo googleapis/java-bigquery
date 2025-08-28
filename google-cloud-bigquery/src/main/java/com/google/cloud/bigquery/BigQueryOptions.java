@@ -72,14 +72,12 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
     private boolean useInt64Timestamps;
     private boolean enableOpenTelemetryTracing;
     private Tracer openTelemetryTracer;
-    private boolean customExceptionHandler;
     private ResultRetryAlgorithm<?> resultRetryAlgorithm;
 
     private Builder() {}
 
     private Builder(BigQueryOptions options) {
       super(options);
-      customExceptionHandler = false;
     }
 
     @Override
