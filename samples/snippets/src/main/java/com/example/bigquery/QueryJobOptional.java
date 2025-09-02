@@ -33,46 +33,46 @@ import com.google.cloud.bigquery.TableResult;
 public class QueryJobOptional {
 
   public static void main(String[] args) {
-    String query =
-        "SELECT name, gender, SUM(number) AS total FROM "
-            + "bigquery-public-data.usa_names.usa_1910_2013 GROUP BY "
-            + "name, gender ORDER BY total DESC LIMIT 10";
-    queryJobOptional(query);
+    // String query =
+    //     "SELECT name, gender, SUM(number) AS total FROM "
+    //         + "bigquery-public-data.usa_names.usa_1910_2013 GROUP BY "
+    //         + "name, gender ORDER BY total DESC LIMIT 10";
+    // queryJobOptional(query);
   }
 
   public static void queryJobOptional(String query) {
-    try {
-      // Initialize client that will be used to send requests. This client only needs
-      // to be created once, and can be reused for multiple requests.
-      BigQueryOptions options = BigQueryOptions.getDefaultInstance();
-      options.setDefaultJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL);
-      BigQuery bigquery = options.getService();
-
-      // Execute the query. The returned TableResult provides access information
-      // about the query execution as well as query results.
-      TableResult results = bigquery.query(QueryJobConfiguration.of(query));
-
-      JobId jobId = results.getJobId();
-      if (jobId != null) {
-        System.out.println("Query was run with job state.  Job ID: " + jobId.toString());
-      } else {
-        System.out.println("Query was run in short mode.  Query ID: " + results.getQueryId());
-      }
-
-      // Print the results.
-      results
-          .iterateAll()
-          .forEach(
-              row -> {
-                System.out.print("name:" + row.get("name").getStringValue());
-                System.out.print(", gender: " + row.get("gender").getStringValue());
-                System.out.print(", total: " + row.get("total").getLongValue());
-                System.out.println();
-              });
-
-    } catch (BigQueryException | InterruptedException e) {
-      System.out.println("Query not performed \n" + e.toString());
-    }
-  }
+  //   try {
+  //     // Initialize client that will be used to send requests. This client only needs
+  //     // to be created once, and can be reused for multiple requests.
+  //     BigQueryOptions options = BigQueryOptions.getDefaultInstance();
+  //     options.setDefaultJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL);
+  //     BigQuery bigquery = options.getService();
+  //
+  //     // Execute the query. The returned TableResult provides access information
+  //     // about the query execution as well as query results.
+  //     TableResult results = bigquery.query(QueryJobConfiguration.of(query));
+  //
+  //     JobId jobId = results.getJobId();
+  //     if (jobId != null) {
+  //       System.out.println("Query was run with job state.  Job ID: " + jobId.toString());
+  //     } else {
+  //       System.out.println("Query was run in short mode.  Query ID: " + results.getQueryId());
+  //     }
+  //
+  //     // Print the results.
+  //     results
+  //         .iterateAll()
+  //         .forEach(
+  //             row -> {
+  //               System.out.print("name:" + row.get("name").getStringValue());
+  //               System.out.print(", gender: " + row.get("gender").getStringValue());
+  //               System.out.print(", total: " + row.get("total").getLongValue());
+  //               System.out.println();
+  //             });
+  //
+  //   } catch (BigQueryException | InterruptedException e) {
+  //     System.out.println("Query not performed \n" + e.toString());
+  //   }
+  // }
 }
 // [END bigquery_query_job_optional]
