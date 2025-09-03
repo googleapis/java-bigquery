@@ -26,7 +26,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SetCustomRetryAlgorithmTest {
+public class SetCustomRetryAlgorithmIT {
   private final Logger log = Logger.getLogger(this.getClass().getName());
   private ByteArrayOutputStream bout;
   private PrintStream out;
