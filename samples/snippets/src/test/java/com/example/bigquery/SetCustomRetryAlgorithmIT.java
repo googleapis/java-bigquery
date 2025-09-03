@@ -17,6 +17,7 @@
 package com.example.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
+import static junit.framework.TestCase.assertNotNull;
 
 import com.google.api.gax.retrying.ResultRetryAlgorithm;
 import com.google.cloud.ExceptionHandler;
