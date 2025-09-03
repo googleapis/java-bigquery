@@ -18,8 +18,11 @@ package com.example.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.api.gax.retrying.ResultRetryAlgorithm;
+import com.google.cloud.ExceptionHandler;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.After;
@@ -33,6 +36,14 @@ public class SetCustomRetryAlgorithmIT {
   private PrintStream originalPrintStream;
 
   private static final String PROJECT_ID = requireEnvVar("GOOGLE_CLOUD_PROJECT");
+
+  private static String requireEnvVar(String varName) {
+    String value = System.getenv(varName);
+    assertNotNull(
+        "Environment variable " + varName + " is required to perform these tests.",
+        System.getenv(varName));
+    return value;
+  }
 
   @Before
   public void setUp() throws Exception {
@@ -59,6 +70,6 @@ public class SetCustomRetryAlgorithmIT {
             .build();
 
     SetCustomRetryAlgorithm.setCustomRetryAlgorithm(PROJECT_ID, retryAlgorithm);
-    assertThat(bout.toString().contains("r"));
+    assertThat(bout.toString().contains("com.google.cloud.ExceptionHandler"));
   }
 }
