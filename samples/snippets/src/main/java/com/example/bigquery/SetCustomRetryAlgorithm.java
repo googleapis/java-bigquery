@@ -28,7 +28,8 @@ public class SetCustomRetryAlgorithm {
     // TODO(developer): Replace projectId and retryAlgorithm classes before
     // running the sample. The ResultRetryAlgorithm abortOn and retryOn methods
     // can be used to specify retry behavior when the client encounters
-    // exceptions during its execution.
+    // exceptions during its execution. Alternatively, you can create your own
+    // custom class that implements the ResultRetryAlgorithm interface.
     String projectId = "project-id";
     ResultRetryAlgorithm<?> retryAlgorithm =
         ExceptionHandler.newBuilder()
@@ -36,10 +37,6 @@ public class SetCustomRetryAlgorithm {
             .retryOn(java.net.ConnectException.class)
             .retryOn(java.net.UnknownHostException.class)
             .retryOn(java.net.SocketException.class)
-            // Alternatively, you can create your own Interceptor object that
-            // implements the com.google.cloud.ExceptionHandler.Interceptor
-            // interface. See
-            // https://github.com/googleapis/sdk-platform-java/blob/f18318660c05d0d8466e3ead7127f0747fac2e2e/java-core/google-cloud-core/src/main/java/com/google/cloud/ExceptionHandler.java#L49
             .addInterceptors(BaseService.EXCEPTION_HANDLER_INTERCEPTOR)
             .build();
     setCustomRetryAlgorithm(projectId, retryAlgorithm);
