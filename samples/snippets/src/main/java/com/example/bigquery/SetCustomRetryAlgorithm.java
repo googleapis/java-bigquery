@@ -18,35 +18,29 @@ package com.example.bigquery;
 
 // [START bigquery_set_custom_retry_algorithm]
 import com.google.api.gax.retrying.ResultRetryAlgorithm;
+import com.google.cloud.BaseService;
 import com.google.cloud.ExceptionHandler;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
-import java.util.concurrent.TimeoutException;
 
 public class SetCustomRetryAlgorithm {
-  // In order to use a custom retry algorithm, you must implement a custom
-  // Interceptor that implements the ExceptionHandler.Interceptor interface.
-  public static final ExceptionHandler.Interceptor EXCEPTION_HANDLER_INTERCEPTOR =
-      new ExceptionHandler.Interceptor() {
-        public ExceptionHandler.Interceptor.RetryResult afterEval(
-            Exception exception, ExceptionHandler.Interceptor.RetryResult retryResult) {
-          return RetryResult.CONTINUE_EVALUATION;
-        }
-
-        public ExceptionHandler.Interceptor.RetryResult beforeEval(Exception exception) {
-          return RetryResult.CONTINUE_EVALUATION;
-        }
-      };
-
   public static void main(String... args) {
-    // TODO(developer): Replace projectId and exception classes before running
-    //  the sample.
+    // TODO(developer): Replace projectId and retryAlgorithm classes before
+    // running the sample. The ResultRetryAlgorithm abortOn and retryOn methods
+    // can be used to specify retry behavior when the client encounters
+    // exceptions during its execution.
     String projectId = "project-id";
     ResultRetryAlgorithm<?> retryAlgorithm =
         ExceptionHandler.newBuilder()
             .abortOn(RuntimeException.class)
-            .retryOn(TimeoutException.class)
-            .addInterceptors(EXCEPTION_HANDLER_INTERCEPTOR)
+            .retryOn(java.net.ConnectException.class)
+            .retryOn(java.net.UnknownHostException.class)
+            .retryOn(java.net.SocketException.class)
+            // Alternatively, you can create your own Interceptor object that
+            // implements the com.google.cloud.ExceptionHandler.Interceptor
+            // interface. See
+            // https://github.com/googleapis/sdk-platform-java/blob/f18318660c05d0d8466e3ead7127f0747fac2e2e/java-core/google-cloud-core/src/main/java/com/google/cloud/ExceptionHandler.java#L49
+            .addInterceptors(BaseService.EXCEPTION_HANDLER_INTERCEPTOR)
             .build();
     setCustomRetryAlgorithm(projectId, retryAlgorithm);
   }
