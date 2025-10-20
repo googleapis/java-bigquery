@@ -554,6 +554,60 @@ public class JobTest {
   }
 
   @Test
+  public void testWaitForReturnsFailedJobOnRateLimitError() throws InterruptedException {
+    // Setup: A running query job and a config to retry on rate limit errors.
+    QueryJobConfiguration queryConfig =
+        QueryJobConfiguration.newBuilder("SELECT 1").setDestinationTable(TABLE_ID1).build();
+    Job queryJob =
+        new Job(
+            bigquery,
+            new JobInfo.BuilderImpl(
+                JobInfo.newBuilder(queryConfig)
+                    .setJobId(JOB_ID)
+                    .setStatus(new JobStatus(State.RUNNING))
+                    .build()));
+    BigQueryRetryConfig retryConfig =
+        BigQueryRetryConfig.newBuilder()
+            .retryOnMessage(BigQueryErrorMessages.RATE_LIMIT_EXCEEDED_MSG)
+            .build();
+
+    // The getQueryResults call always fails with a rate limit error.
+    BigQueryError rateLimitError =
+        new BigQueryError("rateLimitExceeded", "US", BigQueryErrorMessages.RATE_LIMIT_EXCEEDED_MSG);
+    BigQueryException rateLimitException = new BigQueryException(ImmutableList.of(rateLimitError));
+    when(bigquery.getOptions()).thenReturn(mockOptions);
+    when(mockOptions.getClock()).thenReturn(CurrentMillisClock.getDefaultClock());
+    when(bigquery.getQueryResults(eq(JOB_ID), any(BigQuery.QueryResultsOption[].class)))
+        .thenAnswer(
+            invocation -> {
+              throw rateLimitException;
+            });
+
+    // The underlying job has already failed for a different reason.
+    BigQueryError jobError = new BigQueryError("backendError", "US", "Backend error");
+    Job failedJob =
+        queryJob.toBuilder().setStatus(new JobStatus(State.DONE, jobError, null)).build();
+    when(bigquery.getJob(eq(JOB_ID), any(BigQuery.JobOption[].class)))
+        .thenAnswer(
+            invocation -> {
+              return failedJob;
+            });
+
+    Job completedJob =
+        queryJob.waitFor(
+            retryConfig,
+            RetryOption.totalTimeoutDuration(Duration.ofMillis(500L)),
+            RetryOption.initialRetryDelayDuration(Duration.ofMillis(100L)));
+
+    assertNotNull("The completed job should not be null.", completedJob);
+    assertEquals("Job should be in a DONE state.", State.DONE, completedJob.getStatus().getState());
+    assertEquals(
+        "The job's error should be the backendError.",
+        jobError,
+        completedJob.getStatus().getError());
+  }
+
+  @Test
   public void testReload() {
     JobInfo updatedInfo = JOB_INFO.toBuilder().setEtag("etag").build();
     Job expectedJob = new Job(bigquery, new JobInfo.BuilderImpl(updatedInfo));

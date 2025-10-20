@@ -3393,16 +3393,17 @@ public class ITBigQueryTest {
   public void testSingleStatementsQueryException() throws InterruptedException {
     String invalidQuery =
         String.format("INSERT %s.%s VALUES('3', 10);", DATASET, TABLE_ID.getTable());
-    try {
-      bigquery.create(JobInfo.of(QueryJobConfiguration.of(invalidQuery))).waitFor();
-      fail("BigQueryException was expected");
-    } catch (BigQueryException ex) {
-      assertEquals("invalidQuery", ex.getReason());
-      assertNotNull(ex.getMessage());
-      BigQueryError error = ex.getError();
-      assertEquals("invalidQuery", error.getReason());
-      assertNotNull(error.getMessage());
-    }
+
+    Job completedJob =
+        bigquery.create(JobInfo.of(QueryJobConfiguration.of(invalidQuery))).waitFor();
+
+    assertNotNull(completedJob);
+    assertNotNull(completedJob.getStatus());
+
+    BigQueryError error = completedJob.getStatus().getError();
+    assertNotNull(error);
+    assertEquals("invalidQuery", error.getReason());
+    assertNotNull(error.getMessage());
   }
 
   /* TODO(prasmish): replicate the entire test case for executeSelect */
@@ -3412,16 +3413,17 @@ public class ITBigQueryTest {
         String.format(
             "INSERT %s.%s VALUES('3', 10); DELETE %s.%s where c2=3;",
             DATASET, TABLE_ID.getTable(), DATASET, TABLE_ID.getTable());
-    try {
-      bigquery.create(JobInfo.of(QueryJobConfiguration.of(invalidQuery))).waitFor();
-      fail("BigQueryException was expected");
-    } catch (BigQueryException ex) {
-      assertEquals("invalidQuery", ex.getReason());
-      assertNotNull(ex.getMessage());
-      BigQueryError error = ex.getError();
-      assertEquals("invalidQuery", error.getReason());
-      assertNotNull(error.getMessage());
-    }
+
+    Job completedJob =
+        bigquery.create(JobInfo.of(QueryJobConfiguration.of(invalidQuery))).waitFor();
+
+    assertNotNull(completedJob);
+    assertNotNull(completedJob.getStatus());
+
+    BigQueryError error = completedJob.getStatus().getError();
+    assertNotNull(error);
+    assertEquals("invalidQuery", error.getReason());
+    assertNotNull(error.getMessage());
   }
 
   @Test
