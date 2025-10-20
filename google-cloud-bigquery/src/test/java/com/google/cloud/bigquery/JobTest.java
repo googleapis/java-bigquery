@@ -27,11 +27,13 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doAnswer;
 
 import com.google.api.core.CurrentMillisClock;
 import com.google.api.gax.paging.Page;
@@ -552,6 +554,69 @@ public class JobTest {
     // does not match.
     verify(bigquery, times(1)).getQueryResults(jobInfo.getJobId(), Job.DEFAULT_QUERY_WAIT_OPTIONS);
   }
+
+  @Test
+public void testWaitForReturnsFailedJobOnRateLimitError() throws InterruptedException {
+    System.out.println("--- Starting test: testWaitForReturnsFailedJobOnRateLimitError ---");
+
+    // 1. Setup: A running query job and a config to retry on rate limit errors.
+    QueryJobConfiguration queryConfig =
+        QueryJobConfiguration.newBuilder("SELECT 1").setDestinationTable(TABLE_ID1).build();
+    Job queryJob =
+        new Job(
+            bigquery,
+            new JobInfo.BuilderImpl(
+                JobInfo.newBuilder(queryConfig)
+                    .setJobId(JOB_ID)
+                    .setStatus(new JobStatus(State.RUNNING))
+                    .build()));
+    BigQueryRetryConfig retryConfig =
+        BigQueryRetryConfig.newBuilder()
+            .retryOnMessage(BigQueryErrorMessages.RATE_LIMIT_EXCEEDED_MSG)
+            .build();
+
+    // 2. Mocking: Simulate the exact bug scenario.
+    // The getQueryResults call always fails with a rate limit error.
+    BigQueryError rateLimitError =
+        new BigQueryError("rateLimitExceeded", "US", BigQueryErrorMessages.RATE_LIMIT_EXCEEDED_MSG);
+    BigQueryException rateLimitException = new BigQueryException(ImmutableList.of(rateLimitError));
+    when(bigquery.getOptions()).thenReturn(mockOptions);
+    when(mockOptions.getClock()).thenReturn(CurrentMillisClock.getDefaultClock());
+    when(bigquery.getQueryResults(eq(JOB_ID), any(BigQuery.QueryResultsOption[].class)))
+        .thenAnswer(
+            invocation -> {
+              System.out.println("!!! MOCK: bigquery.getQueryResults() called. Throwing RateLimitException.");
+              throw rateLimitException;
+            });
+
+    // However, the underlying job has already failed for a different reason.
+    BigQueryError jobError = new BigQueryError("backendError", "US", "Backend error");
+    Job failedJob =
+        queryJob.toBuilder().setStatus(new JobStatus(State.DONE, jobError, null)).build();
+    when(bigquery.getJob(eq(JOB_ID), any(BigQuery.JobOption[].class)))
+        .thenAnswer(
+            invocation -> {
+              System.out.println("!!! MOCK: bigquery.getJob() called. Returning failed job.");
+              return failedJob;
+            });
+
+    // 3. Execution & Assertion: This will fail with the current buggy code.
+    System.out.println(">>> Calling queryJob.waitFor()...");
+    Job completedJob = queryJob.waitFor(retryConfig);
+    System.out.println("<<< queryJob.waitFor() returned.");
+
+    // These assertions check for the CORRECT behavior.
+    // They will only pass after the fix is implemented.
+    assertNotNull("The completed job should not be null.", completedJob);
+    assertEquals(
+        "Job should be in a DONE state.", State.DONE, completedJob.getStatus().getState());
+    assertEquals(
+        "The job's error should be the backendError.",
+        jobError,
+        completedJob.getStatus().getError());
+
+    System.out.println("--- Finished test: testWaitForReturnsFailedJobOnRateLimitExceeded ---");
+}
 
   @Test
   public void testReload() {
