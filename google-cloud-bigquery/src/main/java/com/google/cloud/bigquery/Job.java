@@ -328,7 +328,7 @@ public class Job extends JobInfo {
             waitForJob(RetryOption.mergeToSettings(DEFAULT_QUERY_JOB_WAIT_SETTINGS, waitOptions));
       }
 
-      return completedJobResponse == null ? null : reload();
+      return completedJobResponse == null ? null : bigquery.getJob(getJobId());
     } finally {
       if (waitFor != null) {
         waitFor.end();
@@ -462,7 +462,30 @@ public class Job extends JobInfo {
           new Callable<QueryResponse>() {
             @Override
             public QueryResponse call() {
-              return bigquery.getQueryResults(getJobId(), resultsOptions);
+              try {
+                return bigquery.getQueryResults(getJobId(), resultsOptions);
+              } catch (BigQueryException e) {
+                // Intercept the exception to check the job's terminal status.
+                Job job = bigquery.getJob(getJobId(), JobOption.fields(BigQuery.JobField.STATUS));
+
+                if (job != null
+                    && job.getStatus() != null
+                    && JobStatus.State.DONE.equals(job.getStatus().getState())) {
+                  // To stop the retry loop, we return a synthetic "completed" response with all
+                  // required fields. The caller (waitForInternal) will then proceed to reload the
+                  // job's actual final (failed) status.
+                  return QueryResponse.newBuilder()
+                      .setCompleted(true)
+                      .setTotalRows(0L) // Required by the builder
+                      .setSchema(Schema.of()) // Required by the builder
+                      .setErrors(ImmutableList.<BigQueryError>of()) // Required by the builder
+                      .build();
+                }
+
+                // If the job is not done, re-throw the original exception to allow
+                // the configured retry policy to handle it.
+                throw e;
+              }
             }
           },
           retrySettings,
