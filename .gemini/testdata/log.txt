@@ -1,0 +1,45 @@
+Failures (16):
+  JUnit Vintage:ITBigQueryTest:testExecuteSelectWithCredentials
+    MethodSource [className = 'com.google.cloud.bigquery.it.ITBigQueryTest', methodName = 'testExecuteSelectWithCredentials', methodParameterTypes = '']
+    => java.lang.ExceptionInInitializerError
+       java.base@24.0.1/java.lang.Class.ensureInitialized(DynamicHub.java:658)
+       com.google.cloud.bigquery.ConnectionImpl$ArrowRowReader.(ConnectionImpl.java:1096)
+       com.google.cloud.bigquery.ConnectionImpl$ArrowRowReader.(ConnectionImpl.java:1093)
+       com.google.cloud.bigquery.ConnectionImpl.highThroughPutRead(ConnectionImpl.java:1034)
+       com.google.cloud.bigquery.ConnectionImpl.getSubsequentQueryResultsWithJob(ConnectionImpl.java:880)
+       [...]
+     Caused by: java.lang.RuntimeException: No DefaultAllocationManager found on classpath. Can't allocate Arrow buffers. Please consider adding arrow-memory-netty or arrow-memory-unsafe as a dependency.
+       org.apache.arrow.memory.CheckAllocator.assertOnlyOne(CheckAllocator.java:107)
+       org.apache.arrow.memory.CheckAllocator.check(CheckAllocator.java:44)
+       org.apache.arrow.memory.DefaultAllocationManagerOption.getDefaultAllocationManagerFactory(DefaultAllocationManagerOption.java:92)
+       org.apache.arrow.memory.BaseAllocator$Config.getAllocationManagerFactory(BaseAllocator.java:824)
+       org.apache.arrow.memory.ImmutableConfig.access$801(ImmutableConfig.java:24)
+       [...]
+  JUnit Vintage:ITBigQueryTest:testBQResultSetMultiThreadedOrder
+    MethodSource [className = 'com.google.cloud.bigquery.it.ITBigQueryTest', methodName = 'testBQResultSetMultiThreadedOrder', methodParameterTypes = '']
+    => java.lang.NoClassDefFoundError: Could not initialize class org.apache.arrow.memory.RootAllocator
+       com.google.cloud.bigquery.ConnectionImpl$ArrowRowReader.(ConnectionImpl.java:1096)
+       com.google.cloud.bigquery.ConnectionImpl$ArrowRowReader.(ConnectionImpl.java:1093)
+       com.google.cloud.bigquery.ConnectionImpl.highThroughPutRead(ConnectionImpl.java:1034)
+       com.google.cloud.bigquery.ConnectionImpl.getSubsequentQueryResultsWithJob(ConnectionImpl.java:880)
+       com.google.cloud.bigquery.ConnectionImpl.queryRpc(ConnectionImpl.java:520)
+       com.google.cloud.bigquery.ConnectionImpl.getExecuteSelectResponse(ConnectionImpl.java:254)
+       com.google.cloud.bigquery.ConnectionImpl.executeSelect(ConnectionImpl.java:213)
+       com.google.cloud.bigquery.it.ITBigQueryTest.testBQResultSetMultiThreadedOrder(ITBigQueryTest.java:3872)
+       java.base@24.0.1/java.lang.reflect.Method.invoke(Method.java:565)
+       java.base@24.0.1/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+       [...]
+  JUnit Vintage:ITBigQueryTest:testBQResultSetPagination
+    MethodSource [className = 'com.google.cloud.bigquery.it.ITBigQueryTest', methodName = 'testBQResultSetPagination', methodParameterTypes = '']
+    => java.lang.NoClassDefFoundError: Could not initialize class org.apache.arrow.memory.RootAllocator
+       com.google.cloud.bigquery.ConnectionImpl$ArrowRowReader.(ConnectionImpl.java:1096)
+       com.google.cloud.bigquery.ConnectionImpl$ArrowRowReader.(ConnectionImpl.java:1093)
+       com.google.cloud.bigquery.ConnectionImpl.highThroughPutRead(ConnectionImpl.java:1034)
+       com.google.cloud.bigquery.ConnectionImpl.getSubsequentQueryResultsWithJob(ConnectionImpl.java:880)
+       com.google.cloud.bigquery.ConnectionImpl.queryRpc(ConnectionImpl.java:520)
+       com.google.cloud.bigquery.ConnectionImpl.getExecuteSelectResponse(ConnectionImpl.java:254)
+       com.google.cloud.bigquery.ConnectionImpl.executeSelect(ConnectionImpl.java:213)
+       com.google.cloud.bigquery.it.ITBigQueryTest.testBQResultSetPagination(ITBigQueryTest.java:4083)
+       java.base@24.0.1/java.lang.reflect.Method.invoke(Method.java:565)
+       java.base@24.0.1/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+       [...]

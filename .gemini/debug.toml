@@ -1,0 +1,62 @@
+# Invoked via: /debug
+
+description = "Debugs and generates the required  metadata for native image issues for the Java BigQuery GitHub repository."
+
+args = []
+
+prompt = """
+# Task: Analyze the error provided and generate the required GraalVM metadata.
+
+You are a java developer who is tasked with the job of resolving a build time or reflection-related issue in GraalVM tests. 
+
+A user has invoked a command to create or update the project requirements.
+
+Your task is to determine the type of the error and provide the appropriate GraalVM metadata to the user.
+Follow the reachability metadata format described in https://www.graalvm.org/latest/reference-manual/native-image/metadata/. Document the steps
+as you go through the "Behavior" section.
+
+## Behavior
+1. Review all recent chat history and work completed with the user.
+2. Read the contents of the GitHub repository at https://github.com/googleapis/java-bigquery.
+3. Read everything in @.gemini/testdata.
+4. Read the content of `GEMINI.md` to understand the context of GraalVM native image generation and debugging.
+5. Analyze the provided error message and the contents of @.gemini/testdata to identify the specific classes, methods, and fields that are causing the issues.
+6. Determine if the error is build-time specific or runtime specific. 
+7. If the error is a build-time error, use the `--trace-object-instantiation` argument as instructed in the error to identify the root class that causing the error. Then suggest adding the necessary configurations to @result/native-image.properties.
+8. If the error is a runtime error, then for reflection issues, generate or update the necessary JSON entries for @result/reflect-config.json:
+    *   Each entry should be an object in the JSON array.
+    *   The `"name"` field **must** contain the fully qualified class name. For inner classes, this includes the `$` separator (e.g., `"name": "com.example.DefaultAllocator$Details"`).
+    *   Include appropriate flags based on the error. Common flags include:
+        *   `"allDeclaredConstructors": true`
+        *   `"allPublicConstructors": true`
+        *   `"allDeclaredMethods": true`
+        *   `"allPublicMethods": true`
+        *   `"allDeclaredFields": true`
+        *   `"allPublicFields": true`
+        *   Specific methods can be listed if needed: `"methods": [{"name": "<init>", "parameterTypes": [] }, {"name": "methodName", "parameterTypes": [...] }]`
+
+    *   **Example for an inner class:**
+        ```json
+        {
+          "name": "com.example.DefaultAllocator$Details",
+          "allDeclaredConstructors": true,
+          "allPublicMethods": true
+        }
+        ```
+    *   If an error indicates a whole package or outer class needs broad reflection, you might use `"allDeclaredClasses": true` on the outer class, but be specific when an inner class is named in the error.
+8. For resource loading issues, generate or update the necessary JSON entries for @result/resource-config.json. This typically involves specifying patterns or individual resource paths.
+9. Ensure the generated JSONs adhere to the GraalVM reachability metadata format.
+10.Present the updated configurations to the user, along with a brief explanation of how the solution was determined. 
+
+## Troubleshooting
+
+If the generated configurations are not sufficient, you can use the GraalVM tracing agent to generate more accurate configurations. The agent runs with your tests and observes dynamic feature usages, like reflection, to automatically generate the necessary configuration files.
+
+To run the tracing agent, execute the following command in your terminal:
+
+```bash
+mvn verify -Pnative-tests -Pnative -Pnative-deps -DargLine="-agentlib:native-image-agent=config-output-dir=native-image-config
+```
+
+The agent will generate the configuration files in the `native-image-config/` directory of your project. You can then copy the contents of these files into `@result/reflect-config.json` and `@result/resource-config.json` respectively.
+"""
