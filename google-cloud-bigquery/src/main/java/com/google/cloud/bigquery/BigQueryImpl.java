@@ -1925,47 +1925,10 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   @Override
   public TableResult query(QueryJobConfiguration configuration, JobOption... options)
       throws InterruptedException, JobException {
-    Job.checkNotDryRun(configuration, "query");
-
-    configuration =
-        configuration.toBuilder()
-            .setJobCreationMode(getOptions().getDefaultJobCreationMode())
-            .build();
-
-    Span querySpan = null;
-    if (getOptions().isOpenTelemetryTracingEnabled()
-        && getOptions().getOpenTelemetryTracer() != null) {
-      querySpan =
-          getOptions()
-              .getOpenTelemetryTracer()
-              .spanBuilder("com.google.cloud.bigquery.BigQuery.query")
-              .setAllAttributes(otelAttributesFromOptions(options))
-              .startSpan();
-    }
-    try (Scope queryScope = querySpan != null ? querySpan.makeCurrent() : null) {
-      // If all parameters passed in configuration are supported by the query() method on the
-      // backend,
-      // put on fast path
-      QueryRequestInfo requestInfo =
-          new QueryRequestInfo(configuration, getOptions().getUseInt64Timestamps());
-      if (requestInfo.isFastQuerySupported(null)) {
-        String projectId = getOptions().getProjectId();
-        QueryRequest content = requestInfo.toPb();
-        if (getOptions().getLocation() != null) {
-          content.setLocation(getOptions().getLocation());
-        }
-        return queryRpc(projectId, content, options);
-      }
-      // Otherwise, fall back to the existing create query job logic
-      return create(JobInfo.of(configuration), options).getQueryResults();
-    } finally {
-      if (querySpan != null) {
-        querySpan.end();
-      }
-    }
+    return query(configuration, null, options);
   }
 
-  private TableResult queryRpc(
+  private Object queryRpc(
       final String projectId, final QueryRequest content, JobOption... options)
       throws InterruptedException {
     com.google.api.services.bigquery.model.QueryResponse results;
@@ -2030,7 +1993,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       // here, but this is left as future work.
       JobId jobId = JobId.fromPb(results.getJobReference());
       Job job = getJob(jobId, options);
-      return job.getQueryResults();
+      return job;
     }
 
     if (results.getPageToken() != null) {
@@ -2070,6 +2033,16 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   @Override
   public TableResult query(QueryJobConfiguration configuration, JobId jobId, JobOption... options)
       throws InterruptedException, JobException {
+    Object result = queryNoWait(configuration, jobId, options);
+    if (result instanceof Job){
+      return ((Job) result).getQueryResults();
+    } 
+    return (TableResult) result;
+  }
+
+  @Override
+  public Object queryNoWait(QueryJobConfiguration configuration, JobId jobId, JobOption... options)
+      throws InterruptedException, JobException {
     Job.checkNotDryRun(configuration, "query");
 
     Span querySpan = null;
@@ -2078,8 +2051,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       querySpan =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("com.google.cloud.bigquery.BigQuery.query")
-              .setAllAttributes(jobId.getOtelAttributes())
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.queryNoWait")
+              .setAllAttributes(jobId != null ? jobId.getOtelAttributes() : null)
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
     }
@@ -2095,14 +2068,14 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         // fail with "Access denied" if the project do not have enough permissions to run the job.
 
         String projectId =
-            jobId.getProject() != null ? jobId.getProject() : getOptions().getProjectId();
+            jobId != null && jobId.getProject() != null ? jobId.getProject() : getOptions().getProjectId();
         QueryRequest content = requestInfo.toPb();
         // Be careful when setting the location, if a location is specified in the BigQueryOption or
         // JobId the job created by the query method will be in that location, even if the table to
         // be
         // queried is in a different location. This may cause the query to fail with
         // "BigQueryException: Not found"
-        if (jobId.getLocation() != null) {
+        if (jobId != null && jobId.getLocation() != null) {
           content.setLocation(jobId.getLocation());
         } else if (getOptions().getLocation() != null) {
           content.setLocation(getOptions().getLocation());
