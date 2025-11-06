@@ -2045,6 +2045,14 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       throws InterruptedException, JobException {
     Job.checkNotDryRun(configuration, "query");
 
+    // If JobCreationMode is not explicitly set, update it with default value;
+    if (configuration.getJobCreationMode() == null) {
+      configuration =
+          configuration.toBuilder()
+              .setJobCreationMode(getOptions().getDefaultJobCreationMode())
+              .build();
+    }
+
     Span querySpan = null;
     if (getOptions().isOpenTelemetryTracingEnabled()
         && getOptions().getOpenTelemetryTracer() != null) {
