@@ -7743,7 +7743,7 @@ public class ITBigQueryTest {
     assertNotNull(
         OTEL_ATTRIBUTES.get("com.google.cloud.bigquery.BigQueryRetryHelper.runWithRetries"));
     assertNotNull(OTEL_ATTRIBUTES.get("com.google.cloud.bigquery.BigQueryRpc.queryRpc"));
-    assertTrue(OTEL_ATTRIBUTES.containsKey("com.google.cloud.bigquery.BigQuery.query"));
+    assertTrue(OTEL_ATTRIBUTES.containsKey("com.google.cloud.bigquery.BigQuery.queryWithTimeout"));
 
     // Query job
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();

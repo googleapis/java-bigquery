@@ -18,6 +18,12 @@ package com.google.cloud.bigquery;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
+
 import com.google.api.core.BetaApi;
 import com.google.api.core.InternalApi;
 import com.google.api.gax.paging.Page;
@@ -30,10 +36,6 @@ import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * An interface for Google Cloud BigQuery.
@@ -49,7 +51,7 @@ public interface BigQuery extends Service<BigQueryOptions> {
    *     Resource</a>
    */
   enum DatasetField implements FieldSelector {
-    ACCESS("access"),
+    ACCESS("access"),testTableResultJobIdAndQueryId
     CREATION_TIME("creationTime"),
     DATASET_REFERENCE("datasetReference"),
     DEFAULT_TABLE_EXPIRATION_MS("defaultTableExpirationMsS"),

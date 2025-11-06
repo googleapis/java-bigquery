@@ -2051,7 +2051,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
       querySpan =
           getOptions()
               .getOpenTelemetryTracer()
-              .spanBuilder("com.google.cloud.bigquery.BigQuery.queryNoWait")
+              .spanBuilder("com.google.cloud.bigquery.BigQuery.queryWithTimeout")
               .setAllAttributes(jobId != null ? jobId.getOtelAttributes() : null)
               .setAllAttributes(otelAttributesFromOptions(options))
               .startSpan();
