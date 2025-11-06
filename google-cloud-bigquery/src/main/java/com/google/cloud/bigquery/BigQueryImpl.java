@@ -1928,8 +1928,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     return query(configuration, null, options);
   }
 
-  private Object queryRpc(
-      final String projectId, final QueryRequest content, JobOption... options)
+  private Object queryRpc(final String projectId, final QueryRequest content, JobOption... options)
       throws InterruptedException {
     com.google.api.services.bigquery.model.QueryResponse results;
     Span queryRpc = null;
@@ -2034,14 +2033,15 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   public TableResult query(QueryJobConfiguration configuration, JobId jobId, JobOption... options)
       throws InterruptedException, JobException {
     Object result = queryWithTimeout(configuration, jobId, null, options);
-    if (result instanceof Job){
+    if (result instanceof Job) {
       return ((Job) result).getQueryResults();
-    } 
+    }
     return (TableResult) result;
   }
 
   @Override
-  public Object queryWithTimeout(QueryJobConfiguration configuration, JobId jobId, Long timeoutMs, JobOption... options)
+  public Object queryWithTimeout(
+      QueryJobConfiguration configuration, JobId jobId, Long timeoutMs, JobOption... options)
       throws InterruptedException, JobException {
     Job.checkNotDryRun(configuration, "query");
 
@@ -2068,7 +2068,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         // fail with "Access denied" if the project do not have enough permissions to run the job.
 
         String projectId =
-            jobId != null && jobId.getProject() != null ? jobId.getProject() : getOptions().getProjectId();
+            jobId != null && jobId.getProject() != null
+                ? jobId.getProject()
+                : getOptions().getProjectId();
         QueryRequest content = requestInfo.toPb();
         // Be careful when setting the location, if a location is specified in the BigQueryOption or
         // JobId the job created by the query method will be in that location, even if the table to
@@ -2080,7 +2082,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         } else if (getOptions().getLocation() != null) {
           content.setLocation(getOptions().getLocation());
         }
-        if (timeoutMs != null){
+        if (timeoutMs != null) {
           content.setTimeoutMs(timeoutMs);
         }
 

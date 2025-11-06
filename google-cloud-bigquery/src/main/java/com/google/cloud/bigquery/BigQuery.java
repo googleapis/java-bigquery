@@ -18,12 +18,6 @@ package com.google.cloud.bigquery;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.checkerframework.checker.nullness.qual.NonNull;
-
 import com.google.api.core.BetaApi;
 import com.google.api.core.InternalApi;
 import com.google.api.gax.paging.Page;
@@ -36,6 +30,10 @@ import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * An interface for Google Cloud BigQuery.
@@ -51,7 +49,7 @@ public interface BigQuery extends Service<BigQueryOptions> {
    *     Resource</a>
    */
   enum DatasetField implements FieldSelector {
-    ACCESS("access"),testTableResultJobIdAndQueryId
+    ACCESS("access"),
     CREATION_TIME("creationTime"),
     DATASET_REFERENCE("datasetReference"),
     DEFAULT_TABLE_EXPIRATION_MS("defaultTableExpirationMsS"),
@@ -1612,8 +1610,8 @@ public interface BigQuery extends Service<BigQueryOptions> {
       throws InterruptedException, JobException;
 
   /**
-   * Starts the query associated with the request, using the given JobId. It returns either TableResult
-   * for quick queries or Job object for long-running queries.
+   * Starts the query associated with the request, using the given JobId. It returns either
+   * TableResult for quick queries or Job object for long-running queries.
    *
    * <p>If the location of the job is not "US" or "EU", the {@code jobId} must specify the job
    * location.
@@ -1629,7 +1627,8 @@ public interface BigQuery extends Service<BigQueryOptions> {
    *     to complete
    * @throws JobException if the job completes unsuccessfully
    */
-  Object queryWithTimeout(QueryJobConfiguration configuration, JobId jobId, Long timeoutMs, JobOption... options)
+  Object queryWithTimeout(
+      QueryJobConfiguration configuration, JobId jobId, Long timeoutMs, JobOption... options)
       throws InterruptedException, JobException;
 
   /**
