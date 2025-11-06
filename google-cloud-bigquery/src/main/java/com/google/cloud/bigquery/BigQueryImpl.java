@@ -2033,7 +2033,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   @Override
   public TableResult query(QueryJobConfiguration configuration, JobId jobId, JobOption... options)
       throws InterruptedException, JobException {
-    Object result = queryNoWait(configuration, jobId, options);
+    Object result = queryWithTimeout(configuration, jobId, null, options);
     if (result instanceof Job){
       return ((Job) result).getQueryResults();
     } 
@@ -2041,7 +2041,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
   }
 
   @Override
-  public Object queryNoWait(QueryJobConfiguration configuration, JobId jobId, JobOption... options)
+  public Object queryWithTimeout(QueryJobConfiguration configuration, JobId jobId, Long timeoutMs, JobOption... options)
       throws InterruptedException, JobException {
     Job.checkNotDryRun(configuration, "query");
 
@@ -2079,6 +2079,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
           content.setLocation(jobId.getLocation());
         } else if (getOptions().getLocation() != null) {
           content.setLocation(getOptions().getLocation());
+        }
+        if (timeoutMs != null){
+          content.setTimeoutMs(timeoutMs);
         }
 
         return queryRpc(projectId, content, options);

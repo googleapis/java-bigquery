@@ -1627,7 +1627,7 @@ public interface BigQuery extends Service<BigQueryOptions> {
    *     to complete
    * @throws JobException if the job completes unsuccessfully
    */
-  Object queryNoWait(QueryJobConfiguration configuration, JobId jobId, JobOption... options)
+  Object queryWithTimeout(QueryJobConfiguration configuration, JobId jobId, Long timeoutMs, JobOption... options)
       throws InterruptedException, JobException;
 
   /**
