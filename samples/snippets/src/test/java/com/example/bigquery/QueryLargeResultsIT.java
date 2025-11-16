@@ -73,6 +73,7 @@ public class QueryLargeResultsIT {
 
   @Test
   public void testQueryLargeResults() {
+    // TODO: Do not merge.
     String query = "SELECT corpus FROM [bigquery-public-data:samples.shakespeare] GROUP BY corpus;";
     QueryLargeResults.queryLargeResults(BIGQUERY_DATASET_NAME, tableName, query);
     assertThat(bout.toString()).contains("Query large results performed successfully.");
