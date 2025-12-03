@@ -2066,10 +2066,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     }
     try (Scope queryScope = querySpan != null ? querySpan.makeCurrent() : null) {
       // If all parameters passed in configuration are supported by the query() method on the
-      // backend,
-      // put on fast path
-      QueryRequestInfo requestInfo =
-          new QueryRequestInfo(configuration, getOptions().getUseInt64Timestamps());
+      // backend, put on fast path
+      QueryRequestInfo requestInfo = new QueryRequestInfo(configuration, getOptions().getDataFormatOptions());
       if (requestInfo.isFastQuerySupported(jobId)) {
         // Be careful when setting the projectID in JobId, if a projectID is specified in the JobId,
         // the job created by the query method will use that project. This may cause the query to

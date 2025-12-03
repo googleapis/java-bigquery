@@ -27,6 +27,7 @@ import com.google.cloud.bigquery.QueryJobConfiguration.JobCreationMode;
 import com.google.cloud.bigquery.spi.BigQueryRpcFactory;
 import com.google.cloud.bigquery.spi.v2.HttpBigQueryRpc;
 import com.google.cloud.http.HttpTransportOptions;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import io.opentelemetry.api.trace.Tracer;
 import java.util.Set;
@@ -72,7 +73,7 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
 
     private String location;
     private boolean useInt64Timestamps;
-    private DataFormatOptions dataFormatOptions = DataFormatOptions.newBuilder().build();
+    private DataFormatOptions dataFormatOptions;
     private boolean enableOpenTelemetryTracing;
     private Tracer openTelemetryTracer;
     private ResultRetryAlgorithm<?> resultRetryAlgorithm;
@@ -118,6 +119,7 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
      * @param dataFormatOptions Configuration of the formatting options
      */
     public Builder setDataFormatOptions(DataFormatOptions dataFormatOptions) {
+      Preconditions.checkNotNull(dataFormatOptions, "DataFormatOptions cannot be null");
       this.dataFormatOptions = dataFormatOptions;
       return this;
     }
@@ -159,13 +161,21 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
     super(BigQueryFactory.class, BigQueryRpcFactory.class, builder, new BigQueryDefaults());
     this.location = builder.location;
     this.useInt64Timestamps = builder.useInt64Timestamps;
-    this.dataFormatOptions = builder.dataFormatOptions;
     this.enableOpenTelemetryTracing = builder.enableOpenTelemetryTracing;
     this.openTelemetryTracer = builder.openTelemetryTracer;
     if (builder.resultRetryAlgorithm != null) {
       this.resultRetryAlgorithm = builder.resultRetryAlgorithm;
     } else {
       this.resultRetryAlgorithm = BigQueryBaseService.DEFAULT_BIGQUERY_EXCEPTION_HANDLER;
+    }
+
+    // If dataFormatOptions is not set, then create a new instance and set it with the
+    // useInt64Timestamps configured in BigQueryOptions
+    if (builder.dataFormatOptions == null) {
+      this.dataFormatOptions =
+          DataFormatOptions.newBuilder().useInt64Timestamp(builder.useInt64Timestamps).build();
+    } else {
+      this.dataFormatOptions = builder.dataFormatOptions;
     }
   }
 
@@ -215,6 +225,16 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
     this.setThrowNotFound = setThrowNotFound;
   }
 
+  /**
+   * This setter is marked as Obsolete. Prefer {@link
+   * Builder#setDataFormatOptions(DataFormatOptions)} to set the int64timestamp configuration
+   * instead.
+   *
+   * <p>If useInt64Timestamps is set via DataFormatOptions, then that value will be used.
+   *
+   * <p>{@code DataFormatOptions.newBuilder().setUseInt64Timestamp(...).build()}
+   */
+  @ObsoleteApi("Use setDataFormatOptions(DataFormatOptions) instead")
   public void setUseInt64Timestamps(boolean useInt64Timestamps) {
     this.useInt64Timestamps = useInt64Timestamps;
   }
@@ -230,6 +250,11 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
     return setThrowNotFound;
   }
 
+  /**
+   * This getter is marked as Obsolete. Prefer {@link #getDataFormatOptions().isUseInt64Timestamp()}
+   * to set the int64timestamp configuration instead.
+   */
+  @ObsoleteApi("Use getDataFormatOptions().isUseInt64Timestamp() instead")
   public boolean getUseInt64Timestamps() {
     return useInt64Timestamps;
   }
