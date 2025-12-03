@@ -17,6 +17,7 @@
 package com.google.cloud.bigquery;
 
 import com.google.api.core.BetaApi;
+import com.google.api.core.ObsoleteApi;
 import com.google.api.gax.retrying.ResultRetryAlgorithm;
 import com.google.cloud.ServiceDefaults;
 import com.google.cloud.ServiceOptions;
@@ -41,6 +42,7 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
   // set the option ThrowNotFound when you want to throw the exception when the value not found
   private boolean setThrowNotFound;
   private boolean useInt64Timestamps;
+  private final DataFormatOptions dataFormatOptions;
   private JobCreationMode defaultJobCreationMode = JobCreationMode.JOB_CREATION_MODE_UNSPECIFIED;
   private boolean enableOpenTelemetryTracing;
   private Tracer openTelemetryTracer;
@@ -70,6 +72,7 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
 
     private String location;
     private boolean useInt64Timestamps;
+    private DataFormatOptions dataFormatOptions = DataFormatOptions.newBuilder().build();
     private boolean enableOpenTelemetryTracing;
     private Tracer openTelemetryTracer;
     private ResultRetryAlgorithm<?> resultRetryAlgorithm;
@@ -94,8 +97,28 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
       return this;
     }
 
+    /**
+     * This setter is marked as Obsolete. Prefer {@link #setDataFormatOptions(DataFormatOptions)} to
+     * set the int64timestamp configuration instead.
+     *
+     * <p>If useInt64Timestamps value is set in here and via DataFormatOptions, the
+     * DataFormatOptions configuration value is used.
+     *
+     * <p>{@code DataFormatOptions.newBuilder().setUseInt64Timestamp(...).build()}
+     */
+    @ObsoleteApi("Use setDataFormatOptions(DataFormatOptions) instead")
     public Builder setUseInt64Timestamps(boolean useInt64Timestamps) {
       this.useInt64Timestamps = useInt64Timestamps;
+      return this;
+    }
+
+    /**
+     * Set the format options for the BigQuery data types
+     *
+     * @param dataFormatOptions Configuration of the formatting options
+     */
+    public Builder setDataFormatOptions(DataFormatOptions dataFormatOptions) {
+      this.dataFormatOptions = dataFormatOptions;
       return this;
     }
 
@@ -136,6 +159,7 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
     super(BigQueryFactory.class, BigQueryRpcFactory.class, builder, new BigQueryDefaults());
     this.location = builder.location;
     this.useInt64Timestamps = builder.useInt64Timestamps;
+    this.dataFormatOptions = builder.dataFormatOptions;
     this.enableOpenTelemetryTracing = builder.enableOpenTelemetryTracing;
     this.openTelemetryTracer = builder.openTelemetryTracer;
     if (builder.resultRetryAlgorithm != null) {
@@ -208,6 +232,10 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
 
   public boolean getUseInt64Timestamps() {
     return useInt64Timestamps;
+  }
+
+  public DataFormatOptions getDataFormatOptions() {
+    return dataFormatOptions;
   }
 
   public JobCreationMode getDefaultJobCreationMode() {

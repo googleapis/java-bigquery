@@ -23,29 +23,59 @@ public class DataFormatOptions {
     }
   }
 
-  private boolean useInt64Timestamp;
-  private TimestampFormatOptions timestampFormatOptions;
+  private final boolean useInt64Timestamp;
+  private final TimestampFormatOptions timestampFormatOptions;
 
-  public DataFormatOptions(
-      boolean useInt64Timestamp, TimestampFormatOptions timestampFormatOptions) {
-    this.useInt64Timestamp = useInt64Timestamp;
-    this.timestampFormatOptions = timestampFormatOptions;
+  DataFormatOptions() {
+    this(new Builder());
+  }
+
+  DataFormatOptions(Builder builder) {
+    this.useInt64Timestamp = builder.useInt64Timestamp;
+    this.timestampFormatOptions = builder.timestampFormatOptions;
   }
 
   public boolean isUseInt64Timestamp() {
     return useInt64Timestamp;
   }
 
-  public void setUseInt64Timestamp(boolean useInt64Timestamp) {
-    this.useInt64Timestamp = useInt64Timestamp;
-  }
-
   public TimestampFormatOptions getTimestampFormatOptions() {
     return timestampFormatOptions;
   }
 
-  public void setTimestampFormatOptions(TimestampFormatOptions timestampFormatOptions) {
-    this.timestampFormatOptions = timestampFormatOptions;
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
+  public Builder toBuilder() {
+    return new Builder(this);
+  }
+
+  public static class Builder {
+    private boolean useInt64Timestamp;
+    private TimestampFormatOptions timestampFormatOptions =
+        TimestampFormatOptions.TIMESTAMP_OUTPUT_FORMAT_UNSPECIFIED;
+
+    public Builder() {}
+
+    public Builder(DataFormatOptions dataFormatOptions) {
+      this.useInt64Timestamp = dataFormatOptions.useInt64Timestamp;
+      this.timestampFormatOptions = dataFormatOptions.timestampFormatOptions;
+    }
+
+    public Builder setUseInt64Timestamp(boolean useInt64Timestamp) {
+      this.useInt64Timestamp = useInt64Timestamp;
+      return this;
+    }
+
+    public Builder setTimestampFormatOptions(TimestampFormatOptions timestampFormatOptions) {
+      this.timestampFormatOptions = timestampFormatOptions;
+      return this;
+    }
+
+    public DataFormatOptions build() {
+      return new DataFormatOptions(this);
+    }
   }
 
   com.google.api.services.bigquery.model.DataFormatOptions toPb() {
@@ -59,8 +89,10 @@ public class DataFormatOptions {
   }
 
   DataFormatOptions fromPb(com.google.api.services.bigquery.model.DataFormatOptions request) {
-    return new DataFormatOptions(
-        request.getUseInt64Timestamp(),
-        TimestampFormatOptions.valueOf(request.getTimestampOutputFormat()));
+    return new Builder()
+        .setUseInt64Timestamp(request.getUseInt64Timestamp())
+        .setTimestampFormatOptions(
+            TimestampFormatOptions.valueOf(request.getTimestampOutputFormat()))
+        .build();
   }
 }
