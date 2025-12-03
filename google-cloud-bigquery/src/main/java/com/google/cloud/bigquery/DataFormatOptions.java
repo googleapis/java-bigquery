@@ -16,9 +16,8 @@
 package com.google.cloud.bigquery;
 
 import com.google.auto.value.AutoValue;
-import org.jspecify.annotations.Nullable;
-
 import java.io.Serializable;
+import javax.annotation.Nullable;
 
 /**
  * Google BigQuery DataFormatOptions. Configures the output format for data types returned from
@@ -50,8 +49,7 @@ public abstract class DataFormatOptions implements Serializable {
   public abstract TimestampFormatOptions timestampFormatOptions();
 
   public static Builder newBuilder() {
-    return new AutoValue_DataFormatOptions.Builder()
-        .useInt64Timestamp(false);
+    return new AutoValue_DataFormatOptions.Builder().useInt64Timestamp(false);
   }
 
   public abstract Builder toBuilder();
@@ -85,9 +83,14 @@ public abstract class DataFormatOptions implements Serializable {
   }
 
   DataFormatOptions fromPb(com.google.api.services.bigquery.model.DataFormatOptions request) {
-    return new AutoValue_DataFormatOptions.Builder()
-        .useInt64Timestamp(request.getUseInt64Timestamp())
-        .timestampFormatOptions(TimestampFormatOptions.valueOf(request.getTimestampOutputFormat()))
-        .build();
+    AutoValue_DataFormatOptions.Builder builder = new AutoValue_DataFormatOptions.Builder();
+    if (request.getUseInt64Timestamp() != null) {
+      builder.useInt64Timestamp(request.getUseInt64Timestamp());
+    }
+    if (request.getTimestampOutputFormat() != null) {
+      builder.timestampFormatOptions(
+          TimestampFormatOptions.valueOf(request.getTimestampOutputFormat()));
+    }
+    return builder.build();
   }
 }

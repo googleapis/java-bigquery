@@ -195,7 +195,9 @@ public class QueryRequestInfoTest {
     assertFalse(requestPb.getFormatOptions().getUseInt64Timestamp());
 
     QueryRequestInfo requestInfoLosslessTs =
-        new QueryRequestInfo(QUERY_JOB_CONFIGURATION, DataFormatOptions.newBuilder().useInt64Timestamp(true).build());
+        new QueryRequestInfo(
+            QUERY_JOB_CONFIGURATION,
+            DataFormatOptions.newBuilder().useInt64Timestamp(true).build());
     QueryRequest requestLosslessTsPb = requestInfoLosslessTs.toPb();
     assertTrue(requestLosslessTsPb.getFormatOptions().getUseInt64Timestamp());
   }
