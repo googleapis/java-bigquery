@@ -43,7 +43,7 @@ public class BigQueryOptionsTest {
 
   @Test
   public void dataFormatOptions_createdByDefault() {
-    BigQueryOptions options = BigQueryOptions.newBuilder().build();
+    BigQueryOptions options = BigQueryOptions.newBuilder().setProjectId("project-id").build();
 
     assertNotNull(options.getDataFormatOptions());
     assertFalse(options.getDataFormatOptions().useInt64Timestamp());
@@ -57,6 +57,7 @@ public class BigQueryOptionsTest {
     BigQueryOptions options =
         BigQueryOptions.newBuilder()
             .setDataFormatOptions(DataFormatOptions.newBuilder().useInt64Timestamp(false).build())
+            .setProjectId("project-id")
             .build();
     options.setUseInt64Timestamps(true);
 
@@ -65,7 +66,7 @@ public class BigQueryOptionsTest {
 
   @Test
   public void nonBuilderSetUseInt64Timestamp_overridesEverything() {
-    BigQueryOptions options = BigQueryOptions.newBuilder().build();
+    BigQueryOptions options = BigQueryOptions.newBuilder().setProjectId("project-id").build();
     options.setUseInt64Timestamps(true);
 
     assertTrue(options.getDataFormatOptions().useInt64Timestamp());
@@ -73,7 +74,8 @@ public class BigQueryOptionsTest {
 
   @Test
   public void noDataFormatOptions_capturesUseInt64TimestampSetInBuilder() {
-    BigQueryOptions options = BigQueryOptions.newBuilder().setUseInt64Timestamps(true).build();
+    BigQueryOptions options =
+        BigQueryOptions.newBuilder().setUseInt64Timestamps(true).setProjectId("project-id").build();
 
     assertTrue(options.getDataFormatOptions().useInt64Timestamp());
   }
@@ -82,6 +84,7 @@ public class BigQueryOptionsTest {
   public void dataFormatOptionsSetterHasPrecedence() {
     BigQueryOptions options =
         BigQueryOptions.newBuilder()
+            .setProjectId("project-id")
             .setDataFormatOptions(DataFormatOptions.newBuilder().useInt64Timestamp(true).build())
             .setUseInt64Timestamps(false)
             .build();

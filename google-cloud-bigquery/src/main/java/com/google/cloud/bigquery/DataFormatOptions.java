@@ -60,8 +60,6 @@ public abstract class DataFormatOptions implements Serializable {
 
     public abstract Builder timestampFormatOptions(TimestampFormatOptions timestampFormatOptions);
 
-    abstract TimestampFormatOptions timestampFormatOptions();
-
     public abstract DataFormatOptions build();
   }
 
@@ -75,7 +73,7 @@ public abstract class DataFormatOptions implements Serializable {
 
   static DataFormatOptions fromPb(
       com.google.api.services.bigquery.model.DataFormatOptions request) {
-    AutoValue_DataFormatOptions.Builder builder = new AutoValue_DataFormatOptions.Builder();
+    DataFormatOptions.Builder builder = newBuilder();
     if (request.getUseInt64Timestamp() != null) {
       builder.useInt64Timestamp(request.getUseInt64Timestamp());
     }
