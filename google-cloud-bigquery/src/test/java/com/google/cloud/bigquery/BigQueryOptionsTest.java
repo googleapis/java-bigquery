@@ -16,6 +16,11 @@
 
 package com.google.cloud.bigquery;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import com.google.cloud.TransportOptions;
 import org.junit.Assert;
 import org.junit.Test;
@@ -34,5 +39,53 @@ public class BigQueryOptionsTest {
     } catch (IllegalArgumentException expected) {
       Assert.assertNotNull(expected.getMessage());
     }
+  }
+
+  @Test
+  public void dataFormatOptions_createdByDefault() {
+    BigQueryOptions options = BigQueryOptions.newBuilder().build();
+
+    assertNotNull(options.getDataFormatOptions());
+    assertFalse(options.getDataFormatOptions().useInt64Timestamp());
+    assertEquals(
+        DataFormatOptions.TimestampFormatOptions.TIMESTAMP_OUTPUT_FORMAT_UNSPECIFIED,
+        options.getDataFormatOptions().timestampFormatOptions());
+  }
+
+  @Test
+  public void nonBuilderSetUseInt64Timestamp_capturedInDataFormatOptions() {
+    BigQueryOptions options =
+        BigQueryOptions.newBuilder()
+            .setDataFormatOptions(DataFormatOptions.newBuilder().useInt64Timestamp(false).build())
+            .build();
+    options.setUseInt64Timestamps(true);
+
+    assertTrue(options.getDataFormatOptions().useInt64Timestamp());
+  }
+
+  @Test
+  public void nonBuilderSetUseInt64Timestamp_overridesEverything() {
+    BigQueryOptions options = BigQueryOptions.newBuilder().build();
+    options.setUseInt64Timestamps(true);
+
+    assertTrue(options.getDataFormatOptions().useInt64Timestamp());
+  }
+
+  @Test
+  public void noDataFormatOptions_capturesUseInt64TimestampSetInBuilder() {
+    BigQueryOptions options = BigQueryOptions.newBuilder().setUseInt64Timestamps(true).build();
+
+    assertTrue(options.getDataFormatOptions().useInt64Timestamp());
+  }
+
+  @Test
+  public void dataFormatOptionsSetterHasPrecedence() {
+    BigQueryOptions options =
+        BigQueryOptions.newBuilder()
+            .setDataFormatOptions(DataFormatOptions.newBuilder().useInt64Timestamp(true).build())
+            .setUseInt64Timestamps(false)
+            .build();
+
+    assertTrue(options.getDataFormatOptions().useInt64Timestamp());
   }
 }
