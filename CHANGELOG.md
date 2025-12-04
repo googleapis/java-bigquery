@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.57.0-rc1](https://github.com/googleapis/java-bigquery/compare/v2.56.0...v2.57.0-rc1) (2025-12-04)
+
+
+### Features
+
+* configure rc releases to be on prerelease mode ([93700c8](https://github.com/googleapis/java-bigquery/commit/93700c83559ca7ff4b9facc34a11c6dace3b5982))
+* Relax client-side validation for BigQuery entity IDs ([#4000](https://github.com/googleapis/java-bigquery/issues/4000)) ([c3548a2](https://github.com/googleapis/java-bigquery/commit/c3548a2f521b19761c844c0b24fc8caab541aba7))
+
+
+### Bug Fixes
+
+* next release candidate ([d01971e](https://github.com/googleapis/java-bigquery/commit/d01971e74c7fc4b233c3504e2a56410a037bd501))
+
 ## [2.56.0](https://github.com/googleapis/java-bigquery/compare/v2.55.3...v2.56.0) (2025-11-15)
 
 
