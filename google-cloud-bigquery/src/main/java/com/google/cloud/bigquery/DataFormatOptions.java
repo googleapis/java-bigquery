@@ -17,7 +17,6 @@ package com.google.cloud.bigquery;
 
 import com.google.auto.value.AutoValue;
 import java.io.Serializable;
-import javax.annotation.Nullable;
 
 /**
  * Google BigQuery DataFormatOptions. Configures the output format for data types returned from
@@ -45,11 +44,12 @@ public abstract class DataFormatOptions implements Serializable {
 
   public abstract boolean useInt64Timestamp();
 
-  @Nullable
   public abstract TimestampFormatOptions timestampFormatOptions();
 
   public static Builder newBuilder() {
-    return new AutoValue_DataFormatOptions.Builder().useInt64Timestamp(false);
+    return new AutoValue_DataFormatOptions.Builder()
+        .useInt64Timestamp(false)
+        .timestampFormatOptions(TimestampFormatOptions.TIMESTAMP_OUTPUT_FORMAT_UNSPECIFIED);
   }
 
   public abstract Builder toBuilder();
@@ -62,27 +62,19 @@ public abstract class DataFormatOptions implements Serializable {
 
     abstract TimestampFormatOptions timestampFormatOptions();
 
-    abstract DataFormatOptions autoBuild();
-
-    public DataFormatOptions build() {
-      if (timestampFormatOptions() == null) {
-        timestampFormatOptions(TimestampFormatOptions.TIMESTAMP_OUTPUT_FORMAT_UNSPECIFIED);
-      }
-      return autoBuild();
-    }
+    public abstract DataFormatOptions build();
   }
 
   com.google.api.services.bigquery.model.DataFormatOptions toPb() {
     com.google.api.services.bigquery.model.DataFormatOptions request =
         new com.google.api.services.bigquery.model.DataFormatOptions();
     request.setUseInt64Timestamp(useInt64Timestamp());
-    if (timestampFormatOptions() != null) {
-      request.setTimestampOutputFormat(timestampFormatOptions().toString());
-    }
+    request.setTimestampOutputFormat(timestampFormatOptions().toString());
     return request;
   }
 
-  DataFormatOptions fromPb(com.google.api.services.bigquery.model.DataFormatOptions request) {
+  static DataFormatOptions fromPb(
+      com.google.api.services.bigquery.model.DataFormatOptions request) {
     AutoValue_DataFormatOptions.Builder builder = new AutoValue_DataFormatOptions.Builder();
     if (request.getUseInt64Timestamp() != null) {
       builder.useInt64Timestamp(request.getUseInt64Timestamp());

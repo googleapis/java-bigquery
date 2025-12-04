@@ -230,10 +230,10 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
    * Builder#setDataFormatOptions(DataFormatOptions)} to set the int64timestamp configuration
    * instead.
    *
-   * <p>If useInt64Timestamps is set via DataFormatOptions, then that value in DataFormatOptions
-   * will be used.
+   * <p>If useInt64Timestamps is set via DataFormatOptions, then the value in DataFormatOptions will
+   * be used. Otherwise, this value will be passed to DataFormatOptions.
    *
-   * <p>{@code DataFormatOptions.newBuilder().setUseInt64Timestamp(...).build()}
+   * <p>Alternative: {@code DataFormatOptions.newBuilder().setUseInt64Timestamp(...).build()}
    */
   @ObsoleteApi("Use setDataFormatOptions(DataFormatOptions) instead")
   public void setUseInt64Timestamps(boolean useInt64Timestamps) {
@@ -255,6 +255,10 @@ public class BigQueryOptions extends ServiceOptions<BigQuery, BigQueryOptions> {
    * This getter is marked as Obsolete. Prefer {@link
    * DataFormatOptions.Builder#useInt64Timestamp(boolean)} to set the int64timestamp configuration
    * instead.
+   *
+   * <p>Warning: DataFormatOptions values have precedence. Use {@link
+   * DataFormatOptions#useInt64Timestamp()} to get `useInt64Timestamp` value used by the BigQuery
+   * client.
    */
   @ObsoleteApi("Use getDataFormatOptions().isUseInt64Timestamp() instead")
   public boolean getUseInt64Timestamps() {
