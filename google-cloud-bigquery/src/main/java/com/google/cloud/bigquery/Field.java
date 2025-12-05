@@ -62,6 +62,7 @@ public final class Field implements Serializable {
   private final Long maxLength;
   private final Long scale;
   private final Long precision;
+  private final Long timestampPrecision;
   private final String defaultValueExpression;
   private final String collation;
   private final FieldElementType rangeElementType;
@@ -88,6 +89,7 @@ public final class Field implements Serializable {
     private Long maxLength;
     private Long scale;
     private Long precision;
+    private Long timestampPrecision;
     private String defaultValueExpression;
     private String collation;
     private FieldElementType rangeElementType;
@@ -104,6 +106,7 @@ public final class Field implements Serializable {
       this.maxLength = field.maxLength;
       this.scale = field.scale;
       this.precision = field.precision;
+      this.timestampPrecision = field.timestampPrecision;
       this.defaultValueExpression = field.defaultValueExpression;
       this.collation = field.collation;
       this.rangeElementType = field.rangeElementType;
@@ -255,6 +258,16 @@ public final class Field implements Serializable {
     }
 
     /**
+     * Precision (maximum number of total digits in base 10) of TIMESTAMP type.
+     *
+     * <p>The default value is 6. Possible values are 6 (microsecond) or 12 (picosecond).
+     */
+    public Builder setTimestampPrecision(Long timestampPrecision) {
+      this.timestampPrecision = timestampPrecision;
+      return this;
+    }
+
+    /**
      * DefaultValueExpression is used to specify the default value of a field using a SQL
      * expression. It can only be set for top level fields (columns).
      *
@@ -317,6 +330,7 @@ public final class Field implements Serializable {
     this.maxLength = builder.maxLength;
     this.scale = builder.scale;
     this.precision = builder.precision;
+    this.timestampPrecision = builder.timestampPrecision;
     this.defaultValueExpression = builder.defaultValueExpression;
     this.collation = builder.collation;
     this.rangeElementType = builder.rangeElementType;
@@ -368,6 +382,11 @@ public final class Field implements Serializable {
   /** Returns the maximum number of total digits allowed for NUMERIC or BIGNUMERIC types. */
   public Long getPrecision() {
     return precision;
+  }
+
+  /** Returns the for precision of TIMESTAMP type. */
+  public Long getTimestampPrecision() {
+    return timestampPrecision;
   }
 
   /** Return the default value of the field. */
@@ -490,6 +509,9 @@ public final class Field implements Serializable {
     if (precision != null) {
       fieldSchemaPb.setPrecision(precision);
     }
+    if (timestampPrecision != null) {
+      fieldSchemaPb.setTimestampPrecision(timestampPrecision);
+    }
     if (defaultValueExpression != null) {
       fieldSchemaPb.setDefaultValueExpression(defaultValueExpression);
     }
@@ -526,6 +548,9 @@ public final class Field implements Serializable {
     }
     if (fieldSchemaPb.getPrecision() != null) {
       fieldBuilder.setPrecision(fieldSchemaPb.getPrecision());
+    }
+    if (fieldSchemaPb.getTimestampPrecision() != null) {
+      fieldBuilder.setTimestampPrecision(fieldSchemaPb.getTimestampPrecision());
     }
     if (fieldSchemaPb.getDefaultValueExpression() != null) {
       fieldBuilder.setDefaultValueExpression(fieldSchemaPb.getDefaultValueExpression());
