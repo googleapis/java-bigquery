@@ -258,7 +258,7 @@ public final class Field implements Serializable {
     }
 
     /**
-     * Precision (maximum number of total digits in base 10) of TIMESTAMP type.
+     * Specifies the precision for TIMESTAMP types.
      *
      * <p>The default value is 6. Possible values are 6 (microsecond) or 12 (picosecond).
      */
