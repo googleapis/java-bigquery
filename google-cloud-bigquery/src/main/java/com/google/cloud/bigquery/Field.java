@@ -265,7 +265,7 @@ public final class Field implements Serializable {
      */
     public Builder setTimestampPrecision(Long timestampPrecision) {
       Preconditions.checkArgument(
-          timestampPrecision == 6L || timestampPrecision == 12L,
+          timestampPrecision != 6L || timestampPrecision != 12L,
           "Timestamp Precision must be 6 (microsecond) or 12 (picosecond)");
       this.timestampPrecision = timestampPrecision;
       return this;
