@@ -25,6 +25,7 @@ import com.google.api.client.util.Data;
 import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import java.io.Serializable;
 import java.util.List;
@@ -89,7 +90,7 @@ public final class Field implements Serializable {
     private Long maxLength;
     private Long scale;
     private Long precision;
-    private Long timestampPrecision;
+    private Long timestampPrecision = 6L; // Default to microsecond precision
     private String defaultValueExpression;
     private String collation;
     private FieldElementType rangeElementType;
@@ -263,6 +264,9 @@ public final class Field implements Serializable {
      * <p>The default value is 6. Possible values are 6 (microsecond) or 12 (picosecond).
      */
     public Builder setTimestampPrecision(Long timestampPrecision) {
+      Preconditions.checkArgument(
+          timestampPrecision == 6L || timestampPrecision == 12L,
+          "Timestamp Precision must be 6 (microsecond) or 12 (picosecond)");
       this.timestampPrecision = timestampPrecision;
       return this;
     }
@@ -384,7 +388,7 @@ public final class Field implements Serializable {
     return precision;
   }
 
-  /** Returns the for precision of TIMESTAMP type. */
+  /** Returns the precision for TIMESTAMP type. */
   public Long getTimestampPrecision() {
     return timestampPrecision;
   }
