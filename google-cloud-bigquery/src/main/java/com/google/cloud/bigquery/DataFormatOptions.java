@@ -70,17 +70,4 @@ public abstract class DataFormatOptions implements Serializable {
     request.setTimestampOutputFormat(timestampFormatOptions().toString());
     return request;
   }
-
-  static DataFormatOptions fromPb(
-      com.google.api.services.bigquery.model.DataFormatOptions request) {
-    DataFormatOptions.Builder builder = newBuilder();
-    if (request.getUseInt64Timestamp() != null) {
-      builder.useInt64Timestamp(request.getUseInt64Timestamp());
-    }
-    if (request.getTimestampOutputFormat() != null) {
-      builder.timestampFormatOptions(
-          TimestampFormatOptions.valueOf(request.getTimestampOutputFormat()));
-    }
-    return builder.build();
-  }
 }
