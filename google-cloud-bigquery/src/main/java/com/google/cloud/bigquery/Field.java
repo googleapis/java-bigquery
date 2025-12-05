@@ -90,7 +90,7 @@ public final class Field implements Serializable {
     private Long maxLength;
     private Long scale;
     private Long precision;
-    private Long timestampPrecision = 6L; // Default to microsecond precision
+    private Long timestampPrecision;
     private String defaultValueExpression;
     private String collation;
     private FieldElementType rangeElementType;
