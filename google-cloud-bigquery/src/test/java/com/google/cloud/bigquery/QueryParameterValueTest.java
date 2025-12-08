@@ -303,11 +303,8 @@ public class QueryParameterValueTest {
   @Test
   public void testTimestampFromLong() {
     // Expects output to be ISO8601 string with microsecond precision
-    QueryParameterValue value = QueryParameterValue.timestamp(1408452095220000L);
-    assertThat(value.getValue()).isEqualTo("2014-08-19 12:41:35.220000+00:00");
-    assertThat(value.getType()).isEqualTo(StandardSQLTypeName.TIMESTAMP);
-    assertThat(value.getArrayType()).isNull();
-    assertThat(value.getArrayValues()).isNull();
+    assertTimestampValue(
+        QueryParameterValue.timestamp(1408452095220000L), "2014-08-19 12:41:35.220000+00:00");
   }
 
   @Test
@@ -318,41 +315,27 @@ public class QueryParameterValueTest {
     int nano = (int) Math.floorMod(timestampInMicroseconds, microseconds) * 1000;
     Instant instant = Instant.ofEpochSecond(secs, nano);
     String expected = TIMESTAMP_FORMATTER.format(instant);
-    assertThat(expected)
-        .isEqualTo(QueryParameterValue.timestamp(timestampInMicroseconds).getValue());
+    assertTimestampValue(QueryParameterValue.timestamp(timestampInMicroseconds), expected);
   }
 
   @Test
   public void testTimestampFromString() {
-    QueryParameterValue value = QueryParameterValue.timestamp("2014-08-19 12:41:35.220000+00:00");
-    assertThat(value.getValue()).isEqualTo("2014-08-19 12:41:35.220000+00:00");
-    assertThat(value.getType()).isEqualTo(StandardSQLTypeName.TIMESTAMP);
-    assertThat(value.getArrayType()).isNull();
-    assertThat(value.getArrayValues()).isNull();
-
-    QueryParameterValue value1 =
-        QueryParameterValue.timestamp("2025-08-19 12:34:56.123456789+00:00");
-    assertThat(value1.getValue()).isEqualTo("2025-08-19 12:34:56.123456789+00:00");
-    assertThat(value1.getType()).isEqualTo(StandardSQLTypeName.TIMESTAMP);
-    assertThat(value1.getArrayType()).isNull();
-    assertThat(value1.getArrayValues()).isNull();
+    assertTimestampValue(
+        QueryParameterValue.timestamp("2014-08-19 12:41:35.220000+00:00"),
+        "2014-08-19 12:41:35.220000+00:00");
+    assertTimestampValue(
+        QueryParameterValue.timestamp("2025-08-19 12:34:56.123456789+00:00"),
+        "2025-08-19 12:34:56.123456789+00:00");
 
     // The following test cases test more than nanosecond precision
     // 10 digits of precision (1 digit more than nanosecond)
-    QueryParameterValue value2 =
-        QueryParameterValue.timestamp("2025-12-08 12:34:56.1234567890+00:00");
-    assertThat(value2.getValue()).isEqualTo("2025-12-08 12:34:56.1234567890+00:00");
-    assertThat(value2.getType()).isEqualTo(StandardSQLTypeName.TIMESTAMP);
-    assertThat(value2.getArrayType()).isNull();
-    assertThat(value2.getArrayValues()).isNull();
-
+    assertTimestampValue(
+        QueryParameterValue.timestamp("2025-12-08 12:34:56.1234567890+00:00"),
+        "2025-12-08 12:34:56.1234567890+00:00");
     // 12 digits (picosecond precision)
-    QueryParameterValue value3 =
-        QueryParameterValue.timestamp("2025-12-08 12:34:56.123456789123+00:00");
-    assertThat(value3.getValue()).isEqualTo("2025-12-08 12:34:56.123456789123+00:00");
-    assertThat(value3.getType()).isEqualTo(StandardSQLTypeName.TIMESTAMP);
-    assertThat(value3.getArrayType()).isNull();
-    assertThat(value3.getArrayValues()).isNull();
+    assertTimestampValue(
+        QueryParameterValue.timestamp("2025-12-08 12:34:56.123456789123+00:00"),
+        "2025-12-08 12:34:56.123456789123+00:00");
 
     // More than picosecond precision
     assertThrows(
@@ -366,21 +349,15 @@ public class QueryParameterValueTest {
 
   @Test
   public void testTimestampWithDateTimeFormatterBuilder() {
-    QueryParameterValue value = QueryParameterValue.timestamp("2019-02-14 12:34:45.938993Z");
-    assertThat(value.getValue()).isEqualTo("2019-02-14 12:34:45.938993Z");
-    assertThat(value.getType()).isEqualTo(StandardSQLTypeName.TIMESTAMP);
-    assertThat(value.getArrayType()).isNull();
-    assertThat(value.getArrayValues()).isNull();
-    QueryParameterValue value1 = QueryParameterValue.timestamp("2019-02-14 12:34:45.938993+0000");
-    assertThat(value1.getValue()).isEqualTo("2019-02-14 12:34:45.938993+0000");
-    assertThat(value1.getType()).isEqualTo(StandardSQLTypeName.TIMESTAMP);
-    assertThat(value1.getArrayType()).isNull();
-    assertThat(value1.getArrayValues()).isNull();
-    QueryParameterValue value2 = QueryParameterValue.timestamp("2019-02-14 12:34:45.102+00:00");
-    assertThat(value2.getValue()).isEqualTo("2019-02-14 12:34:45.102+00:00");
-    assertThat(value2.getType()).isEqualTo(StandardSQLTypeName.TIMESTAMP);
-    assertThat(value2.getArrayType()).isNull();
-    assertThat(value2.getArrayValues()).isNull();
+    assertTimestampValue(
+        QueryParameterValue.timestamp("2019-02-14 12:34:45.938993Z"),
+        "2019-02-14 12:34:45.938993Z");
+    assertTimestampValue(
+        QueryParameterValue.timestamp("2019-02-14 12:34:45.938993+0000"),
+        "2019-02-14 12:34:45.938993+0000");
+    assertTimestampValue(
+        QueryParameterValue.timestamp("2019-02-14 12:34:45.102+00:00"),
+        "2019-02-14 12:34:45.102+00:00");
   }
 
   @Test
@@ -713,5 +690,12 @@ public class QueryParameterValueTest {
     assertThat(queryParameterValue.getArrayValues()).isNull();
     assertThat(queryParameterValue.getStructValues()).isNull();
     assertThat(queryParameterValue.getValue()).isNull();
+  }
+
+  private void assertTimestampValue(QueryParameterValue value, String expectedStringValue) {
+    assertThat(value.getValue()).isEqualTo(expectedStringValue);
+    assertThat(value.getType()).isEqualTo(StandardSQLTypeName.TIMESTAMP);
+    assertThat(value.getArrayType()).isNull();
+    assertThat(value.getArrayValues()).isNull();
   }
 }
