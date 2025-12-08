@@ -404,10 +404,10 @@ public class QueryParameterValueTest {
     // Fractional part has picosecond length, but fractional part is not a valid number
     assertThrows(
         IllegalArgumentException.class,
-        () -> QueryParameterValue.timestamp("2014-08-19T12:34:00.123456789abc+00:00"));
+        () -> QueryParameterValue.timestamp("2014-08-19 12:34:00.123456789abc+00:00"));
     assertThrows(
         IllegalArgumentException.class,
-        () -> QueryParameterValue.timestamp("2014-08-19T12:34:00.123456abc789+00:00"));
+        () -> QueryParameterValue.timestamp("2014-08-19 12:34:00.123456abc789+00:00"));
   }
 
   @Test

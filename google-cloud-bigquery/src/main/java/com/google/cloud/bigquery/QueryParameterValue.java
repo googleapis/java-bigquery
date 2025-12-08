@@ -106,10 +106,10 @@ public abstract class QueryParameterValue implements Serializable {
           .optionalEnd()
           .toFormatter()
           .withZone(ZoneOffset.UTC);
-  // Regex to identify >9 digits in the fraction part (e.g. .123456789123)
-  // Matches the dot, followed by 10-12 digits, followed by non-digits (like +00) or end of string
+  // Regex to identify >9 digits in the fraction part (e.g. `.123456789123`)
+  // Matches the dot, followed by 10+ digits, followed by non-digits (like +00) or end of string
   private static final Pattern ISO8601_TIMESTAMP_HIGH_PRECISION_PATTERN =
-      Pattern.compile("(\\.\\d{10,12})(?:\\D|$)");
+      Pattern.compile("(\\.\\d{10,})(?:\\D|$)");
 
   private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
   private static final DateTimeFormatter timeFormatter =
@@ -556,6 +556,13 @@ public abstract class QueryParameterValue implements Serializable {
       // Group 1 is the fractional part including the dot (e.g., ".123456789123")
       String fraction = matcher.group(1);
 
+      // The fraction part includes the dot, so we check its length.
+      // It should be at most 13 characters long (. + 12 digits).
+      if (fraction.length() > 13) {
+        throw new IllegalArgumentException(
+            "Fractional portion of ISO8601 supports up to picosecond (12 digits)");
+      }
+
       // Truncate to . + 9 digits
       String truncatedFraction = fraction.substring(0, 10);
       // Replace the entire fractional portion with the nanosecond portion. Digits exceeding the
@@ -566,12 +573,6 @@ public abstract class QueryParameterValue implements Serializable {
       // It is valid as long as DateTimeFormatter doesn't throw an exception AND
       // the fractional portion past nanosecond precision is valid (up to picosecond)
       checkFormat(truncatedTimestamp, TIMESTAMP_VALIDATOR);
-      long value = Long.parseLong(fraction.substring(10));
-      // Picosecond supports the next three digits (0 - 999)
-      if (value >= 1000) {
-        throw new IllegalArgumentException(
-            "Fractional portion of ISO8601 supports up to picosecond (12 digits)");
-      }
       return;
     }
 
