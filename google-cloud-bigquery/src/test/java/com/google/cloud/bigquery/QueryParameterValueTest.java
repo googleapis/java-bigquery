@@ -16,11 +16,9 @@
 
 package com.google.cloud.bigquery;
 
+import static com.google.cloud.bigquery.QueryParameterValue.TIMESTAMP_FORMATTER;
 import static com.google.common.truth.Truth.assertThat;
-import static java.time.temporal.ChronoField.HOUR_OF_DAY;
-import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
-import static java.time.temporal.ChronoField.NANO_OF_SECOND;
-import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
+import static org.junit.Assert.assertThrows;
 
 import com.google.api.services.bigquery.model.QueryParameterType;
 import com.google.common.collect.ImmutableMap;
@@ -29,9 +27,6 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.Period;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -42,25 +37,6 @@ import org.junit.Test;
 import org.threeten.extra.PeriodDuration;
 
 public class QueryParameterValueTest {
-
-  private static final DateTimeFormatter TIMESTAMPFORMATTER =
-      new DateTimeFormatterBuilder()
-          .parseLenient()
-          .append(DateTimeFormatter.ISO_LOCAL_DATE)
-          .appendLiteral(' ')
-          .appendValue(HOUR_OF_DAY, 2)
-          .appendLiteral(':')
-          .appendValue(MINUTE_OF_HOUR, 2)
-          .optionalStart()
-          .appendLiteral(':')
-          .appendValue(SECOND_OF_MINUTE, 2)
-          .optionalStart()
-          .appendFraction(NANO_OF_SECOND, 6, 9, true)
-          .optionalStart()
-          .appendOffset("+HHMM", "+00:00")
-          .optionalEnd()
-          .toFormatter()
-          .withZone(ZoneOffset.UTC);
 
   private static final QueryParameterValue QUERY_PARAMETER_VALUE =
       QueryParameterValue.newBuilder()
@@ -326,6 +302,7 @@ public class QueryParameterValueTest {
 
   @Test
   public void testTimestampFromLong() {
+    // Expects output to be ISO8601 string with microsecond precision
     QueryParameterValue value = QueryParameterValue.timestamp(1408452095220000L);
     assertThat(value.getValue()).isEqualTo("2014-08-19 12:41:35.220000+00:00");
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.TIMESTAMP);
@@ -340,18 +317,52 @@ public class QueryParameterValueTest {
     long secs = Math.floorDiv(timestampInMicroseconds, microseconds);
     int nano = (int) Math.floorMod(timestampInMicroseconds, microseconds) * 1000;
     Instant instant = Instant.ofEpochSecond(secs, nano);
-    String expected = TIMESTAMPFORMATTER.format(instant);
+    String expected = TIMESTAMP_FORMATTER.format(instant);
     assertThat(expected)
         .isEqualTo(QueryParameterValue.timestamp(timestampInMicroseconds).getValue());
   }
 
   @Test
-  public void testTimestamp() {
-    QueryParameterValue value = QueryParameterValue.timestamp("2014-08-19 12:41:35.220000+00:00");
-    assertThat(value.getValue()).isEqualTo("2014-08-19 12:41:35.220000+00:00");
-    assertThat(value.getType()).isEqualTo(StandardSQLTypeName.TIMESTAMP);
-    assertThat(value.getArrayType()).isNull();
-    assertThat(value.getArrayValues()).isNull();
+  public void testTimestampFromString() {
+    //    QueryParameterValue value = QueryParameterValue.timestamp("2014-08-19
+    // 12:41:35.220000+00:00");
+    //    assertThat(value.getValue()).isEqualTo("2014-08-19 12:41:35.220000+00:00");
+    //    assertThat(value.getType()).isEqualTo(StandardSQLTypeName.TIMESTAMP);
+    //    assertThat(value.getArrayType()).isNull();
+    //    assertThat(value.getArrayValues()).isNull();
+    //
+    //    QueryParameterValue value1 =
+    //        QueryParameterValue.timestamp("2025-08-19 12:34:56.123456789+00:00");
+    //    assertThat(value1.getValue()).isEqualTo("2025-08-19 12:34:56.123456789+00:00");
+    //    assertThat(value1.getType()).isEqualTo(StandardSQLTypeName.TIMESTAMP);
+    //    assertThat(value1.getArrayType()).isNull();
+    //    assertThat(value1.getArrayValues()).isNull();
+
+    // The following test cases test more than nanosecond precision
+    // 10 digits of precision (1 digit more than nanosecond)
+    QueryParameterValue value2 =
+        QueryParameterValue.timestamp("2025-12-08 12:34:56.1234567890+00:00");
+    assertThat(value2.getValue()).isEqualTo("2025-12-08 12:34:56.1234567890+00:00");
+    assertThat(value2.getType()).isEqualTo(StandardSQLTypeName.TIMESTAMP);
+    assertThat(value2.getArrayType()).isNull();
+    assertThat(value2.getArrayValues()).isNull();
+
+    // 12 digits (picosecond precision)
+    QueryParameterValue value3 =
+        QueryParameterValue.timestamp("2025-12-08 12:34:56.123456789123+00:00");
+    assertThat(value3.getValue()).isEqualTo("2025-12-08 12:34:56.123456789123+00:00");
+    assertThat(value3.getType()).isEqualTo(StandardSQLTypeName.TIMESTAMP);
+    assertThat(value3.getArrayType()).isNull();
+    assertThat(value3.getArrayValues()).isNull();
+
+    // More than picosecond precision
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> QueryParameterValue.timestamp("2025-12-08 12:34:56.1234567891234+00:00"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            QueryParameterValue.timestamp("2025-12-08 12:34:56.123456789123456789123456789+00:00"));
   }
 
   @Test
@@ -373,10 +384,31 @@ public class QueryParameterValueTest {
     assertThat(value2.getArrayValues()).isNull();
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testInvalidTimestamp() {
+  @Test
+  public void testInvalidTimestampStringValues() {
+    assertThrows(IllegalArgumentException.class, () -> QueryParameterValue.timestamp("abc"));
+
     // missing the time
-    QueryParameterValue.timestamp("2014-08-19");
+    assertThrows(IllegalArgumentException.class, () -> QueryParameterValue.timestamp("2014-08-19"));
+
+    // missing the hour
+    assertThrows(
+        IllegalArgumentException.class, () -> QueryParameterValue.timestamp("2014-08-19 12"));
+
+    // can't have the 'T' separator
+    assertThrows(
+        IllegalArgumentException.class, () -> QueryParameterValue.timestamp("2014-08-19T12"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> QueryParameterValue.timestamp("2014-08-19T12:34:00.123456"));
+
+    // Fractional part has picosecond length, but fractional part is not a valid number
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> QueryParameterValue.timestamp("2014-08-19T12:34:00.123456789abc+00:00"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> QueryParameterValue.timestamp("2014-08-19T12:34:00.123456abc789+00:00"));
   }
 
   @Test

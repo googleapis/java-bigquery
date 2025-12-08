@@ -26,6 +26,7 @@ import com.google.api.services.bigquery.model.QueryParameterType;
 import com.google.api.services.bigquery.model.RangeValue;
 import com.google.auto.value.AutoValue;
 import com.google.cloud.Timestamp;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -44,6 +45,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.threeten.extra.PeriodDuration;
 
@@ -76,7 +79,7 @@ import org.threeten.extra.PeriodDuration;
 @AutoValue
 public abstract class QueryParameterValue implements Serializable {
 
-  private static final DateTimeFormatter timestampFormatter =
+  static final DateTimeFormatter TIMESTAMP_FORMATTER =
       new DateTimeFormatterBuilder()
           .parseLenient()
           .append(DateTimeFormatter.ISO_LOCAL_DATE)
@@ -94,15 +97,20 @@ public abstract class QueryParameterValue implements Serializable {
           .optionalEnd()
           .toFormatter()
           .withZone(ZoneOffset.UTC);
-  private static final DateTimeFormatter timestampValidator =
+  private static final DateTimeFormatter TIMESTAMP_VALIDATOR =
       new DateTimeFormatterBuilder()
           .parseLenient()
-          .append(timestampFormatter)
+          .append(TIMESTAMP_FORMATTER)
           .optionalStart()
           .appendOffsetId()
           .optionalEnd()
           .toFormatter()
           .withZone(ZoneOffset.UTC);
+  // Regex to identify >9 digits in the fraction part (e.g. .123456789123)
+  // Matches the dot, followed by 10-12 digits, followed by non-digits (like +00) or end of string
+  private static final Pattern ISO8601_TIMESTAMP_HIGH_PRECISION_PATTERN =
+      Pattern.compile("(\\.\\d{10,12})(?:\\D|$)");
+
   private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
   private static final DateTimeFormatter timeFormatter =
       DateTimeFormatter.ofPattern("HH:mm:ss.SSSSSS");
@@ -303,6 +311,9 @@ public abstract class QueryParameterValue implements Serializable {
   /**
    * Creates a {@code QueryParameterValue} object with a type of TIMESTAMP.
    *
+   * <p>This method only supports microsecond precision for timestamp. To use higher precision,
+   * prefer {@link #timestamp(String)} with an ISO8601 String
+   *
    * @param value Microseconds since epoch, e.g. 1733945416000000 corresponds to 2024-12-11
    *     19:30:16.929Z
    */
@@ -311,8 +322,14 @@ public abstract class QueryParameterValue implements Serializable {
   }
 
   /**
-   * Creates a {@code QueryParameterValue} object with a type of TIMESTAMP. Must be in the format
-   * "yyyy-MM-dd HH:mm:ss.SSSSSSZZ", e.g. "2014-08-19 12:41:35.220000+00:00".
+   * Creates a {@code QueryParameterValue} object with a type of TIMESTAMP.
+   *
+   * <p>This method supports up to picosecond precision (12 digits) for timestamp. Input should
+   * conform to ISO8601 format.
+   *
+   * <p>Must be in the format "yyyy-MM-dd HH:mm:ss.SSSSSS{SSSSSSS}ZZ", e.g. "2014-08-19
+   * 12:41:35.123456+00:00" for microsecond precision and "2014-08-19 12:41:35.123456789123+00:00"
+   * for picosecond precision
    */
   public static QueryParameterValue timestamp(String value) {
     return of(value, StandardSQLTypeName.TIMESTAMP);
@@ -481,12 +498,15 @@ public abstract class QueryParameterValue implements Serializable {
         throw new IllegalArgumentException("Cannot convert RANGE to String value");
       case TIMESTAMP:
         if (value instanceof Long) {
+          // Timestamp passed as a Long only support Microsecond precision
           Timestamp timestamp = Timestamp.ofTimeMicroseconds((Long) value);
-          return timestampFormatter.format(
+          return TIMESTAMP_FORMATTER.format(
               Instant.ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos()));
         } else if (value instanceof String) {
-          // verify that the String is in the right format
-          checkFormat(value, timestampValidator);
+          // Timestamp passed as a String can support up picosecond precision, however,
+          // DateTimeFormatter only supports nanosecond precision. Higher than nanosecond
+          // requires a custom validator.
+          checkValidTimestamp((String) value);
           return (String) value;
         }
         break;
@@ -521,9 +541,46 @@ public abstract class QueryParameterValue implements Serializable {
         "Type " + type + " incompatible with " + value.getClass().getCanonicalName());
   }
 
+  /**
+   * Internal helper method to check that the timestamp follows the expected String input of ISO8601
+   * string. Allows the fractional portion of the timestamp to support up to 12 digits of precision
+   * (up to picosecond).
+   *
+   * @throws IllegalArgumentException if timestamp is invalid or exceeds picosecond precision
+   */
+  @VisibleForTesting
+  static void checkValidTimestamp(String timestamp) {
+    // Match if there is greater than nanosecond precision (>9 fractional digits)
+    Matcher matcher = ISO8601_TIMESTAMP_HIGH_PRECISION_PATTERN.matcher(timestamp);
+    if (matcher.find()) {
+      // Group 1 is the fractional part including the dot (e.g., ".123456789123")
+      String fraction = matcher.group(1);
+
+      // Truncate to . + 9 digits
+      String truncatedFraction = fraction.substring(0, 10);
+      // Replace the entire fractional portion with the nanosecond portion. Digits exceeding the
+      // nanosecond will be checked separately.
+      String truncatedTimestamp =
+          timestamp.replaceFirst(Pattern.quote(fraction), truncatedFraction);
+
+      // It is valid as long as DateTimeFormatter doesn't throw an exception AND
+      // the fractional portion past nanosecond precision is valid (up to picosecond)
+      checkFormat(truncatedTimestamp, TIMESTAMP_VALIDATOR);
+      long value = Long.parseLong(fraction.substring(10));
+      // Picosecond supports the next three digits (0 - 999)
+      if (value >= 1000) {
+        throw new IllegalArgumentException(
+            "Fractional portion of ISO8601 supports up to picosecond (12 digits)");
+      }
+      return;
+    }
+
+    // It is valid as long as DateTimeFormatter doesn't throw an exception
+    checkFormat(timestamp, TIMESTAMP_VALIDATOR);
+  }
+
   private static void checkFormat(Object value, DateTimeFormatter formatter) {
     try {
-
       formatter.parse((String) value);
     } catch (DateTimeParseException e) {
       throw new IllegalArgumentException(e.getMessage(), e);
