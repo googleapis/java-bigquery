@@ -506,7 +506,7 @@ public abstract class QueryParameterValue implements Serializable {
           // Timestamp passed as a String can support up picosecond precision, however,
           // DateTimeFormatter only supports nanosecond precision. Higher than nanosecond
           // requires a custom validator.
-          checkValidTimestamp((String) value);
+          validateTimestamp((String) value);
           return (String) value;
         }
         break;
@@ -549,7 +549,7 @@ public abstract class QueryParameterValue implements Serializable {
    * @throws IllegalArgumentException if timestamp is invalid or exceeds picosecond precision
    */
   @VisibleForTesting
-  static void checkValidTimestamp(String timestamp) {
+  static void validateTimestamp(String timestamp) {
     // Match if there is greater than nanosecond precision (>9 fractional digits)
     Matcher matcher = ISO8601_TIMESTAMP_HIGH_PRECISION_PATTERN.matcher(timestamp);
     if (matcher.find()) {
