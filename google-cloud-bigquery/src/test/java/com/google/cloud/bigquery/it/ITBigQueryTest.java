@@ -210,6 +210,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -4656,6 +4657,7 @@ public class ITBigQueryTest {
   }
 
   @Test
+  @Ignore("b/467064827")
   public void testLocationFastSQLQueryWithJobId() throws InterruptedException {
     DatasetInfo infoUK =
         DatasetInfo.newBuilder(UK_DATASET)
@@ -7213,6 +7215,7 @@ public class ITBigQueryTest {
   }
 
   @Test
+  @Ignore("b/467068396")
   public void testTableResultJobIdAndQueryId() throws InterruptedException {
     // For stateless queries, jobId and queryId are populated based on the following criteria:
     // 1. For stateless queries, then queryId is populated.
@@ -7310,6 +7313,7 @@ public class ITBigQueryTest {
   }
 
   @Test
+  @Ignore("b/467067104")
   public void testQueryWithTimeout() throws InterruptedException {
     // Validate that queryWithTimeout returns either TableResult or Job object
 

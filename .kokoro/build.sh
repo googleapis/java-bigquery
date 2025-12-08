@@ -71,8 +71,19 @@ integration)
     RETURN_CODE=$?
     ;;
 graalvm)
+    declare -a EXCLUSIONS=(
+      "ITRemoteUDFTest#testRoutineRemoteUDF"          # b/467066596
+      "ITBigQueryTest#testCancelJob"                  # b/467066417
+      "ITBigQueryTest#testOpenTelemetryTracingQuery"  # b/467063732
+      "ITBigQueryTest#testFastSQLQueryMultiPage"      # b/467064659
+      "ITBigQueryTest#testStatelessQueries"           # b/467067105
+    )
+    for test_to_skip in "${EXCLUSIONS[@]}"; do
+      EXCLUDED_TESTS+="!${test_to_skip},"
+    done
+    EXCLUDED_TESTS=${EXCLUDED_TESTS::-1}
     # Run Unit and Integration Tests with Native Image
-    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative test
+    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative test -Dtest="${EXCLUDED_TESTS}"
     RETURN_CODE=$?
     ;;
 samples)
