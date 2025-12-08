@@ -107,9 +107,10 @@ public abstract class QueryParameterValue implements Serializable {
           .toFormatter()
           .withZone(ZoneOffset.UTC);
   // Regex to identify >9 digits in the fraction part (e.g. `.123456789123`)
-  // Matches the dot, followed by 10+ digits, followed by non-digits (like +00) or end of string
+  // Matches the dot, followed by 10+ digits (fractional part), followed by non-digits (like `+00`)
+  // or end of string
   private static final Pattern ISO8601_TIMESTAMP_HIGH_PRECISION_PATTERN =
-      Pattern.compile("(\\.\\d{10,})(?:\\D|$)");
+      Pattern.compile("\\.(\\d{10,})(?:\\D|$)");
 
   private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
   private static final DateTimeFormatter timeFormatter =
@@ -550,30 +551,25 @@ public abstract class QueryParameterValue implements Serializable {
    */
   @VisibleForTesting
   static void validateTimestamp(String timestamp) {
-    // Match if there is greater than nanosecond precision (>9 fractional digits)
+    // Check if the string has greater than nanosecond precision (>9 digits in fractional second)
     Matcher matcher = ISO8601_TIMESTAMP_HIGH_PRECISION_PATTERN.matcher(timestamp);
     if (matcher.find()) {
-      // Group 1 is the fractional part including the dot (e.g., ".123456789123")
+      // Group 1 is the fractional second part of the ISO8601 string
       String fraction = matcher.group(1);
-
-      // The fraction part includes the dot, so we check its length.
-      // It should be at most 13 characters long (. + 12 digits).
-      if (fraction.length() > 13) {
+      // Pos 10-12 of the fractional second are guaranteed to be digits. The regex only
+      // matches the fraction section as long as they are digits.
+      if (fraction.length() > 12) {
         throw new IllegalArgumentException(
-            "Fractional portion of ISO8601 supports up to picosecond (12 digits)");
+            "Fractional second portion of ISO8601 only supports up to picosecond (12 digits) in BigQuery");
       }
 
-      // Truncate to . + 9 digits
-      String truncatedFraction = fraction.substring(0, 10);
-      // Replace the entire fractional portion with the nanosecond portion. Digits exceeding the
-      // nanosecond will be checked separately.
-      String truncatedTimestamp =
-          timestamp.replaceFirst(Pattern.quote(fraction), truncatedFraction);
-
-      // It is valid as long as DateTimeFormatter doesn't throw an exception AND
-      // the fractional portion past nanosecond precision is valid (up to picosecond)
-      checkFormat(truncatedTimestamp, TIMESTAMP_VALIDATOR);
-      return;
+      // Replace the entire fractional second portion with just the nanosecond portion.
+      // The new timestamp will be validated against the JDK's DateTimeFormatter
+      String truncatedFraction = fraction.substring(0, 9);
+      timestamp =
+          new StringBuilder(timestamp)
+              .replace(matcher.start(1), matcher.end(1), truncatedFraction)
+              .toString();
     }
 
     // It is valid as long as DateTimeFormatter doesn't throw an exception
