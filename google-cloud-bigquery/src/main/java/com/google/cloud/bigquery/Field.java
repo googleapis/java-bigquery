@@ -265,7 +265,7 @@ public final class Field implements Serializable {
      */
     public Builder setTimestampPrecision(Long timestampPrecision) {
       Preconditions.checkArgument(
-          timestampPrecision != 6L || timestampPrecision != 12L,
+          timestampPrecision == 6L || timestampPrecision == 12L,
           "Timestamp Precision must be 6 (microsecond) or 12 (picosecond)");
       this.timestampPrecision = timestampPrecision;
       return this;
@@ -431,6 +431,7 @@ public final class Field implements Serializable {
         .add("maxLength", maxLength)
         .add("scale", scale)
         .add("precision", precision)
+        .add("timestampPrecision", timestampPrecision)
         .add("defaultValueExpression", defaultValueExpression)
         .add("collation", collation)
         .add("rangeElementType", rangeElementType)
@@ -439,7 +440,19 @@ public final class Field implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, type, mode, description, policyTags, rangeElementType);
+    return Objects.hash(
+        name,
+        type,
+        mode,
+        description,
+        policyTags,
+        maxLength,
+        scale,
+        precision,
+        timestampPrecision,
+        defaultValueExpression,
+        collation,
+        rangeElementType);
   }
 
   @Override
