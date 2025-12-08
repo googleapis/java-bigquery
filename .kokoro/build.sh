@@ -78,10 +78,8 @@ graalvm)
       "ITBigQueryTest#testFastSQLQueryMultiPage"      # b/467064659
       "ITBigQueryTest#testStatelessQueries"           # b/467067105
     )
-    for test_to_skip in "${EXCLUSIONS[@]}"; do
-      EXCLUDED_TESTS+="!${test_to_skip},"
-    done
-    EXCLUDED_TESTS=${EXCLUDED_TESTS::-1}
+    printf -v EXCLUDED_TESTS '!%s,' "${EXCLUSIONS[@]}"
+    EXCLUDED_TESTS=${EXCLUDED_TESTS%,}
     # Run Unit and Integration Tests with Native Image
     mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative test -Dtest="${EXCLUDED_TESTS}"
     RETURN_CODE=$?
