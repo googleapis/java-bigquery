@@ -1177,6 +1177,8 @@ public class ITBigQueryTest {
     Job jobLargeTable = bigquery.create(JobInfo.of(configurationLargeTable));
     jobLargeTable = jobLargeTable.waitFor();
     assertNull(jobLargeTable.getStatus().getError());
+
+    stream.close();
   }
 
   @AfterClass
