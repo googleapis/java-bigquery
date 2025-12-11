@@ -1176,10 +1176,12 @@ public class ITBigQueryTest {
     Job jobLargeTable = bigquery.create(JobInfo.of(configurationLargeTable));
     jobLargeTable = jobLargeTable.waitFor();
     assertNull(jobLargeTable.getStatus().getError());
+
+    stream.close();
   }
 
   @AfterClass
-  public static void afterClass() throws ExecutionException, InterruptedException {
+  public static void afterClass() throws Exception {
     if (bigquery != null) {
       RemoteBigQueryHelper.forceDelete(bigquery, DATASET);
       RemoteBigQueryHelper.forceDelete(bigquery, UK_DATASET);
@@ -1191,6 +1193,11 @@ public class ITBigQueryTest {
       if (!wasDeleted && LOG.isLoggable(Level.WARNING)) {
         LOG.log(Level.WARNING, "Deletion of bucket {0} timed out, bucket is not empty", BUCKET);
       }
+      storage.close();
+    }
+
+    if (otel instanceof OpenTelemetrySdk) {
+      ((OpenTelemetrySdk) otel).close();
     }
   }
 
