@@ -3947,14 +3947,14 @@ public class ITBigQueryTest {
     assertTrue(rs.next()); // first row
     // checking for the null or 0 column values
     assertNull(rs.getString("StringField"));
-    assertEquals(0.0d, rs.getDouble("BigNumericField"), 1e-9);
+    assertEquals(0.0d, rs.getDouble("BigNumericField"), 0.0);
     assertFalse(rs.getBoolean("BooleanField"));
     assertNull(rs.getBytes("BytesField"));
     assertEquals(0, rs.getInt("IntegerField"));
     assertNull(rs.getTimestamp("TimestampField"));
     assertNull(rs.getDate("DateField"));
-    assertEquals(0.0d, rs.getDouble("FloatField"), 1e-9);
-    assertEquals(0.0d, rs.getDouble("NumericField"), 1e-9);
+    assertEquals(0.0d, rs.getDouble("FloatField"), 0.0);
+    assertEquals(0.0d, rs.getDouble("NumericField"), 0.0);
     assertNull(rs.getTime("TimeField"));
     assertNull(rs.getString("DateTimeField"));
     assertNull(rs.getString("GeographyField"));
@@ -3964,14 +3964,14 @@ public class ITBigQueryTest {
     assertTrue(rs.next()); // second row
     // second row is non null, comparing the values
     assertEquals("StringValue1", rs.getString("StringField"));
-    assertEquals(0.3333333333333333d, rs.getDouble("BigNumericField"), 1e-9);
+    assertEquals(0.3333333333333333d, rs.getDouble("BigNumericField"), 0.0);
     assertFalse(rs.getBoolean("BooleanField"));
     assertNotNull(rs.getBytes("BytesField"));
     assertEquals(1, rs.getInt("IntegerField"));
     assertEquals(1534680695123L, rs.getTimestamp("TimestampField").getTime());
     assertEquals(java.sql.Date.valueOf("2018-08-19"), rs.getDate("DateField"));
-    assertEquals(10.1d, rs.getDouble("FloatField"), 1e-9);
-    assertEquals(100.0d, rs.getDouble("NumericField"), 1e-9);
+    assertEquals(10.1d, rs.getDouble("FloatField"), 0.0);
+    assertEquals(100.0d, rs.getDouble("NumericField"), 0.0);
     assertEquals(Time.valueOf(LocalTime.of(12, 11, 35, 123456)), rs.getTime("TimeField"));
     assertEquals("2018-08-19T12:11:35.123456", rs.getString("DateTimeField"));
     assertEquals("POINT(-122.35022 47.649154)", rs.getString("GeographyField"));
@@ -4017,14 +4017,14 @@ public class ITBigQueryTest {
     assertTrue(rs.next()); // first row
     // checking for the null or 0 column values
     assertNull(rs.getString("StringField"));
-    assertEquals(0.0d, rs.getDouble("BigNumericField"), 1e-9);
+    assertEquals(0.0d, rs.getDouble("BigNumericField"), 0.0);
     assertFalse(rs.getBoolean("BooleanField"));
     assertNull(rs.getBytes("BytesField"));
     assertEquals(0, rs.getInt("IntegerField"));
     assertNull(rs.getTimestamp("TimestampField"));
     assertNull(rs.getDate("DateField"));
-    assertEquals(0.0d, rs.getDouble("FloatField"), 1e-9);
-    assertEquals(0.0d, rs.getDouble("NumericField"), 1e-9);
+    assertEquals(0.0d, rs.getDouble("FloatField"), 0.0);
+    assertEquals(0.0d, rs.getDouble("NumericField"), 0.0);
     assertNull(rs.getTime("TimeField"));
     assertNull(rs.getString("DateTimeField"));
     assertNull(rs.getString("GeographyField"));
@@ -4034,14 +4034,14 @@ public class ITBigQueryTest {
     assertTrue(rs.next()); // second row
     // second row is non null, comparing the values
     assertEquals("StringValue1", rs.getString("StringField"));
-    assertEquals(0.3333333333333333d, rs.getDouble("BigNumericField"), 1e-9);
+    assertEquals(0.3333333333333333d, rs.getDouble("BigNumericField"), 0.0);
     assertFalse(rs.getBoolean("BooleanField"));
     assertNotNull(rs.getBytes("BytesField"));
     assertEquals(1, rs.getInt("IntegerField"));
     assertEquals(1534680695123L, rs.getTimestamp("TimestampField").getTime());
     assertEquals(java.sql.Date.valueOf("2018-08-19"), rs.getDate("DateField"));
-    assertEquals(10.1d, rs.getDouble("FloatField"), 1e-9);
-    assertEquals(100.0d, rs.getDouble("NumericField"), 1e-9);
+    assertEquals(10.1d, rs.getDouble("FloatField"), 0.0);
+    assertEquals(100.0d, rs.getDouble("NumericField"), 0.0);
     assertEquals(
         Time.valueOf(LocalTime.of(12, 11, 35, 123456)).toString(),
         rs.getTime("TimeField").toString());
@@ -4366,7 +4366,7 @@ public class ITBigQueryTest {
     assertEquals(2, bigQueryResult.getTotalRows()); // Expecting 2 rows
     while (rs.next()) {
       assertEquals(rs.getString(0), rs.getString("StringField"));
-      assertEquals(rs.getDouble(1), rs.getDouble("BigNumericField"), 1e-9);
+      assertEquals(rs.getDouble(1), rs.getDouble("BigNumericField"), 0.0);
       assertEquals(rs.getBoolean(2), rs.getBoolean("BooleanField"));
       if (rs.getBytes(3) == null) { // both overloads should be null
         assertEquals(rs.getBytes(3), rs.getBytes("BytesField"));
@@ -4378,8 +4378,8 @@ public class ITBigQueryTest {
       assertEquals(rs.getInt(4), rs.getInt("IntegerField"));
       assertEquals(rs.getTimestamp(5), rs.getTimestamp("TimestampField"));
       assertEquals(rs.getDate(9), rs.getDate("DateField"));
-      assertEquals(rs.getDouble("FloatField"), rs.getDouble(6), 1e-9);
-      assertEquals(rs.getDouble("NumericField"), rs.getDouble(7), 1e-9);
+      assertEquals(rs.getDouble("FloatField"), rs.getDouble(6), 0.0);
+      assertEquals(rs.getDouble("NumericField"), rs.getDouble(7), 0.0);
       assertEquals(rs.getTime(8), rs.getTime("TimeField"));
       assertEquals(rs.getString(10), rs.getString("DateTimeField"));
       assertEquals(rs.getString(11), rs.getString("GeographyField"));
@@ -6517,7 +6517,10 @@ public class ITBigQueryTest {
 
     String datasetName = "locationset_" + UUID.randomUUID().toString().replace("-", "_");
     Dataset dataset =
-        otelBigquery.create(DatasetInfo.newBuilder(datasetName).setLocation(location).build());
+        otelBigquery.create(
+            DatasetInfo.newBuilder("locationset_" + UUID.randomUUID().toString().replace("-", "_"))
+                .setLocation(location)
+                .build());
     try {
       TableId tableId = TableId.of(dataset.getDatasetId().getDataset(), "sometable");
       Schema schema = Schema.of(Field.of("name", LegacySQLTypeName.STRING));
@@ -6605,7 +6608,7 @@ public class ITBigQueryTest {
         }
       }
     } finally {
-      RemoteBigQueryHelper.forceDelete(bigquery, datasetName);
+      bigquery.delete(dataset.getDatasetId(), DatasetDeleteOption.deleteContents());
     }
   }
 
