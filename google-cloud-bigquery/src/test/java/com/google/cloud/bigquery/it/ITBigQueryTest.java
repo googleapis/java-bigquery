@@ -1099,10 +1099,12 @@ public class ITBigQueryTest {
             .setContentType("application/json")
             .build(),
         JSON_CONTENT_SIMPLE.getBytes(StandardCharsets.UTF_8));
-    InputStream stream =
-        ITBigQueryTest.class.getClassLoader().getResourceAsStream("QueryTestData.csv");
-    storage.createFrom(
-        BlobInfo.newBuilder(BUCKET, LOAD_FILE_LARGE).setContentType("text/plain").build(), stream);
+    try (InputStream stream =
+        ITBigQueryTest.class.getClassLoader().getResourceAsStream("QueryTestData.csv")) {
+      storage.createFrom(
+          BlobInfo.newBuilder(BUCKET, LOAD_FILE_LARGE).setContentType("text/plain").build(),
+          stream);
+    }
     storage.create(
         BlobInfo.newBuilder(BUCKET, JSON_LOAD_FILE_BQ_RESULTSET)
             .setContentType("application/json")
@@ -1176,8 +1178,6 @@ public class ITBigQueryTest {
     Job jobLargeTable = bigquery.create(JobInfo.of(configurationLargeTable));
     jobLargeTable = jobLargeTable.waitFor();
     assertNull(jobLargeTable.getStatus().getError());
-
-    stream.close();
   }
 
   @AfterClass
