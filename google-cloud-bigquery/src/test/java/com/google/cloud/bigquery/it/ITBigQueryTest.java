@@ -4857,7 +4857,10 @@ public class ITBigQueryTest {
             .setDefaultDataset(DatasetId.of(DATASET))
             .build();
     BigQueryException exception =
-        assertThrows(BigQueryException.class, () -> bigquery.query(configInvalidQuery));
+        assertThrows(
+            "BigQueryException was expected",
+            BigQueryException.class,
+            () -> bigquery.query(configInvalidQuery));
     BigQueryError error = exception.getError();
     assertNotNull(error.getMessage());
     assertEquals("invalidQuery", error.getReason());
@@ -4870,7 +4873,10 @@ public class ITBigQueryTest {
             .build();
 
     BigQueryException exception1 =
-        assertThrows(BigQueryException.class, () -> bigquery.query(configMissingTable));
+        assertThrows(
+            "BigQueryException was expected",
+            BigQueryException.class,
+            () -> bigquery.query(configMissingTable));
     BigQueryError error1 = exception1.getError();
     assertNotNull(error1.getMessage());
     assertEquals("notFound", error1.getReason());
@@ -6494,7 +6500,8 @@ public class ITBigQueryTest {
   public void testLocation() throws Exception {
     String location = "EU";
     String wrongLocation = "US";
-    assertNotEquals(location, wrongLocation);
+
+    assertThat(location).isNotEqualTo(wrongLocation);
 
     Tracer tracer = otel.getTracer("Test Tracer");
     BigQuery otelBigquery =
@@ -7348,7 +7355,10 @@ public class ITBigQueryTest {
     BigQuery bigQuery = bigQueryOptions.getService();
 
     BigQueryException exception =
-        assertThrows(BigQueryException.class, () -> bigQuery.listDatasets("bigquery-public-data"));
+        assertThrows(
+            "RPCs to invalid universe domain should fail",
+            BigQueryException.class,
+            () -> bigQuery.listDatasets("bigquery-public-data"));
     assertEquals(HTTP_UNAUTHORIZED, exception.getCode());
     assertNotNull(exception.getMessage());
     assertTrue(
