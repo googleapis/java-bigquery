@@ -7684,6 +7684,7 @@ public class ITBigQueryTest {
 
       dataset = bigquery.update(updatedInfo, DatasetOption.accessPolicyVersion(2));
       assertEquals("Updated Description", dataset.getDescription());
+      assertTrue(bigquery.delete(dataset.getDatasetId()));
     } finally {
       parentSpan.end();
       Map<AttributeKey<?>, Object> createMap =
