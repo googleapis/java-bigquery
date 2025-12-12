@@ -1723,7 +1723,6 @@ public class ITBigQueryTest {
                   "timestampParam",
                   QueryParameterValue.range(RANGE_TEST_VALUES_TIMESTAMP.get("bounded")))
               .build();
-      System.out.println(config.getQuery());
       result = bigquery.query(config);
 
       assertEquals(1, Iterables.size(result.getValues()));
