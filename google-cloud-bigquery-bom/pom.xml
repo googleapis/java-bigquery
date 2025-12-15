@@ -54,11 +54,7 @@
         <dependency>
           <groupId>com.google.cloud</groupId>
           <artifactId>google-cloud-bigquery</artifactId>
-<<<<<<< HEAD
-          <version>2.56.1-rc1-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
-=======
           <version>2.57.2-SNAPSHOT</version><!-- {x-version-update:google-cloud-bigquery:current} -->
->>>>>>> adbe2e04 (chore(main): release 2.57.2-SNAPSHOT (#4032))
         </dependency>
       </dependencies>
     </dependencyManagement>
