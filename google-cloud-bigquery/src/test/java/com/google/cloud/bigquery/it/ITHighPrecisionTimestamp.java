@@ -66,7 +66,7 @@ public class ITHighPrecisionTimestamp {
   private static final Schema TABLE_SCHEMA = Schema.of(TIMESTAMP_HIGH_PRECISION_FIELD_SCHEMA);
 
   private static final String TIMESTAMP1 = "2025-01-01T12:34:56.123456789123Z";
-  private static final String TIMESTAMP2 = "1970-01-01T12:12:12.123456789123Z";
+  private static final String TIMESTAMP2 = "1970-01-01T12:34:56.123456789123Z";
   private static final String TIMESTAMP3 = "2000-01-01T12:34:56.123456789123Z";
 
   @BeforeClass
@@ -228,6 +228,31 @@ public class ITHighPrecisionTimestamp {
     for (int i = 0; i < timestamps.size(); i++) {
       assertEquals(expected[i], timestamps.get(i));
     }
+
+    String query1 =
+        String.format(
+            "SELECT * FROM %s.%s WHERE timestampHighPrecisionField < CAST(@timestampParam AS TIMESTAMP(12))",
+            DATASET, defaultTableId.getTable());
+
+    QueryJobConfiguration queryConfig1 =
+        QueryJobConfiguration.newBuilder(query1)
+            .setDefaultDataset(DATASET)
+            .setUseLegacySql(false)
+            .addNamedParameter(
+                "timestampParam", QueryParameterValue.timestamp("2000-01-01 12:34:56.123456789123"))
+            .build();
+
+    TableResult result1 = bigquery.query(queryConfig1);
+    assertNotNull(result1);
+    String[] expected1 = new String[] {TIMESTAMP2};
+    List<String> timestamps1 =
+        StreamSupport.stream(result1.getValues().spliterator(), false)
+            .map(x -> (String) x.get(0).getValue())
+            .collect(Collectors.toList());
+    assertEquals(expected1.length, timestamps1.size());
+    for (int i = 0; i < timestamps1.size(); i++) {
+      assertEquals(expected1[i], timestamps1.get(i));
+    }
   }
 
   @Test
@@ -249,16 +274,18 @@ public class ITHighPrecisionTimestamp {
 
     TableResult result = bigquery.query(queryConfig);
     assertNotNull(result);
+    // Exact timestamp for TIMESTAMP3 is `2000-01-01T12:34:56.123456789123Z` and for the micros
+    // is `2000-01-01T12:34:56.123456Z`. The micros value gets cast to 12 digits of precision, so
+    // it becomes `2000-01-01T12:34:56.123456000000Z`. We do expect it as part of the query.
+    String[] expected = new String[] {TIMESTAMP1, TIMESTAMP3};
     List<String> timestamps =
         StreamSupport.stream(result.getValues().spliterator(), false)
             .map(x -> (String) x.get(0).getValue())
             .collect(Collectors.toList());
-    assertEquals(2, timestamps.size());
-    assertEquals(TIMESTAMP1, timestamps.get(0));
-    // Exact timestamp for TIMESTAMP 3 is `2000-01-01T12:34:56.123456789123Z` and for the micros
-    // is `2000-01-01T12:34:56.123456Z`. The micros value gets cast to 12 digits of precision, so
-    // it becomes `2000-01-01T12:34:56.1234560000Z`.
-    assertEquals(TIMESTAMP3, timestamps.get(1));
+    assertEquals(expected.length, timestamps.size());
+    for (int i = 0; i < timestamps.size(); i++) {
+      assertEquals(expected[i], timestamps.get(i));
+    }
 
     String query1 =
         String.format(
@@ -277,15 +304,18 @@ public class ITHighPrecisionTimestamp {
 
     TableResult result1 = bigquery.query(queryConfig1);
     assertNotNull(result1);
+    // Exact timestamp for TIMESTAMP3 is `2000-01-01T12:34:56.123456789123Z` and for the micros
+    // is `2000-01-01T12:34:56.123456Z`. The micros value gets cast to 12 digits of precision, so
+    // it becomes `2000-01-01T12:34:56.123456000000Z`. Do not expect it as part of the query.
+    String[] expected1 = new String[] {TIMESTAMP2};
     List<String> timestamps1 =
         StreamSupport.stream(result1.getValues().spliterator(), false)
             .map(x -> (String) x.get(0).getValue())
             .collect(Collectors.toList());
-    assertEquals(1, timestamps1.size());
-    // Exact timestamp for TIMESTAMP 3 is `2000-01-01T12:34:56.123456789123Z` and for the micros
-    // is `2000-01-01T12:34:56.123456Z`. The micros value gets cast to 12 digits of precision, so
-    // it becomes `2000-01-01T12:34:56.1234560000Z`.
-    assertEquals(TIMESTAMP2, timestamps1.get(0));
+    assertEquals(expected1.length, timestamps1.size());
+    for (int i = 0; i < timestamps1.size(); i++) {
+      assertEquals(expected1[i], timestamps1.get(i));
+    }
   }
 
   @Test
