@@ -214,7 +214,8 @@ public class ITHighPrecisionTimestamp {
             .setDefaultDataset(DATASET)
             .setUseLegacySql(false)
             .addNamedParameter(
-                "timestampParam", QueryParameterValue.timestamp("2000-01-01 12:34:56.123456789123"))
+                "timestampParam",
+                QueryParameterValue.timestamp("2000-01-01 12:34:56.123456789123Z"))
             .build();
 
     TableResult result = bigquery.query(queryConfig);
@@ -239,7 +240,8 @@ public class ITHighPrecisionTimestamp {
             .setDefaultDataset(DATASET)
             .setUseLegacySql(false)
             .addNamedParameter(
-                "timestampParam", QueryParameterValue.timestamp("2000-01-01 12:34:56.123456789123"))
+                "timestampParam",
+                QueryParameterValue.timestamp("2000-01-01 12:34:56.123456789123Z"))
             .build();
 
     TableResult result1 = bigquery.query(queryConfig1);
@@ -269,7 +271,7 @@ public class ITHighPrecisionTimestamp {
             .addNamedParameter(
                 "timestampParam",
                 QueryParameterValue.timestamp(
-                    946730096123456L)) // micros for 2000-01-01 12:34:56.123456
+                    946730096123456L)) // micros for 2000-01-01 12:34:56.123456Z
             .build();
 
     TableResult result = bigquery.query(queryConfig);
@@ -299,7 +301,7 @@ public class ITHighPrecisionTimestamp {
             .addNamedParameter(
                 "timestampParam",
                 QueryParameterValue.timestamp(
-                    946730096123456L)) // micros for 2000-01-01 12:34:56.123456
+                    946730096123456L)) // micros for 2000-01-01 12:34:56.123456Z
             .build();
 
     TableResult result1 = bigquery.query(queryConfig1);
@@ -331,7 +333,7 @@ public class ITHighPrecisionTimestamp {
             .setDefaultDataset(DATASET)
             .setUseLegacySql(false)
             .addNamedParameter(
-                "timestampParam", QueryParameterValue.timestamp("2000-01-01 12:34:56.123456"))
+                "timestampParam", QueryParameterValue.timestamp("2000-01-01 12:34:56.123456Z"))
             .build();
 
     TableResult result = bigquery.query(queryConfig);
