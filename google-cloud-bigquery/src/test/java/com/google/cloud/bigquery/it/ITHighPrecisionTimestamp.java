@@ -112,10 +112,10 @@ public class ITHighPrecisionTimestamp {
 
   @AfterClass
   public static void afterClass() {
-    if (bigquery != null) {
-      bigquery.delete(defaultTableId);
-      RemoteBigQueryHelper.forceDelete(bigquery, DATASET);
-    }
+    //    if (bigquery != null) {
+    //      bigquery.delete(defaultTableId);
+    //      RemoteBigQueryHelper.forceDelete(bigquery, DATASET);
+    //    }
   }
 
   private static String generateTempTableName() {
@@ -208,40 +208,13 @@ public class ITHighPrecisionTimestamp {
 
   @Test
   public void queryNamedParameter_highPrecisionTimestamp() throws InterruptedException {
-    //    String query =
-    //        String.format(
-    //            "SELECT * FROM %s.%s WHERE timestampHighPrecisionField >= CAST(@timestampParam AS
-    // TIMESTAMP(12))",
-    //            DATASET, defaultTableId.getTable());
-    //
-    //    QueryJobConfiguration queryConfig =
-    //        QueryJobConfiguration.newBuilder(query)
-    //            .setDefaultDataset(DATASET)
-    //            .setUseLegacySql(false)
-    //            .addNamedParameter(
-    //                "timestampParam",
-    //                QueryParameterValue.timestamp("2000-01-01 12:34:56.123456789123Z"))
-    //            .build();
-    //
-    //    TableResult result = bigquery.query(queryConfig);
-    //    assertNotNull(result);
-    //    String[] expected = new String[] {TIMESTAMP1, TIMESTAMP3};
-    //    List<String> timestamps =
-    //        StreamSupport.stream(result.getValues().spliterator(), false)
-    //            .map(x -> (String) x.get(0).getValue())
-    //            .collect(Collectors.toList());
-    //    assertEquals(expected.length, timestamps.size());
-    //    for (int i = 0; i < timestamps.size(); i++) {
-    //      assertEquals(expected[i], timestamps.get(i));
-    //    }
-
-    String query1 =
+    String query =
         String.format(
-            "SELECT * FROM %s.%s WHERE timestampHighPrecisionField < CAST(@timestampParam AS TIMESTAMP(12))",
+            "SELECT * FROM %s.%s WHERE timestampHighPrecisionField >= CAST(@timestampParam AS TIMESTAMP(12))",
             DATASET, defaultTableId.getTable());
 
-    QueryJobConfiguration queryConfig1 =
-        QueryJobConfiguration.newBuilder(query1)
+    QueryJobConfiguration queryConfig =
+        QueryJobConfiguration.newBuilder(query)
             .setDefaultDataset(DATASET)
             .setUseLegacySql(false)
             .addNamedParameter(
@@ -249,61 +222,28 @@ public class ITHighPrecisionTimestamp {
                 QueryParameterValue.timestamp("2000-01-01 12:34:56.123456789123Z"))
             .build();
 
-    TableResult result1 = bigquery.query(queryConfig1);
-    assertNotNull(result1);
-    String[] expected1 = new String[] {TIMESTAMP2};
-    List<String> timestamps1 =
-        StreamSupport.stream(result1.getValues().spliterator(), false)
+    TableResult result = bigquery.query(queryConfig);
+    assertNotNull(result);
+    String[] expected = new String[] {TIMESTAMP1, TIMESTAMP3};
+    List<String> timestamps =
+        StreamSupport.stream(result.getValues().spliterator(), false)
             .map(x -> (String) x.get(0).getValue())
             .collect(Collectors.toList());
-    assertEquals(expected1.length, timestamps1.size());
-    for (int i = 0; i < timestamps1.size(); i++) {
-      assertEquals(expected1[i], timestamps1.get(i));
+    assertEquals(expected.length, timestamps.size());
+    for (int i = 0; i < timestamps.size(); i++) {
+      assertEquals(expected[i], timestamps.get(i));
     }
   }
 
   @Test
   public void queryNamedParameter_highPrecisionTimestamp_microsLong() throws InterruptedException {
-    //    String query =
-    //        String.format(
-    //            "SELECT * FROM %s.%s WHERE timestampHighPrecisionField >= CAST(@timestampParam AS
-    // TIMESTAMP(12))",
-    //            DATASET, defaultTableId.getTable());
-    //
-    //    QueryJobConfiguration queryConfig =
-    //        QueryJobConfiguration.newBuilder(query)
-    //            .setDefaultDataset(DATASET)
-    //            .setUseLegacySql(false)
-    //            .addNamedParameter(
-    //                "timestampParam",
-    //                QueryParameterValue.timestamp(
-    //                    946730096123456L)) // micros for 2000-01-01 12:34:56.123456Z
-    //            .build();
-    //
-    //    TableResult result = bigquery.query(queryConfig);
-    //    assertNotNull(result);
-    //    // Exact timestamp for TIMESTAMP3 is `2000-01-01T12:34:56.123456789123Z` and for the
-    // micros
-    //    // is `2000-01-01T12:34:56.123456Z`. The micros value gets cast to 12 digits of precision,
-    // so
-    //    // it becomes `2000-01-01T12:34:56.123456000000Z`. We do expect it as part of the query.
-    //    String[] expected = new String[] {TIMESTAMP1, TIMESTAMP3};
-    //    List<String> timestamps =
-    //        StreamSupport.stream(result.getValues().spliterator(), false)
-    //            .map(x -> (String) x.get(0).getValue())
-    //            .collect(Collectors.toList());
-    //    assertEquals(expected.length, timestamps.size());
-    //    for (int i = 0; i < timestamps.size(); i++) {
-    //      assertEquals(expected[i], timestamps.get(i));
-    //    }
-
-    String query1 =
+    String query =
         String.format(
-            "SELECT * FROM %s.%s WHERE timestampHighPrecisionField < CAST(@timestampParam AS TIMESTAMP(12))",
+            "SELECT * FROM %s.%s WHERE timestampHighPrecisionField >= CAST(@timestampParam AS TIMESTAMP(12))",
             DATASET, defaultTableId.getTable());
 
-    QueryJobConfiguration queryConfig1 =
-        QueryJobConfiguration.newBuilder(query1)
+    QueryJobConfiguration queryConfig =
+        QueryJobConfiguration.newBuilder(query)
             .setDefaultDataset(DATASET)
             .setUseLegacySql(false)
             .addNamedParameter(
@@ -312,19 +252,19 @@ public class ITHighPrecisionTimestamp {
                     946730096123456L)) // micros for 2000-01-01 12:34:56.123456Z
             .build();
 
-    TableResult result1 = bigquery.query(queryConfig1);
-    assertNotNull(result1);
+    TableResult result = bigquery.query(queryConfig);
+    assertNotNull(result);
     // Exact timestamp for TIMESTAMP3 is `2000-01-01T12:34:56.123456789123Z` and for the micros
     // is `2000-01-01T12:34:56.123456Z`. The micros value gets cast to 12 digits of precision, so
-    // it becomes `2000-01-01T12:34:56.123456000000Z`. Do not expect it as part of the query.
-    String[] expected1 = new String[] {TIMESTAMP2};
-    List<String> timestamps1 =
-        StreamSupport.stream(result1.getValues().spliterator(), false)
+    // it becomes `2000-01-01T12:34:56.123456000000Z`. We do expect it as part of the query.
+    String[] expected = new String[] {TIMESTAMP1, TIMESTAMP3};
+    List<String> timestamps =
+        StreamSupport.stream(result.getValues().spliterator(), false)
             .map(x -> (String) x.get(0).getValue())
             .collect(Collectors.toList());
-    assertEquals(expected1.length, timestamps1.size());
-    for (int i = 0; i < timestamps1.size(); i++) {
-      assertEquals(expected1[i], timestamps1.get(i));
+    assertEquals(expected.length, timestamps.size());
+    for (int i = 0; i < timestamps.size(); i++) {
+      assertEquals(expected[i], timestamps.get(i));
     }
   }
 
