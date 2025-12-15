@@ -112,10 +112,10 @@ public class ITHighPrecisionTimestamp {
 
   @AfterClass
   public static void afterClass() {
-    //    if (bigquery != null) {
-    //      bigquery.delete(defaultTableId);
-    //      RemoteBigQueryHelper.forceDelete(bigquery, DATASET);
-    //    }
+    if (bigquery != null) {
+      bigquery.delete(defaultTableId);
+      RemoteBigQueryHelper.forceDelete(bigquery, DATASET);
+    }
   }
 
   private static String generateTempTableName() {
