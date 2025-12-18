@@ -18,14 +18,14 @@ package com.google.cloud.bigquery;
 
 import static com.google.common.collect.ObjectArrays.concat;
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -42,15 +42,13 @@ import com.google.cloud.bigquery.JobStatistics.QueryStatistics;
 import com.google.cloud.bigquery.JobStatus.State;
 import com.google.common.collect.ImmutableList;
 import java.time.Duration;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.junit.MockitoRule;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class JobTest {
 
   private static final JobId JOB_ID = JobId.of("project", "job");
@@ -94,14 +92,12 @@ public class JobTest {
           .retryOnMessage(BigQueryErrorMessages.RATE_LIMIT_EXCEEDED_MSG)
           .build();
 
-  @Rule public MockitoRule rule;
-
   private BigQuery bigquery;
   private BigQueryOptions mockOptions;
   private Job expectedJob;
   private Job job;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     bigquery = mock(BigQuery.class);
     mockOptions = mock(BigQueryOptions.class);
@@ -343,9 +339,9 @@ public class JobTest {
   public void testWaitForAndGetQueryResults_Unsupported() throws InterruptedException {
     try {
       job.getQueryResults();
-      Assert.fail();
+      Assertions.fail();
     } catch (UnsupportedOperationException expected) {
-      Assert.assertNotNull(expected.getMessage());
+      Assertions.assertNotNull(expected.getMessage());
     }
   }
 
@@ -404,9 +400,9 @@ public class JobTest {
     try {
       job.waitFor(
           concat(TEST_RETRY_OPTIONS, RetryOption.totalTimeoutDuration(Duration.ofMillis(3))));
-      Assert.fail();
+      Assertions.fail();
     } catch (BigQueryException expected) {
-      Assert.assertNotNull(expected.getMessage());
+      Assertions.assertNotNull(expected.getMessage());
     }
   }
 
