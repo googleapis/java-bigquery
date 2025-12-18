@@ -16,12 +16,12 @@
 
 package com.google.cloud.bigquery.it;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.bigquery.BigQuery;
@@ -66,12 +66,12 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.arrow.vector.util.JsonStringArrayList;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.Timeout;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
+@Timeout(value = 1800) // 30 min timeout
 public class ITNightlyBigQueryTest {
   private static final Logger logger = Logger.getLogger(ITNightlyBigQueryTest.class.getName());
   private static final String DATASET = RemoteBigQueryHelper.generateDatasetName();
@@ -170,9 +170,7 @@ public class ITNightlyBigQueryTest {
               .setDescription("IntervalFieldDescription")
               .build());
 
-  @Rule public Timeout globalTimeout = Timeout.seconds(1800); // setting 30 mins as the timeout
-
-  @BeforeClass
+  @BeforeAll
   public static void beforeClass() throws InterruptedException, IOException {
     RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
     bigquery = bigqueryHelper.getOptions().getService();
@@ -181,7 +179,7 @@ public class ITNightlyBigQueryTest {
     populateTestRecords(DATASET, TABLE);
   }
 
-  @AfterClass
+  @AfterAll
   public static void afterClass() {
     try {
       if (bigquery != null) {
@@ -343,7 +341,7 @@ public class ITNightlyBigQueryTest {
   @Test
   public void testConnectionClose() throws SQLException {
     Connection connection = bigquery.createConnection();
-    assertNotNull("bigquery.createConnection() returned null", connection);
+    assertNotNull(connection, "bigquery.createConnection() returned null");
     BigQueryResult bigQueryResult = connection.executeSelect(QUERY);
     logger.log(Level.INFO, "Query used: {0}", QUERY);
     ResultSet rs = bigQueryResult.getResultSet();

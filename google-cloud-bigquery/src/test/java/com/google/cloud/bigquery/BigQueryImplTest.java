@@ -20,7 +20,14 @@ import static com.google.cloud.bigquery.BigQuery.JobField.STATISTICS;
 import static com.google.cloud.bigquery.BigQuery.JobField.USER_EMAIL;
 import static com.google.cloud.bigquery.BigQueryImpl.optionMap;
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.*;
 
 import com.google.api.gax.paging.Page;
@@ -47,16 +54,19 @@ import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class BigQueryImplTest {
 
   private static final String PROJECT = "project";
@@ -537,7 +547,7 @@ public class BigQueryImplTest {
         .build();
   }
 
-  @Before
+  @BeforeEach
   public void setUp() {
     rpcFactoryMock = mock(BigQueryRpcFactory.class);
     bigqueryRpcMock = mock(HttpBigQueryRpc.class);
@@ -631,9 +641,9 @@ public class BigQueryImplTest {
     bigquery = options.getService();
     try {
       bigquery.getDataset("dataset-not-found");
-      Assert.fail();
+      Assertions.fail();
     } catch (BigQueryException ex) {
-      Assert.assertNotNull(ex.getMessage());
+      Assertions.assertNotNull(ex.getMessage());
     }
     verify(bigqueryRpcMock)
         .getDatasetSkipExceptionTranslation(PROJECT, "dataset-not-found", EMPTY_RPC_OPTIONS);
@@ -979,9 +989,9 @@ public class BigQueryImplTest {
     bigquery = options.getService();
     try {
       bigquery.getTable(DATASET, "table-not-found");
-      Assert.fail();
+      Assertions.fail();
     } catch (BigQueryException ex) {
-      Assert.assertNotNull(ex.getMessage());
+      Assertions.assertNotNull(ex.getMessage());
     }
     verify(bigqueryRpcMock)
         .getTableSkipExceptionTranslation(PROJECT, DATASET, "table-not-found", EMPTY_RPC_OPTIONS);
@@ -1468,9 +1478,9 @@ public class BigQueryImplTest {
             .getService();
     try {
       bigquery.insertAll(request);
-      Assert.fail();
+      Assertions.fail();
     } catch (BigQueryException ex) {
-      Assert.assertNotNull(ex.getMessage());
+      Assertions.assertNotNull(ex.getMessage());
     }
     verify(bigqueryRpcMock).insertAll(PROJECT, DATASET, TABLE, requestPb);
   }
@@ -2055,9 +2065,9 @@ public class BigQueryImplTest {
     bigquery = options.getService();
     try {
       bigquery.getJob("job-not-found");
-      Assert.fail();
+      Assertions.fail();
     } catch (BigQueryException ex) {
-      Assert.assertNotNull(ex.getMessage());
+      Assertions.assertNotNull(ex.getMessage());
     }
     verify(bigqueryRpcMock)
         .getJobSkipExceptionTranslation(PROJECT, "job-not-found", null, EMPTY_RPC_OPTIONS);
@@ -2783,9 +2793,9 @@ public class BigQueryImplTest {
             .getService();
     try {
       bigquery.getDataset(DatasetId.of(DATASET));
-      Assert.fail();
+      Assertions.fail();
     } catch (BigQueryException ex) {
-      Assert.assertEquals(exceptionMessage, ex.getMessage());
+      assertEquals(exceptionMessage, ex.getMessage());
     }
     verify(bigqueryRpcMock).getDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS);
   }
@@ -2802,9 +2812,9 @@ public class BigQueryImplTest {
             .getService();
     try {
       bigquery.getDataset(DATASET);
-      Assert.fail();
+      Assertions.fail();
     } catch (BigQueryException ex) {
-      Assert.assertTrue(ex.getMessage().endsWith(exceptionMessage));
+      assertTrue(ex.getMessage().endsWith(exceptionMessage));
     }
     verify(bigqueryRpcMock).getDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS);
   }
@@ -2818,9 +2828,9 @@ public class BigQueryImplTest {
           .build()
           .getService()
           .query(QueryJobConfiguration.newBuilder("foo").setDryRun(true).build());
-      Assert.fail();
+      Assertions.fail();
     } catch (UnsupportedOperationException ex) {
-      Assert.assertNotNull(ex.getMessage());
+      Assertions.assertNotNull(ex.getMessage());
     }
   }
 

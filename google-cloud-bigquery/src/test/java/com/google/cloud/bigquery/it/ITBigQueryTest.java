@@ -20,15 +20,15 @@ import static com.google.cloud.bigquery.JobStatus.State.DONE;
 import static com.google.common.truth.Truth.assertThat;
 import static java.lang.System.currentTimeMillis;
 import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.api.client.util.IOUtils;
 import com.google.api.gax.paging.Page;
@@ -208,13 +208,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.Timeout;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.threeten.extra.PeriodDuration;
 
+@Timeout(value = 300)
 public class ITBigQueryTest {
 
   private static final byte[] BYTES = {0xD, 0xE, 0xA, 0xD};
@@ -1063,9 +1063,7 @@ public class ITBigQueryTest {
     }
   }
 
-  @Rule public Timeout globalTimeout = Timeout.seconds(300);
-
-  @BeforeClass
+  @BeforeAll
   public static void beforeClass() throws InterruptedException, IOException {
     RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
     RemoteStorageHelper storageHelper = RemoteStorageHelper.create();
@@ -1180,7 +1178,7 @@ public class ITBigQueryTest {
     assertNull(jobLargeTable.getStatus().getError());
   }
 
-  @AfterClass
+  @AfterAll
   public static void afterClass() throws Exception {
     if (bigquery != null) {
       RemoteBigQueryHelper.forceDelete(bigquery, DATASET);
@@ -1236,7 +1234,7 @@ public class ITBigQueryTest {
     int count = 0;
     for (Dataset dataset : datasets.getValues()) {
       assertTrue(
-          "failed to find label key in dataset", dataset.getLabels().containsKey("example-label1"));
+          dataset.getLabels().containsKey("example-label1"), "failed to find label key in dataset");
       assertEquals(
           "failed to find label value in dataset",
           "example-value1",
@@ -1586,9 +1584,9 @@ public class ITBigQueryTest {
               .build();
       BigQueryException exception =
           assertThrows(
-              "Querying with malformed JSON shouldn't work",
               BigQueryException.class,
-              () -> bigquery.query(dmlQueryJobConfiguration2));
+              () -> bigquery.query(dmlQueryJobConfiguration2),
+              "Querying with malformed JSON shouldn't work");
       BigQueryError error = exception.getError();
       assertNotNull(error);
       assertEquals("invalidQuery", error.getReason());
@@ -1899,7 +1897,7 @@ public class ITBigQueryTest {
     RemoteBigQueryHelper.forceDelete(bigquery, accessPolicyDataset);
   }
 
-  @Test(expected = BigQueryException.class)
+  @Test
   public void testCreateDatasetWithInvalidAccessPolicyVersion() throws IOException {
     String accessPolicyDataset = RemoteBigQueryHelper.generateDatasetName();
     ServiceAccountCredentials credentials =
@@ -1923,7 +1921,9 @@ public class ITBigQueryTest {
     Dataset dataset = bigquery.create(info, datasetOption);
     assertNotNull(dataset);
 
-    RemoteBigQueryHelper.forceDelete(bigquery, accessPolicyDataset);
+    assertThrows(
+        BigQueryException.class,
+        () -> RemoteBigQueryHelper.forceDelete(bigquery, accessPolicyDataset));
   }
 
   @Test
@@ -2821,9 +2821,9 @@ public class ITBigQueryTest {
             StandardTableDefinition.of(SIMPLE_SCHEMA));
     BigQueryException exception =
         assertThrows(
-            "BigQueryException was expected",
             BigQueryException.class,
-            () -> bigquery.update(tableInfo));
+            () -> bigquery.update(tableInfo),
+            "BigQueryException was expected");
     BigQueryError error = exception.getError();
     assertNotNull(error);
     assertEquals("notFound", error.getReason());
@@ -3417,9 +3417,9 @@ public class ITBigQueryTest {
         String.format("INSERT %s.%s VALUES('3', 10);", DATASET, TABLE_ID.getTable());
     BigQueryException exception =
         assertThrows(
-            "BigQueryException was expected",
             BigQueryException.class,
-            () -> bigquery.create(JobInfo.of(QueryJobConfiguration.of(invalidQuery))).waitFor());
+            () -> bigquery.create(JobInfo.of(QueryJobConfiguration.of(invalidQuery))).waitFor(),
+            "BigQueryException was expected");
     assertEquals("invalidQuery", exception.getReason());
     assertNotNull(exception.getMessage());
     BigQueryError error = exception.getError();
@@ -3436,9 +3436,9 @@ public class ITBigQueryTest {
             DATASET, TABLE_ID.getTable(), DATASET, TABLE_ID.getTable());
     BigQueryException exception =
         assertThrows(
-            "BigQueryException was expected",
             BigQueryException.class,
-            () -> bigquery.create(JobInfo.of(QueryJobConfiguration.of(invalidQuery))).waitFor());
+            () -> bigquery.create(JobInfo.of(QueryJobConfiguration.of(invalidQuery))).waitFor(),
+            "BigQueryException was expected");
     assertEquals("invalidQuery", exception.getReason());
     assertNotNull(exception.getMessage());
     BigQueryError error = exception.getError();
@@ -4304,7 +4304,7 @@ public class ITBigQueryTest {
   @Test
   public void testCreateDefaultConnection() throws BigQuerySQLException {
     Connection connection = bigquery.createConnection();
-    assertNotNull("bigquery.createConnection() returned null", connection);
+    assertNotNull(connection, "bigquery.createConnection() returned null");
     assertTrue(connection.close());
   }
 
@@ -4858,9 +4858,9 @@ public class ITBigQueryTest {
             .build();
     BigQueryException exception =
         assertThrows(
-            "BigQueryException was expected",
             BigQueryException.class,
-            () -> bigquery.query(configInvalidQuery));
+            () -> bigquery.query(configInvalidQuery),
+            "BigQueryException was expected");
     BigQueryError error = exception.getError();
     assertNotNull(error.getMessage());
     assertEquals("invalidQuery", error.getReason());
@@ -4874,9 +4874,9 @@ public class ITBigQueryTest {
 
     BigQueryException exception1 =
         assertThrows(
-            "BigQueryException was expected",
             BigQueryException.class,
-            () -> bigquery.query(configMissingTable));
+            () -> bigquery.query(configMissingTable),
+            "BigQueryException was expected");
     BigQueryError error1 = exception1.getError();
     assertNotNull(error1.getMessage());
     assertEquals("notFound", error1.getReason());
@@ -5563,9 +5563,9 @@ public class ITBigQueryTest {
             .build();
 
     assertThrows(
-        "an empty array of struct query parameter shouldn't work with 'IN UNNEST'",
         BigQueryException.class,
-        () -> bigquery.query(config));
+        () -> bigquery.query(config),
+        "an empty array of struct query parameter shouldn't work with 'IN UNNEST'");
   }
 
   @Test
@@ -5723,10 +5723,10 @@ public class ITBigQueryTest {
       foundMax = Math.max(job.getStatistics().getCreationTime(), foundMax);
     }
     assertTrue(
-        "Found min job time " + foundMin + " earlier than " + lowerBound, foundMin >= lowerBound);
+        foundMin >= lowerBound, "Found min job time " + foundMin + " earlier than " + lowerBound);
     assertTrue(
-        "Found max job time " + foundMax + " later than " + upperBound, foundMax <= upperBound);
-    assertTrue("no jobs listed", jobCount > 0);
+        foundMax <= upperBound, "Found max job time " + foundMax + " later than " + upperBound);
+    assertTrue(jobCount > 0, "no jobs listed");
   }
 
   @Test
@@ -6563,14 +6563,14 @@ public class ITBigQueryTest {
           .isEmpty();
 
       assertThrows(
-          "querying a table with wrong location shouldn't work",
           BigQueryException.class,
           () ->
               otelBigquery
                   .query(
                       QueryJobConfiguration.of(query),
                       JobId.newBuilder().setLocation(wrongLocation).build())
-                  .iterateAll());
+                  .iterateAll(),
+          "querying a table with wrong location shouldn't work");
 
       // Test write
       {
@@ -6590,14 +6590,14 @@ public class ITBigQueryTest {
         }
 
         assertThrows(
-            "writing to a table with wrong location shouldn't work",
             BigQueryException.class,
             () -> {
               try (TableDataWriteChannel ignore =
                   otelBigquery.writer(
                       JobId.newBuilder().setLocation(wrongLocation).build(),
                       writeChannelConfiguration)) {}
-            });
+            },
+            "writing to a table with wrong location shouldn't work");
       }
     } finally {
       RemoteBigQueryHelper.forceDelete(bigquery, datasetName);
@@ -6909,8 +6909,8 @@ public class ITBigQueryTest {
     String sourceDirectory = "bigquery/hive-partitioning-table/example";
     BlobInfo blobInfo = BlobInfo.newBuilder(BUCKET, sourceDirectory + "/key=foo/data.json").build();
     assertNotNull(
-        "Failed to upload JSON to GCS",
-        storage.create(blobInfo, "{\"name\":\"bar\"}".getBytes(StandardCharsets.UTF_8)));
+        storage.create(blobInfo, "{\"name\":\"bar\"}".getBytes(StandardCharsets.UTF_8)),
+        "Failed to upload JSON to GCS");
     String sourceUri = "gs://" + BUCKET + "/" + sourceDirectory + "/*";
     String sourceUriPrefix = "gs://" + BUCKET + "/" + sourceDirectory + "/";
 
@@ -7294,7 +7294,6 @@ public class ITBigQueryTest {
 
       // Test stateless query when BigQueryOption location does not match dataset location.
       assertThrows(
-          "querying a table with wrong location shouldn't work",
           BigQueryException.class,
           () -> {
             BigQuery bigQueryWrongLocation =
@@ -7306,7 +7305,8 @@ public class ITBigQueryTest {
                 .getOptions()
                 .setDefaultJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL);
             bigQueryWrongLocation.query(QueryJobConfiguration.of(query));
-          });
+          },
+          "querying a table with wrong location shouldn't work");
     } finally {
       RemoteBigQueryHelper.forceDelete(bigQuery, datasetName);
     }
@@ -7368,9 +7368,9 @@ public class ITBigQueryTest {
 
     BigQueryException exception =
         assertThrows(
-            "RPCs to invalid universe domain should fail",
             BigQueryException.class,
-            () -> bigQuery.listDatasets("bigquery-public-data"));
+            () -> bigQuery.listDatasets("bigquery-public-data"),
+            "RPCs to invalid universe domain should fail");
     assertEquals(HTTP_UNAUTHORIZED, exception.getCode());
     assertNotNull(exception.getMessage());
     assertTrue(
@@ -7390,9 +7390,9 @@ public class ITBigQueryTest {
 
     BigQueryException exception =
         assertThrows(
-            "RPCs to invalid universe domain should fail",
             BigQueryException.class,
-            () -> bigQuery.listDatasets("bigquery-public-data"));
+            () -> bigQuery.listDatasets("bigquery-public-data"),
+            "RPCs to invalid universe domain should fail");
     assertEquals(HTTP_UNAUTHORIZED, exception.getCode());
     assertNotNull(exception.getMessage());
     assertTrue(
@@ -7482,9 +7482,9 @@ public class ITBigQueryTest {
 
     BigQueryException exception =
         assertThrows(
-            "BigQueryException was expected",
             BigQueryException.class,
-            () -> bigquery.create(tableInfo));
+            () -> bigquery.create(tableInfo),
+            "BigQueryException was expected");
     BigQueryError error = exception.getError();
     assertNotNull(error);
     assertEquals("invalid", error.getReason());

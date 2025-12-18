@@ -16,14 +16,14 @@
 
 package com.google.cloud.bigquery;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.google.cloud.bigquery.TimePartitioning.Type;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TimePartitioningTest {
 
@@ -93,7 +93,7 @@ public class TimePartitioningTest {
   public void testTypeOf_Npe() {
     try {
       TimePartitioning.of(null);
-      Assert.fail();
+      Assertions.fail();
     } catch (NullPointerException ex) {
       assertNotNull(ex.getMessage());
     }
@@ -103,7 +103,7 @@ public class TimePartitioningTest {
   public void testTypeAndExpirationOf_Npe() {
     try {
       TimePartitioning.of(null, EXPIRATION_MS);
-      Assert.fail();
+      Assertions.fail();
     } catch (NullPointerException ex) {
       assertNotNull(ex.getMessage());
     }

@@ -16,11 +16,11 @@
 
 package com.google.cloud.bigquery;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -39,15 +39,18 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Random;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class TableDataWriteChannelTest {
 
   private static final String UPLOAD_ID = "uploadid";
@@ -80,7 +83,7 @@ public class TableDataWriteChannelTest {
 
   private TableDataWriteChannel writer;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     rpcFactoryMock = mock(BigQueryRpcFactory.class);
     bigqueryRpcMock = mock(HttpBigQueryRpc.class);
@@ -144,9 +147,9 @@ public class TableDataWriteChannelTest {
         .thenThrow(new RuntimeException("expected"));
     try (TableDataWriteChannel channel =
         new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION)) {
-      Assert.fail();
+      Assertions.fail();
     } catch (RuntimeException expected) {
-      Assert.assertEquals("java.lang.RuntimeException: expected", expected.getMessage());
+      Assertions.assertEquals("java.lang.RuntimeException: expected", expected.getMessage());
     }
     verify(bigqueryRpcMock)
         .openSkipExceptionTranslation(
@@ -276,9 +279,9 @@ public class TableDataWriteChannelTest {
         buffers[i] = randomBuffer(MIN_CHUNK_SIZE);
         assertEquals(MIN_CHUNK_SIZE, writer.write(buffers[i]));
       }
-      Assert.fail();
+      Assertions.fail();
     } catch (RuntimeException expected) {
-      Assert.assertEquals("java.lang.RuntimeException: expected", expected.getMessage());
+      Assertions.assertEquals("java.lang.RuntimeException: expected", expected.getMessage());
     }
     verify(bigqueryRpcMock)
         .openSkipExceptionTranslation(
