@@ -1925,7 +1925,9 @@ class ITBigQueryTest {
     DatasetOption datasetOption = DatasetOption.accessPolicyVersion(4);
     assertThrows(BigQueryException.class, () -> bigquery.create(info, datasetOption));
 
-    RemoteBigQueryHelper.forceDelete(bigquery, accessPolicyDataset);
+    assertThrows(
+        BigQueryException.class,
+        () -> RemoteBigQueryHelper.forceDelete(bigquery, accessPolicyDataset));
   }
 
   @Test
