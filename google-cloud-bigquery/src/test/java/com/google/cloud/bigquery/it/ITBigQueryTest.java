@@ -7220,16 +7220,11 @@ public class ITBigQueryTest {
     String query = "SELECT 1 as one";
     QueryJobConfiguration configStateless = QueryJobConfiguration.newBuilder(query).build();
     TableResult result = bigQuery.query(configStateless);
-    // FIX START: Handle race condition where network latency causes fallback to Job creation.
-    if (result.getJobId() != null) {
-      // If the server forced a Job ID (due to latency/timeout), the Query ID should be null.
-      // This is valid fallback behavior as per the library contract.
-      assertNull(result.getQueryId());
-    } else {
-      // If the query remained stateless, we expect a Query ID.
-      assertNotNull(result.getQueryId());
-    }
-    // FIX END
+    // A stateless query should result in either a queryId (stateless success) or a jobId (fallback to a job).
+    // Exactly one of them should be non-null.
+    assertTrue(
+        "Exactly one of jobId or queryId should be non-null",
+        (result.getJobId() != null) ^ (result.getQueryId() != null));
 
     // Test scenario 2 by failing stateless check by setting job timeout.
     QueryJobConfiguration configQueryWithJob =
