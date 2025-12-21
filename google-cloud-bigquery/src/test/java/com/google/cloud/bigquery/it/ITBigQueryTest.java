@@ -7181,8 +7181,10 @@ public class ITBigQueryTest {
     // Stateless query should have no job id.
     bigQuery.getOptions().setDefaultJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL);
     TableResult tableResult = executeSimpleQuery(bigQuery);
-    assertNotNull(tableResult.getQueryId());
-    assertNull(tableResult.getJobId());
+    // Use XOR: We accept EITHER a QueryId (fast path) OR a JobId (slow fallback), but not both.
+    assertTrue(
+        "Exactly one of jobId or queryId should be non-null",
+        (tableResult.getJobId() != null) ^ (tableResult.getQueryId() != null));
 
     // Job creation takes over, no query id is created.
     bigQuery.getOptions().setDefaultJobCreationMode(JobCreationMode.JOB_CREATION_REQUIRED);
@@ -7220,7 +7222,8 @@ public class ITBigQueryTest {
     String query = "SELECT 1 as one";
     QueryJobConfiguration configStateless = QueryJobConfiguration.newBuilder(query).build();
     TableResult result = bigQuery.query(configStateless);
-    // A stateless query should result in either a queryId (stateless success) or a jobId (fallback to a job).
+    // A stateless query should result in either a queryId (stateless success) or a jobId (fallback
+    // to a job).
     // Exactly one of them should be non-null.
     assertTrue(
         "Exactly one of jobId or queryId should be non-null",
