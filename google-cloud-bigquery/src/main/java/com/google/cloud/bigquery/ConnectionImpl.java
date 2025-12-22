@@ -1069,7 +1069,20 @@ class ConnectionImpl implements Connection {
             }
 
           } catch (Exception e) {
-            throw BigQueryException.translateAndThrow(e);
+            boolean isInterrupted = e.getCause() instanceof InterruptedException;
+
+            if (e instanceof com.google.api.gax.rpc.CancelledException) {
+              isInterrupted = true;
+            }
+            if (isInterrupted) {
+              // Log silently and let it fall through to 'finally' for cleanup.
+              // This is the "graceful shutdown".
+              logger.log(
+                  Level.INFO, "Background thread interrupted (Connection Closed). Stopping.");
+              Thread.currentThread().interrupt();
+            } else {
+              throw BigQueryException.translateAndThrow(e);
+            }
           } finally { // logic needed for graceful shutdown
             // marking end of stream
             try {
