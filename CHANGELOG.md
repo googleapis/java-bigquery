@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.57.2](https://github.com/googleapis/java-bigquery/compare/v2.57.1...v2.57.2) (2025-12-23)
+
+
+### Bug Fixes
+
+* Job.isDone() uses Job.Status.State if available ([#4039](https://github.com/googleapis/java-bigquery/issues/4039)) ([fa0a12e](https://github.com/googleapis/java-bigquery/commit/fa0a12e3cf171abab528c318ba3f4260b69a5274))
+
 ## [2.57.1](https://github.com/googleapis/java-bigquery/compare/v2.57.0...v2.57.1) (2025-12-12)
 
 
