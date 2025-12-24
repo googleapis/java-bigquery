@@ -15,8 +15,8 @@
  */
 package com.google.cloud.bigquery.it;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.bigquery.BigQuery;
@@ -39,9 +39,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ITRemoteUDFTest {
 
@@ -56,7 +56,7 @@ public class ITRemoteUDFTest {
   private static Connection connection;
   private static BigQuery bigquery;
 
-  @Before
+  @BeforeEach
   public void setUp() throws IOException {
     RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
     bigquery = bigqueryHelper.getOptions().getService();
@@ -76,7 +76,7 @@ public class ITRemoteUDFTest {
     connection = client.createConnection(request);
   }
 
-  @AfterClass
+  @AfterAll
   public static void afterClass() {
     if (bigquery != null) {
       RemoteBigQueryHelper.forceDelete(bigquery, ROUTINE_DATASET);

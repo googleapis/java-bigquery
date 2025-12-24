@@ -15,11 +15,11 @@
  */
 package com.google.cloud.bigquery;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class RemoteFunctionOptionsTest {
   private static final String endpoint = "https://aaabbbccc-uc.a.run.app";
