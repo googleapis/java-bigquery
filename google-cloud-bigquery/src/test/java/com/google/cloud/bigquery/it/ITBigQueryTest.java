@@ -7182,7 +7182,8 @@ public class ITBigQueryTest {
     bigQuery.getOptions().setDefaultJobCreationMode(JobCreationMode.JOB_CREATION_OPTIONAL);
     TableResult tableResult = executeSimpleQuery(bigQuery);
     // Use XOR: We accept EITHER a QueryId (fast path) OR a JobId (slow fallback), but not both.
-    // Ideally Stateless query will return queryId but in some cases it would return jobId instead of queryId based on the query complexity or other factors (job timeout configs).
+    // Ideally Stateless query will return queryId but in some cases it would return jobId instead
+    // of queryId based on the query complexity or other factors (job timeout configs).
     assertTrue(
         "Exactly one of jobId or queryId should be non-null",
         (tableResult.getJobId() != null) ^ (tableResult.getQueryId() != null));
@@ -7226,6 +7227,8 @@ public class ITBigQueryTest {
     // A stateless query should result in either a queryId (stateless success) or a jobId (fallback
     // to a job).
     // Exactly one of them should be non-null.
+    // Ideally Stateless query will return queryId but in some cases it would return jobId instead
+    // of queryId based on the query complexity or other factors (job timeout configs).
     assertTrue(
         "Exactly one of jobId or queryId should be non-null",
         (result.getJobId() != null) ^ (result.getQueryId() != null));
