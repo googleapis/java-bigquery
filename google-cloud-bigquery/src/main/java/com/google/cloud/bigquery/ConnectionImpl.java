@@ -1069,9 +1069,7 @@ class ConnectionImpl implements Connection {
             }
 
           } catch (Exception e) {
-            if (e instanceof InterruptedException
-                || e.getCause() instanceof InterruptedException
-                || e instanceof com.google.api.gax.rpc.CancelledException) {
+            if (e instanceof InterruptedException || e.getCause() instanceof InterruptedException) {
               // Log silently and let it fall through to 'finally' for cleanup.
               // This is the "graceful shutdown".
               logger.log(
