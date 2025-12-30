@@ -16,24 +16,22 @@
 
 package com.google.cloud.bigquery;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.junit.MockitoRule;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ModelTest {
 
   private static final ModelId MODEL_ID = ModelId.of("dataset", "model");
@@ -54,14 +52,12 @@ public class ModelTest {
           .setFriendlyName(FRIENDLY_NAME)
           .build();
 
-  @Rule public MockitoRule rule;
-
   private BigQuery bigquery;
   private BigQueryOptions mockOptions;
   private Model expectedModel;
   private Model model;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     bigquery = mock(BigQuery.class);
     mockOptions = mock(BigQueryOptions.class);

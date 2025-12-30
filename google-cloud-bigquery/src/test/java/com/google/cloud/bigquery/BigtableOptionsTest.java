@@ -18,8 +18,8 @@ package com.google.cloud.bigquery;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class BigtableOptionsTest {
 
@@ -83,31 +83,31 @@ public class BigtableOptionsTest {
   public void testNullPointerException() {
     try {
       BigtableColumnFamily.newBuilder().setFamilyID(null).build();
-      Assert.fail();
+      Assertions.fail();
     } catch (NullPointerException ex) {
       assertThat(ex.getMessage()).isNotNull();
     }
     try {
       BigtableColumnFamily.newBuilder().setColumns(null).build();
-      Assert.fail();
+      Assertions.fail();
     } catch (NullPointerException ex) {
       assertThat(ex.getMessage()).isNotNull();
     }
     try {
       BigtableColumnFamily.newBuilder().setEncoding(null).build();
-      Assert.fail();
+      Assertions.fail();
     } catch (NullPointerException ex) {
       assertThat(ex.getMessage()).isNotNull();
     }
     try {
       BigtableColumnFamily.newBuilder().setOnlyReadLatest(null).build();
-      Assert.fail();
+      Assertions.fail();
     } catch (NullPointerException ex) {
       assertThat(ex.getMessage()).isNotNull();
     }
     try {
       BigtableColumnFamily.newBuilder().setType(null).build();
-      Assert.fail();
+      Assertions.fail();
     } catch (NullPointerException ex) {
       assertThat(ex.getMessage()).isNotNull();
     }

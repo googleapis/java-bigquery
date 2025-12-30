@@ -22,7 +22,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.api.gax.paging.Page;
 import com.google.cloud.PageImpl;
 import com.google.common.collect.ImmutableList;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TableResultTest {
   private static final Page<FieldValueList> INNER_PAGE_0 =

@@ -16,7 +16,7 @@
 
 package com.google.cloud.bigquery;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.google.api.services.bigquery.model.Dataset;
 import com.google.cloud.bigquery.Acl.DatasetAclEntity;
@@ -31,7 +31,7 @@ import com.google.cloud.bigquery.Acl.User;
 import com.google.cloud.bigquery.Acl.View;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class AclTest {
 

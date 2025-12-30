@@ -37,7 +37,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import org.apache.arrow.vector.util.Text;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class BigQueryResultImplTest {
 
