@@ -16,22 +16,21 @@
 
 package com.example.bigquery;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertNotNull;
+
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.StandardSQLTypeName;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static com.google.common.truth.Truth.assertThat;
-import static junit.framework.TestCase.assertNotNull;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class CreateTableTimestampIT {
   private final Logger log = Logger.getLogger(this.getClass().getName());
