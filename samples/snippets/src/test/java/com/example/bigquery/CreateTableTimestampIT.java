@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Google LLC
+ * Copyright 2026 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +16,24 @@
 
 package com.example.bigquery;
 
-import static com.google.common.truth.Truth.assertThat;
-import static junit.framework.TestCase.assertNotNull;
-
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.StandardSQLTypeName;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class CreateTableIT {
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import static com.google.common.truth.Truth.assertThat;
+import static junit.framework.TestCase.assertNotNull;
+
+public class CreateTableTimestampIT {
   private final Logger log = Logger.getLogger(this.getClass().getName());
   private String tableName;
   private ByteArrayOutputStream bout;
@@ -74,10 +74,8 @@ public class CreateTableIT {
   @Test
   public void testCreateTable() {
     Schema schema =
-        Schema.of(
-            Field.of("stringField", StandardSQLTypeName.STRING),
-            Field.of("booleanField", StandardSQLTypeName.BOOL));
-    CreateTable.createTable(BIGQUERY_DATASET_NAME, tableName, schema);
+        Schema.of(Field.of("timestampField", StandardSQLTypeName.TIMESTAMP));
+    CreateTableTimestamp.createTable(BIGQUERY_DATASET_NAME, tableName, schema);
     assertThat(bout.toString()).contains("Table created successfully");
   }
 }
