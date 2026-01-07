@@ -7187,8 +7187,8 @@ public class ITBigQueryTest {
     // Ideally Stateless query will return queryId but in some cases it would return jobId instead
     // of queryId based on the query complexity or other factors (job timeout configs).
     assertTrue(
-        "Exactly one of jobId or queryId should be non-null",
-        (tableResult.getJobId() != null) ^ (tableResult.getQueryId() != null));
+        (tableResult.getJobId() != null) ^ (tableResult.getQueryId() != null),
+        "Exactly one of jobId or queryId should be non-null");
 
     // Job creation takes over, no query id is created.
     bigQuery.getOptions().setDefaultJobCreationMode(JobCreationMode.JOB_CREATION_REQUIRED);
@@ -7232,8 +7232,8 @@ public class ITBigQueryTest {
     // Ideally Stateless query will return queryId but in some cases it would return jobId instead
     // of queryId based on the query complexity or other factors (job timeout configs).
     assertTrue(
-        "Exactly one of jobId or queryId should be non-null",
-        (result.getJobId() != null) ^ (result.getQueryId() != null));
+        (result.getJobId() != null) ^ (result.getQueryId() != null),
+        "Exactly one of jobId or queryId should be non-null");
 
     // Test scenario 2 by failing stateless check by setting job timeout.
     QueryJobConfiguration configQueryWithJob =
