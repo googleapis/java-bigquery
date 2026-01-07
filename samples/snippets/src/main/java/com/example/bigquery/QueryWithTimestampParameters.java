@@ -38,7 +38,7 @@ public class QueryWithTimestampParameters {
 
       ZonedDateTime timestamp = LocalDateTime.of(2016, 12, 7, 8, 0, 0).atZone(ZoneOffset.UTC);
       String query = "SELECT last_reported FROM "
-          + "bigquery-public-data.new_york_citibike.citibike_stations"
+          + "`bigquery-public-data`.new_york_citibike.citibike_stations"
           + " WHERE last_reported >= @ts_value LIMIT 5";
       // Note: Standard SQL is required to use query parameters.
       QueryJobConfiguration queryConfig =
