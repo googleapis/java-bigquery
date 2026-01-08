@@ -657,8 +657,12 @@ public class BigQueryImplTest {
     options.setThrowNotFound(true);
     bigquery = options.getService();
     BigQueryException ex =
+<<<<<<< HEAD
         Assertions.assertThrows(
             BigQueryException.class, () -> bigquery.getDataset("dataset-not-found"));
+=======
+        Assertions.assertThrows(BigQueryException.class, () -> bigquery.getDataset("dataset-not-found"));
+>>>>>>> 91dc2386 (feat: migrate tests to JUnit 5 assertThrows and static imports)
     Assertions.assertNotNull(ex.getMessage());
     verify(bigqueryRpcMock)
         .getDatasetSkipExceptionTranslation(PROJECT, "dataset-not-found", EMPTY_RPC_OPTIONS);
@@ -2805,8 +2809,12 @@ public class BigQueryImplTest {
             .build()
             .getService();
     BigQueryException ex =
+<<<<<<< HEAD
         Assertions.assertThrows(
             BigQueryException.class, () -> bigquery.getDataset(DatasetId.of(DATASET)));
+=======
+        Assertions.assertThrows(BigQueryException.class, () -> bigquery.getDataset(DatasetId.of(DATASET)));
+>>>>>>> 91dc2386 (feat: migrate tests to JUnit 5 assertThrows and static imports)
     assertEquals(exceptionMessage, ex.getMessage());
     verify(bigqueryRpcMock).getDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS);
   }

@@ -17,7 +17,7 @@
 package com.example.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Schema;
