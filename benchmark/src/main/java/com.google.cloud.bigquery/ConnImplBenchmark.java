@@ -53,7 +53,7 @@ public class ConnImplBenchmark {
       "SELECT * FROM bigquery-public-data.new_york_taxi_trips.tlc_yellow_trips_2017 LIMIT %s";
 
   @Setup
-  void setUp() throws IOException {
+  public void setUp() throws IOException {
     java.util.logging.Logger.getGlobal().setLevel(Level.ALL);
 
     connectionSettingsReadAPIEnabled = ConnectionSettings.newBuilder()
@@ -67,7 +67,7 @@ public class ConnImplBenchmark {
   }
 
   @Benchmark
-  void iterateRecordsWithBigQuery_Query(Blackhole blackhole) throws InterruptedException {
+  public void iterateRecordsWithBigQuery_Query(Blackhole blackhole) throws InterruptedException {
     String selectQuery = String.format(QUERY, rowLimit);
     BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
     QueryJobConfiguration config =
@@ -111,7 +111,7 @@ public class ConnImplBenchmark {
   }
 
   @Benchmark
-  void iterateRecordsUsingReadAPI(Blackhole blackhole)
+  public void iterateRecordsUsingReadAPI(Blackhole blackhole)
       throws InterruptedException, BigQuerySQLException {
     Connection connectionReadAPIEnabled =
         BigQueryOptions.getDefaultInstance()
@@ -131,7 +131,7 @@ public class ConnImplBenchmark {
   }
 
   @Benchmark
-  void iterateRecordsWithoutUsingReadAPI(Blackhole blackhole)
+  public void iterateRecordsWithoutUsingReadAPI(Blackhole blackhole)
       throws InterruptedException, BigQuerySQLException {
     Connection connectionReadAPIDisabled =
         BigQueryOptions.getDefaultInstance()

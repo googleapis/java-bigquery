@@ -55,7 +55,7 @@ public class QueryBenchmark {
   private BigQuery bigquery;
 
   @Setup
-  void setUp() {
+  public void setUp() {
     this.bigquery = BigQueryOptions.getDefaultInstance().getService();
   }
 
@@ -90,7 +90,7 @@ public class QueryBenchmark {
   }
 
   @Benchmark
-  void query(QueryParams queryParams, Blackhole blackhole) throws Exception {
+  public void query(QueryParams queryParams, Blackhole blackhole) throws Exception {
     queryPerform(queryParams.queries, blackhole);
   }
 }
