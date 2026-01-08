@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-public class ConnectionSettingsTest {
+class ConnectionSettingsTest {
   private static final String TEST_PROJECT_ID = "test-project-id";
   private static final DatasetId DATASET_ID = DatasetId.of("dataset");
   private static final TableId TABLE_ID = TableId.of("dataset", "table");
@@ -116,19 +116,19 @@ public class ConnectionSettingsTest {
           .build();
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareConnectionSettings(CONNECTION_SETTINGS, CONNECTION_SETTINGS.toBuilder().build());
   }
 
   @Test
-  public void testToBuilderIncomplete() {
+  void testToBuilderIncomplete() {
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder().setDefaultDataset(DATASET_ID).build();
     compareConnectionSettings(connectionSettings, connectionSettings.toBuilder().build());
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertEquals(REQUEST_TIMEOUT, CONNECTION_SETTINGS.getRequestTimeout());
     assertEquals(NUM_BUFFERED_ROWS, CONNECTION_SETTINGS.getNumBufferedRows());
     assertEquals(MAX_RESULTS, CONNECTION_SETTINGS.getMaxResults());

@@ -548,7 +548,7 @@ public class BigQueryImplTest {
   }
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     rpcFactoryMock = mock(BigQueryRpcFactory.class);
     bigqueryRpcMock = mock(HttpBigQueryRpc.class);
     when(rpcFactoryMock.create(any(BigQueryOptions.class))).thenReturn(bigqueryRpcMock);
@@ -556,13 +556,13 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetOptions() {
+  void testGetOptions() {
     bigquery = options.getService();
     assertSame(options, bigquery.getOptions());
   }
 
   @Test
-  public void testCreateDataset() throws IOException {
+  void testCreateDataset() throws IOException {
     DatasetInfo datasetInfo = DATASET_INFO.setProjectId(OTHER_PROJECT);
     when(bigqueryRpcMock.createSkipExceptionTranslation(datasetInfo.toPb(), EMPTY_RPC_OPTIONS))
         .thenReturn(datasetInfo.toPb());
@@ -575,7 +575,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateDatasetWithSelectedFields() throws IOException {
+  void testCreateDatasetWithSelectedFields() throws IOException {
     when(bigqueryRpcMock.createSkipExceptionTranslation(
             eq(DATASET_INFO_WITH_PROJECT.toPb()), capturedOptions.capture()))
         .thenReturn(DATASET_INFO_WITH_PROJECT.toPb());
@@ -594,7 +594,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateDatasetWithAccessPolicy() throws IOException {
+  void testCreateDatasetWithAccessPolicy() throws IOException {
     DatasetInfo datasetInfo = DATASET_INFO.setProjectId(OTHER_PROJECT);
     DatasetOption datasetOption = DatasetOption.accessPolicyVersion(3);
     when(bigqueryRpcMock.createSkipExceptionTranslation(
@@ -610,7 +610,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetDataset() throws IOException {
+  void testGetDataset() throws IOException {
     when(bigqueryRpcMock.getDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS))
         .thenReturn(DATASET_INFO_WITH_PROJECT.toPb());
     bigquery = options.getService();
@@ -621,7 +621,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetDatasetNotFoundWhenThrowIsDisabled() throws IOException {
+  void testGetDatasetNotFoundWhenThrowIsDisabled() throws IOException {
     when(bigqueryRpcMock.getDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS))
         .thenReturn(DATASET_INFO_WITH_PROJECT.toPb());
     options.setThrowNotFound(false);
@@ -633,7 +633,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetDatasetNotFoundWhenThrowIsEnabled() throws IOException {
+  void testGetDatasetNotFoundWhenThrowIsEnabled() throws IOException {
     when(bigqueryRpcMock.getDatasetSkipExceptionTranslation(
             PROJECT, "dataset-not-found", EMPTY_RPC_OPTIONS))
         .thenThrow(new BigQueryException(404, "Dataset not found"));
@@ -650,7 +650,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetDatasetFromDatasetId() throws IOException {
+  void testGetDatasetFromDatasetId() throws IOException {
     when(bigqueryRpcMock.getDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS))
         .thenReturn(DATASET_INFO_WITH_PROJECT.toPb());
     bigquery = options.getService();
@@ -661,7 +661,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetDatasetFromDatasetIdWithProject() throws IOException {
+  void testGetDatasetFromDatasetIdWithProject() throws IOException {
     DatasetInfo datasetInfo = DATASET_INFO.setProjectId(OTHER_PROJECT);
     DatasetId datasetId = DatasetId.of(OTHER_PROJECT, DATASET);
     when(bigqueryRpcMock.getDatasetSkipExceptionTranslation(
@@ -675,7 +675,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetDatasetWithSelectedFields() throws IOException {
+  void testGetDatasetWithSelectedFields() throws IOException {
     when(bigqueryRpcMock.getDatasetSkipExceptionTranslation(
             eq(PROJECT), eq(DATASET), capturedOptions.capture()))
         .thenReturn(DATASET_INFO_WITH_PROJECT.toPb());
@@ -693,7 +693,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListDatasets() throws IOException {
+  void testListDatasets() throws IOException {
     bigquery = options.getService();
     ImmutableList<Dataset> datasetList =
         ImmutableList.of(
@@ -711,7 +711,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListDatasetsWithProjects() throws IOException {
+  void testListDatasetsWithProjects() throws IOException {
     bigquery = options.getService();
     ImmutableList<Dataset> datasetList =
         ImmutableList.of(
@@ -729,7 +729,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListEmptyDatasets() throws IOException {
+  void testListEmptyDatasets() throws IOException {
     ImmutableList<com.google.api.services.bigquery.model.Dataset> datasets = ImmutableList.of();
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Dataset>> result =
         Tuple.<String, Iterable<com.google.api.services.bigquery.model.Dataset>>of(null, datasets);
@@ -744,7 +744,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListDatasetsWithOptions() throws IOException {
+  void testListDatasetsWithOptions() throws IOException {
     bigquery = options.getService();
     ImmutableList<Dataset> datasetList =
         ImmutableList.of(
@@ -763,7 +763,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testDeleteDataset() throws IOException {
+  void testDeleteDataset() throws IOException {
     when(bigqueryRpcMock.deleteDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS))
         .thenReturn(true);
     bigquery = options.getService();
@@ -773,7 +773,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testDeleteDatasetFromDatasetId() throws IOException {
+  void testDeleteDatasetFromDatasetId() throws IOException {
     when(bigqueryRpcMock.deleteDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS))
         .thenReturn(true);
     bigquery = options.getService();
@@ -783,7 +783,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testDeleteDatasetFromDatasetIdWithProject() throws IOException {
+  void testDeleteDatasetFromDatasetIdWithProject() throws IOException {
     DatasetId datasetId = DatasetId.of(OTHER_PROJECT, DATASET);
     when(bigqueryRpcMock.deleteDatasetSkipExceptionTranslation(
             OTHER_PROJECT, DATASET, EMPTY_RPC_OPTIONS))
@@ -795,7 +795,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testDeleteDatasetWithOptions() throws IOException {
+  void testDeleteDatasetWithOptions() throws IOException {
     when(bigqueryRpcMock.deleteDatasetSkipExceptionTranslation(
             PROJECT, DATASET, DATASET_DELETE_OPTIONS))
         .thenReturn(true);
@@ -806,7 +806,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testUpdateDataset() throws IOException {
+  void testUpdateDataset() throws IOException {
     DatasetInfo updatedDatasetInfo =
         DATASET_INFO.setProjectId(OTHER_PROJECT).toBuilder()
             .setDescription("newDescription")
@@ -822,7 +822,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testUpdateDatasetWithSelectedFields() throws IOException {
+  void testUpdateDatasetWithSelectedFields() throws IOException {
     DatasetInfo updatedDatasetInfo =
         DATASET_INFO.toBuilder().setDescription("newDescription").build();
     DatasetInfo updatedDatasetInfoWithProject =
@@ -845,7 +845,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateTable() throws IOException {
+  void testCreateTable() throws IOException {
     TableInfo tableInfo = TABLE_INFO.setProjectId(OTHER_PROJECT);
     when(bigqueryRpcMock.createSkipExceptionTranslation(tableInfo.toPb(), EMPTY_RPC_OPTIONS))
         .thenReturn(tableInfo.toPb());
@@ -858,7 +858,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void tesCreateExternalTable() throws IOException {
+  void tesCreateExternalTable() throws IOException {
     TableInfo createTableInfo =
         TableInfo.of(TABLE_ID, ExternalTableDefinition.newBuilder().setSchema(TABLE_SCHEMA).build())
             .setProjectId(OTHER_PROJECT);
@@ -877,7 +877,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateTableWithoutProject() throws IOException {
+  void testCreateTableWithoutProject() throws IOException {
     TableInfo tableInfo = TABLE_INFO.setProjectId(PROJECT);
     TableId tableId = TableId.of("", TABLE_ID.getDataset(), TABLE_ID.getTable());
     tableInfo.toBuilder().setTableId(tableId);
@@ -891,7 +891,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateTableWithSelectedFields() throws IOException {
+  void testCreateTableWithSelectedFields() throws IOException {
     when(bigqueryRpcMock.createSkipExceptionTranslation(
             eq(TABLE_INFO_WITH_PROJECT.toPb()), capturedOptions.capture()))
         .thenReturn(TABLE_INFO_WITH_PROJECT.toPb());
@@ -909,7 +909,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetTable() throws IOException {
+  void testGetTable() throws IOException {
     when(bigqueryRpcMock.getTableSkipExceptionTranslation(
             PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
         .thenReturn(TABLE_INFO_WITH_PROJECT.toPb());
@@ -921,7 +921,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetModel() throws IOException {
+  void testGetModel() throws IOException {
     when(bigqueryRpcMock.getModelSkipExceptionTranslation(
             PROJECT, DATASET, MODEL, EMPTY_RPC_OPTIONS))
         .thenReturn(MODEL_INFO_WITH_PROJECT.toPb());
@@ -933,7 +933,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetModelNotFoundWhenThrowIsEnabled() throws IOException {
+  void testGetModelNotFoundWhenThrowIsEnabled() throws IOException {
     String expected = "Model not found";
     when(bigqueryRpcMock.getModelSkipExceptionTranslation(
             PROJECT, DATASET, MODEL, EMPTY_RPC_OPTIONS))
@@ -950,7 +950,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListPartition() throws IOException {
+  void testListPartition() throws IOException {
     when(bigqueryRpcMock.getTableSkipExceptionTranslation(
             PROJECT, DATASET, "table$__PARTITIONS_SUMMARY__", EMPTY_RPC_OPTIONS))
         .thenReturn(TABLE_INFO_PARTITIONS.toPb());
@@ -968,7 +968,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetTableNotFoundWhenThrowIsDisabled() throws IOException {
+  void testGetTableNotFoundWhenThrowIsDisabled() throws IOException {
     when(bigqueryRpcMock.getTableSkipExceptionTranslation(
             PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
         .thenReturn(TABLE_INFO_WITH_PROJECT.toPb());
@@ -981,7 +981,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetTableNotFoundWhenThrowIsEnabled() throws IOException {
+  void testGetTableNotFoundWhenThrowIsEnabled() throws IOException {
     when(bigqueryRpcMock.getTableSkipExceptionTranslation(
             PROJECT, DATASET, "table-not-found", EMPTY_RPC_OPTIONS))
         .thenThrow(new BigQueryException(404, "Table not found"));
@@ -998,7 +998,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetTableFromTableId() throws IOException {
+  void testGetTableFromTableId() throws IOException {
     when(bigqueryRpcMock.getTableSkipExceptionTranslation(
             PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
         .thenReturn(TABLE_INFO_WITH_PROJECT.toPb());
@@ -1010,7 +1010,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetTableFromTableIdWithProject() throws IOException {
+  void testGetTableFromTableIdWithProject() throws IOException {
     TableInfo tableInfo = TABLE_INFO.setProjectId(OTHER_PROJECT);
     TableId tableId = TABLE_ID.setProjectId(OTHER_PROJECT);
     when(bigqueryRpcMock.getTableSkipExceptionTranslation(
@@ -1026,7 +1026,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetTableFromTableIdWithoutProject() throws IOException {
+  void testGetTableFromTableIdWithoutProject() throws IOException {
     TableInfo tableInfo = TABLE_INFO.setProjectId(PROJECT);
     TableId tableId = TableId.of("", TABLE_ID.getDataset(), TABLE_ID.getTable());
     when(bigqueryRpcMock.getTableSkipExceptionTranslation(
@@ -1041,7 +1041,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetTableWithSelectedFields() throws IOException {
+  void testGetTableWithSelectedFields() throws IOException {
     when(bigqueryRpcMock.getTableSkipExceptionTranslation(
             eq(PROJECT), eq(DATASET), eq(TABLE), capturedOptions.capture()))
         .thenReturn(TABLE_INFO_WITH_PROJECT.toPb());
@@ -1059,7 +1059,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListTables() throws IOException {
+  void testListTables() throws IOException {
     bigquery = options.getService();
     ImmutableList<Table> tableList =
         ImmutableList.of(
@@ -1077,7 +1077,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListTablesReturnedParameters() throws IOException {
+  void testListTablesReturnedParameters() throws IOException {
     bigquery = options.getService();
     ImmutableList<Table> tableList =
         ImmutableList.of(
@@ -1094,7 +1094,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListTablesReturnedParametersNullType() throws IOException {
+  void testListTablesReturnedParametersNullType() throws IOException {
     bigquery = options.getService();
     ImmutableList<Table> tableList =
         ImmutableList.of(
@@ -1111,7 +1111,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListTablesWithRangePartitioning() throws IOException {
+  void testListTablesWithRangePartitioning() throws IOException {
     bigquery = options.getService();
     ImmutableList<Table> tableList =
         ImmutableList.of(
@@ -1128,7 +1128,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListTablesFromDatasetId() throws IOException {
+  void testListTablesFromDatasetId() throws IOException {
     bigquery = options.getService();
     ImmutableList<Table> tableList =
         ImmutableList.of(
@@ -1145,7 +1145,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListTablesFromDatasetIdWithProject() throws IOException {
+  void testListTablesFromDatasetIdWithProject() throws IOException {
     bigquery = options.getService();
     ImmutableList<Table> tableList =
         ImmutableList.of(
@@ -1163,7 +1163,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListTablesWithLabels() throws IOException {
+  void testListTablesWithLabels() throws IOException {
     bigquery = options.getService();
     ImmutableList<Table> tableList =
         ImmutableList.of(
@@ -1180,7 +1180,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListTablesWithOptions() throws IOException {
+  void testListTablesWithOptions() throws IOException {
     bigquery = options.getService();
     ImmutableList<Table> tableList =
         ImmutableList.of(
@@ -1198,7 +1198,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListModels() throws IOException {
+  void testListModels() throws IOException {
     bigquery = options.getService();
     ImmutableList<Model> modelList =
         ImmutableList.of(
@@ -1215,7 +1215,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListModelsWithModelId() throws IOException {
+  void testListModelsWithModelId() throws IOException {
     bigquery = options.getService();
     ImmutableList<Model> modelList =
         ImmutableList.of(
@@ -1232,7 +1232,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testDeleteTable() throws IOException {
+  void testDeleteTable() throws IOException {
     when(bigqueryRpcMock.deleteTableSkipExceptionTranslation(PROJECT, DATASET, TABLE))
         .thenReturn(true);
     bigquery = options.getService();
@@ -1241,7 +1241,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testDeleteTableFromTableId() throws IOException {
+  void testDeleteTableFromTableId() throws IOException {
     when(bigqueryRpcMock.deleteTableSkipExceptionTranslation(PROJECT, DATASET, TABLE))
         .thenReturn(true);
     bigquery = options.getService();
@@ -1250,7 +1250,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testDeleteTableFromTableIdWithProject() throws IOException {
+  void testDeleteTableFromTableIdWithProject() throws IOException {
     TableId tableId = TABLE_ID.setProjectId(OTHER_PROJECT);
     when(bigqueryRpcMock.deleteTableSkipExceptionTranslation(OTHER_PROJECT, DATASET, TABLE))
         .thenReturn(true);
@@ -1262,7 +1262,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testDeleteTableFromTableIdWithoutProject() throws IOException {
+  void testDeleteTableFromTableIdWithoutProject() throws IOException {
     TableId tableId = TableId.of("", TABLE_ID.getDataset(), TABLE_ID.getTable());
     when(bigqueryRpcMock.deleteTableSkipExceptionTranslation(PROJECT, DATASET, TABLE))
         .thenReturn(true);
@@ -1273,7 +1273,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testDeleteModel() throws IOException {
+  void testDeleteModel() throws IOException {
     when(bigqueryRpcMock.deleteModelSkipExceptionTranslation(PROJECT, DATASET, MODEL))
         .thenReturn(true);
     bigquery = options.getService();
@@ -1282,7 +1282,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testUpdateModel() throws IOException {
+  void testUpdateModel() throws IOException {
     ModelInfo updateModelInfo =
         MODEL_INFO_WITH_PROJECT.setProjectId(OTHER_PROJECT).toBuilder()
             .setDescription("newDescription")
@@ -1299,7 +1299,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testUpdateTable() throws IOException {
+  void testUpdateTable() throws IOException {
     TableInfo updatedTableInfo =
         TABLE_INFO.setProjectId(OTHER_PROJECT).toBuilder().setDescription("newDescription").build();
     when(bigqueryRpcMock.patchSkipExceptionTranslation(updatedTableInfo.toPb(), EMPTY_RPC_OPTIONS))
@@ -1314,7 +1314,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testUpdateExternalTableWithNewSchema() throws IOException {
+  void testUpdateExternalTableWithNewSchema() throws IOException {
     TableInfo updatedTableInfo =
         TableInfo.of(TABLE_ID, ExternalTableDefinition.newBuilder().setSchema(TABLE_SCHEMA).build())
             .setProjectId(OTHER_PROJECT);
@@ -1333,7 +1333,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testUpdateTableWithoutProject() throws IOException {
+  void testUpdateTableWithoutProject() throws IOException {
     TableInfo tableInfo = TABLE_INFO.setProjectId(PROJECT);
     TableId tableId = TableId.of("", TABLE_ID.getDataset(), TABLE_ID.getTable());
     tableInfo.toBuilder().setTableId(tableId);
@@ -1347,7 +1347,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testUpdateTableWithSelectedFields() throws IOException {
+  void testUpdateTableWithSelectedFields() throws IOException {
     TableInfo updatedTableInfo = TABLE_INFO.toBuilder().setDescription("newDescription").build();
     TableInfo updatedTableInfoWithProject =
         TABLE_INFO_WITH_PROJECT.toBuilder().setDescription("newDescription").build();
@@ -1369,7 +1369,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testUpdateTableWithAutoDetectSchema() throws IOException {
+  void testUpdateTableWithAutoDetectSchema() throws IOException {
     TableInfo updatedTableInfo = TABLE_INFO.toBuilder().setDescription("newDescription").build();
     TableInfo updatedTableInfoWithProject =
         TABLE_INFO_WITH_PROJECT.toBuilder().setDescription("newDescription").build();
@@ -1389,7 +1389,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testInsertAllWithRowIdShouldRetry() throws IOException {
+  void testInsertAllWithRowIdShouldRetry() throws IOException {
     Map<String, Object> row1 = ImmutableMap.<String, Object>of("field", "value1");
     Map<String, Object> row2 = ImmutableMap.<String, Object>of("field", "value2");
     List<RowToInsert> rows =
@@ -1442,7 +1442,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testInsertAllWithoutRowIdShouldNotRetry() {
+  void testInsertAllWithoutRowIdShouldNotRetry() {
     Map<String, Object> row1 = ImmutableMap.<String, Object>of("field", "value1");
     Map<String, Object> row2 = ImmutableMap.<String, Object>of("field", "value2");
     List<RowToInsert> rows = ImmutableList.of(RowToInsert.of(row1), RowToInsert.of(row2));
@@ -1486,7 +1486,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testInsertAllWithProject() throws IOException {
+  void testInsertAllWithProject() throws IOException {
     Map<String, Object> row1 = ImmutableMap.<String, Object>of("field", "value1");
     Map<String, Object> row2 = ImmutableMap.<String, Object>of("field", "value2");
     List<RowToInsert> rows =
@@ -1538,7 +1538,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testInsertAllWithProjectInTable() throws IOException {
+  void testInsertAllWithProjectInTable() throws IOException {
     Map<String, Object> row1 = ImmutableMap.<String, Object>of("field", "value1");
     Map<String, Object> row2 = ImmutableMap.<String, Object>of("field", "value2");
     List<RowToInsert> rows =
@@ -1591,7 +1591,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListTableData() throws IOException {
+  void testListTableData() throws IOException {
     when(bigqueryRpcMock.listTableDataSkipExceptionTranslation(
             PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
         .thenReturn(TABLE_DATA_PB);
@@ -1604,7 +1604,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListTableDataFromTableId() throws IOException {
+  void testListTableDataFromTableId() throws IOException {
     when(bigqueryRpcMock.listTableDataSkipExceptionTranslation(
             PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
         .thenReturn(TABLE_DATA_PB);
@@ -1617,7 +1617,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListTableDataFromTableIdWithProject() throws IOException {
+  void testListTableDataFromTableIdWithProject() throws IOException {
     TableId tableId = TABLE_ID.setProjectId(OTHER_PROJECT);
     when(bigqueryRpcMock.listTableDataSkipExceptionTranslation(
             OTHER_PROJECT, DATASET, TABLE, EMPTY_RPC_OPTIONS))
@@ -1632,7 +1632,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListTableDataWithOptions() throws IOException {
+  void testListTableDataWithOptions() throws IOException {
     when(bigqueryRpcMock.listTableDataSkipExceptionTranslation(
             PROJECT, DATASET, TABLE, TABLE_DATA_LIST_OPTIONS))
         .thenReturn(TABLE_DATA_PB);
@@ -1651,7 +1651,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListTableDataWithNextPage() throws IOException {
+  void testListTableDataWithNextPage() throws IOException {
     doReturn(TABLE_DATA_PB)
         .when(bigqueryRpcMock)
         .listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, TABLE_DATA_LIST_OPTIONS);
@@ -1697,7 +1697,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateJobSuccess() throws IOException {
+  void testCreateJobSuccess() throws IOException {
     String id = "testCreateJobSuccess-id";
     JobId jobId = JobId.of(id);
     String query = "SELECT * in FOO";
@@ -1714,7 +1714,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateJobFailureShouldRetryExceptionHandlerExceptions() throws IOException {
+  void testCreateJobFailureShouldRetryExceptionHandlerExceptions() throws IOException {
     when(bigqueryRpcMock.createSkipExceptionTranslation(
             jobCapture.capture(), eq(EMPTY_RPC_OPTIONS)))
         .thenThrow(new UnknownHostException())
@@ -1734,7 +1734,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateJobFailureShouldRetry() throws IOException {
+  void testCreateJobFailureShouldRetry() throws IOException {
     when(bigqueryRpcMock.createSkipExceptionTranslation(
             jobCapture.capture(), eq(EMPTY_RPC_OPTIONS)))
         .thenThrow(new BigQueryException(500, "InternalError"))
@@ -1759,7 +1759,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateJobWithBigQueryRetryConfigFailureShouldRetry() throws IOException {
+  void testCreateJobWithBigQueryRetryConfigFailureShouldRetry() throws IOException {
     // Validate create job with BigQueryRetryConfig that retries on rate limit error message.
     JobOption bigQueryRetryConfigOption =
         JobOption.bigQueryRetryConfig(
@@ -1792,7 +1792,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateJobWithBigQueryRetryConfigFailureShouldNotRetry() throws IOException {
+  void testCreateJobWithBigQueryRetryConfigFailureShouldNotRetry() throws IOException {
     // Validate create job with BigQueryRetryConfig that does not retry on rate limit error message.
     JobOption bigQueryRetryConfigOption =
         JobOption.bigQueryRetryConfig(BigQueryRetryConfig.newBuilder().build());
@@ -1829,7 +1829,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateJobWithRetryOptionsFailureShouldRetry() throws IOException {
+  void testCreateJobWithRetryOptionsFailureShouldRetry() throws IOException {
     // Validate create job with RetryOptions.
     JobOption retryOptions = JobOption.retryOptions(RetryOption.maxAttempts(4));
     Map<BigQueryRpc.Option, ?> bigQueryRpcOptions = optionMap(retryOptions);
@@ -1854,7 +1854,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateJobWithRetryOptionsFailureShouldNotRetry() throws IOException {
+  void testCreateJobWithRetryOptionsFailureShouldNotRetry() throws IOException {
     // Validate create job with RetryOptions that only attempts once (no retry).
     JobOption retryOptions = JobOption.retryOptions(RetryOption.maxAttempts(1));
     Map<BigQueryRpc.Option, ?> bigQueryRpcOptions = optionMap(retryOptions);
@@ -1888,7 +1888,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateJobWithSelectedFields() throws IOException {
+  void testCreateJobWithSelectedFields() throws IOException {
     when(bigqueryRpcMock.createSkipExceptionTranslation(
             any(com.google.api.services.bigquery.model.Job.class), capturedOptions.capture()))
         .thenReturn(newJobPb());
@@ -1909,7 +1909,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateJobNoGet() throws IOException {
+  void testCreateJobNoGet() throws IOException {
     String id = "testCreateJobNoGet-id";
     JobId jobId = JobId.of(id);
     String query = "SELECT * in FOO";
@@ -1930,7 +1930,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateJobTryGet() throws IOException {
+  void testCreateJobTryGet() throws IOException {
     final String id = "testCreateJobTryGet-id";
     String query = "SELECT * in FOO";
     Supplier<JobId> idProvider =
@@ -1959,7 +1959,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateJobTryGetNotRandom() throws IOException {
+  void testCreateJobTryGetNotRandom() throws IOException {
     Map<BigQueryRpc.Option, ?> withStatisticOption = optionMap(JobOption.fields(STATISTICS));
     final String id = "testCreateJobTryGet-id";
     String query = "SELECT * in FOO";
@@ -1991,7 +1991,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateJobWithProjectId() throws IOException {
+  void testCreateJobWithProjectId() throws IOException {
     JobInfo jobInfo =
         JobInfo.newBuilder(QUERY_JOB_CONFIGURATION.setProjectId(OTHER_PROJECT))
             .setJobId(JobId.of(OTHER_PROJECT, JOB))
@@ -2014,7 +2014,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testDeleteJob() throws IOException {
+  void testDeleteJob() throws IOException {
     JobId jobId = JobId.newBuilder().setJob(JOB).setProject(PROJECT).setLocation(LOCATION).build();
     when(bigqueryRpcMock.deleteJobSkipExceptionTranslation(PROJECT, JOB, LOCATION))
         .thenReturn(true);
@@ -2024,7 +2024,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetJob() throws IOException {
+  void testGetJob() throws IOException {
     when(bigqueryRpcMock.getJobSkipExceptionTranslation(PROJECT, JOB, null, EMPTY_RPC_OPTIONS))
         .thenReturn(COMPLETE_COPY_JOB.toPb());
     bigquery = options.getService();
@@ -2034,7 +2034,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetJobWithLocation() throws IOException {
+  void testGetJobWithLocation() throws IOException {
     when(bigqueryRpcMock.getJobSkipExceptionTranslation(PROJECT, JOB, LOCATION, EMPTY_RPC_OPTIONS))
         .thenReturn(COMPLETE_COPY_JOB.toPb());
     BigQueryOptions options = createBigQueryOptionsForProjectWithLocation(PROJECT, rpcFactoryMock);
@@ -2046,7 +2046,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetJobNotFoundWhenThrowIsDisabled() throws IOException {
+  void testGetJobNotFoundWhenThrowIsDisabled() throws IOException {
     when(bigqueryRpcMock.getJobSkipExceptionTranslation(PROJECT, JOB, null, EMPTY_RPC_OPTIONS))
         .thenReturn(COMPLETE_COPY_JOB.toPb());
     options.setThrowNotFound(false);
@@ -2057,7 +2057,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetJobNotFoundWhenThrowIsEnabled() throws IOException {
+  void testGetJobNotFoundWhenThrowIsEnabled() throws IOException {
     when(bigqueryRpcMock.getJobSkipExceptionTranslation(
             PROJECT, "job-not-found", null, EMPTY_RPC_OPTIONS))
         .thenThrow(new IOException("Job not found"));
@@ -2074,7 +2074,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetJobFromJobId() throws IOException {
+  void testGetJobFromJobId() throws IOException {
     when(bigqueryRpcMock.getJobSkipExceptionTranslation(PROJECT, JOB, null, EMPTY_RPC_OPTIONS))
         .thenReturn(COMPLETE_COPY_JOB.toPb());
     bigquery = options.getService();
@@ -2084,7 +2084,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetJobFromJobIdWithLocation() throws IOException {
+  void testGetJobFromJobIdWithLocation() throws IOException {
     when(bigqueryRpcMock.getJobSkipExceptionTranslation(PROJECT, JOB, LOCATION, EMPTY_RPC_OPTIONS))
         .thenReturn(COMPLETE_COPY_JOB.toPb());
     BigQueryOptions options = createBigQueryOptionsForProjectWithLocation(PROJECT, rpcFactoryMock);
@@ -2096,7 +2096,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetJobFromJobIdWithProject() throws IOException {
+  void testGetJobFromJobIdWithProject() throws IOException {
     JobId jobId = JobId.of(OTHER_PROJECT, JOB);
     JobInfo jobInfo = COPY_JOB.setProjectId(OTHER_PROJECT);
     when(bigqueryRpcMock.getJobSkipExceptionTranslation(
@@ -2110,7 +2110,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetJobFromJobIdWithProjectWithLocation() throws IOException {
+  void testGetJobFromJobIdWithProjectWithLocation() throws IOException {
     JobId jobId = JobId.of(OTHER_PROJECT, JOB);
     JobInfo jobInfo = COPY_JOB.setProjectId(OTHER_PROJECT);
     when(bigqueryRpcMock.getJobSkipExceptionTranslation(
@@ -2125,7 +2125,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListJobs() throws IOException {
+  void testListJobs() throws IOException {
     bigquery = options.getService();
     ImmutableList<Job> jobList =
         ImmutableList.of(
@@ -2151,7 +2151,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListJobsWithOptions() throws IOException {
+  void testListJobsWithOptions() throws IOException {
     bigquery = options.getService();
     ImmutableList<Job> jobList =
         ImmutableList.of(
@@ -2179,7 +2179,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListJobsWithSelectedFields() throws IOException {
+  void testListJobsWithSelectedFields() throws IOException {
     bigquery = options.getService();
     ImmutableList<Job> jobList =
         ImmutableList.of(
@@ -2215,7 +2215,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCancelJob() throws IOException {
+  void testCancelJob() throws IOException {
     when(bigqueryRpcMock.cancelSkipExceptionTranslation(PROJECT, JOB, null)).thenReturn(true);
     bigquery = options.getService();
     assertTrue(bigquery.cancel(JOB));
@@ -2223,7 +2223,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCancelJobFromJobId() throws IOException {
+  void testCancelJobFromJobId() throws IOException {
     when(bigqueryRpcMock.cancelSkipExceptionTranslation(PROJECT, JOB, null)).thenReturn(true);
     bigquery = options.getService();
     assertTrue(bigquery.cancel(JobId.of(PROJECT, JOB)));
@@ -2231,7 +2231,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCancelJobFromJobIdWithProject() throws IOException {
+  void testCancelJobFromJobIdWithProject() throws IOException {
     JobId jobId = JobId.of(OTHER_PROJECT, JOB);
     when(bigqueryRpcMock.cancelSkipExceptionTranslation(OTHER_PROJECT, JOB, null)).thenReturn(true);
     bigquery = options.getService();
@@ -2240,7 +2240,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testQueryRequestCompleted() throws InterruptedException, IOException {
+  void testQueryRequestCompleted() throws InterruptedException, IOException {
     JobId queryJob = JobId.of(PROJECT, JOB);
     com.google.api.services.bigquery.model.Job jobResponsePb =
         new com.google.api.services.bigquery.model.Job()
@@ -2295,7 +2295,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testFastQueryRequestCompleted() throws InterruptedException, IOException {
+  void testFastQueryRequestCompleted() throws InterruptedException, IOException {
     com.google.api.services.bigquery.model.QueryResponse queryResponsePb =
         new com.google.api.services.bigquery.model.QueryResponse()
             .setCacheHit(false)
@@ -2335,7 +2335,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testFastQueryRequestCompletedWithLocation() throws InterruptedException, IOException {
+  void testFastQueryRequestCompletedWithLocation() throws InterruptedException, IOException {
     com.google.api.services.bigquery.model.QueryResponse queryResponsePb =
         new com.google.api.services.bigquery.model.QueryResponse()
             .setCacheHit(false)
@@ -2376,7 +2376,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testFastQueryMultiplePages() throws InterruptedException, IOException {
+  void testFastQueryMultiplePages() throws InterruptedException, IOException {
     JobId queryJob = JobId.of(PROJECT, JOB);
     com.google.api.services.bigquery.model.Job responseJob =
         new com.google.api.services.bigquery.model.Job()
@@ -2432,7 +2432,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testFastQuerySlowDdl() throws InterruptedException, IOException {
+  void testFastQuerySlowDdl() throws InterruptedException, IOException {
     // mock new fast query path response when running a query that takes more than 10s
     JobId queryJob = JobId.of(PROJECT, JOB);
     com.google.api.services.bigquery.model.QueryResponse queryResponsePb =
@@ -2498,7 +2498,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testQueryRequestCompletedOptions() throws InterruptedException, IOException {
+  void testQueryRequestCompletedOptions() throws InterruptedException, IOException {
     JobId queryJob = JobId.of(PROJECT, JOB);
     com.google.api.services.bigquery.model.Job jobResponsePb =
         new com.google.api.services.bigquery.model.Job()
@@ -2556,7 +2556,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testQueryRequestCompletedOnSecondAttempt() throws InterruptedException, IOException {
+  void testQueryRequestCompletedOnSecondAttempt() throws InterruptedException, IOException {
     JobId queryJob = JobId.of(PROJECT, JOB);
     com.google.api.services.bigquery.model.Job jobResponsePb1 =
         new com.google.api.services.bigquery.model.Job()
@@ -2621,7 +2621,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testQueryWithTimeoutSetsTimeout() throws InterruptedException, IOException {
+  void testQueryWithTimeoutSetsTimeout() throws InterruptedException, IOException {
     com.google.api.services.bigquery.model.QueryResponse queryResponsePb =
         new com.google.api.services.bigquery.model.QueryResponse()
             .setCacheHit(false)
@@ -2644,7 +2644,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetQueryResults() throws IOException {
+  void testGetQueryResults() throws IOException {
     JobId queryJob = JobId.of(JOB);
     GetQueryResultsResponse responsePb =
         new GetQueryResultsResponse()
@@ -2668,7 +2668,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetQueryResultsRetry() throws IOException {
+  void testGetQueryResultsRetry() throws IOException {
     JobId queryJob = JobId.of(JOB);
     GetQueryResultsResponse responsePb =
         new GetQueryResultsResponse()
@@ -2712,7 +2712,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetQueryResultsWithProject() throws IOException {
+  void testGetQueryResultsWithProject() throws IOException {
     JobId queryJob = JobId.of(OTHER_PROJECT, JOB);
     GetQueryResultsResponse responsePb =
         new GetQueryResultsResponse()
@@ -2736,7 +2736,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetQueryResultsWithOptions() throws IOException {
+  void testGetQueryResultsWithOptions() throws IOException {
     JobId queryJob = JobId.of(PROJECT, JOB);
     GetQueryResultsResponse responsePb =
         new GetQueryResultsResponse()
@@ -2765,7 +2765,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetDatasetRetryableException() throws IOException {
+  void testGetDatasetRetryableException() throws IOException {
     when(bigqueryRpcMock.getDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS))
         .thenThrow(new BigQueryException(500, "InternalError"))
         .thenReturn(DATASET_INFO_WITH_PROJECT.toPb());
@@ -2782,7 +2782,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testNonRetryableException() throws IOException {
+  void testNonRetryableException() throws IOException {
     String exceptionMessage = "Not Implemented";
     when(bigqueryRpcMock.getDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS))
         .thenThrow(new BigQueryException(501, exceptionMessage));
@@ -2801,7 +2801,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testRuntimeException() throws IOException {
+  void testRuntimeException() throws IOException {
     String exceptionMessage = "Artificial runtime exception";
     when(bigqueryRpcMock.getDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS))
         .thenThrow(new RuntimeException(exceptionMessage));
@@ -2820,7 +2820,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testQueryDryRun() throws Exception {
+  void testQueryDryRun() throws Exception {
     // https://github.com/googleapis/google-cloud-java/issues/2479
     try {
       options.toBuilder()
@@ -2835,7 +2835,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testFastQuerySQLShouldRetry() throws Exception {
+  void testFastQuerySQLShouldRetry() throws Exception {
     com.google.api.services.bigquery.model.QueryResponse responsePb =
         new com.google.api.services.bigquery.model.QueryResponse()
             .setCacheHit(false)
@@ -2876,7 +2876,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testFastQueryDMLShouldRetry() throws Exception {
+  void testFastQueryDMLShouldRetry() throws Exception {
     com.google.api.services.bigquery.model.QueryResponse responsePb =
         new com.google.api.services.bigquery.model.QueryResponse()
             .setCacheHit(false)
@@ -2917,7 +2917,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testFastQueryRateLimitIdempotency() throws Exception {
+  void testFastQueryRateLimitIdempotency() throws Exception {
     com.google.api.services.bigquery.model.QueryResponse responsePb =
         new com.google.api.services.bigquery.model.QueryResponse()
             .setCacheHit(false)
@@ -2965,7 +2965,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testRateLimitRegEx() throws Exception {
+  void testRateLimitRegEx() throws Exception {
     String msg2 =
         "Job eceeded rate limits: Your table exceeded quota for table update operations. For more information, see https://cloud.google.com/bigquery/docs/troubleshoot-quotas";
     String msg3 = "exceeded rate exceeded quota for table update";
@@ -2989,7 +2989,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testFastQueryDDLShouldRetry() throws Exception {
+  void testFastQueryDDLShouldRetry() throws Exception {
     com.google.api.services.bigquery.model.QueryResponse responsePb =
         new com.google.api.services.bigquery.model.QueryResponse()
             .setCacheHit(false)
@@ -3029,7 +3029,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testFastQueryBigQueryException() throws InterruptedException, IOException {
+  void testFastQueryBigQueryException() throws InterruptedException, IOException {
     List<ErrorProto> errorProtoList =
         ImmutableList.of(
             new ErrorProto()
@@ -3068,7 +3068,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testCreateRoutine() throws IOException {
+  void testCreateRoutine() throws IOException {
     RoutineInfo routineInfo = ROUTINE_INFO.setProjectId(OTHER_PROJECT);
     when(bigqueryRpcMock.createSkipExceptionTranslation(routineInfo.toPb(), EMPTY_RPC_OPTIONS))
         .thenReturn(routineInfo.toPb());
@@ -3081,7 +3081,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetRoutine() throws IOException {
+  void testGetRoutine() throws IOException {
     when(bigqueryRpcMock.getRoutineSkipExceptionTranslation(
             PROJECT, DATASET, ROUTINE, EMPTY_RPC_OPTIONS))
         .thenReturn(ROUTINE_INFO.toPb());
@@ -3093,7 +3093,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetRoutineWithRountineId() throws IOException {
+  void testGetRoutineWithRountineId() throws IOException {
     when(bigqueryRpcMock.getRoutineSkipExceptionTranslation(
             PROJECT, DATASET, ROUTINE, EMPTY_RPC_OPTIONS))
         .thenReturn(ROUTINE_INFO.toPb());
@@ -3105,7 +3105,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetRoutineWithEnabledThrowNotFoundException() throws IOException {
+  void testGetRoutineWithEnabledThrowNotFoundException() throws IOException {
     when(bigqueryRpcMock.getRoutineSkipExceptionTranslation(
             PROJECT, DATASET, ROUTINE, EMPTY_RPC_OPTIONS))
         .thenThrow(new BigQueryException(404, "Routine not found"));
@@ -3122,7 +3122,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testUpdateRoutine() throws IOException {
+  void testUpdateRoutine() throws IOException {
     RoutineInfo updatedRoutineInfo =
         ROUTINE_INFO.setProjectId(OTHER_PROJECT).toBuilder()
             .setDescription("newDescription")
@@ -3140,7 +3140,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListRoutines() throws IOException {
+  void testListRoutines() throws IOException {
     bigquery = options.getService();
     ImmutableList<Routine> routineList =
         ImmutableList.of(new Routine(bigquery, new RoutineInfo.BuilderImpl(ROUTINE_INFO)));
@@ -3156,7 +3156,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testListRoutinesWithDatasetId() throws IOException {
+  void testListRoutinesWithDatasetId() throws IOException {
     bigquery = options.getService();
     ImmutableList<Routine> routineList =
         ImmutableList.of(new Routine(bigquery, new RoutineInfo.BuilderImpl(ROUTINE_INFO)));
@@ -3172,7 +3172,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testDeleteRoutine() throws IOException {
+  void testDeleteRoutine() throws IOException {
     when(bigqueryRpcMock.deleteRoutineSkipExceptionTranslation(PROJECT, DATASET, ROUTINE))
         .thenReturn(true);
     bigquery = options.getService();
@@ -3181,7 +3181,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testWriteWithJob() throws IOException {
+  void testWriteWithJob() throws IOException {
     bigquery = options.getService();
     Job job = new Job(bigquery, new JobInfo.BuilderImpl(JOB_INFO));
     when(bigqueryRpcMock.openSkipExceptionTranslation(
@@ -3207,7 +3207,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testWriteChannel() throws IOException {
+  void testWriteChannel() throws IOException {
     bigquery = options.getService();
     Job job = new Job(bigquery, new JobInfo.BuilderImpl(JOB_INFO));
     when(bigqueryRpcMock.openSkipExceptionTranslation(
@@ -3233,7 +3233,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testGetIamPolicy() throws IOException {
+  void testGetIamPolicy() throws IOException {
     final String resourceId =
         String.format("projects/%s/datasets/%s/tables/%s", PROJECT, DATASET, TABLE);
     final com.google.api.services.bigquery.model.Policy apiPolicy =
@@ -3247,7 +3247,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testSetIamPolicy() throws IOException {
+  void testSetIamPolicy() throws IOException {
     final String resourceId =
         String.format("projects/%s/datasets/%s/tables/%s", PROJECT, DATASET, TABLE);
     final com.google.api.services.bigquery.model.Policy apiPolicy =
@@ -3263,7 +3263,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testTestIamPermissions() throws IOException {
+  void testTestIamPermissions() throws IOException {
     final String resourceId =
         String.format("projects/%s/datasets/%s/tables/%s", PROJECT, DATASET, TABLE);
     final List<String> checkedPermissions = ImmutableList.<String>of("foo", "bar", "baz");
@@ -3283,7 +3283,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  public void testTestIamPermissionsWhenNoPermissionsGranted() throws IOException {
+  void testTestIamPermissionsWhenNoPermissionsGranted() throws IOException {
     final String resourceId =
         String.format("projects/%s/datasets/%s/tables/%s", PROJECT, DATASET, TABLE);
     final List<String> checkedPermissions = ImmutableList.<String>of("foo", "bar", "baz");

@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 
 public class AnnotationsTest {
   @Test
-  public void testFromUser() {
+  void testFromUser() {
     assertThat(Annotations.fromUser(null).userMap()).isNull();
 
     HashMap<String, String> user = new HashMap<>();
@@ -43,7 +43,7 @@ public class AnnotationsTest {
   }
 
   @Test
-  public void testFromToPb() {
+  void testFromToPb() {
     assertThat(Annotations.fromPb(null).toPb()).isNull();
 
     HashMap<String, String> pb = new HashMap<>();
@@ -60,7 +60,7 @@ public class AnnotationsTest {
   }
 
   @Test
-  public void testNullKey() {
+  void testNullKey() {
     try {
       Annotations.fromUser(Collections.singletonMap((String) null, "foo"));
       fail("null key shouldn't work");

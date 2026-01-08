@@ -48,7 +48,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 public class BigQueryExceptionTest {
 
   @Test
-  public void testBigQueryException() {
+  void testBigQueryException() {
     BigQueryException exception = new BigQueryException(500, "message");
     assertEquals(500, exception.getCode());
     assertEquals("message", exception.getMessage());
@@ -137,7 +137,7 @@ public class BigQueryExceptionTest {
   }
 
   @Test
-  public void testTranslateAndThrow() throws Exception {
+  void testTranslateAndThrow() throws Exception {
     Exception cause = new BigQueryException(503, "message");
     RetryHelperException exceptionMock = mock(RetryHelperException.class);
     when(exceptionMock.getCause()).thenReturn(cause);
@@ -168,7 +168,7 @@ public class BigQueryExceptionTest {
   }
 
   @Test
-  public void testDefaultExceptionHandler() throws java.io.IOException {
+  void testDefaultExceptionHandler() throws java.io.IOException {
     BigQueryOptions defaultOptions =
         BigQueryOptions.newBuilder().setProjectId("project-id").build();
     DatasetInfo info = DatasetInfo.newBuilder("dataset").build();
@@ -198,7 +198,7 @@ public class BigQueryExceptionTest {
   }
 
   @Test
-  public void testCustomExceptionHandler() throws java.io.IOException {
+  void testCustomExceptionHandler() throws java.io.IOException {
     BigQueryOptions defaultOptions =
         BigQueryOptions.newBuilder()
             .setProjectId("project-id")

@@ -41,7 +41,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class DatasetTest {
+class DatasetTest {
 
   private static final DatasetId DATASET_ID = DatasetId.of("dataset");
   private static final List<Acl> ACCESS_RULES =
@@ -99,7 +99,7 @@ public class DatasetTest {
   private Dataset dataset;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     bigquery = mock(BigQuery.class);
     mockOptions = mock(BigQueryOptions.class);
     when(bigquery.getOptions()).thenReturn(mockOptions);
@@ -108,7 +108,7 @@ public class DatasetTest {
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     Dataset builtDataset =
         new Dataset.Builder(bigquery, DATASET_ID)
             .setAcl(ACCESS_RULES)
@@ -144,12 +144,12 @@ public class DatasetTest {
   }
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareDataset(expectedDataset, expectedDataset.toBuilder().build());
   }
 
   @Test
-  public void testExists_True() {
+  void testExists_True() {
     BigQuery.DatasetOption[] expectedOptions = {BigQuery.DatasetOption.fields()};
     when(bigquery.getDataset(DATASET_INFO.getDatasetId(), expectedOptions))
         .thenReturn(expectedDataset);
@@ -158,7 +158,7 @@ public class DatasetTest {
   }
 
   @Test
-  public void testExists_False() {
+  void testExists_False() {
     BigQuery.DatasetOption[] expectedOptions = {BigQuery.DatasetOption.fields()};
     when(bigquery.getDataset(DATASET_INFO.getDatasetId(), expectedOptions)).thenReturn(null);
     assertFalse(dataset.exists());
@@ -166,7 +166,7 @@ public class DatasetTest {
   }
 
   @Test
-  public void testReload() {
+  void testReload() {
     DatasetInfo updatedInfo = DATASET_INFO.toBuilder().setDescription("Description").build();
     Dataset expectedDataset = new Dataset(bigquery, new DatasetInfo.BuilderImpl(updatedInfo));
     when(bigquery.getDataset(DATASET_INFO.getDatasetId().getDataset())).thenReturn(expectedDataset);
@@ -176,14 +176,14 @@ public class DatasetTest {
   }
 
   @Test
-  public void testReloadNull() {
+  void testReloadNull() {
     when(bigquery.getDataset(DATASET_INFO.getDatasetId().getDataset())).thenReturn(null);
     assertNull(dataset.reload());
     verify(bigquery).getDataset(DATASET_INFO.getDatasetId().getDataset());
   }
 
   @Test
-  public void testReloadWithOptions() {
+  void testReloadWithOptions() {
     DatasetInfo updatedInfo = DATASET_INFO.toBuilder().setDescription("Description").build();
     Dataset expectedDataset = new Dataset(bigquery, new DatasetInfo.BuilderImpl(updatedInfo));
     when(bigquery.getDataset(
@@ -196,7 +196,7 @@ public class DatasetTest {
   }
 
   @Test
-  public void testUpdate() {
+  void testUpdate() {
     Dataset expectedUpdatedDataset =
         expectedDataset.toBuilder().setDescription("Description").build();
     when(bigquery.update(eq(expectedDataset))).thenReturn(expectedUpdatedDataset);
@@ -206,7 +206,7 @@ public class DatasetTest {
   }
 
   @Test
-  public void testUpdateWithOptions() {
+  void testUpdateWithOptions() {
     Dataset expectedUpdatedDataset =
         expectedDataset.toBuilder().setDescription("Description").build();
     when(bigquery.update(eq(expectedDataset), eq(BigQuery.DatasetOption.fields())))
@@ -217,21 +217,21 @@ public class DatasetTest {
   }
 
   @Test
-  public void testDeleteTrue() {
+  void testDeleteTrue() {
     when(bigquery.delete(DATASET_INFO.getDatasetId())).thenReturn(true);
     assertTrue(dataset.delete());
     verify(bigquery).delete(DATASET_INFO.getDatasetId());
   }
 
   @Test
-  public void testDeleteFalse() {
+  void testDeleteFalse() {
     when(bigquery.delete(DATASET_INFO.getDatasetId())).thenReturn(false);
     assertFalse(dataset.delete());
     verify(bigquery).delete(DATASET_INFO.getDatasetId());
   }
 
   @Test
-  public void testList() {
+  void testList() {
     List<Table> tableResults =
         ImmutableList.of(
             new Table(bigquery, new Table.BuilderImpl(TABLE_INFO1)),
@@ -247,7 +247,7 @@ public class DatasetTest {
   }
 
   @Test
-  public void testListWithOptions() {
+  void testListWithOptions() {
     List<Table> tableResults =
         ImmutableList.of(
             new Table(bigquery, new Table.BuilderImpl(TABLE_INFO1)),
@@ -265,7 +265,7 @@ public class DatasetTest {
   }
 
   @Test
-  public void testGet() {
+  void testGet() {
     Table expectedTable = new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO1));
     when(bigquery.getTable(TABLE_INFO1.getTableId())).thenReturn(expectedTable);
     Table table = dataset.get(TABLE_INFO1.getTableId().getTable());
@@ -275,7 +275,7 @@ public class DatasetTest {
   }
 
   @Test
-  public void testGetTableWithNewProjectId() {
+  void testGetTableWithNewProjectId() {
     Table expectedTable = new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO4));
     when(bigquery.getTable(TABLE_ID1, null)).thenReturn(expectedTable);
     Table table = bigquery.getTable(TABLE_ID1, null);
@@ -285,14 +285,14 @@ public class DatasetTest {
   }
 
   @Test
-  public void testGetNull() {
+  void testGetNull() {
     when(bigquery.getTable(TABLE_INFO1.getTableId())).thenReturn(null);
     assertNull(dataset.get(TABLE_INFO1.getTableId().getTable()));
     verify(bigquery).getTable(TABLE_INFO1.getTableId());
   }
 
   @Test
-  public void testGetWithOptions() {
+  void testGetWithOptions() {
     Table expectedTable = new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO1));
     when(bigquery.getTable(TABLE_INFO1.getTableId(), BigQuery.TableOption.fields()))
         .thenReturn(expectedTable);
@@ -303,7 +303,7 @@ public class DatasetTest {
   }
 
   @Test
-  public void testCreateTable() {
+  void testCreateTable() {
     Table expectedTable = new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO1));
     when(bigquery.create(TABLE_INFO1)).thenReturn(expectedTable);
     Table table = dataset.create(TABLE_INFO1.getTableId().getTable(), TABLE_DEFINITION);
@@ -312,7 +312,7 @@ public class DatasetTest {
   }
 
   @Test
-  public void testCreateTableWithOptions() {
+  void testCreateTableWithOptions() {
     Table expectedTable = new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO1));
     when(bigquery.create(TABLE_INFO1, BigQuery.TableOption.fields())).thenReturn(expectedTable);
     Table table =
@@ -323,17 +323,17 @@ public class DatasetTest {
   }
 
   @Test
-  public void testBigQuery() {
+  void testBigQuery() {
     assertSame(bigquery, expectedDataset.getBigQuery());
   }
 
   @Test
-  public void testToAndFromPb() {
+  void testToAndFromPb() {
     compareDataset(expectedDataset, Dataset.fromPb(bigquery, expectedDataset.toPb()));
   }
 
   @Test
-  public void testExternalDatasetReference() {
+  void testExternalDatasetReference() {
     Dataset datasetWithExternalDatasetReference =
         new Dataset.Builder(bigquery, DATASET_ID)
             .setAcl(ACCESS_RULES)

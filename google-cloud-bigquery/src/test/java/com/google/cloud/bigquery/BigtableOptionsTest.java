@@ -55,7 +55,7 @@ public class BigtableOptionsTest {
           .build();
 
   @Test
-  public void testConstructors() {
+  void testConstructors() {
     // column
     assertThat(COL1.getQualifierEncoded()).isEqualTo("aaa");
     assertThat(COL1.getFieldName()).isEqualTo("field1");
@@ -80,7 +80,7 @@ public class BigtableOptionsTest {
   }
 
   @Test
-  public void testNullPointerException() {
+  void testNullPointerException() {
     try {
       BigtableColumnFamily.newBuilder().setFamilyID(null).build();
       Assertions.fail();
@@ -114,7 +114,7 @@ public class BigtableOptionsTest {
   }
 
   @Test
-  public void testIllegalStateException() {
+  void testIllegalStateException() {
     try {
       BigtableColumnFamily.newBuilder().build();
     } catch (IllegalStateException ex) {
@@ -123,14 +123,14 @@ public class BigtableOptionsTest {
   }
 
   @Test
-  public void testToAndFromPb() {
+  void testToAndFromPb() {
     compareBigtableColumn(COL1, BigtableColumn.fromPb(COL1.toPb()));
     compareBigtableColumnFamily(TESTFAMILY, BigtableColumnFamily.fromPb(TESTFAMILY.toPb()));
     compareBigtableOptions(OPTIONS, BigtableOptions.fromPb(OPTIONS.toPb()));
   }
 
   @Test
-  public void testEquals() {
+  void testEquals() {
     compareBigtableColumn(COL1, COL1);
     compareBigtableColumnFamily(TESTFAMILY, TESTFAMILY);
     assertThat(TESTFAMILY.equals(TESTFAMILY)).isTrue();

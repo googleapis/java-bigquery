@@ -88,7 +88,7 @@ public class ExtractJobConfigurationTest {
           .build();
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareExtractJobConfiguration(
         EXTRACT_CONFIGURATION, EXTRACT_CONFIGURATION.toBuilder().build());
     ExtractJobConfiguration job =

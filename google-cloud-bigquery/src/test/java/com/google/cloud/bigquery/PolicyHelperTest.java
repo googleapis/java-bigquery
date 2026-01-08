@@ -24,7 +24,7 @@ import com.google.cloud.Role;
 import com.google.common.collect.ImmutableList;
 import org.junit.jupiter.api.Test;
 
-public class PolicyHelperTest {
+class PolicyHelperTest {
 
   public static final String ETAG = "etag";
   public static final String ROLE1 = "roles/bigquery.admin";
@@ -58,7 +58,7 @@ public class PolicyHelperTest {
       Policy.newBuilder().setEtag(ETAG).setVersion(1).build();
 
   @Test
-  public void testConversionWithBindings() {
+  void testConversionWithBindings() {
     assertEquals(IAM_POLICY, PolicyHelper.convertFromApiPolicy(API_POLICY));
     assertEquals(API_POLICY, PolicyHelper.convertToApiPolicy(IAM_POLICY));
     assertEquals(
@@ -68,7 +68,7 @@ public class PolicyHelperTest {
   }
 
   @Test
-  public void testConversionNoBindings() {
+  void testConversionNoBindings() {
     assertEquals(IAM_POLICY_NO_BINDINGS, PolicyHelper.convertFromApiPolicy(API_POLICY_NO_BINDINGS));
     assertEquals(API_POLICY_NO_BINDINGS, PolicyHelper.convertToApiPolicy(IAM_POLICY_NO_BINDINGS));
     assertEquals(

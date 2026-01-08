@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -197,9 +198,8 @@ public class ITNightlyBigQueryTest {
     BigQuerySQLException ex =
         assertThrows(BigQuerySQLException.class, () -> connection.executeSelect(INVALID_QUERY));
     assertNotNull(ex.getMessage());
-    assertTrue(ex.getMessage().toLowerCase().contains("unexpected keyword into")); finally {
-      connection.close();
-    }
+    assertTrue(ex.getMessage().toLowerCase().contains("unexpected keyword into"));
+    connection.close();
   }
 
   /*
@@ -593,6 +593,13 @@ public class ITNightlyBigQueryTest {
   private static void addBatchRecords(TableId tableId) {
     Map<String, Object> nullRow = new HashMap<>();
     try {
+      InsertAllRequest.Builder reqBuilder = InsertAllRequest.newBuilder(tableId);
+      if (rowCnt == 0) {
+        reqBuilder.addRow(nullRow);
+      }
+      for (int i = 0; i < REC_PER_BATCHES; i++) {
+        reqBuilder.addRow(getNextRow());
+      }
       InsertAllResponse response = bigquery.insertAll(reqBuilder.build());
 
       if (response.hasErrors()) {

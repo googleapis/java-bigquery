@@ -28,7 +28,7 @@ public class CloneDefinitionTest {
       CloneDefinition.newBuilder().setBaseTableId(BASE_TABLE_ID).setCloneTime(CLONE_TIME).build();
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareCloneTableDefinition(CLONETABLE_DEFINITION, CLONETABLE_DEFINITION.toBuilder().build());
     CloneDefinition cloneTableDefinition =
         CLONETABLE_DEFINITION.toBuilder().setCloneTime("2021-05-20T11:32:26.553Z").build();
@@ -36,7 +36,7 @@ public class CloneDefinitionTest {
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertEquals(BASE_TABLE_ID, CLONETABLE_DEFINITION.getBaseTableId());
     assertEquals(CLONE_TIME, CLONETABLE_DEFINITION.getCloneTime());
     CloneDefinition cloneDefinition =
@@ -45,7 +45,7 @@ public class CloneDefinitionTest {
   }
 
   @Test
-  public void testToAndFromPb() {
+  void testToAndFromPb() {
     CloneDefinition cloneDefinition = CLONETABLE_DEFINITION.toBuilder().build();
     assertTrue(CloneDefinition.fromPb(cloneDefinition.toPb()) instanceof CloneDefinition);
     compareCloneTableDefinition(cloneDefinition, CloneDefinition.fromPb(cloneDefinition.toPb()));
