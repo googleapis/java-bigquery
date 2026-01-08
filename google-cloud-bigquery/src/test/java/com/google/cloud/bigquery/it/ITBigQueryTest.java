@@ -4110,7 +4110,8 @@ class ITBigQueryTest {
   }
 
   @Test
-    void testReadAPIIterationAndOrder() throws SQLException { // use read API to read 300K records and check the order
+  void testReadAPIIterationAndOrder()
+      throws SQLException { // use read API to read 300K records and check the order
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable()
@@ -4146,7 +4147,10 @@ class ITBigQueryTest {
   }
 
   @Test
-    void testReadAPIIterationAndOrderAsync() throws SQLException, ExecutionException, InterruptedException { // use read API to read 300K records and check the order
+  void testReadAPIIterationAndOrderAsync()
+      throws SQLException,
+          ExecutionException,
+          InterruptedException { // use read API to read 300K records and check the order
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths / 10 FROM "
             + TABLE_ID_LARGE.getTable()
@@ -4191,7 +4195,10 @@ class ITBigQueryTest {
   // TODO(prasmish): Remove this test case if it turns out to be flaky, as expecting the process to
   // be uncompleted in 1000ms is nondeterministic! Though very likely it won't be complete in the
   // specified amount of time
-  void testExecuteSelectAsyncCancel() throws SQLException, ExecutionException, InterruptedException { // use read API to read 300K records and check the order
+  void testExecuteSelectAsyncCancel()
+      throws SQLException,
+          ExecutionException,
+          InterruptedException { // use read API to read 300K records and check the order
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable()
@@ -4230,7 +4237,10 @@ class ITBigQueryTest {
   // TODO(prasmish): Remove this test case if it turns out to be flaky, as expecting the process to
   // be uncompleted in 1000ms is nondeterministic! Though very likely it won't be complete in the
   // specified amount of time
-  void testExecuteSelectAsyncTimeout() throws SQLException, ExecutionException, InterruptedException { // use read API to read 300K records and check the order
+  void testExecuteSelectAsyncTimeout()
+      throws SQLException,
+          ExecutionException,
+          InterruptedException { // use read API to read 300K records and check the order
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable()
@@ -4257,7 +4267,8 @@ class ITBigQueryTest {
   }
 
   @Test
-  void testExecuteSelectWithNamedQueryParametersAsync() throws BigQuerySQLException, ExecutionException, InterruptedException {
+  void testExecuteSelectWithNamedQueryParametersAsync()
+      throws BigQuerySQLException, ExecutionException, InterruptedException {
     String query =
         "SELECT TimestampField, StringField, BooleanField FROM "
             + TABLE_ID.getTable()
@@ -4293,7 +4304,9 @@ class ITBigQueryTest {
   }
 
   @Test
-    void testReadAPIConnectionMultiClose() throws SQLException { // use read API to read 300K records, then closes the connection. This test
+  void testReadAPIConnectionMultiClose()
+      throws
+          SQLException { // use read API to read 300K records, then closes the connection. This test
     // repeats it multiple times and assets if the connection was closed
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
@@ -6451,7 +6464,8 @@ class ITBigQueryTest {
   }
 
   @Test
-  void testInsertWithDecimalTargetTypes() throws InterruptedException, IOException, TimeoutException {
+  void testInsertWithDecimalTargetTypes()
+      throws InterruptedException, IOException, TimeoutException {
     String destinationTableName = "test_insert_from_file_table_with_decimal_target_type";
     TableId tableId = TableId.of(DATASET, destinationTableName);
     WriteChannelConfiguration configuration =

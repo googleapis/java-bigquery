@@ -33,12 +33,11 @@ public class BigQueryOptionsTest {
 
   @Test
   void testInvalidTransport() {
-    try {
-      BigQueryOptions.newBuilder().setTransportOptions(Mockito.mock(TransportOptions.class));
-      Assertions.fail();
-    } catch (IllegalArgumentException expected) {
-      Assertions.assertNotNull(expected.getMessage());
-    }
+    IllegalArgumentException expected =
+        Assertions.assertThrows(
+            IllegalArgumentException.class,
+            () -> BigQueryOptions.newBuilder().setTransportOptions(Mockito.mock(TransportOptions.class)));
+    Assertions.assertNotNull(expected.getMessage());
   }
 
   @Test

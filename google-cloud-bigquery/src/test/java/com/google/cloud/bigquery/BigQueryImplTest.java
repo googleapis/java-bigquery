@@ -639,12 +639,9 @@ public class BigQueryImplTest {
         .thenThrow(new BigQueryException(404, "Dataset not found"));
     options.setThrowNotFound(true);
     bigquery = options.getService();
-    try {
-      bigquery.getDataset("dataset-not-found");
-      Assertions.fail();
-    } catch (BigQueryException ex) {
-      Assertions.assertNotNull(ex.getMessage());
-    }
+    BigQueryException ex =
+        Assertions.assertThrows(BigQueryException.class, () -> bigquery.getDataset("dataset-not-found"));
+    Assertions.assertNotNull(ex.getMessage());
     verify(bigqueryRpcMock)
         .getDatasetSkipExceptionTranslation(PROJECT, "dataset-not-found", EMPTY_RPC_OPTIONS);
   }
@@ -1815,13 +1812,13 @@ public class BigQueryImplTest {
             .build()
             .getService();
 
-    try {
-      ((BigQueryImpl) bigquery)
-          .create(JobInfo.of(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY), bigQueryRetryConfigOption);
-      fail("JobException expected");
-    } catch (BigQueryException e) {
-      assertNotNull(e.getMessage());
-    }
+    BigQueryException e =
+        Assertions.assertThrows(
+            BigQueryException.class,
+            () ->
+                ((BigQueryImpl) bigquery)
+                    .create(JobInfo.of(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY), bigQueryRetryConfigOption));
+    assertNotNull(e.getMessage());
     // Verify that getQueryResults is attempted only once and not retried since the error message
     // does not match.
     verify(bigqueryRpcMock, times(1))
@@ -1876,13 +1873,13 @@ public class BigQueryImplTest {
             .build()
             .getService();
 
-    try {
-      ((BigQueryImpl) bigquery)
-          .create(JobInfo.of(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY), retryOptions);
-      fail("JobException expected");
-    } catch (BigQueryException e) {
-      assertNotNull(e.getMessage());
-    }
+    BigQueryException e =
+        Assertions.assertThrows(
+            BigQueryException.class,
+            () ->
+                ((BigQueryImpl) bigquery)
+                    .create(JobInfo.of(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY), retryOptions));
+    assertNotNull(e.getMessage());
     verify(bigqueryRpcMock, times(1))
         .createSkipExceptionTranslation(jobCapture.capture(), eq(bigQueryRpcOptions));
   }
@@ -1919,12 +1916,11 @@ public class BigQueryImplTest {
         .thenThrow(new BigQueryException(409, "already exists, for some reason"));
 
     bigquery = options.getService();
-    try {
-      bigquery.create(JobInfo.of(jobId, QueryJobConfiguration.of(query)));
-      fail("should throw");
-    } catch (BigQueryException e) {
-      assertThat(jobCapture.getValue().getJobReference().getJobId()).isEqualTo(id);
-    }
+    BigQueryException e =
+        Assertions.assertThrows(
+            BigQueryException.class,
+            () -> bigquery.create(JobInfo.of(jobId, QueryJobConfiguration.of(query))));
+    assertThat(jobCapture.getValue().getJobReference().getJobId()).isEqualTo(id);
     verify(bigqueryRpcMock)
         .createSkipExceptionTranslation(jobCapture.capture(), eq(EMPTY_RPC_OPTIONS));
   }
@@ -2063,12 +2059,9 @@ public class BigQueryImplTest {
         .thenThrow(new IOException("Job not found"));
     options.setThrowNotFound(true);
     bigquery = options.getService();
-    try {
-      bigquery.getJob("job-not-found");
-      Assertions.fail();
-    } catch (BigQueryException ex) {
-      Assertions.assertNotNull(ex.getMessage());
-    }
+    BigQueryException ex =
+        Assertions.assertThrows(BigQueryException.class, () -> bigquery.getJob("job-not-found"));
+    Assertions.assertNotNull(ex.getMessage());
     verify(bigqueryRpcMock)
         .getJobSkipExceptionTranslation(PROJECT, "job-not-found", null, EMPTY_RPC_OPTIONS);
   }
@@ -2791,12 +2784,9 @@ public class BigQueryImplTest {
             .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
             .build()
             .getService();
-    try {
-      bigquery.getDataset(DatasetId.of(DATASET));
-      Assertions.fail();
-    } catch (BigQueryException ex) {
-      assertEquals(exceptionMessage, ex.getMessage());
-    }
+    BigQueryException ex =
+        Assertions.assertThrows(BigQueryException.class, () -> bigquery.getDataset(DatasetId.of(DATASET)));
+    assertEquals(exceptionMessage, ex.getMessage());
     verify(bigqueryRpcMock).getDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS);
   }
 
@@ -2810,28 +2800,25 @@ public class BigQueryImplTest {
             .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
             .build()
             .getService();
-    try {
-      bigquery.getDataset(DATASET);
-      Assertions.fail();
-    } catch (BigQueryException ex) {
-      assertTrue(ex.getMessage().endsWith(exceptionMessage));
-    }
+    BigQueryException ex =
+        Assertions.assertThrows(BigQueryException.class, () -> bigquery.getDataset(DATASET));
+    assertTrue(ex.getMessage().endsWith(exceptionMessage));
     verify(bigqueryRpcMock).getDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS);
   }
 
   @Test
   void testQueryDryRun() throws Exception {
     // https://github.com/googleapis/google-cloud-java/issues/2479
-    try {
-      options.toBuilder()
-          .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
-          .build()
-          .getService()
-          .query(QueryJobConfiguration.newBuilder("foo").setDryRun(true).build());
-      Assertions.fail();
-    } catch (UnsupportedOperationException ex) {
-      Assertions.assertNotNull(ex.getMessage());
-    }
+    UnsupportedOperationException ex =
+        Assertions.assertThrows(
+            UnsupportedOperationException.class,
+            () ->
+                options.toBuilder()
+                    .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
+                    .build()
+                    .getService()
+                    .query(QueryJobConfiguration.newBuilder("foo").setDryRun(true).build()));
+    Assertions.assertNotNull(ex.getMessage());
   }
 
   @Test
@@ -3050,12 +3037,10 @@ public class BigQueryImplTest {
         .thenReturn(responsePb);
 
     bigquery = options.getService();
-    try {
-      bigquery.query(QUERY_JOB_CONFIGURATION_FOR_QUERY);
-      fail("BigQueryException expected");
-    } catch (BigQueryException ex) {
-      assertEquals(Lists.transform(errorProtoList, BigQueryError.FROM_PB_FUNCTION), ex.getErrors());
-    }
+    BigQueryException ex =
+        Assertions.assertThrows(
+            BigQueryException.class, () -> bigquery.query(QUERY_JOB_CONFIGURATION_FOR_QUERY));
+    assertEquals(Lists.transform(errorProtoList, BigQueryError.FROM_PB_FUNCTION), ex.getErrors());
 
     QueryRequest requestPb = requestPbCapture.getValue();
     assertEquals(QUERY_JOB_CONFIGURATION_FOR_QUERY.getQuery(), requestPb.getQuery());
@@ -3111,12 +3096,9 @@ public class BigQueryImplTest {
         .thenThrow(new BigQueryException(404, "Routine not found"));
     options.setThrowNotFound(true);
     bigquery = options.getService();
-    try {
-      bigquery.getRoutine(ROUTINE_ID);
-      fail();
-    } catch (BigQueryException ex) {
-      assertEquals("Routine not found", ex.getMessage());
-    }
+    BigQueryException ex =
+        Assertions.assertThrows(BigQueryException.class, () -> bigquery.getRoutine(ROUTINE_ID));
+    assertEquals("Routine not found", ex.getMessage());
     verify(bigqueryRpcMock)
         .getRoutineSkipExceptionTranslation(PROJECT, DATASET, ROUTINE, EMPTY_RPC_OPTIONS);
   }

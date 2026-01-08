@@ -81,36 +81,26 @@ public class BigtableOptionsTest {
 
   @Test
   void testNullPointerException() {
-    try {
-      BigtableColumnFamily.newBuilder().setFamilyID(null).build();
-      Assertions.fail();
-    } catch (NullPointerException ex) {
-      assertThat(ex.getMessage()).isNotNull();
-    }
-    try {
-      BigtableColumnFamily.newBuilder().setColumns(null).build();
-      Assertions.fail();
-    } catch (NullPointerException ex) {
-      assertThat(ex.getMessage()).isNotNull();
-    }
-    try {
-      BigtableColumnFamily.newBuilder().setEncoding(null).build();
-      Assertions.fail();
-    } catch (NullPointerException ex) {
-      assertThat(ex.getMessage()).isNotNull();
-    }
-    try {
-      BigtableColumnFamily.newBuilder().setOnlyReadLatest(null).build();
-      Assertions.fail();
-    } catch (NullPointerException ex) {
-      assertThat(ex.getMessage()).isNotNull();
-    }
-    try {
-      BigtableColumnFamily.newBuilder().setType(null).build();
-      Assertions.fail();
-    } catch (NullPointerException ex) {
-      assertThat(ex.getMessage()).isNotNull();
-    }
+    NullPointerException ex =
+        Assertions.assertThrows(
+            NullPointerException.class, () -> BigtableColumnFamily.newBuilder().setFamilyID(null).build());
+    assertThat(ex.getMessage()).isNotNull();
+    ex =
+        Assertions.assertThrows(
+            NullPointerException.class, () -> BigtableColumnFamily.newBuilder().setColumns(null).build());
+    assertThat(ex.getMessage()).isNotNull();
+    ex =
+        Assertions.assertThrows(
+            NullPointerException.class, () -> BigtableColumnFamily.newBuilder().setEncoding(null).build());
+    assertThat(ex.getMessage()).isNotNull();
+    ex =
+        Assertions.assertThrows(
+            NullPointerException.class, () -> BigtableColumnFamily.newBuilder().setOnlyReadLatest(null).build());
+    assertThat(ex.getMessage()).isNotNull();
+    ex =
+        Assertions.assertThrows(
+            NullPointerException.class, () -> BigtableColumnFamily.newBuilder().setType(null).build());
+    assertThat(ex.getMessage()).isNotNull();
   }
 
   @Test

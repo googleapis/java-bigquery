@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -399,7 +398,9 @@ class JobTest {
             BigQueryException.class,
             () ->
                 job.waitFor(
-                    concat(TEST_RETRY_OPTIONS, RetryOption.totalTimeoutDuration(Duration.ofMillis(3)))));
+                    concat(
+                        TEST_RETRY_OPTIONS,
+                        RetryOption.totalTimeoutDuration(Duration.ofMillis(3)))));
     Assertions.assertNotNull(expected.getMessage());
   }
 
@@ -537,7 +538,8 @@ class JobTest {
     job = this.job.toBuilder().setConfiguration(DRL_QUERY_CONFIGURATION).build();
     BigQueryException e =
         Assertions.assertThrows(
-            BigQueryException.class, () -> job.waitFor(TEST_BIGQUERY_RETRY_CONFIG, TEST_RETRY_OPTIONS));
+            BigQueryException.class,
+            () -> job.waitFor(TEST_BIGQUERY_RETRY_CONFIG, TEST_RETRY_OPTIONS));
     assertNotNull(e.getErrors());
     // Verify that getQueryResults is attempted only once and not retried since the error message
     // does not match.

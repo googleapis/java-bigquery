@@ -145,12 +145,14 @@ public class TableDataWriteChannelTest {
                 .setJobReference(JOB_INFO.getJobId().toPb())
                 .setConfiguration(LOAD_CONFIGURATION.toPb())))
         .thenThrow(new RuntimeException("expected"));
-    try (TableDataWriteChannel channel =
-        new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION)) {
-      Assertions.fail();
-    } catch (RuntimeException expected) {
-      Assertions.assertEquals("java.lang.RuntimeException: expected", expected.getMessage());
-    }
+    RuntimeException expected =
+        Assertions.assertThrows(
+            RuntimeException.class,
+            () -> {
+              try (TableDataWriteChannel channel =
+                  new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION)) {}
+            });
+    Assertions.assertEquals("java.lang.RuntimeException: expected", expected.getMessage());
     verify(bigqueryRpcMock)
         .openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
@@ -272,17 +274,18 @@ public class TableDataWriteChannelTest {
             eq(DEFAULT_CHUNK_SIZE),
             eq(false)))
         .thenThrow(new RuntimeException("expected"));
-    try {
-      writer = new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION);
-      ByteBuffer[] buffers = new ByteBuffer[DEFAULT_CHUNK_SIZE / MIN_CHUNK_SIZE];
-      for (int i = 0; i < buffers.length; i++) {
-        buffers[i] = randomBuffer(MIN_CHUNK_SIZE);
-        assertEquals(MIN_CHUNK_SIZE, writer.write(buffers[i]));
-      }
-      Assertions.fail();
-    } catch (RuntimeException expected) {
-      Assertions.assertEquals("java.lang.RuntimeException: expected", expected.getMessage());
-    }
+    RuntimeException expected =
+        Assertions.assertThrows(
+            RuntimeException.class,
+            () -> {
+              writer = new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION);
+              ByteBuffer[] buffers = new ByteBuffer[DEFAULT_CHUNK_SIZE / MIN_CHUNK_SIZE];
+              for (int i = 0; i < buffers.length; i++) {
+                buffers[i] = randomBuffer(MIN_CHUNK_SIZE);
+                assertEquals(MIN_CHUNK_SIZE, writer.write(buffers[i]));
+              }
+            });
+    Assertions.assertEquals("java.lang.RuntimeException: expected", expected.getMessage());
     verify(bigqueryRpcMock)
         .openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
@@ -366,12 +369,8 @@ public class TableDataWriteChannelTest {
     writer = new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION);
     writer.close();
     assertEquals(job, writer.getJob());
-    try {
-      writer.write(ByteBuffer.allocate(MIN_CHUNK_SIZE));
-      fail("Expected TableDataWriteChannel write to throw IOException");
-    } catch (IOException ex) {
-      // expected
-    }
+    Assertions.assertThrows(
+        IOException.class, () -> writer.write(ByteBuffer.allocate(MIN_CHUNK_SIZE)));
     verify(bigqueryRpcMock)
         .openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()

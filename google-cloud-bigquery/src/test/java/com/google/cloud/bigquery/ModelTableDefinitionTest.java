@@ -19,7 +19,6 @@ package com.google.cloud.bigquery;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -61,7 +60,8 @@ class ModelTableDefinitionTest {
   void testTypeNullPointerException() {
     NullPointerException ex =
         Assertions.assertThrows(
-            NullPointerException.class, () -> MODEL_TABLE_DEFINITION.toBuilder().setType(null).build());
+            NullPointerException.class,
+            () -> MODEL_TABLE_DEFINITION.toBuilder().setType(null).build());
     assertNotNull(ex.getMessage());
   }
 

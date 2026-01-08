@@ -446,7 +446,8 @@ public class ITNightlyBigQueryTest {
   }
 
   @Test
-    void testPositionalParams() throws SQLException { // Bypasses Read API as it doesnt support Positional Params
+  void testPositionalParams()
+      throws SQLException { // Bypasses Read API as it doesnt support Positional Params
     Connection connection = getConnection();
     Parameter dateParam =
         Parameter.newBuilder().setValue(QueryParameterValue.date("2022-01-01")).build();

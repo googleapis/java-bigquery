@@ -54,11 +54,6 @@ public class OptionTest {
     Option option = new Option(RPC_OPTION, null) {};
     assertEquals(RPC_OPTION, option.getRpcOption());
     assertNull(option.getValue());
-    try {
-      new Option(null, VALUE) {};
-      Assertions.fail();
-    } catch (NullPointerException expected) {
-
-    }
+    Assertions.assertThrows(NullPointerException.class, () -> new Option(null, VALUE) {});
   }
 }

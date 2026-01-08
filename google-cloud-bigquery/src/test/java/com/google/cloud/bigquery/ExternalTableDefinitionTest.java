@@ -18,7 +18,6 @@ package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.google.cloud.bigquery.ExternalTableDefinition.SourceColumnMatch;
 import com.google.common.collect.ImmutableList;
@@ -126,7 +125,8 @@ class ExternalTableDefinitionTest {
   @Test
   void testTypeNullPointerException() {
     org.junit.jupiter.api.Assertions.assertThrows(
-        NullPointerException.class, () -> EXTERNAL_TABLE_DEFINITION.toBuilder().setType(null).build());
+        NullPointerException.class,
+        () -> EXTERNAL_TABLE_DEFINITION.toBuilder().setType(null).build());
   }
 
   @Test

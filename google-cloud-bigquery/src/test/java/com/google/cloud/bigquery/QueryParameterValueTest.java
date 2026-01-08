@@ -58,12 +58,10 @@ public class QueryParameterValueTest {
 
   @Test
   public void testTypeNullPointerException() {
-    try {
-      QUERY_PARAMETER_VALUE.toBuilder().setType(null).build();
-      Assertions.fail();
-    } catch (NullPointerException ex) {
-      assertThat(ex).isNotNull();
-    }
+    NullPointerException ex =
+        assertThrows(
+            NullPointerException.class, () -> QUERY_PARAMETER_VALUE.toBuilder().setType(null).build());
+    assertThat(ex).isNotNull();
   }
 
   @Test

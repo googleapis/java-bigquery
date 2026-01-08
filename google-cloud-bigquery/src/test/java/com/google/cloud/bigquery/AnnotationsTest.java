@@ -17,7 +17,7 @@
 package com.google.cloud.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.google.api.client.util.Data;
 import java.util.Collections;
@@ -61,16 +61,12 @@ public class AnnotationsTest {
 
   @Test
   void testNullKey() {
-    try {
-      Annotations.fromUser(Collections.singletonMap((String) null, "foo"));
-      fail("null key shouldn't work");
-    } catch (IllegalArgumentException e) {
-    }
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> Annotations.fromUser(Collections.singletonMap((String) null, "foo")));
 
-    try {
-      Annotations.fromPb(Collections.singletonMap((String) null, "foo"));
-      fail("null key shouldn't work");
-    } catch (IllegalArgumentException e) {
-    }
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> Annotations.fromPb(Collections.singletonMap((String) null, "foo")));
   }
 }
