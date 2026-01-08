@@ -185,24 +185,19 @@ public class ITNightlyBigQueryTest {
       if (bigquery != null) {
         deleteTable(DATASET, TABLE);
         RemoteBigQueryHelper.forceDelete(bigquery, DATASET);
-      } else {
-        fail("Error clearing the test dataset");
       }
     } catch (BigQueryException e) {
-      fail("Error clearing the test dataset " + e);
+      throw new RuntimeException("Error clearing the test dataset " + e);
     }
   }
 
   @Test
   public void testInvalidQuery() throws BigQuerySQLException {
     Connection connection = getConnection();
-    try {
-      BigQueryResult bigQueryResult = connection.executeSelect(INVALID_QUERY);
-      fail("BigQuerySQLException was expected");
-    } catch (BigQuerySQLException ex) {
-      assertNotNull(ex.getMessage());
-      assertTrue(ex.getMessage().toLowerCase().contains("unexpected keyword into"));
-    } finally {
+    BigQuerySQLException ex =
+        assertThrows(BigQuerySQLException.class, () -> connection.executeSelect(INVALID_QUERY));
+    assertNotNull(ex.getMessage());
+    assertTrue(ex.getMessage().toLowerCase().contains("unexpected keyword into")); finally {
       connection.close();
     }
   }
@@ -275,7 +270,7 @@ public class ITNightlyBigQueryTest {
   This tests for the order of the records using default connection settings as well as the value of the records using testForAllDataTypeValues
    */
   @Test
-  public void testIterateAndOrderDefaultConnSettings() throws SQLException {
+  void testIterateAndOrderDefaultConnSettings() throws SQLException {
     Connection connection = bigquery.createConnection();
     BigQueryResult bigQueryResult = connection.executeSelect(QUERY);
     logger.log(Level.INFO, "Query used: {0}", QUERY);
@@ -339,7 +334,7 @@ public class ITNightlyBigQueryTest {
   This tests interrupts the execution in between and checks if it has been interrupted successfully while using ReadAPI
    */
   @Test
-  public void testConnectionClose() throws SQLException {
+  void testConnectionClose() throws SQLException {
     Connection connection = bigquery.createConnection();
     assertNotNull(connection, "bigquery.createConnection() returned null");
     BigQueryResult bigQueryResult = connection.executeSelect(QUERY);
@@ -361,7 +356,7 @@ public class ITNightlyBigQueryTest {
   }
 
   @Test
-  public void testMultipleRuns() throws SQLException {
+  void testMultipleRuns() throws SQLException {
 
     Connection connection = getConnection();
     BigQueryResult bigQueryResult = connection.executeSelect(MULTI_QUERY);
@@ -451,8 +446,7 @@ public class ITNightlyBigQueryTest {
   }
 
   @Test
-  public void testPositionalParams()
-      throws SQLException { // Bypasses Read API as it doesnt support Positional Params
+    void testPositionalParams() throws SQLException { // Bypasses Read API as it doesnt support Positional Params
     Connection connection = getConnection();
     Parameter dateParam =
         Parameter.newBuilder().setValue(QueryParameterValue.date("2022-01-01")).build();
@@ -488,7 +482,7 @@ public class ITNightlyBigQueryTest {
   // This testcase reads rows in bulk for a public table to make sure we do not get
   // table-not-found exception. Ref: b/241134681 . This exception has been seen while reading data
   // in bulk
-  public void testForTableNotFound() throws SQLException {
+  void testForTableNotFound() throws SQLException {
     int recordCnt = 50000000; // 5Mil
     String query =
         String.format(
@@ -599,13 +593,6 @@ public class ITNightlyBigQueryTest {
   private static void addBatchRecords(TableId tableId) {
     Map<String, Object> nullRow = new HashMap<>();
     try {
-      InsertAllRequest.Builder reqBuilder = InsertAllRequest.newBuilder(tableId);
-      if (rowCnt == 0) {
-        reqBuilder.addRow(nullRow);
-      }
-      for (int i = 0; i < REC_PER_BATCHES; i++) {
-        reqBuilder.addRow(getNextRow());
-      }
       InsertAllResponse response = bigquery.insertAll(reqBuilder.build());
 
       if (response.hasErrors()) {
@@ -613,15 +600,15 @@ public class ITNightlyBigQueryTest {
         for (Map.Entry<Long, List<BigQueryError>> entry : response.getInsertErrors().entrySet()) {
           logger.log(Level.WARNING, "Exception while adding records {0}", entry.getValue());
         }
-        fail("Response has errors");
+        throw new BigQueryException(0, "Response has errors");
       }
     } catch (BigQueryException e) {
       logger.log(Level.WARNING, "Exception while adding records {0}", e);
-      fail("Error in addBatchRecords");
+      throw new BigQueryException(0, "Error in addBatchRecords", e);
     }
   }
 
-  private static void createTable(String datasetName, String tableName, Schema schema) {
+  static void createTable(String datasetName, String tableName, Schema schema) {
     try {
       TableId tableId = TableId.of(datasetName, tableName);
       TableDefinition tableDefinition = StandardTableDefinition.of(schema);
@@ -633,7 +620,7 @@ public class ITNightlyBigQueryTest {
     }
   }
 
-  public static void deleteTable(String datasetName, String tableName) {
+  static void deleteTable(String datasetName, String tableName) {
     try {
       assertTrue(bigquery.delete(TableId.of(datasetName, tableName)));
     } catch (BigQueryException e) {
@@ -641,7 +628,7 @@ public class ITNightlyBigQueryTest {
     }
   }
 
-  public static void createDataset(String datasetName) {
+  static void createDataset(String datasetName) {
     try {
       DatasetInfo datasetInfo = DatasetInfo.newBuilder(datasetName).build();
       Dataset newDataset = bigquery.create(datasetInfo);
@@ -651,7 +638,7 @@ public class ITNightlyBigQueryTest {
     }
   }
 
-  public static void deleteDataset(String datasetName) {
+  static void deleteDataset(String datasetName) {
     try {
       DatasetInfo datasetInfo = DatasetInfo.newBuilder(datasetName).build();
       assertTrue(bigquery.delete(datasetInfo.getDatasetId()));
