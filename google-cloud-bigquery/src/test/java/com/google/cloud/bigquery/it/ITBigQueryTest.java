@@ -1236,9 +1236,9 @@ public class ITBigQueryTest {
       assertTrue(
           dataset.getLabels().containsKey("example-label1"), "failed to find label key in dataset");
       assertEquals(
-          "failed to find label value in dataset",
           "example-value1",
-          dataset.getLabels().get("example-label1"));
+          dataset.getLabels().get("example-label1"),
+          "failed to find label value in dataset");
       count++;
     }
     assertTrue(count > 0);
@@ -1918,12 +1918,9 @@ public class ITBigQueryTest {
             .setAcl(ImmutableList.of(acl))
             .build();
     DatasetOption datasetOption = DatasetOption.accessPolicyVersion(4);
-    Dataset dataset = bigquery.create(info, datasetOption);
-    assertNotNull(dataset);
+    assertThrows(BigQueryException.class, () -> bigquery.create(info, datasetOption));
 
-    assertThrows(
-        BigQueryException.class,
-        () -> RemoteBigQueryHelper.forceDelete(bigquery, accessPolicyDataset));
+    RemoteBigQueryHelper.forceDelete(bigquery, accessPolicyDataset);
   }
 
   @Test
