@@ -170,7 +170,6 @@ public class SerializationTest extends BaseSerializationTest {
   private static final JobStatus JOB_STATUS =
       new JobStatus(JobStatus.State.DONE, BIGQUERY_ERROR, ImmutableList.of(BIGQUERY_ERROR));
   private static final JobId JOB_ID = JobId.of("project", "job");
-  private static final Long NUM_DL_AFFECTED_ROWS = 24L;
   private static final CopyJobConfiguration COPY_JOB_CONFIGURATION =
       CopyJobConfiguration.of(TABLE_ID, TABLE_ID);
   private static final ExtractJobConfiguration EXTRACT_JOB_CONFIGURATION =

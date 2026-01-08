@@ -17,7 +17,7 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import org.junit.jupiter.api.Test;
 
@@ -56,8 +56,8 @@ class SnapshotTableDefinitionTest {
   @Test
   void testToAndFromPb() {
     SnapshotTableDefinition snapshotTableDefinition = SNAPSHOTTABLE_DEFINITION.toBuilder().build();
-    assertTrue(
-        TableDefinition.fromPb(snapshotTableDefinition.toPb()) instanceof SnapshotTableDefinition);
+    assertInstanceOf(
+        SnapshotTableDefinition.class, TableDefinition.fromPb(snapshotTableDefinition.toPb()));
     compareSnapshotTableDefinition(
         snapshotTableDefinition,
         TableDefinition.<SnapshotTableDefinition>fromPb(snapshotTableDefinition.toPb()));

@@ -17,6 +17,7 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -43,11 +44,11 @@ class JobStatusTest {
 
     assertEquals(STATE, JOB_STATUS_INCOMPLETE1.getState());
     assertEquals(ERROR, JOB_STATUS_INCOMPLETE1.getError());
-    assertEquals(null, JOB_STATUS_INCOMPLETE1.getExecutionErrors());
+    assertNull(JOB_STATUS_INCOMPLETE1.getExecutionErrors());
 
     assertEquals(STATE, JOB_STATUS_INCOMPLETE2.getState());
-    assertEquals(null, JOB_STATUS_INCOMPLETE2.getError());
-    assertEquals(null, JOB_STATUS_INCOMPLETE2.getExecutionErrors());
+    assertNull(JOB_STATUS_INCOMPLETE2.getError());
+    assertNull(JOB_STATUS_INCOMPLETE2.getExecutionErrors());
   }
 
   @Test

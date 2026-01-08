@@ -52,29 +52,37 @@ class BigLakeConfigurationTest {
 
   @Test
   void testToPb() {
-    assertBigLakeConfiguration(BIG_LAKE_CONFIGURATION_PB, BIG_LAKE_CONFIGURATION.toPb());
+    assertBigLakeConfiguration(BIG_LAKE_CONFIGURATION.toPb());
   }
 
   @Test
   void testFromPb() {
-    assertBigLakeConfiguration(
-        BIG_LAKE_CONFIGURATION, BigLakeConfiguration.fromPb(BIG_LAKE_CONFIGURATION_PB));
+    assertBigLakeConfiguration(BigLakeConfiguration.fromPb(BIG_LAKE_CONFIGURATION_PB));
+  }
+
+  private static void assertBigLakeConfiguration(BigLakeConfiguration actual) {
+    assertEquals(
+        BigLakeConfigurationTest.BIG_LAKE_CONFIGURATION.getConnectionId(),
+        actual.getConnectionId());
+    assertEquals(
+        BigLakeConfigurationTest.BIG_LAKE_CONFIGURATION.getTableFormat(), actual.getTableFormat());
+    assertEquals(
+        BigLakeConfigurationTest.BIG_LAKE_CONFIGURATION.getStorageUri(), actual.getStorageUri());
+    assertEquals(
+        BigLakeConfigurationTest.BIG_LAKE_CONFIGURATION.getFileFormat(), actual.getFileFormat());
   }
 
   private static void assertBigLakeConfiguration(
-      BigLakeConfiguration expected, BigLakeConfiguration actual) {
-    assertEquals(expected.getConnectionId(), actual.getConnectionId());
-    assertEquals(expected.getTableFormat(), actual.getTableFormat());
-    assertEquals(expected.getStorageUri(), actual.getStorageUri());
-    assertEquals(expected.getFileFormat(), actual.getFileFormat());
-  }
-
-  private static void assertBigLakeConfiguration(
-      com.google.api.services.bigquery.model.BigLakeConfiguration expected,
       com.google.api.services.bigquery.model.BigLakeConfiguration actual) {
-    assertEquals(expected.getConnectionId(), actual.getConnectionId());
-    assertEquals(expected.getTableFormat(), actual.getTableFormat());
-    assertEquals(expected.getStorageUri(), actual.getStorageUri());
-    assertEquals(expected.getFileFormat(), actual.getFileFormat());
+    assertEquals(
+        BigLakeConfigurationTest.BIG_LAKE_CONFIGURATION_PB.getConnectionId(),
+        actual.getConnectionId());
+    assertEquals(
+        BigLakeConfigurationTest.BIG_LAKE_CONFIGURATION_PB.getTableFormat(),
+        actual.getTableFormat());
+    assertEquals(
+        BigLakeConfigurationTest.BIG_LAKE_CONFIGURATION_PB.getStorageUri(), actual.getStorageUri());
+    assertEquals(
+        BigLakeConfigurationTest.BIG_LAKE_CONFIGURATION_PB.getFileFormat(), actual.getFileFormat());
   }
 }

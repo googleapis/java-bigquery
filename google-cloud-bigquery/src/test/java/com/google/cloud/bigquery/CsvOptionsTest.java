@@ -22,7 +22,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 
-public class CsvOptionsTest {
+class CsvOptionsTest {
 
   private static final Boolean ALLOW_JAGGED_ROWS = true;
   private static final Boolean ALLOW_QUOTED_NEWLINE = true;

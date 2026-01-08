@@ -29,16 +29,15 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class BigQueryOptionsTest {
+class BigQueryOptionsTest {
 
   @Test
   void testInvalidTransport() {
+    BigQueryOptions.Builder builder = BigQueryOptions.newBuilder();
+    TransportOptions transportOptions = Mockito.mock(TransportOptions.class);
     IllegalArgumentException expected =
         assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                BigQueryOptions.newBuilder()
-                    .setTransportOptions(Mockito.mock(TransportOptions.class)));
+            IllegalArgumentException.class, () -> builder.setTransportOptions(transportOptions));
     assertNotNull(expected.getMessage());
   }
 

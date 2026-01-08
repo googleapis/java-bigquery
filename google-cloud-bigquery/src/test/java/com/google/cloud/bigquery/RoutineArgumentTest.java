@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-public class RoutineArgumentTest {
+class RoutineArgumentTest {
 
   private static final String NAME = "foo";
   private static final String KIND = "SCALAR_FUNCTION";
@@ -35,12 +35,12 @@ public class RoutineArgumentTest {
           .build();
 
   @Test
-  public void testToBuilder() {
-    compareRoutineArguments(ARGUMENT, ARGUMENT.toBuilder().build());
+  void testToBuilder() {
+    compareRoutineArguments(ARGUMENT.toBuilder().build());
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertEquals(NAME, ARGUMENT.getName());
     assertEquals(KIND, ARGUMENT.getKind());
     assertEquals(MODE, ARGUMENT.getMode());
@@ -48,16 +48,16 @@ public class RoutineArgumentTest {
   }
 
   @Test
-  public void testToPbAndFromPb() {
-    compareRoutineArguments(ARGUMENT, RoutineArgument.fromPb(ARGUMENT.toPb()));
+  void testToPbAndFromPb() {
+    compareRoutineArguments(RoutineArgument.fromPb(ARGUMENT.toPb()));
   }
 
-  public void compareRoutineArguments(RoutineArgument expected, RoutineArgument value) {
-    assertEquals(expected, value);
-    assertEquals(expected.getName(), value.getName());
-    assertEquals(expected.getKind(), value.getKind());
-    assertEquals(expected.getMode(), value.getMode());
-    assertEquals(expected.getDataType(), value.getDataType());
-    assertEquals(expected.hashCode(), value.hashCode());
+  void compareRoutineArguments(RoutineArgument value) {
+    assertEquals(RoutineArgumentTest.ARGUMENT, value);
+    assertEquals(RoutineArgumentTest.ARGUMENT.getName(), value.getName());
+    assertEquals(RoutineArgumentTest.ARGUMENT.getKind(), value.getKind());
+    assertEquals(RoutineArgumentTest.ARGUMENT.getMode(), value.getMode());
+    assertEquals(RoutineArgumentTest.ARGUMENT.getDataType(), value.getDataType());
+    assertEquals(RoutineArgumentTest.ARGUMENT.hashCode(), value.hashCode());
   }
 }

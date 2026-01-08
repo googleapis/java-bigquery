@@ -22,8 +22,8 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class RemoteFunctionOptionsTest {
-  private static final String endpoint = "https://aaabbbccc-uc.a.run.app";
-  private static final String connection =
+  private static final String ENDPOINT = "https://aaabbbccc-uc.a.run.app";
+  private static final String CONNECTION =
       "projects/{projectId}/locations/{locationId}/connections/{connectionId}";
   private static final Map<String, String> userDefinedContext =
       new HashMap<String, String>() {
@@ -32,14 +32,14 @@ class RemoteFunctionOptionsTest {
           put("key2", "value2");
         }
       };
-  private static final Long maxBatchingRows = 20L;
+  private static final Long MAX_BATCHING_ROWS = 20L;
 
   private static final RemoteFunctionOptions REMOTE_FUNCTION_OPTIONS =
       RemoteFunctionOptions.newBuilder()
-          .setEndpoint(endpoint)
-          .setConnection(connection)
+          .setEndpoint(ENDPOINT)
+          .setConnection(CONNECTION)
           .setUserDefinedContext(userDefinedContext)
-          .setMaxBatchingRows(maxBatchingRows)
+          .setMaxBatchingRows(MAX_BATCHING_ROWS)
           .build();
 
   @Test
@@ -50,10 +50,10 @@ class RemoteFunctionOptionsTest {
 
   @Test
   void testBuilder() {
-    assertEquals(endpoint, REMOTE_FUNCTION_OPTIONS.getEndpoint());
-    assertEquals(connection, REMOTE_FUNCTION_OPTIONS.getConnection());
+    assertEquals(ENDPOINT, REMOTE_FUNCTION_OPTIONS.getEndpoint());
+    assertEquals(CONNECTION, REMOTE_FUNCTION_OPTIONS.getConnection());
     assertEquals(userDefinedContext, REMOTE_FUNCTION_OPTIONS.getUserDefinedContext());
-    assertEquals(maxBatchingRows, REMOTE_FUNCTION_OPTIONS.getMaxBatchingRows());
+    assertEquals(MAX_BATCHING_ROWS, REMOTE_FUNCTION_OPTIONS.getMaxBatchingRows());
   }
 
   @Test

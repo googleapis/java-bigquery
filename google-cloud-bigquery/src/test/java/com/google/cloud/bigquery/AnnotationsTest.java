@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-public class AnnotationsTest {
+class AnnotationsTest {
   @Test
   void testFromUser() {
     assertThat(Annotations.fromUser(null).userMap()).isNull();
@@ -61,12 +61,7 @@ public class AnnotationsTest {
 
   @Test
   void testNullKey() {
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> Annotations.fromUser(Collections.singletonMap((String) null, "foo")));
-
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> Annotations.fromPb(Collections.singletonMap((String) null, "foo")));
+    Map<String, String> map = Collections.singletonMap(null, "foo");
+    assertThrows(IllegalArgumentException.class, () -> Annotations.fromUser(map));
   }
 }

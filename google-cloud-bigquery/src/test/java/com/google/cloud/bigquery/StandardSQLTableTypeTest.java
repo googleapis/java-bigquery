@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-public class StandardSQLTableTypeTest {
+class StandardSQLTableTypeTest {
 
   private static final StandardSQLField COLUMN_1 =
       StandardSQLField.newBuilder("COLUMN_1", StandardSQLDataType.newBuilder("STRING").build())
@@ -36,18 +36,18 @@ public class StandardSQLTableTypeTest {
       StandardSQLTableType.newBuilder(COLUMN_LIST).build();
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareStandardSQLTableType(TABLE_TYPE, TABLE_TYPE.toBuilder().build());
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertEquals(COLUMN_1, TABLE_TYPE.getColumns().get(0));
     assertEquals(COLUMN_2, TABLE_TYPE.getColumns().get(1));
   }
 
   @Test
-  public void testToAndFromPb() {
+  void testToAndFromPb() {
     compareStandardSQLTableType(TABLE_TYPE, StandardSQLTableType.fromPb(TABLE_TYPE.toPb()));
   }
 

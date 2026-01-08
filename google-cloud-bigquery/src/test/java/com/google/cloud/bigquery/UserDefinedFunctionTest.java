@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-public class UserDefinedFunctionTest {
+class UserDefinedFunctionTest {
 
   private static final String INLINE = "inline";
   private static final String URI = "uri";
@@ -29,7 +29,7 @@ public class UserDefinedFunctionTest {
   private static final UserDefinedFunction URI_FUNCTION = new UserDefinedFunction.UriFunction(URI);
 
   @Test
-  public void testConstructor() {
+  void testConstructor() {
     assertEquals(INLINE, INLINE_FUNCTION.getContent());
     assertEquals(UserDefinedFunction.Type.INLINE, INLINE_FUNCTION.getType());
     assertEquals(URI, URI_FUNCTION.getContent());
@@ -37,13 +37,13 @@ public class UserDefinedFunctionTest {
   }
 
   @Test
-  public void testFactoryMethod() {
+  void testFactoryMethod() {
     compareUserDefinedFunction(INLINE_FUNCTION, UserDefinedFunction.inline(INLINE));
     compareUserDefinedFunction(URI_FUNCTION, UserDefinedFunction.fromUri(URI));
   }
 
   @Test
-  public void testToAndFromPb() {
+  void testToAndFromPb() {
     compareUserDefinedFunction(INLINE_FUNCTION, UserDefinedFunction.fromPb(INLINE_FUNCTION.toPb()));
     compareUserDefinedFunction(URI_FUNCTION, UserDefinedFunction.fromPb(URI_FUNCTION.toPb()));
   }

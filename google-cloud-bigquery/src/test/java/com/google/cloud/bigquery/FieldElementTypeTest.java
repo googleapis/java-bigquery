@@ -20,22 +20,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.google.api.services.bigquery.model.QueryParameterType;
 import org.junit.jupiter.api.Test;
 
-public class FieldElementTypeTest {
+class FieldElementTypeTest {
   private static final FieldElementType FIELD_ELEMENT_TYPE =
       FieldElementType.newBuilder().setType("DATE").build();
 
   @Test
-  public void testToBuilder() {
-    compareFieldElementType(FIELD_ELEMENT_TYPE, FIELD_ELEMENT_TYPE.toBuilder().build());
+  void testToBuilder() {
+    compareFieldElementType(FIELD_ELEMENT_TYPE.toBuilder().build());
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertEquals("DATE", FIELD_ELEMENT_TYPE.getType());
   }
 
   @Test
-  public void testFromAndPb() {
+  void testFromAndPb() {
     assertEquals(FIELD_ELEMENT_TYPE, FieldElementType.fromPb(FIELD_ELEMENT_TYPE.toPb()));
     assertEquals(
         FIELD_ELEMENT_TYPE,
@@ -44,9 +44,9 @@ public class FieldElementTypeTest {
                 .setRangeElementType(new QueryParameterType().setType("DATE"))));
   }
 
-  private void compareFieldElementType(FieldElementType expected, FieldElementType value) {
-    assertEquals(expected.getType(), value.getType());
-    assertEquals(expected.hashCode(), value.hashCode());
-    assertEquals(expected.toString(), value.toString());
+  private void compareFieldElementType(FieldElementType value) {
+    assertEquals(FieldElementTypeTest.FIELD_ELEMENT_TYPE.getType(), value.getType());
+    assertEquals(FieldElementTypeTest.FIELD_ELEMENT_TYPE.hashCode(), value.hashCode());
+    assertEquals(FieldElementTypeTest.FIELD_ELEMENT_TYPE.toString(), value.toString());
   }
 }

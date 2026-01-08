@@ -51,14 +51,13 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-public class ITHighPrecisionTimestamp {
+class ITHighPrecisionTimestamp {
 
-  public static final String TEST_HIGH_PRECISION_TIMESTAMP_TABLE_NAME =
-      "test_high_precision_timestamp";
+  static final String TEST_HIGH_PRECISION_TIMESTAMP_TABLE_NAME = "test_high_precision_timestamp";
   private static BigQuery bigquery;
   private static final String DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static TableId defaultTableId;
-  public static final long TIMESTAMP_PICOSECOND_PRECISION = 12L;
+  private static final long TIMESTAMP_PICOSECOND_PRECISION = 12L;
   private static final Field TIMESTAMP_HIGH_PRECISION_FIELD_SCHEMA =
       Field.newBuilder("timestampHighPrecisionField", StandardSQLTypeName.TIMESTAMP)
           .setTimestampPrecision(TIMESTAMP_PICOSECOND_PRECISION)
@@ -70,7 +69,7 @@ public class ITHighPrecisionTimestamp {
   private static final String TIMESTAMP3 = "2000-01-01T12:34:56.123456789123Z";
 
   @BeforeAll
-  public static void beforeClass() {
+  static void beforeClass() {
     BigQueryOptions.Builder builder =
         BigQueryOptions.newBuilder()
             .setDataFormatOptions(
@@ -111,7 +110,7 @@ public class ITHighPrecisionTimestamp {
   }
 
   @AfterAll
-  public static void afterClass() {
+  static void afterClass() {
     if (bigquery != null) {
       bigquery.delete(defaultTableId);
       RemoteBigQueryHelper.forceDelete(bigquery, DATASET);
@@ -125,7 +124,7 @@ public class ITHighPrecisionTimestamp {
   }
 
   @Test
-  public void query_highPrecisionTimestamp() throws InterruptedException {
+  void query_highPrecisionTimestamp() throws InterruptedException {
     String sql =
         String.format("SELECT timestampHighPrecisionField FROM %s;", defaultTableId.getTable());
     QueryJobConfiguration queryJobConfiguration =
@@ -147,7 +146,7 @@ public class ITHighPrecisionTimestamp {
   }
 
   @Test
-  public void insert_highPrecisionTimestamp_ISOValidFormat() {
+  void insert_highPrecisionTimestamp_ISOValidFormat() {
     StandardTableDefinition tableDefinition =
         StandardTableDefinition.newBuilder().setSchema(TABLE_SCHEMA).build();
     String tempTableName = generateTempTableName();
@@ -166,7 +165,7 @@ public class ITHighPrecisionTimestamp {
   }
 
   @Test
-  public void insert_highPrecisionTimestamp_invalidFormats() {
+  void insert_highPrecisionTimestamp_invalidFormats() {
     StandardTableDefinition tableDefinition =
         StandardTableDefinition.newBuilder().setSchema(TABLE_SCHEMA).build();
     String tempTable = generateTempTableName();
@@ -207,7 +206,7 @@ public class ITHighPrecisionTimestamp {
   }
 
   @Test
-  public void queryNamedParameter_highPrecisionTimestamp() throws InterruptedException {
+  void queryNamedParameter_highPrecisionTimestamp() throws InterruptedException {
     String query =
         String.format(
             "SELECT * FROM %s.%s WHERE timestampHighPrecisionField >= CAST(@timestampParam AS TIMESTAMP(12))",
@@ -236,7 +235,7 @@ public class ITHighPrecisionTimestamp {
   }
 
   @Test
-  public void queryNamedParameter_highPrecisionTimestamp_microsLong() throws InterruptedException {
+  void queryNamedParameter_highPrecisionTimestamp_microsLong() throws InterruptedException {
     String query =
         String.format(
             "SELECT * FROM %s.%s WHERE timestampHighPrecisionField >= CAST(@timestampParam AS TIMESTAMP(12))",
@@ -269,8 +268,7 @@ public class ITHighPrecisionTimestamp {
   }
 
   @Test
-  public void queryNamedParameter_highPrecisionTimestamp_microsISOString()
-      throws InterruptedException {
+  void queryNamedParameter_highPrecisionTimestamp_microsISOString() throws InterruptedException {
     String query =
         String.format(
             "SELECT * FROM %s.%s WHERE timestampHighPrecisionField >= CAST(@timestampParam AS TIMESTAMP(12))",
@@ -298,7 +296,7 @@ public class ITHighPrecisionTimestamp {
   }
 
   @Test
-  public void queryNamedParameter_highPrecisionTimestamp_noExplicitCastInQuery_fails() {
+  void queryNamedParameter_highPrecisionTimestamp_noExplicitCastInQuery_fails() {
     String query =
         String.format(
             "SELECT * FROM %s.%s WHERE timestampHighPrecisionField >= @timestampParam",

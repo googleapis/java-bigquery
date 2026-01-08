@@ -104,7 +104,7 @@ class ITRemoteUDFTest {
         RemoteFunctionOptions.newBuilder()
             .setEndpoint(REMOTE_ENDPOINT)
             .setConnection(connection.getName())
-            .setMaxBatchingRows(Long.valueOf(30))
+            .setMaxBatchingRows(30L)
             .setUserDefinedContext(userDefinedContext)
             .build();
     RoutineInfo routineInfo =
@@ -122,7 +122,7 @@ class ITRemoteUDFTest {
 
     Routine routine = bigquery.create(routineInfo);
     assertNotNull(routine);
-    assertEquals(routine.getRoutineType(), "SCALAR_FUNCTION");
+    assertEquals("SCALAR_FUNCTION", routine.getRoutineType());
     assertEquals(REMOTE_ENDPOINT, routine.getRemoteFunctionOptions().getEndpoint());
     assertEquals(connection.getName(), routine.getRemoteFunctionOptions().getConnection());
   }

@@ -17,11 +17,11 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import org.junit.jupiter.api.Test;
 
-public class ExternalDatasetReferenceTest {
+class ExternalDatasetReferenceTest {
   private static final String EXTERNAL_SOURCE = "test_source";
   private static final String CONNECTION = "test_connection";
   private static final ExternalDatasetReference EXTERNAL_DATASET_REFERENCE =
@@ -55,9 +55,9 @@ public class ExternalDatasetReferenceTest {
   void testToAndFromPb() {
     ExternalDatasetReference externalDatasetReference =
         EXTERNAL_DATASET_REFERENCE.toBuilder().build();
-    assertTrue(
-        ExternalDatasetReference.fromPb(externalDatasetReference.toPb())
-            instanceof ExternalDatasetReference);
+    assertInstanceOf(
+        ExternalDatasetReference.class,
+        ExternalDatasetReference.fromPb(externalDatasetReference.toPb()));
     compareExternalDatasetReference(
         externalDatasetReference, ExternalDatasetReference.fromPb(externalDatasetReference.toPb()));
   }

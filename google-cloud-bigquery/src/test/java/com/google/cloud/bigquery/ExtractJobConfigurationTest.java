@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-public class ExtractJobConfigurationTest {
+class ExtractJobConfigurationTest {
 
   private static final String TEST_PROJECT_ID = "test-project-id";
   private static final List<String> DESTINATION_URIS = ImmutableList.of("uri1", "uri2");
@@ -39,7 +39,7 @@ public class ExtractJobConfigurationTest {
   private static final String JSON_FORMAT = "NEWLINE_DELIMITED_JSON";
   private static final Boolean PRINT_HEADER = true;
   private static final String COMPRESSION = "GZIP";
-  private static final Boolean USEAVROLOGICALTYPES = true;
+  private static final Boolean USE_AVRO_LOGICAL_TYPES = true;
   private static final Map<String, String> LABELS =
       ImmutableMap.of("test-job-name", "test-extract-job");
   private static final Long TIMEOUT = 10L;
@@ -70,7 +70,7 @@ public class ExtractJobConfigurationTest {
           .setFieldDelimiter(FIELD_DELIMITER)
           .setCompression(COMPRESSION)
           .setFormat(AVRO_FORMAT)
-          .setUseAvroLogicalTypes(USEAVROLOGICALTYPES)
+          .setUseAvroLogicalTypes(USE_AVRO_LOGICAL_TYPES)
           .setLabels(LABELS)
           .setJobTimeoutMs(TIMEOUT)
           .setReservation(RESERVATION)
@@ -81,7 +81,7 @@ public class ExtractJobConfigurationTest {
           .setFieldDelimiter(FIELD_DELIMITER)
           .setCompression(COMPRESSION)
           .setFormat(FORMAT)
-          .setUseAvroLogicalTypes(USEAVROLOGICALTYPES)
+          .setUseAvroLogicalTypes(USE_AVRO_LOGICAL_TYPES)
           .setLabels(LABELS)
           .setJobTimeoutMs(TIMEOUT)
           .setReservation(RESERVATION)
@@ -115,7 +115,7 @@ public class ExtractJobConfigurationTest {
   }
 
   @Test
-  public void testOf() {
+  void testOf() {
     ExtractJobConfiguration job = ExtractJobConfiguration.of(TABLE_ID, DESTINATION_URIS);
     assertEquals(TABLE_ID, job.getSourceTable());
     assertEquals(DESTINATION_URIS, job.getDestinationUris());
@@ -147,7 +147,7 @@ public class ExtractJobConfigurationTest {
   }
 
   @Test
-  public void testToBuilderIncomplete() {
+  void testToBuilderIncomplete() {
     ExtractJobConfiguration job = ExtractJobConfiguration.of(TABLE_ID, DESTINATION_URIS);
     compareExtractJobConfiguration(job, job.toBuilder().build());
     ExtractJobConfiguration modelJob = ExtractJobConfiguration.of(MODEL_ID, DESTINATION_URIS);
@@ -155,7 +155,7 @@ public class ExtractJobConfigurationTest {
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertEquals(TABLE_ID, EXTRACT_CONFIGURATION.getSourceTable());
     assertEquals(DESTINATION_URIS, EXTRACT_CONFIGURATION.getDestinationUris());
     assertEquals(FIELD_DELIMITER, EXTRACT_CONFIGURATION.getFieldDelimiter());
@@ -179,7 +179,7 @@ public class ExtractJobConfigurationTest {
     assertEquals(COMPRESSION, EXTRACT_CONFIGURATION_AVRO.getCompression());
     assertEquals(PRINT_HEADER, EXTRACT_CONFIGURATION_AVRO.printHeader());
     assertEquals(AVRO_FORMAT, EXTRACT_CONFIGURATION_AVRO.getFormat());
-    assertEquals(USEAVROLOGICALTYPES, EXTRACT_CONFIGURATION_AVRO.getUseAvroLogicalTypes());
+    assertEquals(USE_AVRO_LOGICAL_TYPES, EXTRACT_CONFIGURATION_AVRO.getUseAvroLogicalTypes());
     assertEquals(LABELS, EXTRACT_CONFIGURATION_AVRO.getLabels());
     assertEquals(TIMEOUT, EXTRACT_CONFIGURATION_AVRO.getJobTimeoutMs());
     assertEquals(MODEL_ID, EXTRACT_CONFIGURATION_MODEL.getSourceModel());
@@ -194,7 +194,7 @@ public class ExtractJobConfigurationTest {
   }
 
   @Test
-  public void testToPbAndFromPb() {
+  void testToPbAndFromPb() {
     assertNotNull(EXTRACT_CONFIGURATION.toPb().getExtract());
     assertNull(EXTRACT_CONFIGURATION.toPb().getCopy());
     assertNull(EXTRACT_CONFIGURATION.toPb().getLoad());
@@ -216,7 +216,7 @@ public class ExtractJobConfigurationTest {
   }
 
   @Test
-  public void testSetProjectId() {
+  void testSetProjectId() {
     ExtractJobConfiguration configuration = EXTRACT_CONFIGURATION.setProjectId(TEST_PROJECT_ID);
     assertEquals(TEST_PROJECT_ID, configuration.getSourceTable().getProject());
     ExtractJobConfiguration modelConfiguration =
@@ -225,7 +225,7 @@ public class ExtractJobConfigurationTest {
   }
 
   @Test
-  public void testSetProjectIdDoNotOverride() {
+  void testSetProjectIdDoNotOverride() {
     ExtractJobConfiguration configuration =
         EXTRACT_CONFIGURATION.toBuilder()
             .setSourceTable(TABLE_ID.setProjectId(TEST_PROJECT_ID))
@@ -241,7 +241,7 @@ public class ExtractJobConfigurationTest {
   }
 
   @Test
-  public void testGetType() {
+  void testGetType() {
     assertEquals(JobConfiguration.Type.EXTRACT, EXTRACT_CONFIGURATION.getType());
     assertEquals(JobConfiguration.Type.EXTRACT, EXTRACT_CONFIGURATION_ONE_URI.getType());
     assertEquals(JobConfiguration.Type.EXTRACT, EXTRACT_CONFIGURATION_AVRO.getType());

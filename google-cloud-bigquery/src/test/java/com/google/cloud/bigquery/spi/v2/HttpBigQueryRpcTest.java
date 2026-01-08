@@ -23,9 +23,9 @@ import com.google.api.services.bigquery.model.DatasetReference;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 
-public class HttpBigQueryRpcTest {
+class HttpBigQueryRpcTest {
   @Test
-  public void testListToDataset() {
+  void testListToDataset() {
     DatasetReference datasetRef =
         new DatasetReference().setDatasetId("dataset-id").setProjectId("project-id");
 

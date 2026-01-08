@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 
 class SchemaTest {
 
-  private static PolicyTags POLICY_TAGS =
+  private static final PolicyTags POLICY_TAGS =
       PolicyTags.newBuilder().setNames(ImmutableList.of("someTag")).build();
 
   private static final Field FIELD_SCHEMA1 =
@@ -54,17 +54,17 @@ class SchemaTest {
 
   @Test
   void testOf() {
-    compareTableSchema(TABLE_SCHEMA, Schema.of(FIELDS));
+    compareTableSchema(Schema.of(FIELDS));
   }
 
   @Test
   void testToAndFromPb() {
-    compareTableSchema(TABLE_SCHEMA, Schema.fromPb(TABLE_SCHEMA.toPb()));
+    compareTableSchema(Schema.fromPb(TABLE_SCHEMA.toPb()));
   }
 
-  private void compareTableSchema(Schema expected, Schema value) {
-    assertEquals(expected, value);
-    assertEquals(expected.getFields(), value.getFields());
+  private void compareTableSchema(Schema value) {
+    assertEquals(SchemaTest.TABLE_SCHEMA, value);
+    assertEquals(SchemaTest.TABLE_SCHEMA.getFields(), value.getFields());
   }
 
   @Test

@@ -17,10 +17,11 @@ package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.api.services.bigquery.model.TrainingOptions;
 import com.google.api.services.bigquery.model.TrainingRun;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -41,7 +42,8 @@ class ModelInfoTest {
       new TrainingOptions().setDataSplitColumn("foo").setEarlyStop(true).setLossType("bar");
   private static final TrainingRun TRAINING_RUN =
       new TrainingRun().setTrainingOptions(TRAINING_OPTIONS);
-  private static final List<TrainingRun> TRAINING_RUN_LIST = Arrays.asList(TRAINING_RUN);
+  private static final List<TrainingRun> TRAINING_RUN_LIST =
+      Collections.singletonList(TRAINING_RUN);
 
   private static final ModelInfo MODEL_INFO =
       ModelInfo.newBuilder(MODEL_ID)
@@ -58,7 +60,7 @@ class ModelInfoTest {
 
   @Test
   void testToBuilder() {
-    compareModelInfo(MODEL_INFO, MODEL_INFO.toBuilder().build());
+    compareModelInfo(MODEL_INFO.toBuilder().build());
   }
 
   @Test
@@ -92,14 +94,14 @@ class ModelInfoTest {
     assertNull(modelInfo.getFriendlyName());
     assertNull(modelInfo.getEncryptionConfiguration());
     assertNull(modelInfo.getLocation());
-    assertEquals(modelInfo.getTrainingRuns().isEmpty(), true);
-    assertEquals(modelInfo.getLabelColumns().isEmpty(), true);
-    assertEquals(modelInfo.getFeatureColumns().isEmpty(), true);
+    assertTrue(modelInfo.getTrainingRuns().isEmpty());
+    assertTrue(modelInfo.getLabelColumns().isEmpty());
+    assertTrue(modelInfo.getFeatureColumns().isEmpty());
   }
 
   @Test
   void testToAndFromPb() {
-    compareModelInfo(MODEL_INFO, ModelInfo.fromPb(MODEL_INFO.toPb()));
+    compareModelInfo(ModelInfo.fromPb(MODEL_INFO.toPb()));
   }
 
   @Test
@@ -107,21 +109,22 @@ class ModelInfoTest {
     assertEquals("project", MODEL_INFO.setProjectId("project").getModelId().getProject());
   }
 
-  private void compareModelInfo(ModelInfo expected, ModelInfo value) {
-    assertEquals(expected, value);
-    assertEquals(expected.getModelId(), value.getModelId());
-    assertEquals(expected.getEtag(), value.getEtag());
-    assertEquals(expected.getCreationTime(), value.getCreationTime());
-    assertEquals(expected.getLastModifiedTime(), value.getLastModifiedTime());
-    assertEquals(expected.getExpirationTime(), value.getExpirationTime());
-    assertEquals(expected.getDescription(), value.getDescription());
-    assertEquals(expected.getFriendlyName(), value.getFriendlyName());
-    assertEquals(expected.getLabels(), value.getLabels());
-    assertEquals(expected.getLocation(), value.getLocation());
-    assertEquals(expected.hashCode(), value.hashCode());
-    assertEquals(expected.getTrainingRuns(), value.getTrainingRuns());
-    assertEquals(expected.getLabelColumns(), value.getLabelColumns());
-    assertEquals(expected.getFeatureColumns(), value.getFeatureColumns());
-    assertEquals(expected.getEncryptionConfiguration(), value.getEncryptionConfiguration());
+  private void compareModelInfo(ModelInfo value) {
+    assertEquals(ModelInfoTest.MODEL_INFO, value);
+    assertEquals(ModelInfoTest.MODEL_INFO.getModelId(), value.getModelId());
+    assertEquals(ModelInfoTest.MODEL_INFO.getEtag(), value.getEtag());
+    assertEquals(ModelInfoTest.MODEL_INFO.getCreationTime(), value.getCreationTime());
+    assertEquals(ModelInfoTest.MODEL_INFO.getLastModifiedTime(), value.getLastModifiedTime());
+    assertEquals(ModelInfoTest.MODEL_INFO.getExpirationTime(), value.getExpirationTime());
+    assertEquals(ModelInfoTest.MODEL_INFO.getDescription(), value.getDescription());
+    assertEquals(ModelInfoTest.MODEL_INFO.getFriendlyName(), value.getFriendlyName());
+    assertEquals(ModelInfoTest.MODEL_INFO.getLabels(), value.getLabels());
+    assertEquals(ModelInfoTest.MODEL_INFO.getLocation(), value.getLocation());
+    assertEquals(ModelInfoTest.MODEL_INFO.hashCode(), value.hashCode());
+    assertEquals(ModelInfoTest.MODEL_INFO.getTrainingRuns(), value.getTrainingRuns());
+    assertEquals(ModelInfoTest.MODEL_INFO.getLabelColumns(), value.getLabelColumns());
+    assertEquals(ModelInfoTest.MODEL_INFO.getFeatureColumns(), value.getFeatureColumns());
+    assertEquals(
+        ModelInfoTest.MODEL_INFO.getEncryptionConfiguration(), value.getEncryptionConfiguration());
   }
 }

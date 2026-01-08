@@ -17,6 +17,7 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +30,7 @@ class TableIdTest {
 
   @Test
   void testOf() {
-    assertEquals(null, TABLE.getProject());
+    assertNull(TABLE.getProject());
     assertEquals("dataset", TABLE.getDataset());
     assertEquals("table", TABLE.getTable());
     assertEquals("project", TABLE_COMPLETE.getProject());

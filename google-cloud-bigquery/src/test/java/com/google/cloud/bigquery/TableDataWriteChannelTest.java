@@ -50,7 +50,7 @@ import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class TableDataWriteChannelTest {
+class TableDataWriteChannelTest {
 
   private static final String UPLOAD_ID = "uploadid";
   private static final TableId TABLE_ID = TableId.of("dataset", "table");
@@ -83,7 +83,7 @@ public class TableDataWriteChannelTest {
   private TableDataWriteChannel writer;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     rpcFactoryMock = mock(BigQueryRpcFactory.class);
     bigqueryRpcMock = mock(HttpBigQueryRpc.class);
     bigqueryFactoryMock = mock(BigQueryFactory.class);
@@ -101,7 +101,7 @@ public class TableDataWriteChannelTest {
   }
 
   @Test
-  public void testCreate() throws IOException {
+  void testCreate() throws IOException {
     when(bigqueryRpcMock.openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
@@ -118,7 +118,7 @@ public class TableDataWriteChannelTest {
   }
 
   @Test
-  public void testCreateRetryableErrors() throws IOException {
+  void testCreateRetryableErrors() throws IOException {
     when(bigqueryRpcMock.openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
@@ -138,7 +138,7 @@ public class TableDataWriteChannelTest {
   }
 
   @Test
-  public void testCreateNonRetryableError() throws IOException {
+  void testCreateNonRetryableError() throws IOException {
     when(bigqueryRpcMock.openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
@@ -160,7 +160,7 @@ public class TableDataWriteChannelTest {
   }
 
   @Test
-  public void testWriteWithoutFlush() throws IOException {
+  void testWriteWithoutFlush() throws IOException {
     when(bigqueryRpcMock.openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
@@ -177,7 +177,7 @@ public class TableDataWriteChannelTest {
   }
 
   @Test
-  public void testWriteWithFlush() throws IOException {
+  void testWriteWithFlush() throws IOException {
     when(bigqueryRpcMock.openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
@@ -213,7 +213,7 @@ public class TableDataWriteChannelTest {
   }
 
   @Test
-  public void testWritesAndFlushRetryableErrors() throws IOException {
+  void testWritesAndFlushRetryableErrors() throws IOException {
     when(bigqueryRpcMock.openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
@@ -259,7 +259,7 @@ public class TableDataWriteChannelTest {
   }
 
   @Test
-  public void testWritesAndFlushNonRetryableError() throws IOException {
+  void testWritesAndFlushNonRetryableError() throws IOException {
     when(bigqueryRpcMock.openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
@@ -301,7 +301,7 @@ public class TableDataWriteChannelTest {
   }
 
   @Test
-  public void testCloseWithoutFlush() throws IOException {
+  void testCloseWithoutFlush() throws IOException {
     when(bigqueryRpcMock.openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
@@ -327,7 +327,7 @@ public class TableDataWriteChannelTest {
   }
 
   @Test
-  public void testCloseWithFlush() throws IOException {
+  void testCloseWithFlush() throws IOException {
     when(bigqueryRpcMock.openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
@@ -356,7 +356,7 @@ public class TableDataWriteChannelTest {
   }
 
   @Test
-  public void testWriteClosed() throws IOException {
+  void testWriteClosed() throws IOException {
     when(bigqueryRpcMock.openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
@@ -380,7 +380,7 @@ public class TableDataWriteChannelTest {
   }
 
   @Test
-  public void testSaveAndRestore() throws IOException {
+  void testSaveAndRestore() throws IOException {
     when(bigqueryRpcMock.openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
@@ -399,30 +399,31 @@ public class TableDataWriteChannelTest {
     writer = new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION);
     assertEquals(DEFAULT_CHUNK_SIZE, writer.write(buffer1));
     assertArrayEquals(buffer1.array(), capturedBuffer.getAllValues().get(0));
-    assertEquals(new Long(0L), capturedPosition.getAllValues().get(0));
+    assertEquals(Long.valueOf(0L), capturedPosition.getAllValues().get(0));
     assertNull(writer.getJob());
     RestorableState<WriteChannel> writerState = writer.capture();
-    WriteChannel restoredWriter = writerState.restore();
-    assertEquals(DEFAULT_CHUNK_SIZE, restoredWriter.write(buffer2));
-    assertArrayEquals(buffer2.array(), capturedBuffer.getAllValues().get(1));
-    assertEquals(new Long(DEFAULT_CHUNK_SIZE), capturedPosition.getAllValues().get(1));
-    verify(bigqueryRpcMock)
-        .openSkipExceptionTranslation(
-            new com.google.api.services.bigquery.model.Job()
-                .setJobReference(JOB_INFO.getJobId().toPb())
-                .setConfiguration(LOAD_CONFIGURATION.toPb()));
-    verify(bigqueryRpcMock, times(2))
-        .writeSkipExceptionTranslation(
-            eq(UPLOAD_ID),
-            capturedBuffer.capture(),
-            eq(0),
-            capturedPosition.capture(),
-            eq(DEFAULT_CHUNK_SIZE),
-            eq(false));
+    try (WriteChannel restoredWriter = writerState.restore()) {
+      assertEquals(DEFAULT_CHUNK_SIZE, restoredWriter.write(buffer2));
+      assertArrayEquals(buffer2.array(), capturedBuffer.getAllValues().get(1));
+      assertEquals(Long.valueOf(DEFAULT_CHUNK_SIZE), capturedPosition.getAllValues().get(1));
+      verify(bigqueryRpcMock)
+          .openSkipExceptionTranslation(
+              new com.google.api.services.bigquery.model.Job()
+                  .setJobReference(JOB_INFO.getJobId().toPb())
+                  .setConfiguration(LOAD_CONFIGURATION.toPb()));
+      verify(bigqueryRpcMock, times(2))
+          .writeSkipExceptionTranslation(
+              eq(UPLOAD_ID),
+              capturedBuffer.capture(),
+              eq(0),
+              capturedPosition.capture(),
+              eq(DEFAULT_CHUNK_SIZE),
+              eq(false));
+    }
   }
 
   @Test
-  public void testSaveAndRestoreClosed() throws IOException {
+  void testSaveAndRestoreClosed() throws IOException {
     when(bigqueryRpcMock.openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())
@@ -456,7 +457,7 @@ public class TableDataWriteChannelTest {
   }
 
   @Test
-  public void testStateEquals() throws IOException {
+  void testStateEquals() throws IOException {
     when(bigqueryRpcMock.openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
                 .setJobReference(JOB_INFO.getJobId().toPb())

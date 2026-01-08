@@ -16,17 +16,18 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.junit.jupiter.api.Test;
 
-public class RoutineIdTest {
+class RoutineIdTest {
 
-  public static final RoutineId ROUTINE = RoutineId.of("dataset", "routine");
-  public static final RoutineId ROUTINE_COMPLETE = RoutineId.of("project", "dataset", "routine");
+  static final RoutineId ROUTINE = RoutineId.of("dataset", "routine");
+  static final RoutineId ROUTINE_COMPLETE = RoutineId.of("project", "dataset", "routine");
 
   @Test
-  public void testOf() {
-    assertEquals(null, ROUTINE.getProject());
+  void testOf() {
+    assertNull(ROUTINE.getProject());
     assertEquals("dataset", ROUTINE.getDataset());
     assertEquals("routine", ROUTINE.getRoutine());
 
@@ -36,19 +37,19 @@ public class RoutineIdTest {
   }
 
   @Test
-  public void testEquals() {
+  void testEquals() {
     compareRoutineIds(ROUTINE, RoutineId.of("dataset", "routine"));
     compareRoutineIds(ROUTINE_COMPLETE, RoutineId.of("project", "dataset", "routine"));
   }
 
   @Test
-  public void testToPbAndFromPb() {
+  void testToPbAndFromPb() {
     compareRoutineIds(ROUTINE, RoutineId.fromPb(ROUTINE.toPb()));
     compareRoutineIds(ROUTINE_COMPLETE, RoutineId.fromPb(ROUTINE_COMPLETE.toPb()));
   }
 
   @Test
-  public void testSetProjectId() {
+  void testSetProjectId() {
     RoutineId differentProjectTable = RoutineId.of("differentProject", "dataset", "routine");
     assertEquals(differentProjectTable, ROUTINE.setProjectId("differentProject"));
   }

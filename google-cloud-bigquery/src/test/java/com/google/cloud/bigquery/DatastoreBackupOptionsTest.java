@@ -30,13 +30,13 @@ class DatastoreBackupOptionsTest {
 
   @Test
   void testToBuilder() {
-    compareDatastoreBackupOptions(BACKUP_OPTIONS, BACKUP_OPTIONS.toBuilder().build());
+    compareDatastoreBackupOptions(BACKUP_OPTIONS.toBuilder().build());
     List<String> fields = ImmutableList.of("field1", "field2");
     DatastoreBackupOptions backupOptions =
         BACKUP_OPTIONS.toBuilder().setProjectionFields(fields).build();
     assertEquals(fields, backupOptions.getProjectionFields());
     backupOptions = backupOptions.toBuilder().setProjectionFields(PROJECTION_FIELDS).build();
-    compareDatastoreBackupOptions(BACKUP_OPTIONS, backupOptions);
+    compareDatastoreBackupOptions(backupOptions);
   }
 
   @Test
@@ -52,9 +52,10 @@ class DatastoreBackupOptionsTest {
     assertEquals(PROJECTION_FIELDS, BACKUP_OPTIONS.getProjectionFields());
   }
 
-  private void compareDatastoreBackupOptions(
-      DatastoreBackupOptions expected, DatastoreBackupOptions value) {
-    assertEquals(expected, value);
-    assertEquals(expected.getProjectionFields(), value.getProjectionFields());
+  private void compareDatastoreBackupOptions(DatastoreBackupOptions value) {
+    assertEquals(DatastoreBackupOptionsTest.BACKUP_OPTIONS, value);
+    assertEquals(
+        DatastoreBackupOptionsTest.BACKUP_OPTIONS.getProjectionFields(),
+        value.getProjectionFields());
   }
 }

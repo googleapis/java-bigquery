@@ -20,13 +20,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.google.api.services.bigquery.model.MetadataCacheStatistics;
 import com.google.common.collect.ImmutableList;
-import com.google.common.truth.Truth;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 class MetadataCacheStatsTest {
-  private static List<com.google.api.services.bigquery.model.TableMetadataCacheUsage>
+  private static final List<com.google.api.services.bigquery.model.TableMetadataCacheUsage>
       TABLE_METADATA_CACHE_USAGE_PB_LIST =
           ImmutableList.of(
               new com.google.api.services.bigquery.model.TableMetadataCacheUsage()
@@ -46,15 +45,15 @@ class MetadataCacheStatsTest {
   @Test
   void testToPbAndFromPb() {
     assertEquals(METADATA_CACHE_STATISTICS_PB, METADATA_CACHE_STATS.toPb());
-    compareMetadataCacheStats(
-        METADATA_CACHE_STATS, MetadataCacheStats.fromPb(METADATA_CACHE_STATISTICS_PB));
+    compareMetadataCacheStats(MetadataCacheStats.fromPb(METADATA_CACHE_STATISTICS_PB));
   }
 
-  private void compareMetadataCacheStats(MetadataCacheStats expected, MetadataCacheStats value) {
-    assertEquals(expected, value);
-    assertEquals(expected.hashCode(), value.hashCode());
-    assertEquals(expected.toString(), value.toString());
-    Truth.assertThat(
-        expected.getTableMetadataCacheUsage().containsAll(value.getTableMetadataCacheUsage()));
+  private void compareMetadataCacheStats(MetadataCacheStats value) {
+    assertEquals(MetadataCacheStatsTest.METADATA_CACHE_STATS, value);
+    assertEquals(MetadataCacheStatsTest.METADATA_CACHE_STATS.hashCode(), value.hashCode());
+    assertEquals(MetadataCacheStatsTest.METADATA_CACHE_STATS.toString(), value.toString());
+    assertEquals(
+        MetadataCacheStatsTest.METADATA_CACHE_STATS.getTableMetadataCacheUsage(),
+        value.getTableMetadataCacheUsage());
   }
 }

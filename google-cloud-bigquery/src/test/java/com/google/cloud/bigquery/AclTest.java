@@ -17,6 +17,7 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.google.api.services.bigquery.model.Dataset;
 import com.google.cloud.bigquery.Acl.DatasetAclEntity;
@@ -131,11 +132,11 @@ class AclTest {
     View view = new View(TableId.of("project", "dataset", "view"));
     acl = Acl.of(view);
     assertEquals(view, acl.getEntity());
-    assertEquals(null, acl.getRole());
+    assertNull(acl.getRole());
     Acl.Routine routine = new Acl.Routine(RoutineId.of("project", "dataset", "routine"));
     acl = Acl.of(routine);
     assertEquals(routine, acl.getEntity());
-    assertEquals(null, acl.getRole());
+    assertNull(acl.getRole());
   }
 
   @Test

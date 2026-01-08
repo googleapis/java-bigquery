@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-public class DmlStatsTest {
+class DmlStatsTest {
 
   private static final Long DELETED_ROW_COUNT = 10L;
   private static final Long INSERTED_ROW_COUNT = 20L;
@@ -41,15 +41,15 @@ public class DmlStatsTest {
 
   @Test
   void testToPbAndFromPb() {
-    compareDmlStats(DML_STATS, DmlStats.fromPb(DML_STATS.toPb()));
+    compareDmlStats(DmlStats.fromPb(DML_STATS.toPb()));
   }
 
-  private void compareDmlStats(DmlStats expected, DmlStats actual) {
-    assertEquals(expected, actual);
-    assertEquals(expected.hashCode(), actual.hashCode());
-    assertEquals(expected.toString(), actual.toString());
-    assertEquals(expected.getDeletedRowCount(), actual.getDeletedRowCount());
-    assertEquals(expected.getInsertedRowCount(), actual.getInsertedRowCount());
-    assertEquals(expected.getUpdatedRowCount(), actual.getUpdatedRowCount());
+  private void compareDmlStats(DmlStats actual) {
+    assertEquals(DmlStatsTest.DML_STATS, actual);
+    assertEquals(DmlStatsTest.DML_STATS.hashCode(), actual.hashCode());
+    assertEquals(DmlStatsTest.DML_STATS.toString(), actual.toString());
+    assertEquals(DmlStatsTest.DML_STATS.getDeletedRowCount(), actual.getDeletedRowCount());
+    assertEquals(DmlStatsTest.DML_STATS.getInsertedRowCount(), actual.getInsertedRowCount());
+    assertEquals(DmlStatsTest.DML_STATS.getUpdatedRowCount(), actual.getUpdatedRowCount());
   }
 }

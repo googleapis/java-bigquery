@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-public class WriteChannelConfigurationTest {
+class WriteChannelConfigurationTest {
 
   private static final CsvOptions CSV_OPTIONS =
       CsvOptions.newBuilder()
@@ -121,7 +121,7 @@ public class WriteChannelConfigurationTest {
           .build();
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareLoadConfiguration(LOAD_CONFIGURATION_CSV, LOAD_CONFIGURATION_CSV.toBuilder().build());
     WriteChannelConfiguration configuration =
         LOAD_CONFIGURATION_CSV.toBuilder()
@@ -142,7 +142,7 @@ public class WriteChannelConfigurationTest {
   }
 
   @Test
-  public void testOf() {
+  void testOf() {
     WriteChannelConfiguration configuration = WriteChannelConfiguration.of(TABLE_ID);
     assertEquals(TABLE_ID, configuration.getDestinationTable());
     configuration = WriteChannelConfiguration.of(TABLE_ID, CSV_OPTIONS);
@@ -152,13 +152,13 @@ public class WriteChannelConfigurationTest {
   }
 
   @Test
-  public void testToBuilderIncomplete() {
+  void testToBuilderIncomplete() {
     WriteChannelConfiguration configuration = WriteChannelConfiguration.of(TABLE_ID);
     compareLoadConfiguration(configuration, configuration.toBuilder().build());
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertEquals(TABLE_ID, LOAD_CONFIGURATION_CSV.getDestinationTable());
     assertEquals(CREATE_DISPOSITION, LOAD_CONFIGURATION_CSV.getCreateDisposition());
     assertEquals(WRITE_DISPOSITION, LOAD_CONFIGURATION_CSV.getWriteDisposition());
@@ -202,7 +202,7 @@ public class WriteChannelConfigurationTest {
   }
 
   @Test
-  public void testToPbAndFromPb() {
+  void testToPbAndFromPb() {
     assertNull(LOAD_CONFIGURATION_CSV.toPb().getLoad().getSourceUris());
     compareLoadConfiguration(
         LOAD_CONFIGURATION_CSV, WriteChannelConfiguration.fromPb(LOAD_CONFIGURATION_CSV.toPb()));
@@ -211,7 +211,7 @@ public class WriteChannelConfigurationTest {
   }
 
   @Test
-  public void testSetProjectIdDoNotOverride() {
+  void testSetProjectIdDoNotOverride() {
     WriteChannelConfiguration configuration =
         WriteChannelConfiguration.of(TABLE_ID).setProjectId("project");
     configuration.setProjectId("different-project").toBuilder();

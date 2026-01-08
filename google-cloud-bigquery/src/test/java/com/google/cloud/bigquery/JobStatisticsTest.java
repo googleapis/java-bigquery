@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
-public class JobStatisticsTest {
+class JobStatisticsTest {
 
   private static final BiEngineReason BI_ENGINE_REASON =
       BiEngineReason.newBuilder()
@@ -272,7 +272,7 @@ public class JobStatisticsTest {
       SessionInfo.newBuilder().setSessionId(SESSION_ID).build();
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertEquals(CREATION_TIME, EXTRACT_STATISTICS.getCreationTime());
     assertEquals(START_TIME, EXTRACT_STATISTICS.getStartTime());
     assertEquals(END_TIME, EXTRACT_STATISTICS.getEndTime());
@@ -358,7 +358,7 @@ public class JobStatisticsTest {
   }
 
   @Test
-  public void testToPbAndFromPb() {
+  void testToPbAndFromPb() {
     compareExtractStatistics(
         EXTRACT_STATISTICS, ExtractStatistics.fromPb(EXTRACT_STATISTICS.toPb()));
     compareCopyStatistics(COPY_STATISTICS, CopyStatistics.fromPb(COPY_STATISTICS.toPb()));
@@ -386,7 +386,7 @@ public class JobStatisticsTest {
   }
 
   @Test
-  public void testIncomplete() {
+  void testIncomplete() {
     // https://github.com/googleapis/google-cloud-java/issues/2357
     com.google.api.services.bigquery.model.Job job =
         new com.google.api.services.bigquery.model.Job()

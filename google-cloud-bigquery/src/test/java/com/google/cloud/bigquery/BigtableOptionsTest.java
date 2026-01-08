@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableList;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class BigtableOptionsTest {
+class BigtableOptionsTest {
 
   private static final BigtableColumn COL1 =
       BigtableColumn.newBuilder()
@@ -62,7 +62,6 @@ public class BigtableOptionsTest {
     assertThat(COL1.getOnlyReadLatest()).isEqualTo(true);
     assertThat(COL1.getEncoding()).isEqualTo("BINARY");
     assertThat(COL1.getType()).isEqualTo("BYTES");
-    assertThat(COL1.equals(COL1)).isTrue();
     assertThat(COL1).isNotEqualTo(TESTFAMILY);
 
     // family
@@ -76,35 +75,27 @@ public class BigtableOptionsTest {
     assertThat(OPTIONS.getIgnoreUnspecifiedColumnFamilies()).isEqualTo(true);
     assertThat(OPTIONS.getReadRowkeyAsString()).isEqualTo(true);
     assertThat(OPTIONS.getColumnFamilies()).isEqualTo(ImmutableList.of(TESTFAMILY));
-    compareBigtableOptions(OPTIONS, OPTIONS.toBuilder().build());
+    compareBigtableOptions(OPTIONS.toBuilder().build());
   }
 
   @Test
   void testNullPointerException() {
+    BigtableColumnFamily.Builder builder = BigtableColumnFamily.newBuilder();
     NullPointerException ex =
-        Assertions.assertThrows(
-            NullPointerException.class,
-            () -> BigtableColumnFamily.newBuilder().setFamilyID(null).build());
+        Assertions.assertThrows(NullPointerException.class, () -> builder.setFamilyID(null));
     assertThat(ex.getMessage()).isNotNull();
-    ex =
-        Assertions.assertThrows(
-            NullPointerException.class,
-            () -> BigtableColumnFamily.newBuilder().setColumns(null).build());
+    BigtableColumnFamily.Builder builder1 = BigtableColumnFamily.newBuilder();
+    ex = Assertions.assertThrows(NullPointerException.class, () -> builder1.setColumns(null));
     assertThat(ex.getMessage()).isNotNull();
-    ex =
-        Assertions.assertThrows(
-            NullPointerException.class,
-            () -> BigtableColumnFamily.newBuilder().setEncoding(null).build());
+    BigtableColumnFamily.Builder builder2 = BigtableColumnFamily.newBuilder();
+    ex = Assertions.assertThrows(NullPointerException.class, () -> builder2.setEncoding(null));
     assertThat(ex.getMessage()).isNotNull();
+    BigtableColumnFamily.Builder builder3 = BigtableColumnFamily.newBuilder();
     ex =
-        Assertions.assertThrows(
-            NullPointerException.class,
-            () -> BigtableColumnFamily.newBuilder().setOnlyReadLatest(null).build());
+        Assertions.assertThrows(NullPointerException.class, () -> builder3.setOnlyReadLatest(null));
     assertThat(ex.getMessage()).isNotNull();
-    ex =
-        Assertions.assertThrows(
-            NullPointerException.class,
-            () -> BigtableColumnFamily.newBuilder().setType(null).build());
+    BigtableColumnFamily.Builder builder4 = BigtableColumnFamily.newBuilder();
+    ex = Assertions.assertThrows(NullPointerException.class, () -> builder4.setType(null));
     assertThat(ex.getMessage()).isNotNull();
   }
 
@@ -119,52 +110,53 @@ public class BigtableOptionsTest {
 
   @Test
   void testToAndFromPb() {
-    compareBigtableColumn(COL1, BigtableColumn.fromPb(COL1.toPb()));
-    compareBigtableColumnFamily(TESTFAMILY, BigtableColumnFamily.fromPb(TESTFAMILY.toPb()));
-    compareBigtableOptions(OPTIONS, BigtableOptions.fromPb(OPTIONS.toPb()));
+    compareBigtableColumn(BigtableColumn.fromPb(COL1.toPb()));
+    compareBigtableColumnFamily(BigtableColumnFamily.fromPb(TESTFAMILY.toPb()));
+    compareBigtableOptions(BigtableOptions.fromPb(OPTIONS.toPb()));
   }
 
   @Test
   void testEquals() {
-    compareBigtableColumn(COL1, COL1);
-    compareBigtableColumnFamily(TESTFAMILY, TESTFAMILY);
-    assertThat(TESTFAMILY.equals(TESTFAMILY)).isTrue();
+    compareBigtableColumn(COL1);
+    compareBigtableColumnFamily(TESTFAMILY);
     assertThat(TESTFAMILY).isNotEqualTo(COL1);
-    assertThat(OPTIONS.equals(OPTIONS)).isTrue();
     assertThat(OPTIONS).isNotEqualTo(TESTFAMILY);
-    compareBigtableOptions(OPTIONS, OPTIONS);
+    compareBigtableOptions(OPTIONS);
   }
 
-  private void compareBigtableColumn(BigtableColumn expected, BigtableColumn value) {
-    assertThat(expected).isEqualTo(value);
-    assertThat(expected.getEncoding()).isEqualTo(value.getEncoding());
-    assertThat(expected.getFieldName()).isEqualTo(value.getFieldName());
-    assertThat(expected.getQualifierEncoded()).isEqualTo(value.getQualifierEncoded());
-    assertThat(expected.getOnlyReadLatest()).isEqualTo(value.getOnlyReadLatest());
-    assertThat(expected.getType()).isEqualTo(value.getType());
-    assertThat(expected.toString()).isEqualTo(value.toString());
-    assertThat(expected.hashCode()).isEqualTo(value.hashCode());
+  private void compareBigtableColumn(BigtableColumn value) {
+    assertThat(BigtableOptionsTest.COL1).isEqualTo(value);
+    assertThat(BigtableOptionsTest.COL1.getEncoding()).isEqualTo(value.getEncoding());
+    assertThat(BigtableOptionsTest.COL1.getFieldName()).isEqualTo(value.getFieldName());
+    assertThat(BigtableOptionsTest.COL1.getQualifierEncoded())
+        .isEqualTo(value.getQualifierEncoded());
+    assertThat(BigtableOptionsTest.COL1.getOnlyReadLatest()).isEqualTo(value.getOnlyReadLatest());
+    assertThat(BigtableOptionsTest.COL1.getType()).isEqualTo(value.getType());
+    assertThat(BigtableOptionsTest.COL1.toString()).isEqualTo(value.toString());
+    assertThat(BigtableOptionsTest.COL1.hashCode()).isEqualTo(value.hashCode());
   }
 
-  private void compareBigtableColumnFamily(
-      BigtableColumnFamily expected, BigtableColumnFamily value) {
-    assertThat(expected).isEqualTo(value);
-    assertThat(expected.getFamilyID()).isEqualTo(value.getFamilyID());
-    assertThat(expected.getOnlyReadLatest()).isEqualTo(value.getOnlyReadLatest());
-    assertThat(expected.getColumns()).isEqualTo(value.getColumns());
-    assertThat(expected.getEncoding()).isEqualTo(value.getEncoding());
-    assertThat(expected.getType()).isEqualTo(value.getType());
-    assertThat(expected.toString()).isEqualTo(value.toString());
-    assertThat(expected.hashCode()).isEqualTo(value.hashCode());
+  private void compareBigtableColumnFamily(BigtableColumnFamily value) {
+    assertThat(BigtableOptionsTest.TESTFAMILY).isEqualTo(value);
+    assertThat(BigtableOptionsTest.TESTFAMILY.getFamilyID()).isEqualTo(value.getFamilyID());
+    assertThat(BigtableOptionsTest.TESTFAMILY.getOnlyReadLatest())
+        .isEqualTo(value.getOnlyReadLatest());
+    assertThat(BigtableOptionsTest.TESTFAMILY.getColumns()).isEqualTo(value.getColumns());
+    assertThat(BigtableOptionsTest.TESTFAMILY.getEncoding()).isEqualTo(value.getEncoding());
+    assertThat(BigtableOptionsTest.TESTFAMILY.getType()).isEqualTo(value.getType());
+    assertThat(BigtableOptionsTest.TESTFAMILY.toString()).isEqualTo(value.toString());
+    assertThat(BigtableOptionsTest.TESTFAMILY.hashCode()).isEqualTo(value.hashCode());
   }
 
-  private void compareBigtableOptions(BigtableOptions expected, BigtableOptions value) {
-    assertThat(expected).isEqualTo(value);
-    assertThat(expected.getIgnoreUnspecifiedColumnFamilies())
+  private void compareBigtableOptions(BigtableOptions value) {
+    assertThat(BigtableOptionsTest.OPTIONS).isEqualTo(value);
+    assertThat(BigtableOptionsTest.OPTIONS.getIgnoreUnspecifiedColumnFamilies())
         .isEqualTo(value.getIgnoreUnspecifiedColumnFamilies());
-    assertThat(expected.getReadRowkeyAsString()).isEqualTo(value.getReadRowkeyAsString());
-    assertThat(expected.getColumnFamilies()).isEqualTo(value.getColumnFamilies());
-    assertThat(expected.hashCode()).isEqualTo(value.hashCode());
-    assertThat(expected.toString()).isEqualTo(value.toString());
+    assertThat(BigtableOptionsTest.OPTIONS.getReadRowkeyAsString())
+        .isEqualTo(value.getReadRowkeyAsString());
+    assertThat(BigtableOptionsTest.OPTIONS.getColumnFamilies())
+        .isEqualTo(value.getColumnFamilies());
+    assertThat(BigtableOptionsTest.OPTIONS.hashCode()).isEqualTo(value.hashCode());
+    assertThat(BigtableOptionsTest.OPTIONS.toString()).isEqualTo(value.toString());
   }
 }

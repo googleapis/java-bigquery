@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-public class QueryJobConfigurationTest {
+class QueryJobConfigurationTest {
 
   private static final String TEST_PROJECT_ID = "test-project-id";
   private static final String QUERY = "BigQuery SQL";
@@ -156,7 +156,7 @@ public class QueryJobConfigurationTest {
       QUERY_JOB_CONFIGURATION.toBuilder().setJobCreationMode(JOB_CREATION_MODE).build();
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareQueryJobConfiguration(
         QUERY_JOB_CONFIGURATION, QUERY_JOB_CONFIGURATION.toBuilder().build());
     QueryJobConfiguration job =
@@ -167,19 +167,19 @@ public class QueryJobConfigurationTest {
   }
 
   @Test
-  public void testOf() {
+  void testOf() {
     QueryJobConfiguration job = QueryJobConfiguration.of(QUERY);
     assertEquals(QUERY, job.getQuery());
   }
 
   @Test
-  public void testToBuilderIncomplete() {
+  void testToBuilderIncomplete() {
     QueryJobConfiguration job = QueryJobConfiguration.of(QUERY);
     compareQueryJobConfiguration(job, job.toBuilder().build());
   }
 
   @Test
-  public void testToPbAndFromPb() {
+  void testToPbAndFromPb() {
     assertNotNull(QUERY_JOB_CONFIGURATION.toPb().getQuery());
     assertNull(QUERY_JOB_CONFIGURATION.toPb().getExtract());
     assertNull(QUERY_JOB_CONFIGURATION.toPb().getCopy());
@@ -198,14 +198,14 @@ public class QueryJobConfigurationTest {
   }
 
   @Test
-  public void testSetProjectId() {
+  void testSetProjectId() {
     QueryJobConfiguration configuration = QUERY_JOB_CONFIGURATION.setProjectId(TEST_PROJECT_ID);
     assertEquals(TEST_PROJECT_ID, configuration.getDefaultDataset().getProject());
     assertEquals(TEST_PROJECT_ID, configuration.getDestinationTable().getProject());
   }
 
   @Test
-  public void testSetProjectIdDoNotOverride() {
+  void testSetProjectIdDoNotOverride() {
     QueryJobConfiguration configuration =
         QUERY_JOB_CONFIGURATION.toBuilder()
             .setDestinationTable(TABLE_ID.setProjectId(TEST_PROJECT_ID))
@@ -216,26 +216,26 @@ public class QueryJobConfigurationTest {
   }
 
   @Test
-  public void testGetType() {
+  void testGetType() {
     assertEquals(JobConfiguration.Type.QUERY, QUERY_JOB_CONFIGURATION.getType());
   }
 
   @Test
-  public void testPositionalParameter() {
+  void testPositionalParameter() {
     compareQueryJobConfiguration(
         QUERY_JOB_CONFIGURATION_ADD_POSITIONAL_PARAMETER,
         QUERY_JOB_CONFIGURATION_ADD_POSITIONAL_PARAMETER.toBuilder().build());
   }
 
   @Test
-  public void testNamedParameter() {
+  void testNamedParameter() {
     compareQueryJobConfiguration(
         QUERY_JOB_CONFIGURATION_SET_NAME_PARAMETER,
         QUERY_JOB_CONFIGURATION_SET_NAME_PARAMETER.toBuilder().build());
   }
 
   @Test
-  public void testJobCreationMode() {
+  void testJobCreationMode() {
     compareQueryJobConfiguration(
         QUERY_JOB_CONFIGURATION_SET_JOB_CREATION_MODE,
         QUERY_JOB_CONFIGURATION_SET_JOB_CREATION_MODE.toBuilder().build());

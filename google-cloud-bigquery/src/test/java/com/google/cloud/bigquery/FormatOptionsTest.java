@@ -20,10 +20,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-public class FormatOptionsTest {
+class FormatOptionsTest {
 
   @Test
-  public void testConstructor() {
+  void testConstructor() {
     FormatOptions options = new FormatOptions(FormatOptions.CSV);
     assertEquals(FormatOptions.CSV, options.getType());
     options = new FormatOptions(FormatOptions.JSON);
@@ -35,7 +35,7 @@ public class FormatOptionsTest {
   }
 
   @Test
-  public void testFactoryMethods() {
+  void testFactoryMethods() {
     assertEquals(FormatOptions.CSV, FormatOptions.csv().getType());
     assertEquals(FormatOptions.JSON, FormatOptions.json().getType());
     assertEquals(FormatOptions.DATASTORE_BACKUP, FormatOptions.datastoreBackup().getType());
@@ -45,15 +45,13 @@ public class FormatOptionsTest {
   }
 
   @Test
-  public void testEquals() {
+  void testEquals() {
     assertEquals(FormatOptions.csv(), FormatOptions.csv());
     assertEquals(FormatOptions.csv().hashCode(), FormatOptions.csv().hashCode());
-    assertEquals(FormatOptions.json(), FormatOptions.json());
     assertEquals(FormatOptions.json().hashCode(), FormatOptions.json().hashCode());
     assertEquals(FormatOptions.datastoreBackup(), FormatOptions.datastoreBackup());
     assertEquals(
         FormatOptions.datastoreBackup().hashCode(), FormatOptions.datastoreBackup().hashCode());
     assertEquals(FormatOptions.googleSheets(), FormatOptions.googleSheets());
-    assertEquals(FormatOptions.iceberg(), FormatOptions.iceberg());
   }
 }

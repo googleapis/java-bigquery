@@ -40,7 +40,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class TableTest {
+class TableTest {
 
   private static final String ETAG = "etag";
   private static final String GENERATED_ID = "project:dataset:table1";
@@ -56,8 +56,6 @@ public class TableTest {
   private static final TableId TABLE_ID1 = TableId.of("dataset", "table1");
   private static final TableId TABLE_ID2 = TableId.of("dataset", "table2");
   private static final Boolean REQUIRE_PARTITION_FILTER = true;
-  private static final EncryptionConfiguration ENCRYPTION_CONFIGURATION =
-      EncryptionConfiguration.newBuilder().setKmsKeyName("KMS_KEY_1").build();
   private static final CopyJobConfiguration COPY_JOB_CONFIGURATION =
       CopyJobConfiguration.of(TABLE_ID2, TABLE_ID1);
   private static final JobInfo COPY_JOB_INFO = JobInfo.of(COPY_JOB_CONFIGURATION);
@@ -96,21 +94,20 @@ public class TableTest {
           FieldValueList.of(ImmutableList.of(FIELD_VALUE2)).withSchema(SCHEMA.getFields()));
 
   private BigQuery bigquery;
-  private BigQueryOptions mockOptions;
   private Table expectedTable;
   private Table table;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     bigquery = mock(BigQuery.class);
-    mockOptions = mock(BigQueryOptions.class);
+    BigQueryOptions mockOptions = mock(BigQueryOptions.class);
     when(bigquery.getOptions()).thenReturn(mockOptions);
     expectedTable = new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO));
     table = new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO));
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     Table builtTable =
         new Table.Builder(bigquery, TABLE_ID1, TABLE_DEFINITION)
             .setCreationTime(CREATION_TIME)
@@ -144,12 +141,12 @@ public class TableTest {
   }
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareTable(expectedTable, expectedTable.toBuilder().build());
   }
 
   @Test
-  public void testExists_True() {
+  void testExists_True() {
     BigQuery.TableOption[] expectedOptions = {BigQuery.TableOption.fields()};
     when(bigquery.getTable(TABLE_INFO.getTableId(), expectedOptions)).thenReturn(expectedTable);
     assertTrue(table.exists());
@@ -157,7 +154,7 @@ public class TableTest {
   }
 
   @Test
-  public void testExists_False() {
+  void testExists_False() {
     BigQuery.TableOption[] expectedOptions = {BigQuery.TableOption.fields()};
     when(bigquery.getTable(TABLE_INFO.getTableId(), expectedOptions)).thenReturn(null);
     assertFalse(table.exists());
@@ -165,7 +162,7 @@ public class TableTest {
   }
 
   @Test
-  public void testReload() {
+  void testReload() {
     TableInfo updatedInfo = TABLE_INFO.toBuilder().setDescription("Description").build();
     Table expectedTable = new Table(bigquery, new TableInfo.BuilderImpl(updatedInfo));
     when(bigquery.getTable(TABLE_INFO.getTableId())).thenReturn(expectedTable);
@@ -175,14 +172,14 @@ public class TableTest {
   }
 
   @Test
-  public void testReloadNull() {
+  void testReloadNull() {
     when(bigquery.getTable(TABLE_INFO.getTableId())).thenReturn(null);
     assertNull(table.reload());
     verify(bigquery).getTable(TABLE_INFO.getTableId());
   }
 
   @Test
-  public void testReloadWithOptions() {
+  void testReloadWithOptions() {
     TableInfo updatedInfo = TABLE_INFO.toBuilder().setDescription("Description").build();
     Table expectedTable = new Table(bigquery, new TableInfo.BuilderImpl(updatedInfo));
     when(bigquery.getTable(TABLE_INFO.getTableId(), BigQuery.TableOption.fields()))
@@ -193,7 +190,7 @@ public class TableTest {
   }
 
   @Test
-  public void testUpdate() {
+  void testUpdate() {
     Table expectedUpdatedTable = expectedTable.toBuilder().setDescription("Description").build();
     when(bigquery.update(eq(expectedTable))).thenReturn(expectedUpdatedTable);
     Table actualUpdatedTable = table.update();
@@ -202,7 +199,7 @@ public class TableTest {
   }
 
   @Test
-  public void testUpdateWithOptions() {
+  void testUpdateWithOptions() {
     Table expectedUpdatedTable = expectedTable.toBuilder().setDescription("Description").build();
     when(bigquery.update(eq(expectedTable), eq(BigQuery.TableOption.fields())))
         .thenReturn(expectedUpdatedTable);
@@ -212,21 +209,21 @@ public class TableTest {
   }
 
   @Test
-  public void testDeleteTrue() {
+  void testDeleteTrue() {
     when(bigquery.delete(TABLE_INFO.getTableId())).thenReturn(true);
     assertTrue(table.delete());
     verify(bigquery).delete(TABLE_INFO.getTableId());
   }
 
   @Test
-  public void testDeleteFalse() {
+  void testDeleteFalse() {
     when(bigquery.delete(TABLE_INFO.getTableId())).thenReturn(false);
     assertFalse(table.delete());
     verify(bigquery).delete(TABLE_INFO.getTableId());
   }
 
   @Test
-  public void testInsert() {
+  void testInsert() {
     when(bigquery.insertAll(INSERT_ALL_REQUEST)).thenReturn(EMPTY_INSERT_ALL_RESPONSE);
     InsertAllResponse response = table.insert(ROWS_TO_INSERT);
     assertSame(EMPTY_INSERT_ALL_RESPONSE, response);
@@ -234,7 +231,7 @@ public class TableTest {
   }
 
   @Test
-  public void testInsertComplete() {
+  void testInsertComplete() {
     when(bigquery.insertAll(INSERT_ALL_REQUEST_COMPLETE)).thenReturn(EMPTY_INSERT_ALL_RESPONSE);
     InsertAllResponse response = table.insert(ROWS_TO_INSERT, true, true);
     assertSame(EMPTY_INSERT_ALL_RESPONSE, response);
@@ -242,7 +239,7 @@ public class TableTest {
   }
 
   @Test
-  public void testList() {
+  void testList() {
     Page<FieldValueList> page = new PageImpl<>(null, "c", ROWS);
     when(bigquery.listTableData(TABLE_ID1))
         .thenReturn(
@@ -266,7 +263,7 @@ public class TableTest {
   }
 
   @Test
-  public void testListWithOptions() {
+  void testListWithOptions() {
     Page<FieldValueList> page = new PageImpl<>(null, "c", ROWS);
     when(bigquery.listTableData(TABLE_ID1, BigQuery.TableDataListOption.pageSize(10L)))
         .thenReturn(
@@ -291,7 +288,7 @@ public class TableTest {
   }
 
   @Test
-  public void testCopyFromString() {
+  void testCopyFromString() {
     Job expectedJob = new Job(bigquery, new JobInfo.BuilderImpl(COPY_JOB_INFO));
     when(bigquery.create(COPY_JOB_INFO)).thenReturn(expectedJob);
     Job job = table.copy(TABLE_ID2.getDataset(), TABLE_ID2.getTable());
@@ -300,7 +297,7 @@ public class TableTest {
   }
 
   @Test
-  public void testCopyFromId() {
+  void testCopyFromId() {
     Job expectedJob = new Job(bigquery, new JobInfo.BuilderImpl(COPY_JOB_INFO));
     when(bigquery.create(COPY_JOB_INFO)).thenReturn(expectedJob);
     Job job = table.copy(TABLE_ID2.getDataset(), TABLE_ID2.getTable());
@@ -309,7 +306,7 @@ public class TableTest {
   }
 
   @Test
-  public void testLoadDataUri() {
+  void testLoadDataUri() {
     Job expectedJob = new Job(bigquery, new JobInfo.BuilderImpl(LOAD_JOB_INFO));
     when(bigquery.create(LOAD_JOB_INFO)).thenReturn(expectedJob);
     Job job = table.load(FormatOptions.json(), "URI");
@@ -318,7 +315,7 @@ public class TableTest {
   }
 
   @Test
-  public void testLoadDataUris() {
+  void testLoadDataUris() {
     Job expectedJob = new Job(bigquery, new JobInfo.BuilderImpl(LOAD_JOB_INFO));
     when(bigquery.create(LOAD_JOB_INFO)).thenReturn(expectedJob);
     Job job = table.load(FormatOptions.json(), ImmutableList.of("URI"));
@@ -327,7 +324,7 @@ public class TableTest {
   }
 
   @Test
-  public void testExtractDataUri() {
+  void testExtractDataUri() {
     Job expectedJob = new Job(bigquery, new JobInfo.BuilderImpl(EXTRACT_JOB_INFO));
     when(bigquery.create(EXTRACT_JOB_INFO)).thenReturn(expectedJob);
     Job job = table.extract("CSV", "URI");
@@ -336,7 +333,7 @@ public class TableTest {
   }
 
   @Test
-  public void testExtractDataUris() {
+  void testExtractDataUris() {
     Job expectedJob = new Job(bigquery, new JobInfo.BuilderImpl(EXTRACT_JOB_INFO));
     when(bigquery.create(EXTRACT_JOB_INFO)).thenReturn(expectedJob);
     Job job = table.extract("CSV", ImmutableList.of("URI"));
@@ -345,12 +342,12 @@ public class TableTest {
   }
 
   @Test
-  public void testBigQuery() {
+  void testBigQuery() {
     assertSame(bigquery, expectedTable.getBigQuery());
   }
 
   @Test
-  public void testToAndFromPb() {
+  void testToAndFromPb() {
     compareTable(expectedTable, Table.fromPb(bigquery, expectedTable.toPb()));
   }
 

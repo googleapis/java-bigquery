@@ -280,7 +280,7 @@ class DatasetTest {
     when(bigquery.getTable(TABLE_ID1, null)).thenReturn(expectedTable);
     Table table = bigquery.getTable(TABLE_ID1, null);
     assertNotNull(table);
-    assertEquals(table.getTableId().getProject(), NEW_PROJECT_ID);
+    assertEquals(NEW_PROJECT_ID, table.getTableId().getProject());
     verify(bigquery).getTable(TABLE_ID1, null);
   }
 

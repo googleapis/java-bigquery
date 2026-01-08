@@ -24,7 +24,7 @@ import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class OptionTest {
+class OptionTest {
 
   private static final BigQueryRpc.Option RPC_OPTION = BigQueryRpc.Option.PAGE_TOKEN;
   private static final BigQueryRpc.Option ANOTHER_RPC_OPTION = BigQueryRpc.Option.FIELDS;
@@ -36,19 +36,19 @@ public class OptionTest {
   private static final Option OPTION_NOT_EQUALS2 = new Option(ANOTHER_RPC_OPTION, VALUE) {};
 
   @Test
-  public void testEquals() {
+  void testEquals() {
     assertEquals(OPTION, OPTION_EQUALS);
     assertNotEquals(OPTION, OPTION_NOT_EQUALS1);
     assertNotEquals(OPTION, OPTION_NOT_EQUALS2);
   }
 
   @Test
-  public void testHashCode() {
+  void testHashCode() {
     assertEquals(OPTION.hashCode(), OPTION_EQUALS.hashCode());
   }
 
   @Test
-  public void testConstructor() {
+  void testConstructor() {
     assertEquals(RPC_OPTION, OPTION.getRpcOption());
     assertEquals(VALUE, OPTION.getValue());
     Option option = new Option(RPC_OPTION, null) {};

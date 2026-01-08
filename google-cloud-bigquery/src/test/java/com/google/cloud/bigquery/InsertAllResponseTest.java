@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-public class InsertAllResponseTest {
+class InsertAllResponseTest {
 
   private static final List<BigQueryError> ERRORS1 =
       ImmutableList.of(
@@ -43,12 +43,7 @@ public class InsertAllResponseTest {
   private static final InsertAllResponse EMPTY_INSERT_ALL_RESPONSE = new InsertAllResponse(null);
 
   @Test
-  public void testConstructor() {
-    assertEquals(INSERT_ALL_RESPONSE, INSERT_ALL_RESPONSE);
-  }
-
-  @Test
-  public void testErrorsFor() {
+  void testErrorsFor() {
     assertEquals(ERRORS_MAP, INSERT_ALL_RESPONSE.getInsertErrors());
     assertEquals(ERRORS1, INSERT_ALL_RESPONSE.getErrorsFor(0L));
     assertEquals(ERRORS2, INSERT_ALL_RESPONSE.getErrorsFor(1L));
@@ -56,13 +51,13 @@ public class InsertAllResponseTest {
   }
 
   @Test
-  public void testHasErrors() {
+  void testHasErrors() {
     assertTrue(INSERT_ALL_RESPONSE.hasErrors());
     assertFalse(EMPTY_INSERT_ALL_RESPONSE.hasErrors());
   }
 
   @Test
-  public void testToPbAndFromPb() {
+  void testToPbAndFromPb() {
     compareInsertAllResponse(
         INSERT_ALL_RESPONSE, InsertAllResponse.fromPb(INSERT_ALL_RESPONSE.toPb()));
     compareInsertAllResponse(

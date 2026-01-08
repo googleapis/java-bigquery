@@ -27,12 +27,10 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-public class InsertAllRequestTest {
+class InsertAllRequestTest {
 
-  private static final Map<String, Object> CONTENT1 =
-      ImmutableMap.<String, Object>of("key", "val1");
-  private static final Map<String, Object> CONTENT2 =
-      ImmutableMap.<String, Object>of("key", "val2");
+  private static final Map<String, Object> CONTENT1 = ImmutableMap.of("key", "val1");
+  private static final Map<String, Object> CONTENT2 = ImmutableMap.of("key", "val2");
   private static final List<InsertAllRequest.RowToInsert> ROWS =
       ImmutableList.of(
           InsertAllRequest.RowToInsert.of(CONTENT1), InsertAllRequest.RowToInsert.of(CONTENT2));
@@ -118,7 +116,7 @@ public class InsertAllRequestTest {
           .build();
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertThat(TABLE_ID).isEqualTo(INSERT_ALL_REQUEST1.getTable());
     assertThat(TABLE_ID).isEqualTo(INSERT_ALL_REQUEST2.getTable());
     assertThat(TABLE_ID).isEqualTo(INSERT_ALL_REQUEST3.getTable());
@@ -177,7 +175,7 @@ public class InsertAllRequestTest {
   }
 
   @Test
-  public void testOf() {
+  void testOf() {
     InsertAllRequest request = InsertAllRequest.of(TABLE_ID, ROWS);
     assertThat(TABLE_ID).isEqualTo(request.getTable());
     assertThat(ROWS).isEqualTo(request.getRows());
@@ -203,7 +201,7 @@ public class InsertAllRequestTest {
   }
 
   @Test
-  public void testEquals() {
+  void testEquals() {
     compareInsertAllRequest(INSERT_ALL_REQUEST1, INSERT_ALL_REQUEST2);
     compareInsertAllRequest(INSERT_ALL_REQUEST2, INSERT_ALL_REQUEST4);
     compareInsertAllRequest(INSERT_ALL_REQUEST3, INSERT_ALL_REQUEST5);
@@ -216,14 +214,15 @@ public class InsertAllRequestTest {
   }
 
   @Test
-  public void testImmutable() {
+  void testImmutable() {
     InsertAllRequest.RowToInsert row = InsertAllRequest.RowToInsert.of(new HashMap<>());
 
-    assertThrows(UnsupportedOperationException.class, () -> row.getContent().put("zip", "zap"));
+    Map<String, Object> content = row.getContent();
+    assertThrows(UnsupportedOperationException.class, () -> content.put("zip", "zap"));
   }
 
   @Test
-  public void testNullOK() {
+  void testNullOK() {
     InsertAllRequest.RowToInsert row =
         InsertAllRequest.RowToInsert.of(Collections.singletonMap("foo", null));
     assertThat(row.getContent()).containsExactly("foo", null);

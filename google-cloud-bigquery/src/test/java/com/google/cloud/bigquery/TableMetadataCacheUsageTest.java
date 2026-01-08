@@ -53,18 +53,26 @@ class TableMetadataCacheUsageTest {
   @Test
   void testToPbAndFromPb() {
     assertEquals(TABLE_METADATA_CACHE_USAGE_PB, TABLE_METADATA_CACHE_USAGE.toPb());
-    compareTableMetadataCacheUsage(
-        TABLE_METADATA_CACHE_USAGE, TableMetadataCacheUsage.fromPb(TABLE_METADATA_CACHE_USAGE_PB));
+    compareTableMetadataCacheUsage(TableMetadataCacheUsage.fromPb(TABLE_METADATA_CACHE_USAGE_PB));
   }
 
-  private void compareTableMetadataCacheUsage(
-      TableMetadataCacheUsage expected, TableMetadataCacheUsage value) {
-    assertEquals(expected, value);
-    assertEquals(expected.hashCode(), value.hashCode());
-    assertEquals(expected.toString(), value.toString());
-    assertEquals(expected.getExplanation(), value.getExplanation());
-    assertEquals(expected.getTableType(), value.getTableType());
-    assertEquals(expected.getUnusedReason(), value.getUnusedReason());
-    assertEquals(expected.getTableReference(), value.getTableReference());
+  private void compareTableMetadataCacheUsage(TableMetadataCacheUsage value) {
+    assertEquals(TableMetadataCacheUsageTest.TABLE_METADATA_CACHE_USAGE, value);
+    assertEquals(
+        TableMetadataCacheUsageTest.TABLE_METADATA_CACHE_USAGE.hashCode(), value.hashCode());
+    assertEquals(
+        TableMetadataCacheUsageTest.TABLE_METADATA_CACHE_USAGE.toString(), value.toString());
+    assertEquals(
+        TableMetadataCacheUsageTest.TABLE_METADATA_CACHE_USAGE.getExplanation(),
+        value.getExplanation());
+    assertEquals(
+        TableMetadataCacheUsageTest.TABLE_METADATA_CACHE_USAGE.getTableType(),
+        value.getTableType());
+    assertEquals(
+        TableMetadataCacheUsageTest.TABLE_METADATA_CACHE_USAGE.getUnusedReason(),
+        value.getUnusedReason());
+    assertEquals(
+        TableMetadataCacheUsageTest.TABLE_METADATA_CACHE_USAGE.getTableReference(),
+        value.getTableReference());
   }
 }

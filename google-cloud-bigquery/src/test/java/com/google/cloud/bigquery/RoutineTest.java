@@ -35,7 +35,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class RoutineTest {
+class RoutineTest {
 
   private static final RoutineId ROUTINE_ID = RoutineId.of("dataset", "routine");
   private static final RoutineId ROUTINE_ID_TVF = RoutineId.of("dataset", "tvf_routine");
@@ -115,15 +115,14 @@ public class RoutineTest {
           .build();
 
   private BigQuery bigquery;
-  private BigQueryOptions mockOptions;
   private Routine expectedRoutine;
   private Routine expectedRoutineTvf;
   private Routine routine;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     bigquery = mock(BigQuery.class);
-    mockOptions = mock(BigQueryOptions.class);
+    BigQueryOptions mockOptions = mock(BigQueryOptions.class);
     when(bigquery.getOptions()).thenReturn(mockOptions);
     expectedRoutine = new Routine(bigquery, new RoutineInfo.BuilderImpl(ROUTINE_INFO));
     expectedRoutineTvf = new Routine(bigquery, new RoutineInfo.BuilderImpl(ROUTINE_INFO_TVF));
@@ -131,7 +130,7 @@ public class RoutineTest {
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     Routine builtRoutine =
         new Routine.Builder(bigquery, ROUTINE_ID)
             .setEtag(ETAG)
@@ -153,13 +152,13 @@ public class RoutineTest {
   }
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareRoutineInfo(expectedRoutine, expectedRoutine.toBuilder().build());
     compareRoutineInfo(expectedRoutineTvf, expectedRoutineTvf.toBuilder().build());
   }
 
   @Test
-  public void testExists_True() {
+  void testExists_True() {
     BigQuery.RoutineOption[] expectedOptions = {BigQuery.RoutineOption.fields()};
     when(bigquery.getRoutine(ROUTINE_INFO.getRoutineId(), expectedOptions)).thenReturn(null);
     assertFalse(routine.exists());
@@ -167,7 +166,7 @@ public class RoutineTest {
   }
 
   @Test
-  public void testExists_False() {
+  void testExists_False() {
     BigQuery.RoutineOption[] expectedOptions = {BigQuery.RoutineOption.fields()};
     when(bigquery.getRoutine(ROUTINE_INFO.getRoutineId(), expectedOptions))
         .thenReturn(expectedRoutine);
@@ -176,7 +175,7 @@ public class RoutineTest {
   }
 
   @Test
-  public void testReload() {
+  void testReload() {
     RoutineInfo updatedInfo = ROUTINE_INFO.toBuilder().setBody("body2").build();
     Routine expectedRoutine = new Routine(bigquery, new RoutineInfo.BuilderImpl(updatedInfo));
     when(bigquery.getRoutine(ROUTINE_INFO.getRoutineId())).thenReturn(expectedRoutine);
@@ -186,14 +185,14 @@ public class RoutineTest {
   }
 
   @Test
-  public void testReload_Null() {
+  void testReload_Null() {
     when(bigquery.getRoutine(ROUTINE_INFO.getRoutineId())).thenReturn(null);
     assertNull(routine.reload());
     verify(bigquery).getRoutine(ROUTINE_INFO.getRoutineId());
   }
 
   @Test
-  public void testUpdate() {
+  void testUpdate() {
     Routine expectedUpdatedRoutine = expectedRoutine.toBuilder().setBody("body2").build();
     when(bigquery.update(eq(expectedRoutine))).thenReturn(expectedUpdatedRoutine);
     Routine actualUpdatedRoutine = routine.update();
@@ -202,7 +201,7 @@ public class RoutineTest {
   }
 
   @Test
-  public void testUpdateWithOptions() {
+  void testUpdateWithOptions() {
     Routine expectedUpdatedRoutine = expectedRoutine.toBuilder().setBody("body2").build();
     when(bigquery.update(eq(expectedRoutine), eq(BigQuery.RoutineOption.fields())))
         .thenReturn(expectedUpdatedRoutine);
@@ -212,14 +211,14 @@ public class RoutineTest {
   }
 
   @Test
-  public void testDeleteTrue() {
+  void testDeleteTrue() {
     when(bigquery.delete(ROUTINE_INFO.getRoutineId())).thenReturn(true);
     assertTrue(routine.delete());
     verify(bigquery).delete(ROUTINE_INFO.getRoutineId());
   }
 
   @Test
-  public void testDeleteFalse() {
+  void testDeleteFalse() {
     when(bigquery.delete(ROUTINE_INFO.getRoutineId())).thenReturn(false);
     assertFalse(routine.delete());
     verify(bigquery).delete(ROUTINE_INFO.getRoutineId());
@@ -231,7 +230,7 @@ public class RoutineTest {
     assertEquals(expected.getBigQuery().getOptions(), value.getBigQuery().getOptions());
   }
 
-  public void compareRoutineInfo(RoutineInfo expected, RoutineInfo value) {
+  void compareRoutineInfo(RoutineInfo expected, RoutineInfo value) {
     assertEquals(expected, value);
     assertEquals(expected.getRoutineId(), value.getRoutineId());
     assertEquals(expected.getEtag(), value.getEtag());

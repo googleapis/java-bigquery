@@ -16,7 +16,9 @@
 
 package com.google.cloud.bigquery;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
@@ -26,7 +28,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import org.junit.jupiter.api.Test;
 
-public class FieldTest {
+class FieldTest {
 
   private static final String FIELD_NAME1 = "StringField";
   private static final String FIELD_NAME2 = "IntegerField";
@@ -88,7 +90,7 @@ public class FieldTest {
       Field.newBuilder(FIELD_NAME5, StandardSQLTypeName.STRING).build();
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareFieldSchemas(FIELD_SCHEMA1, FIELD_SCHEMA1.toBuilder().build());
     compareFieldSchemas(FIELD_SCHEMA2, FIELD_SCHEMA2.toBuilder().build());
     compareFieldSchemas(FIELD_SCHEMA3, FIELD_SCHEMA3.toBuilder().build());
@@ -99,7 +101,7 @@ public class FieldTest {
   }
 
   @Test
-  public void testToBuilderWithStandardSQLTypeName() {
+  void testToBuilderWithStandardSQLTypeName() {
     compareFieldSchemas(STANDARD_FIELD_SCHEMA1, STANDARD_FIELD_SCHEMA1.toBuilder().build());
     compareFieldSchemas(STANDARD_FIELD_SCHEMA2, STANDARD_FIELD_SCHEMA2.toBuilder().build());
     compareFieldSchemas(STANDARD_FIELD_SCHEMA3, STANDARD_FIELD_SCHEMA3.toBuilder().build());
@@ -112,7 +114,7 @@ public class FieldTest {
   }
 
   @Test
-  public void testToBuilderIncomplete() {
+  void testToBuilderIncomplete() {
     Field field = Field.of(FIELD_NAME1, FIELD_TYPE1);
     compareFieldSchemas(field, field.toBuilder().build());
     field = Field.of(FIELD_NAME2, FIELD_TYPE3, FIELD_SCHEMA1, FIELD_SCHEMA2);
@@ -120,7 +122,7 @@ public class FieldTest {
   }
 
   @Test
-  public void testToBuilderIncompleteWithStandardSQLTypeName() {
+  void testToBuilderIncompleteWithStandardSQLTypeName() {
     Field field = Field.of(FIELD_NAME1, FIELD_TYPE1);
     compareFieldSchemas(field, field.toBuilder().build());
     field = Field.of(FIELD_NAME2, FIELD_TYPE3, STANDARD_FIELD_SCHEMA1, STANDARD_FIELD_SCHEMA2);
@@ -128,7 +130,7 @@ public class FieldTest {
   }
 
   @Test
-  public void testToBuilderIncompleteStandard() {
+  void testToBuilderIncompleteStandard() {
     Field field = Field.of(FIELD_NAME1, FIELD_TYPE1_STANDARD);
     compareFieldSchemas(field, field.toBuilder().build());
     field = Field.of(FIELD_NAME2, FIELD_TYPE3_STANDARD, FIELD_SCHEMA1, FIELD_SCHEMA2);
@@ -136,7 +138,7 @@ public class FieldTest {
   }
 
   @Test
-  public void testToBuilderIncompleteStandardWithStandardSQLTypeName() {
+  void testToBuilderIncompleteStandardWithStandardSQLTypeName() {
     Field field = Field.of(FIELD_NAME1, FIELD_TYPE1_STANDARD);
     compareFieldSchemas(field, field.toBuilder().build());
     field =
@@ -145,13 +147,13 @@ public class FieldTest {
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertEquals(FIELD_NAME1, FIELD_SCHEMA1.getName());
     assertEquals(FIELD_TYPE1, FIELD_SCHEMA1.getType());
     assertEquals(FIELD_MODE1, FIELD_SCHEMA1.getMode());
     assertEquals(FIELD_DESCRIPTION1, FIELD_SCHEMA1.getDescription());
     assertEquals(FIELD_DEFAULT_VALUE_EXPRESSION1, FIELD_SCHEMA1.getDefaultValueExpression());
-    assertEquals(null, FIELD_SCHEMA1.getSubFields());
+    assertNull(FIELD_SCHEMA1.getSubFields());
     assertEquals(FIELD_NAME3, FIELD_SCHEMA3.getName());
     assertEquals(FIELD_TYPE3, FIELD_SCHEMA3.getType());
     assertEquals(FIELD_MODE3, FIELD_SCHEMA3.getMode());
@@ -160,26 +162,26 @@ public class FieldTest {
   }
 
   @Test
-  public void testBuilderWithStandardSQLTypeName() {
+  void testBuilderWithStandardSQLTypeName() {
     assertEquals(FIELD_NAME1, STANDARD_FIELD_SCHEMA1.getName());
     assertEquals(FIELD_TYPE1, STANDARD_FIELD_SCHEMA1.getType());
     assertEquals(FIELD_MODE1, STANDARD_FIELD_SCHEMA1.getMode());
     assertEquals(FIELD_DESCRIPTION1, STANDARD_FIELD_SCHEMA1.getDescription());
     assertEquals(FIELD_DEFAULT_VALUE_EXPRESSION1, FIELD_SCHEMA1.getDefaultValueExpression());
-    assertEquals(null, STANDARD_FIELD_SCHEMA1.getSubFields());
+    assertNull(STANDARD_FIELD_SCHEMA1.getSubFields());
     assertEquals(FIELD_NAME3, STANDARD_FIELD_SCHEMA3.getName());
     assertEquals(FIELD_TYPE3, STANDARD_FIELD_SCHEMA3.getType());
     assertEquals(FIELD_MODE3, STANDARD_FIELD_SCHEMA3.getMode());
     assertEquals(FIELD_DESCRIPTION3, STANDARD_FIELD_SCHEMA3.getDescription());
-    assertEquals(null, STANDARD_FIELD_SCHEMA4.getMode());
-    assertEquals(null, STANDARD_FIELD_SCHEMA5.getMode());
+    assertNull(STANDARD_FIELD_SCHEMA4.getMode());
+    assertNull(STANDARD_FIELD_SCHEMA5.getMode());
     assertEquals(
         FieldList.of(STANDARD_FIELD_SCHEMA1, STANDARD_FIELD_SCHEMA2),
         STANDARD_FIELD_SCHEMA3.getSubFields());
   }
 
   @Test
-  public void testToAndFromPb() {
+  void testToAndFromPb() {
     compareFieldSchemas(FIELD_SCHEMA1, Field.fromPb(FIELD_SCHEMA1.toPb()));
     compareFieldSchemas(FIELD_SCHEMA2, Field.fromPb(FIELD_SCHEMA2.toPb()));
     compareFieldSchemas(FIELD_SCHEMA3, Field.fromPb(FIELD_SCHEMA3.toPb()));
@@ -188,7 +190,7 @@ public class FieldTest {
   }
 
   @Test
-  public void testToAndFromPbWithStandardSQLTypeName() {
+  void testToAndFromPbWithStandardSQLTypeName() {
     compareFieldSchemas(STANDARD_FIELD_SCHEMA1, Field.fromPb(STANDARD_FIELD_SCHEMA1.toPb()));
     compareFieldSchemas(STANDARD_FIELD_SCHEMA2, Field.fromPb(STANDARD_FIELD_SCHEMA2.toPb()));
     compareFieldSchemas(STANDARD_FIELD_SCHEMA3, Field.fromPb(STANDARD_FIELD_SCHEMA3.toPb()));
@@ -199,7 +201,7 @@ public class FieldTest {
   }
 
   @Test
-  public void testSubFieldWithClonedType() throws Exception {
+  void testSubFieldWithClonedType() throws Exception {
     LegacySQLTypeName record = LegacySQLTypeName.RECORD;
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -211,11 +213,12 @@ public class FieldTest {
     LegacySQLTypeName clonedRecord = (LegacySQLTypeName) ois.readObject();
     ois.close();
 
-    Field.of("field", clonedRecord, Field.of("subfield", LegacySQLTypeName.BOOLEAN));
+    assertDoesNotThrow(
+        () -> Field.of("field", clonedRecord, Field.of("subfield", LegacySQLTypeName.BOOLEAN)));
   }
 
   @Test
-  public void setTimestampPrecisionValues() {
+  void setTimestampPrecisionValues() {
     Field.Builder builder = Field.newBuilder(FIELD_NAME1, FIELD_TYPE1);
 
     // Value values: 6L or 12L
