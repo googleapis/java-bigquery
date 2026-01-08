@@ -32,7 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class ModelTest {
+class ModelTest {
 
   private static final ModelId MODEL_ID = ModelId.of("dataset", "model");
   private static final String ETAG = "etag";
@@ -58,7 +58,7 @@ public class ModelTest {
   private Model model;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     bigquery = mock(BigQuery.class);
     mockOptions = mock(BigQueryOptions.class);
     when(bigquery.getOptions()).thenReturn(mockOptions);
@@ -67,7 +67,7 @@ public class ModelTest {
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     Model builtModel =
         new Model.Builder(bigquery, MODEL_ID)
             .setEtag(ETAG)
@@ -82,12 +82,12 @@ public class ModelTest {
   }
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareModelInfo(expectedModel, expectedModel.toBuilder().build());
   }
 
   @Test
-  public void testExists_True() {
+  void testExists_True() {
     BigQuery.ModelOption[] expectedOptions = {BigQuery.ModelOption.fields()};
     when(bigquery.getModel(MODEL_INFO.getModelId(), expectedOptions)).thenReturn(expectedModel);
     assertTrue(model.exists());
@@ -95,7 +95,7 @@ public class ModelTest {
   }
 
   @Test
-  public void testExists_False() {
+  void testExists_False() {
     BigQuery.ModelOption[] expectedOptions = {BigQuery.ModelOption.fields()};
     when(bigquery.getModel(MODEL_INFO.getModelId(), expectedOptions)).thenReturn(null);
     assertFalse(model.exists());
@@ -103,7 +103,7 @@ public class ModelTest {
   }
 
   @Test
-  public void testReload() {
+  void testReload() {
     ModelInfo updatedInfo = MODEL_INFO.toBuilder().setDescription("Description").build();
     Model expectedModel = new Model(bigquery, new ModelInfo.BuilderImpl(updatedInfo));
     when(bigquery.getModel(MODEL_INFO.getModelId())).thenReturn(expectedModel);
@@ -113,14 +113,14 @@ public class ModelTest {
   }
 
   @Test
-  public void testReloadNull() {
+  void testReloadNull() {
     when(bigquery.getModel(MODEL_INFO.getModelId())).thenReturn(null);
     assertNull(model.reload());
     verify(bigquery).getModel(MODEL_INFO.getModelId());
   }
 
   @Test
-  public void testUpdate() {
+  void testUpdate() {
     Model expectedUpdatedModel = expectedModel.toBuilder().setDescription("Description").build();
     when(bigquery.update(eq(expectedModel))).thenReturn(expectedUpdatedModel);
     Model actualUpdatedModel = model.update();
@@ -129,7 +129,7 @@ public class ModelTest {
   }
 
   @Test
-  public void testUpdateWithOptions() {
+  void testUpdateWithOptions() {
     Model expectedUpdatedModel = expectedModel.toBuilder().setDescription("Description").build();
     when(bigquery.update(eq(expectedModel), eq(BigQuery.ModelOption.fields())))
         .thenReturn(expectedUpdatedModel);
@@ -139,14 +139,14 @@ public class ModelTest {
   }
 
   @Test
-  public void testDeleteTrue() {
+  void testDeleteTrue() {
     when(bigquery.delete(MODEL_INFO.getModelId())).thenReturn(true);
     assertTrue(model.delete());
     verify(bigquery).delete(MODEL_INFO.getModelId());
   }
 
   @Test
-  public void testDeleteFalse() {
+  void testDeleteFalse() {
     when(bigquery.delete(MODEL_INFO.getModelId())).thenReturn(false);
     assertFalse(model.delete());
     verify(bigquery).delete(MODEL_INFO.getModelId());

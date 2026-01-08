@@ -55,7 +55,7 @@ public class BigtableOptionsTest {
           .build();
 
   @Test
-  public void testConstructors() {
+  void testConstructors() {
     // column
     assertThat(COL1.getQualifierEncoded()).isEqualTo("aaa");
     assertThat(COL1.getFieldName()).isEqualTo("field1");
@@ -80,41 +80,36 @@ public class BigtableOptionsTest {
   }
 
   @Test
-  public void testNullPointerException() {
-    try {
-      BigtableColumnFamily.newBuilder().setFamilyID(null).build();
-      Assertions.fail();
-    } catch (NullPointerException ex) {
-      assertThat(ex.getMessage()).isNotNull();
-    }
-    try {
-      BigtableColumnFamily.newBuilder().setColumns(null).build();
-      Assertions.fail();
-    } catch (NullPointerException ex) {
-      assertThat(ex.getMessage()).isNotNull();
-    }
-    try {
-      BigtableColumnFamily.newBuilder().setEncoding(null).build();
-      Assertions.fail();
-    } catch (NullPointerException ex) {
-      assertThat(ex.getMessage()).isNotNull();
-    }
-    try {
-      BigtableColumnFamily.newBuilder().setOnlyReadLatest(null).build();
-      Assertions.fail();
-    } catch (NullPointerException ex) {
-      assertThat(ex.getMessage()).isNotNull();
-    }
-    try {
-      BigtableColumnFamily.newBuilder().setType(null).build();
-      Assertions.fail();
-    } catch (NullPointerException ex) {
-      assertThat(ex.getMessage()).isNotNull();
-    }
+  void testNullPointerException() {
+    NullPointerException ex =
+        Assertions.assertThrows(
+            NullPointerException.class,
+            () -> BigtableColumnFamily.newBuilder().setFamilyID(null).build());
+    assertThat(ex.getMessage()).isNotNull();
+    ex =
+        Assertions.assertThrows(
+            NullPointerException.class,
+            () -> BigtableColumnFamily.newBuilder().setColumns(null).build());
+    assertThat(ex.getMessage()).isNotNull();
+    ex =
+        Assertions.assertThrows(
+            NullPointerException.class,
+            () -> BigtableColumnFamily.newBuilder().setEncoding(null).build());
+    assertThat(ex.getMessage()).isNotNull();
+    ex =
+        Assertions.assertThrows(
+            NullPointerException.class,
+            () -> BigtableColumnFamily.newBuilder().setOnlyReadLatest(null).build());
+    assertThat(ex.getMessage()).isNotNull();
+    ex =
+        Assertions.assertThrows(
+            NullPointerException.class,
+            () -> BigtableColumnFamily.newBuilder().setType(null).build());
+    assertThat(ex.getMessage()).isNotNull();
   }
 
   @Test
-  public void testIllegalStateException() {
+  void testIllegalStateException() {
     try {
       BigtableColumnFamily.newBuilder().build();
     } catch (IllegalStateException ex) {
@@ -123,14 +118,14 @@ public class BigtableOptionsTest {
   }
 
   @Test
-  public void testToAndFromPb() {
+  void testToAndFromPb() {
     compareBigtableColumn(COL1, BigtableColumn.fromPb(COL1.toPb()));
     compareBigtableColumnFamily(TESTFAMILY, BigtableColumnFamily.fromPb(TESTFAMILY.toPb()));
     compareBigtableOptions(OPTIONS, BigtableOptions.fromPb(OPTIONS.toPb()));
   }
 
   @Test
-  public void testEquals() {
+  void testEquals() {
     compareBigtableColumn(COL1, COL1);
     compareBigtableColumnFamily(TESTFAMILY, TESTFAMILY);
     assertThat(TESTFAMILY.equals(TESTFAMILY)).isTrue();

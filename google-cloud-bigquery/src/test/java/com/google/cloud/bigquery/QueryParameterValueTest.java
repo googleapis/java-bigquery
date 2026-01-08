@@ -32,7 +32,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.threeten.extra.PeriodDuration;
 
@@ -58,12 +57,11 @@ public class QueryParameterValueTest {
 
   @Test
   public void testTypeNullPointerException() {
-    try {
-      QUERY_PARAMETER_VALUE.toBuilder().setType(null).build();
-      Assertions.fail();
-    } catch (NullPointerException ex) {
-      assertThat(ex).isNotNull();
-    }
+    NullPointerException ex =
+        assertThrows(
+            NullPointerException.class,
+            () -> QUERY_PARAMETER_VALUE.toBuilder().setType(null).build());
+    assertThat(ex).isNotNull();
   }
 
   @Test

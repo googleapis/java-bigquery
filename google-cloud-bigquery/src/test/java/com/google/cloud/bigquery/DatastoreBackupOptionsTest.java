@@ -22,14 +22,14 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-public class DatastoreBackupOptionsTest {
+class DatastoreBackupOptionsTest {
 
   private static final List<String> PROJECTION_FIELDS = ImmutableList.of("field1", "field2");
   private static final DatastoreBackupOptions BACKUP_OPTIONS =
       DatastoreBackupOptions.newBuilder().setProjectionFields(PROJECTION_FIELDS).build();
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareDatastoreBackupOptions(BACKUP_OPTIONS, BACKUP_OPTIONS.toBuilder().build());
     List<String> fields = ImmutableList.of("field1", "field2");
     DatastoreBackupOptions backupOptions =
@@ -40,14 +40,14 @@ public class DatastoreBackupOptionsTest {
   }
 
   @Test
-  public void testToBuilderIncomplete() {
+  void testToBuilderIncomplete() {
     DatastoreBackupOptions backupOptions =
         DatastoreBackupOptions.newBuilder().setProjectionFields(PROJECTION_FIELDS).build();
     assertEquals(backupOptions, backupOptions.toBuilder().build());
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertEquals(FormatOptions.DATASTORE_BACKUP, BACKUP_OPTIONS.getType());
     assertEquals(PROJECTION_FIELDS, BACKUP_OPTIONS.getProjectionFields());
   }

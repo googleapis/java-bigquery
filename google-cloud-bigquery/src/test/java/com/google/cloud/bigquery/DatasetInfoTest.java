@@ -104,7 +104,7 @@ public class DatasetInfoTest {
       DATASET_INFO.toBuilder().setMaxTimeTravelHours(MAX_TIME_TRAVEL_HOURS_5_DAYS).build();
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareDatasets(DATASET_INFO, DATASET_INFO.toBuilder().build());
     compareDatasets(
         DATASET_INFO_COMPLETE_WITH_IAM_MEMBER,
@@ -122,13 +122,13 @@ public class DatasetInfoTest {
   }
 
   @Test
-  public void testToBuilderIncomplete() {
+  void testToBuilderIncomplete() {
     DatasetInfo datasetInfo = DatasetInfo.newBuilder(DATASET_ID).build();
     assertEquals(datasetInfo, datasetInfo.toBuilder().build());
   }
 
   @Test
-  public void testToBuilderWithExternalDatasetReference() {
+  void testToBuilderWithExternalDatasetReference() {
     compareDatasets(
         DATASET_INFO_COMPLETE_WITH_EXTERNAL_DATASET_REFERENCE,
         DATASET_INFO_COMPLETE_WITH_EXTERNAL_DATASET_REFERENCE.toBuilder().build());
@@ -149,7 +149,7 @@ public class DatasetInfoTest {
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertNull(DATASET_INFO.getDatasetId().getProject());
     assertEquals(DATASET_ID, DATASET_INFO.getDatasetId());
     assertEquals(ACCESS_RULES, DATASET_INFO.getAcl());
@@ -189,7 +189,7 @@ public class DatasetInfoTest {
   }
 
   @Test
-  public void testOf() {
+  void testOf() {
     DatasetInfo datasetInfo = DatasetInfo.of(DATASET_ID.getDataset());
     assertEquals(DATASET_ID, datasetInfo.getDatasetId());
     assertNull(datasetInfo.getAcl());
@@ -230,7 +230,7 @@ public class DatasetInfoTest {
   }
 
   @Test
-  public void testToPbAndFromPb() {
+  void testToPbAndFromPb() {
     compareDatasets(DATASET_INFO_COMPLETE, DatasetInfo.fromPb(DATASET_INFO_COMPLETE.toPb()));
     compareDatasets(
         DATASET_INFO_COMPLETE_WITH_EXTERNAL_DATASET_REFERENCE,
@@ -240,12 +240,12 @@ public class DatasetInfoTest {
   }
 
   @Test
-  public void testSetProjectId() {
+  void testSetProjectId() {
     assertEquals(DATASET_INFO_COMPLETE, DATASET_INFO.setProjectId("project"));
   }
 
   @Test
-  public void testSetMaxTimeTravelHours() {
+  void testSetMaxTimeTravelHours() {
     assertNotEquals(
         DATASET_INFO_WITH_MAX_TIME_TRAVEL_5_DAYS.getMaxTimeTravelHours(),
         DATASET_INFO.getMaxTimeTravelHours());

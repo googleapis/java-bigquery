@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-public class JobStatusTest {
+class JobStatusTest {
 
   private static final JobStatus.State STATE = JobStatus.State.DONE;
   private static final BigQueryError ERROR =
@@ -36,7 +36,7 @@ public class JobStatusTest {
   private static final JobStatus JOB_STATUS_INCOMPLETE2 = new JobStatus(STATE, null, null);
 
   @Test
-  public void testConstructor() {
+  void testConstructor() {
     assertEquals(STATE, JOB_STATUS.getState());
     assertEquals(ERROR, JOB_STATUS.getError());
     assertEquals(ALL_ERRORS, JOB_STATUS.getExecutionErrors());
@@ -51,7 +51,7 @@ public class JobStatusTest {
   }
 
   @Test
-  public void testToPbAndFromPb() {
+  void testToPbAndFromPb() {
     compareStatus(JOB_STATUS, JobStatus.fromPb(JOB_STATUS.toPb()));
     compareStatus(JOB_STATUS_INCOMPLETE1, JobStatus.fromPb(JOB_STATUS_INCOMPLETE1.toPb()));
     compareStatus(JOB_STATUS_INCOMPLETE2, JobStatus.fromPb(JOB_STATUS_INCOMPLETE2.toPb()));

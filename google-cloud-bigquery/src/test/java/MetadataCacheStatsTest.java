@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
-public class MetadataCacheStatsTest {
+class MetadataCacheStatsTest {
   private static List<com.google.api.services.bigquery.model.TableMetadataCacheUsage>
       TABLE_METADATA_CACHE_USAGE_PB_LIST =
           ImmutableList.of(
@@ -44,7 +44,7 @@ public class MetadataCacheStatsTest {
       new MetadataCacheStatistics().setTableMetadataCacheUsage(TABLE_METADATA_CACHE_USAGE_PB_LIST);
 
   @Test
-  public void testToPbAndFromPb() {
+  void testToPbAndFromPb() {
     assertEquals(METADATA_CACHE_STATISTICS_PB, METADATA_CACHE_STATS.toPb());
     compareMetadataCacheStats(
         METADATA_CACHE_STATS, MetadataCacheStats.fromPb(METADATA_CACHE_STATISTICS_PB));

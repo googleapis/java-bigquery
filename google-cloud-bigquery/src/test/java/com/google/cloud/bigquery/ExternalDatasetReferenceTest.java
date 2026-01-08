@@ -31,7 +31,7 @@ public class ExternalDatasetReferenceTest {
           .build();
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareExternalDatasetReference(
         EXTERNAL_DATASET_REFERENCE, EXTERNAL_DATASET_REFERENCE.toBuilder().build());
     ExternalDatasetReference externalDatasetReference =
@@ -40,7 +40,7 @@ public class ExternalDatasetReferenceTest {
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertEquals(EXTERNAL_SOURCE, EXTERNAL_DATASET_REFERENCE.getExternalSource());
     assertEquals(CONNECTION, EXTERNAL_DATASET_REFERENCE.getConnection());
     ExternalDatasetReference externalDatasetReference =
@@ -52,7 +52,7 @@ public class ExternalDatasetReferenceTest {
   }
 
   @Test
-  public void testToAndFromPb() {
+  void testToAndFromPb() {
     ExternalDatasetReference externalDatasetReference =
         EXTERNAL_DATASET_REFERENCE.toBuilder().build();
     assertTrue(

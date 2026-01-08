@@ -17,7 +17,7 @@
 package com.google.cloud.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.google.api.client.util.Data;
 import java.util.Collections;
@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 
 public class AnnotationsTest {
   @Test
-  public void testFromUser() {
+  void testFromUser() {
     assertThat(Annotations.fromUser(null).userMap()).isNull();
 
     HashMap<String, String> user = new HashMap<>();
@@ -43,7 +43,7 @@ public class AnnotationsTest {
   }
 
   @Test
-  public void testFromToPb() {
+  void testFromToPb() {
     assertThat(Annotations.fromPb(null).toPb()).isNull();
 
     HashMap<String, String> pb = new HashMap<>();
@@ -60,17 +60,13 @@ public class AnnotationsTest {
   }
 
   @Test
-  public void testNullKey() {
-    try {
-      Annotations.fromUser(Collections.singletonMap((String) null, "foo"));
-      fail("null key shouldn't work");
-    } catch (IllegalArgumentException e) {
-    }
+  void testNullKey() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> Annotations.fromUser(Collections.singletonMap((String) null, "foo")));
 
-    try {
-      Annotations.fromPb(Collections.singletonMap((String) null, "foo"));
-      fail("null key shouldn't work");
-    } catch (IllegalArgumentException e) {
-    }
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> Annotations.fromPb(Collections.singletonMap((String) null, "foo")));
   }
 }
