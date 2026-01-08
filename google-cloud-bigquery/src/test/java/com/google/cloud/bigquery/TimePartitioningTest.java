@@ -20,9 +20,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.google.cloud.bigquery.TimePartitioning.Type;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class TimePartitioningTest {
@@ -92,15 +92,14 @@ class TimePartitioningTest {
   @Test
   void testTypeOf_Npe() {
     NullPointerException ex =
-        Assertions.assertThrows(NullPointerException.class, () -> TimePartitioning.of(null));
+        assertThrows(NullPointerException.class, () -> TimePartitioning.of(null));
     assertNotNull(ex.getMessage());
   }
 
   @Test
   void testTypeAndExpirationOf_Npe() {
     NullPointerException ex =
-        Assertions.assertThrows(
-            NullPointerException.class, () -> TimePartitioning.of(null, EXPIRATION_MS));
+        assertThrows(NullPointerException.class, () -> TimePartitioning.of(null, EXPIRATION_MS));
     assertNotNull(ex.getMessage());
   }
 

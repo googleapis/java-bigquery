@@ -19,8 +19,8 @@ package com.google.cloud.bigquery;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -39,7 +39,6 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Random;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -146,13 +145,13 @@ public class TableDataWriteChannelTest {
                 .setConfiguration(LOAD_CONFIGURATION.toPb())))
         .thenThrow(new RuntimeException("expected"));
     RuntimeException expected =
-        Assertions.assertThrows(
+        assertThrows(
             RuntimeException.class,
             () -> {
               try (TableDataWriteChannel channel =
                   new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION)) {}
             });
-    Assertions.assertEquals("java.lang.RuntimeException: expected", expected.getMessage());
+    assertEquals("java.lang.RuntimeException: expected", expected.getMessage());
     verify(bigqueryRpcMock)
         .openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
@@ -275,7 +274,7 @@ public class TableDataWriteChannelTest {
             eq(false)))
         .thenThrow(new RuntimeException("expected"));
     RuntimeException expected =
-        Assertions.assertThrows(
+        assertThrows(
             RuntimeException.class,
             () -> {
               writer = new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION);
@@ -285,7 +284,7 @@ public class TableDataWriteChannelTest {
                 assertEquals(MIN_CHUNK_SIZE, writer.write(buffers[i]));
               }
             });
-    Assertions.assertEquals("java.lang.RuntimeException: expected", expected.getMessage());
+    assertEquals("java.lang.RuntimeException: expected", expected.getMessage());
     verify(bigqueryRpcMock)
         .openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
@@ -369,8 +368,7 @@ public class TableDataWriteChannelTest {
     writer = new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION);
     writer.close();
     assertEquals(job, writer.getJob());
-    Assertions.assertThrows(
-        IOException.class, () -> writer.write(ByteBuffer.allocate(MIN_CHUNK_SIZE)));
+    assertThrows(IOException.class, () -> writer.write(ByteBuffer.allocate(MIN_CHUNK_SIZE)));
     verify(bigqueryRpcMock)
         .openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()

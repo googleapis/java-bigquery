@@ -27,12 +27,26 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.google.api.gax.paging.Page;
-import com.google.api.services.bigquery.model.*;
+import com.google.api.services.bigquery.model.ErrorProto;
+import com.google.api.services.bigquery.model.GetQueryResultsResponse;
+import com.google.api.services.bigquery.model.JobConfigurationQuery;
 import com.google.api.services.bigquery.model.JobStatistics;
+import com.google.api.services.bigquery.model.QueryRequest;
+import com.google.api.services.bigquery.model.TableCell;
+import com.google.api.services.bigquery.model.TableDataInsertAllRequest;
+import com.google.api.services.bigquery.model.TableDataInsertAllResponse;
+import com.google.api.services.bigquery.model.TableDataList;
+import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.Policy;
 import com.google.cloud.RetryOption;
 import com.google.cloud.ServiceOptions;
@@ -46,7 +60,11 @@ import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
 import com.google.cloud.bigquery.spi.v2.HttpBigQueryRpc;
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
-import com.google.common.collect.*;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.ConnectException;
@@ -60,7 +78,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -640,7 +657,8 @@ public class BigQueryImplTest {
     options.setThrowNotFound(true);
     bigquery = options.getService();
     BigQueryException ex =
-        Assertions.assertThrows(BigQueryException.class, () -> bigquery.getDataset("dataset-not-found"));
+        Assertions.assertThrows(
+            BigQueryException.class, () -> bigquery.getDataset("dataset-not-found"));
     Assertions.assertNotNull(ex.getMessage());
     verify(bigqueryRpcMock)
         .getDatasetSkipExceptionTranslation(PROJECT, "dataset-not-found", EMPTY_RPC_OPTIONS);
@@ -1802,7 +1820,7 @@ public class BigQueryImplTest {
     // Job create will attempt to retrieve the job even in the case when the job is created in a
     // returned failure.
     when(bigqueryRpcMock.getJobSkipExceptionTranslation(
-            nullable(String.class), nullable(String.class), nullable(String.class), Mockito.any()))
+            nullable(String.class), nullable(String.class), nullable(String.class), any()))
         .thenThrow(new BigQueryException(500, "InternalError"));
 
     bigquery = options.getService();
@@ -1817,7 +1835,9 @@ public class BigQueryImplTest {
             BigQueryException.class,
             () ->
                 ((BigQueryImpl) bigquery)
-                    .create(JobInfo.of(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY), bigQueryRetryConfigOption));
+                    .create(
+                        JobInfo.of(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY),
+                        bigQueryRetryConfigOption));
     assertNotNull(e.getMessage());
     // Verify that getQueryResults is attempted only once and not retried since the error message
     // does not match.
@@ -1863,7 +1883,7 @@ public class BigQueryImplTest {
     // Job create will attempt to retrieve the job even in the case when the job is created in a
     // returned failure.
     when(bigqueryRpcMock.getJobSkipExceptionTranslation(
-            nullable(String.class), nullable(String.class), nullable(String.class), Mockito.any()))
+            nullable(String.class), nullable(String.class), nullable(String.class), any()))
         .thenThrow(new BigQueryException(500, "InternalError"));
 
     bigquery = options.getService();
@@ -2785,7 +2805,8 @@ public class BigQueryImplTest {
             .build()
             .getService();
     BigQueryException ex =
-        Assertions.assertThrows(BigQueryException.class, () -> bigquery.getDataset(DatasetId.of(DATASET)));
+        Assertions.assertThrows(
+            BigQueryException.class, () -> bigquery.getDataset(DatasetId.of(DATASET)));
     assertEquals(exceptionMessage, ex.getMessage());
     verify(bigqueryRpcMock).getDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS);
   }

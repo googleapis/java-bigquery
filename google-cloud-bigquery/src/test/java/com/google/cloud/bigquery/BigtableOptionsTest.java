@@ -83,23 +83,28 @@ public class BigtableOptionsTest {
   void testNullPointerException() {
     NullPointerException ex =
         Assertions.assertThrows(
-            NullPointerException.class, () -> BigtableColumnFamily.newBuilder().setFamilyID(null).build());
+            NullPointerException.class,
+            () -> BigtableColumnFamily.newBuilder().setFamilyID(null).build());
     assertThat(ex.getMessage()).isNotNull();
     ex =
         Assertions.assertThrows(
-            NullPointerException.class, () -> BigtableColumnFamily.newBuilder().setColumns(null).build());
+            NullPointerException.class,
+            () -> BigtableColumnFamily.newBuilder().setColumns(null).build());
     assertThat(ex.getMessage()).isNotNull();
     ex =
         Assertions.assertThrows(
-            NullPointerException.class, () -> BigtableColumnFamily.newBuilder().setEncoding(null).build());
+            NullPointerException.class,
+            () -> BigtableColumnFamily.newBuilder().setEncoding(null).build());
     assertThat(ex.getMessage()).isNotNull();
     ex =
         Assertions.assertThrows(
-            NullPointerException.class, () -> BigtableColumnFamily.newBuilder().setOnlyReadLatest(null).build());
+            NullPointerException.class,
+            () -> BigtableColumnFamily.newBuilder().setOnlyReadLatest(null).build());
     assertThat(ex.getMessage()).isNotNull();
     ex =
         Assertions.assertThrows(
-            NullPointerException.class, () -> BigtableColumnFamily.newBuilder().setType(null).build());
+            NullPointerException.class,
+            () -> BigtableColumnFamily.newBuilder().setType(null).build());
     assertThat(ex.getMessage()).isNotNull();
   }
 

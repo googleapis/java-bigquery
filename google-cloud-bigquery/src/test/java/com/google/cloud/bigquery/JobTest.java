@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
@@ -41,7 +42,6 @@ import com.google.cloud.bigquery.JobStatistics.QueryStatistics;
 import com.google.cloud.bigquery.JobStatus.State;
 import com.google.common.collect.ImmutableList;
 import java.time.Duration;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -337,8 +337,8 @@ class JobTest {
   @Test
   void testWaitForAndGetQueryResults_Unsupported() throws InterruptedException {
     UnsupportedOperationException expected =
-        Assertions.assertThrows(UnsupportedOperationException.class, () -> job.getQueryResults());
-    Assertions.assertNotNull(expected.getMessage());
+        assertThrows(UnsupportedOperationException.class, () -> job.getQueryResults());
+    assertNotNull(expected.getMessage());
   }
 
   @Test
@@ -394,14 +394,14 @@ class JobTest {
     when(bigquery.getJob(JOB_INFO.getJobId(), expectedOptions)).thenReturn(runningJob);
     when(bigquery.getJob(JOB_INFO.getJobId(), expectedOptions)).thenReturn(runningJob);
     BigQueryException expected =
-        Assertions.assertThrows(
+        assertThrows(
             BigQueryException.class,
             () ->
                 job.waitFor(
                     concat(
                         TEST_RETRY_OPTIONS,
                         RetryOption.totalTimeoutDuration(Duration.ofMillis(3)))));
-    Assertions.assertNotNull(expected.getMessage());
+    assertNotNull(expected.getMessage());
   }
 
   @Test
@@ -537,7 +537,7 @@ class JobTest {
         .thenReturn(completedQuery);
     job = this.job.toBuilder().setConfiguration(DRL_QUERY_CONFIGURATION).build();
     BigQueryException e =
-        Assertions.assertThrows(
+        assertThrows(
             BigQueryException.class,
             () -> job.waitFor(TEST_BIGQUERY_RETRY_CONFIG, TEST_RETRY_OPTIONS));
     assertNotNull(e.getErrors());
@@ -566,7 +566,7 @@ class JobTest {
     ImmutableList<BigQueryError> bigQueryErrorList = ImmutableList.of(bigQueryError);
     BigQueryException bigQueryException = new BigQueryException(bigQueryErrorList);
     when(bigquery.getJob(JOB_INFO.getJobId())).thenReturn(expectedJob).thenThrow(bigQueryException);
-    BigQueryException e = Assertions.assertThrows(BigQueryException.class, () -> job.reload());
+    BigQueryException e = assertThrows(BigQueryException.class, () -> job.reload());
     assertNotNull(e.getErrors());
   }
 

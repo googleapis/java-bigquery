@@ -19,6 +19,7 @@ package com.google.cloud.bigquery;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
@@ -77,8 +78,7 @@ class FieldListTest {
     assertEquals(3, fieldsSchema.size());
 
     IllegalArgumentException exception =
-        org.junit.jupiter.api.Assertions.assertThrows(
-            IllegalArgumentException.class, () -> fieldsSchema.get(FIELD_NAME4));
+        assertThrows(IllegalArgumentException.class, () -> fieldsSchema.get(FIELD_NAME4));
     assertNotNull(exception);
   }
 
@@ -91,8 +91,7 @@ class FieldListTest {
     assertEquals(3, fieldsSchema.size());
 
     IndexOutOfBoundsException exception =
-        org.junit.jupiter.api.Assertions.assertThrows(
-            IndexOutOfBoundsException.class, () -> fieldsSchema.get(4));
+        assertThrows(IndexOutOfBoundsException.class, () -> fieldsSchema.get(4));
     assertNotNull(exception);
   }
 

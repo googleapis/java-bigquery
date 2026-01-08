@@ -19,10 +19,10 @@ package com.google.cloud.bigquery;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.cloud.TransportOptions;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
@@ -34,10 +34,12 @@ public class BigQueryOptionsTest {
   @Test
   void testInvalidTransport() {
     IllegalArgumentException expected =
-        Assertions.assertThrows(
+        assertThrows(
             IllegalArgumentException.class,
-            () -> BigQueryOptions.newBuilder().setTransportOptions(Mockito.mock(TransportOptions.class)));
-    Assertions.assertNotNull(expected.getMessage());
+            () ->
+                BigQueryOptions.newBuilder()
+                    .setTransportOptions(Mockito.mock(TransportOptions.class)));
+    assertNotNull(expected.getMessage());
   }
 
   @Test
