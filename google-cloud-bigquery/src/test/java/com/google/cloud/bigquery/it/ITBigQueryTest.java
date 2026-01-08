@@ -215,7 +215,7 @@ import org.junit.jupiter.api.Timeout;
 import org.threeten.extra.PeriodDuration;
 
 @Timeout(value = 300)
-public class ITBigQueryTest {
+class ITBigQueryTest {
 
   private static final byte[] BYTES = {0xD, 0xE, 0xA, 0xD};
   private static final String BYTES_BASE64 = BaseEncoding.base64().encode(BYTES);
@@ -1064,7 +1064,7 @@ public class ITBigQueryTest {
   }
 
   @BeforeAll
-  public static void beforeClass() throws InterruptedException, IOException {
+  static void beforeClass() throws InterruptedException, IOException {
     RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
     RemoteStorageHelper storageHelper = RemoteStorageHelper.create();
     Map<String, String> labels = ImmutableMap.of("test-job-name", "test-load-job");
@@ -1179,7 +1179,7 @@ public class ITBigQueryTest {
   }
 
   @AfterAll
-  public static void afterClass() throws Exception {
+  static void afterClass() throws Exception {
     if (bigquery != null) {
       RemoteBigQueryHelper.forceDelete(bigquery, DATASET);
       RemoteBigQueryHelper.forceDelete(bigquery, UK_DATASET);
@@ -1204,13 +1204,12 @@ public class ITBigQueryTest {
     try (InputStream keyStream = new ByteArrayInputStream(credentialFile.getBytes())) {
       return GoogleCredentials.fromStream(keyStream);
     } catch (IOException e) {
-      fail("Couldn't create fake JSON credentials.");
+      throw new RuntimeException("Couldn't create fake JSON credentials.", e);
     }
-    return null;
   }
 
   @Test
-  public void testListDatasets() {
+  void testListDatasets() {
     Page<Dataset> datasets = bigquery.listDatasets("bigquery-public-data");
     Iterator<Dataset> iterator = datasets.iterateAll().iterator();
     Set<String> datasetNames = new HashSet<>();
@@ -1228,7 +1227,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testListDatasetsWithFilter() {
+  void testListDatasetsWithFilter() {
     String labelFilter = "labels.example-label1:example-value1";
     Page<Dataset> datasets = bigquery.listDatasets(DatasetListOption.labelFilter(labelFilter));
     int count = 0;
@@ -1245,7 +1244,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testGetDataset() {
+  void testGetDataset() {
     Dataset dataset = bigquery.getDataset(DATASET);
     assertEquals(bigquery.getOptions().getProjectId(), dataset.getDatasetId().getProject());
     assertEquals(DATASET, dataset.getDatasetId().getDataset());
@@ -1259,7 +1258,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testDatasetUpdateAccess() throws IOException {
+  void testDatasetUpdateAccess() throws IOException {
     Dataset dataset = bigquery.getDataset(DATASET);
     ServiceAccountCredentials credentials =
         (ServiceAccountCredentials) GoogleCredentials.getApplicationDefault();
@@ -1274,7 +1273,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testGetDatasetWithSelectedFields() {
+  void testGetDatasetWithSelectedFields() {
     Dataset dataset =
         bigquery.getDataset(
             DATASET, DatasetOption.fields(DatasetField.CREATION_TIME, DatasetField.LABELS));
@@ -1296,7 +1295,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testGetDatasetWithAccessPolicyVersion() throws IOException {
+  void testGetDatasetWithAccessPolicyVersion() throws IOException {
     String accessPolicyDataset = RemoteBigQueryHelper.generateDatasetName();
     ServiceAccountCredentials credentials =
         (ServiceAccountCredentials) GoogleCredentials.getApplicationDefault();
@@ -1340,7 +1339,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testUpdateDataset() {
+  void testUpdateDataset() {
     Dataset dataset =
         bigquery.create(
             DatasetInfo.newBuilder(OTHER_DATASET)
@@ -1377,7 +1376,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testUpdateDatasetWithSelectedFields() {
+  void testUpdateDatasetWithSelectedFields() {
     Dataset dataset =
         bigquery.create(
             DatasetInfo.newBuilder(OTHER_DATASET).setDescription("Some Description").build());
@@ -1405,7 +1404,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testUpdateDatasetWithAccessPolicyVersion() throws IOException {
+  void testUpdateDatasetWithAccessPolicyVersion() throws IOException {
     String accessPolicyDataset = RemoteBigQueryHelper.generateDatasetName();
     ServiceAccountCredentials credentials =
         (ServiceAccountCredentials) GoogleCredentials.getApplicationDefault();
@@ -1458,12 +1457,12 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testGetNonExistingTable() {
+  void testGetNonExistingTable() {
     assertNull(bigquery.getTable(DATASET, "test_get_non_existing_table"));
   }
 
   @Test
-  public void testCreateTableWithRangePartitioning() {
+  void testCreateTableWithRangePartitioning() {
     String tableName = "test_create_table_rangepartitioning";
     TableId tableId = TableId.of(DATASET, tableName);
     try {
@@ -1488,7 +1487,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate this test case for executeSelect on the relevant part */
   @Test
-  public void testJsonType() throws InterruptedException {
+  void testJsonType() throws InterruptedException {
     String tableName = "test_create_table_jsontype";
     TableId tableId = TableId.of(DATASET, tableName);
     Schema schema = Schema.of(Field.of("jsonField", StandardSQLTypeName.JSON));
@@ -1597,7 +1596,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate this test case for executeSelect on the relevant part */
   @Test
-  public void testIntervalType() throws InterruptedException {
+  void testIntervalType() throws InterruptedException {
     String tableName = "test_create_table_intervaltype";
     TableId tableId = TableId.of(DATASET, tableName);
     Schema schema = Schema.of(Field.of("intervalField", StandardSQLTypeName.INTERVAL));
@@ -1672,7 +1671,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testRangeType() throws InterruptedException {
+  void testRangeType() throws InterruptedException {
     String tableName = "test_range_type_table";
     TableId tableId = TableId.of(DATASET, tableName);
 
@@ -1749,7 +1748,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateTableWithConstraints() {
+  void testCreateTableWithConstraints() {
     String tableName = "test_create_table_with_constraints";
     TableId tableId = TableId.of(DATASET, tableName);
     Field stringFieldWithConstraint =
@@ -1793,7 +1792,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateDatasetWithSpecifiedStorageBillingModel() {
+  void testCreateDatasetWithSpecifiedStorageBillingModel() {
     String billingModelDataset = RemoteBigQueryHelper.generateDatasetName();
     DatasetInfo info =
         DatasetInfo.newBuilder(billingModelDataset)
@@ -1810,7 +1809,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateDatasetWithSpecificMaxTimeTravelHours() {
+  void testCreateDatasetWithSpecificMaxTimeTravelHours() {
     String timeTravelDataset = RemoteBigQueryHelper.generateDatasetName();
     DatasetInfo info =
         DatasetInfo.newBuilder(timeTravelDataset)
@@ -1827,7 +1826,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateDatasetWithDefaultMaxTimeTravelHours() {
+  void testCreateDatasetWithDefaultMaxTimeTravelHours() {
     String timeTravelDataset = RemoteBigQueryHelper.generateDatasetName();
     DatasetInfo info =
         DatasetInfo.newBuilder(timeTravelDataset)
@@ -1844,7 +1843,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateDatasetWithDefaultCollation() {
+  void testCreateDatasetWithDefaultCollation() {
     String collationDataset = RemoteBigQueryHelper.generateDatasetName();
     DatasetInfo info =
         DatasetInfo.newBuilder(collationDataset)
@@ -1861,7 +1860,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateDatasetWithAccessPolicyVersion() throws IOException {
+  void testCreateDatasetWithAccessPolicyVersion() throws IOException {
     String accessPolicyDataset = RemoteBigQueryHelper.generateDatasetName();
     ServiceAccountCredentials credentials =
         (ServiceAccountCredentials) GoogleCredentials.getApplicationDefault();
@@ -1898,7 +1897,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateDatasetWithInvalidAccessPolicyVersion() throws IOException {
+  void testCreateDatasetWithInvalidAccessPolicyVersion() throws IOException {
     String accessPolicyDataset = RemoteBigQueryHelper.generateDatasetName();
     ServiceAccountCredentials credentials =
         (ServiceAccountCredentials) GoogleCredentials.getApplicationDefault();
@@ -1924,7 +1923,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateTableWithDefaultCollation() {
+  void testCreateTableWithDefaultCollation() {
     String tableName = "test_create_table_with_default_collation";
     TableId tableId = TableId.of(DATASET, tableName);
     Field stringFieldWithoutCollation =
@@ -1962,7 +1961,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateFieldWithDefaultCollation() {
+  void testCreateFieldWithDefaultCollation() {
     String tableName = "test_create_field_with_default_collation";
     TableId tableId = TableId.of(DATASET, tableName);
     Field stringFieldWithCollation =
@@ -1999,7 +1998,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateTableWithDefaultValueExpression() {
+  void testCreateTableWithDefaultValueExpression() {
     String tableName = "test_create_table_with_default_value_expression";
     TableId tableId = TableId.of(DATASET, tableName);
     Field stringFieldWithDefaultValueExpression =
@@ -2061,7 +2060,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateAndUpdateTableWithPolicyTags() throws IOException {
+  void testCreateAndUpdateTableWithPolicyTags() throws IOException {
     // Set up policy tags in the datacatalog service
     try (PolicyTagManagerClient policyTagManagerClient = PolicyTagManagerClient.create()) {
       CreateTaxonomyRequest createTaxonomyRequest =
@@ -2143,7 +2142,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateAndGetTable() {
+  void testCreateAndGetTable() {
     String tableName = "test_create_and_get_table";
     TableId tableId = TableId.of(DATASET, tableName);
     TimePartitioning partitioning = TimePartitioning.of(Type.DAY);
@@ -2181,7 +2180,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateAndListTable() {
+  void testCreateAndListTable() {
     String tableName = "test_create_and_list_table";
     TableId tableId = TableId.of(DATASET, tableName);
     TimePartitioning partitioning = TimePartitioning.of(Type.DAY);
@@ -2216,7 +2215,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateAndGetTableWithBasicTableMetadataView() {
+  void testCreateAndGetTableWithBasicTableMetadataView() {
     String tableName = "test_create_and_get_table_with_basic_metadata_view";
     TableId tableId = TableId.of(DATASET, tableName);
     TimePartitioning partitioning = TimePartitioning.of(Type.DAY);
@@ -2248,7 +2247,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateAndGetTableWithFullTableMetadataView() {
+  void testCreateAndGetTableWithFullTableMetadataView() {
     String tableName = "test_create_and_get_table_with_full_metadata_view";
     TableId tableId = TableId.of(DATASET, tableName);
     TimePartitioning partitioning = TimePartitioning.of(Type.DAY);
@@ -2279,7 +2278,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateAndGetTableWithStorageStatsTableMetadataView() {
+  void testCreateAndGetTableWithStorageStatsTableMetadataView() {
     String tableName = "test_create_and_get_table_with_storage_stats_metadata_view";
     TableId tableId = TableId.of(DATASET, tableName);
     TimePartitioning partitioning = TimePartitioning.of(Type.DAY);
@@ -2311,7 +2310,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateAndGetTableWithUnspecifiedTableMetadataView() {
+  void testCreateAndGetTableWithUnspecifiedTableMetadataView() {
     String tableName = "test_create_and_get_table_with_unspecified_metadata_view";
     TableId tableId = TableId.of(DATASET, tableName);
     TimePartitioning partitioning = TimePartitioning.of(Type.DAY);
@@ -2343,7 +2342,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateAndGetTableWithSelectedField() {
+  void testCreateAndGetTableWithSelectedField() {
     String tableName = "test_create_and_get_selected_fields_table";
     TableId tableId = TableId.of(DATASET, tableName);
     StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
@@ -2383,7 +2382,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateExternalTable() throws InterruptedException {
+  void testCreateExternalTable() throws InterruptedException {
     String tableName = "test_create_external_table";
     TableId tableId = TableId.of(DATASET, tableName);
 
@@ -2441,7 +2440,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testSetPermExternalTableSchema() {
+  void testSetPermExternalTableSchema() {
     String tableName = "test_create_external_table_perm";
     TableId tableId = TableId.of(DATASET, tableName);
     ExternalTableDefinition externalTableDefinition =
@@ -2463,7 +2462,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testUpdatePermExternableTableWithAutodetectSchemaUpdatesSchema() {
+  void testUpdatePermExternableTableWithAutodetectSchemaUpdatesSchema() {
     String tableName = "test_create_external_table_perm_with_auto_detect";
     TableId tableId = TableId.of(DATASET, tableName);
     Schema setSchema = Schema.of(TIMESTAMP_FIELD_SCHEMA, STRING_FIELD_SCHEMA);
@@ -2498,7 +2497,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateViewTable() throws InterruptedException {
+  void testCreateViewTable() throws InterruptedException {
     String tableName = "test_create_view_table";
     TableId tableId = TableId.of(DATASET, tableName);
     ViewDefinition viewDefinition =
@@ -2546,7 +2545,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateMaterializedViewTable() {
+  void testCreateMaterializedViewTable() {
     String tableName = "test_materialized_view_table";
     TableId tableId = TableId.of(DATASET, tableName);
     MaterializedViewDefinition viewDefinition =
@@ -2570,7 +2569,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testTableIAM() {
+  void testTableIAM() {
     String tableName = "test_iam_table";
     TableId tableId = TableId.of(DATASET, tableName);
     StandardTableDefinition tableDefinition =
@@ -2599,7 +2598,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testListTables() {
+  void testListTables() {
     String tableName = "test_list_tables";
     StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
     TableInfo tableInfo = TableInfo.of(TableId.of(DATASET, tableName), tableDefinition);
@@ -2618,7 +2617,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testListTablesWithPartitioning() {
+  void testListTablesWithPartitioning() {
     String tableName = "test_list_tables_partitioning";
     TimePartitioning timePartitioning = TimePartitioning.of(Type.DAY, EXPIRATION_MS);
     StandardTableDefinition tableDefinition =
@@ -2651,7 +2650,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testListTablesWithRangePartitioning() {
+  void testListTablesWithRangePartitioning() {
     String tableName = "test_list_tables_range_partitioning";
     StandardTableDefinition tableDefinition =
         StandardTableDefinition.newBuilder()
@@ -2681,7 +2680,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testListPartitions() throws InterruptedException {
+  void testListPartitions() throws InterruptedException {
     String tableName = "test_table_partitions_" + UUID.randomUUID().toString().substring(0, 8);
     Date date = Date.fromJavaUtilDate(new java.util.Date());
     String partitionDate = date.toString().replaceAll("-", "");
@@ -2707,7 +2706,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testUpdateTable() {
+  void testUpdateTable() {
     String tableName = "test_update_table";
     StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
     TableInfo tableInfo =
@@ -2737,7 +2736,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testUpdateTimePartitioning() {
+  void testUpdateTimePartitioning() {
     String tableName = "testUpdateTimePartitioning";
     TableId tableId = TableId.of(DATASET, tableName);
     StandardTableDefinition tableDefinition =
@@ -2779,8 +2778,7 @@ public class ITBigQueryTest {
     table.delete();
   }
 
-  @Test
-  public void testUpdateTableWithSelectedFields() {
+  void testUpdateTableWithSelectedFields() {
     String tableName = "test_update_with_selected_fields_table";
     StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
     TableInfo tableInfo = TableInfo.of(TableId.of(DATASET, tableName), tableDefinition);
@@ -2811,7 +2809,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testUpdateNonExistingTable() {
+  void testUpdateNonExistingTable() {
     TableInfo tableInfo =
         TableInfo.of(
             TableId.of(DATASET, "test_update_non_existing_table"),
@@ -2828,12 +2826,12 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testDeleteNonExistingTable() {
+  void testDeleteNonExistingTable() {
     assertFalse(bigquery.delete("test_delete_non_existing_table"));
   }
 
   @Test
-  public void testDeleteJob() {
+  void testDeleteJob() {
     String query = "SELECT 17 as foo";
     QueryJobConfiguration config = QueryJobConfiguration.of(query);
     String jobName = "jobId_" + UUID.randomUUID().toString();
@@ -2847,7 +2845,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testInsertAll() throws IOException {
+  void testInsertAll() throws IOException {
     String tableName = "test_insert_all_table";
     StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
     TableInfo tableInfo = TableInfo.of(TableId.of(DATASET, tableName), tableDefinition);
@@ -2906,7 +2904,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testInsertAllWithSuffix() throws InterruptedException {
+  void testInsertAllWithSuffix() throws InterruptedException {
     String tableName = "test_insert_all_with_suffix_table";
     StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
     TableInfo tableInfo = TableInfo.of(TableId.of(DATASET, tableName), tableDefinition);
@@ -2974,7 +2972,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testInsertAllWithErrors() {
+  void testInsertAllWithErrors() {
     String tableName = "test_insert_all_with_errors_table";
     StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
     TableInfo tableInfo = TableInfo.of(TableId.of(DATASET, tableName), tableDefinition);
@@ -3044,7 +3042,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
-  public void testListAllTableData() {
+  void testListAllTableData() {
     Page<FieldValueList> rows = bigquery.listTableData(TABLE_ID);
     int rowCount = 0;
     for (FieldValueList row : rows.getValues()) {
@@ -3089,7 +3087,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testListPageWithStartIndex() {
+  void testListPageWithStartIndex() {
     String tableName = "midyear_population_agespecific";
     TableId tableId = TableId.of(PUBLIC_PROJECT, PUBLIC_DATASET, tableName);
     Table table = bigquery.getTable(tableId);
@@ -3108,7 +3106,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testModelLifecycle() throws InterruptedException {
+  void testModelLifecycle() throws InterruptedException {
 
     String modelName = RemoteBigQueryHelper.generateModelName();
 
@@ -3167,7 +3165,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testEmptyListModels() {
+  void testEmptyListModels() {
     String datasetId = "test_empty_dataset_list_models_" + RANDOM_ID;
     assertNotNull(bigquery.create(DatasetInfo.of(datasetId)));
     Page<Model> models = bigquery.listModels(datasetId, BigQuery.ModelListOption.pageSize(100));
@@ -3178,7 +3176,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testEmptyListRoutines() {
+  void testEmptyListRoutines() {
     String datasetId = "test_empty_dataset_list_routines_" + RANDOM_ID;
     assertNotNull(bigquery.create(DatasetInfo.of(datasetId)));
     Page<Routine> routines =
@@ -3190,7 +3188,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testRoutineLifecycle() throws InterruptedException {
+  void testRoutineLifecycle() throws InterruptedException {
     String routineName = RemoteBigQueryHelper.generateRoutineName();
     // Create a routine using SQL.
     String sql =
@@ -3233,7 +3231,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testRoutineAPICreation() {
+  void testRoutineAPICreation() {
     String routineName = RemoteBigQueryHelper.generateRoutineName();
     RoutineId routineId = RoutineId.of(ROUTINE_DATASET, routineName);
     RoutineInfo routineInfo =
@@ -3255,7 +3253,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testRoutineAPICreationJavascriptUDF() {
+  void testRoutineAPICreationJavascriptUDF() {
     String routineName = RemoteBigQueryHelper.generateRoutineName();
     RoutineId routineId = RoutineId.of(ROUTINE_DATASET, routineName);
     RoutineInfo routineInfo =
@@ -3283,7 +3281,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testRoutineAPICreationTVF() {
+  void testRoutineAPICreationTVF() {
     String routineName = RemoteBigQueryHelper.generateRoutineName();
     RoutineId routineId = RoutineId.of(ROUTINE_DATASET, routineName);
     List<StandardSQLField> columns =
@@ -3311,7 +3309,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testRoutineDataGovernanceType() {
+  void testRoutineDataGovernanceType() {
     String routineName = RemoteBigQueryHelper.generateRoutineName();
     RoutineId routineId = RoutineId.of(ROUTINE_DATASET, routineName);
     RoutineInfo routineInfo =
@@ -3338,7 +3336,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testAuthorizeRoutine() {
+  void testAuthorizeRoutine() {
     String routineName = RemoteBigQueryHelper.generateRoutineName();
     RoutineId routineId = RoutineId.of(PROJECT_ID, ROUTINE_DATASET, routineName);
     RoutineInfo routineInfo =
@@ -3364,7 +3362,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testAuthorizeDataset() {
+  void testAuthorizeDataset() {
     String datasetName = RemoteBigQueryHelper.generateDatasetName();
     DatasetId datasetId = DatasetId.of(PROJECT_ID, datasetName);
     List<String> targetTypes = ImmutableList.of("VIEWS");
@@ -3409,7 +3407,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
-  public void testSingleStatementsQueryException() throws InterruptedException {
+  void testSingleStatementsQueryException() throws InterruptedException {
     String invalidQuery =
         String.format("INSERT %s.%s VALUES('3', 10);", DATASET, TABLE_ID.getTable());
     BigQueryException exception =
@@ -3426,7 +3424,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
-  public void testMultipleStatementsQueryException() throws InterruptedException {
+  void testMultipleStatementsQueryException() throws InterruptedException {
     String invalidQuery =
         String.format(
             "INSERT %s.%s VALUES('3', 10); DELETE %s.%s where c2=3;",
@@ -3444,7 +3442,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testTimestamp() throws InterruptedException {
+  void testTimestamp() throws InterruptedException {
     String query = "SELECT TIMESTAMP '2022-01-24T23:54:25.095574Z'";
     String timestampStringValueExpected = "2022-01-24T23:54:25.095574Z";
 
@@ -3462,7 +3460,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testLosslessTimestamp() throws InterruptedException {
+  void testLosslessTimestamp() throws InterruptedException {
     String query = "SELECT TIMESTAMP '2022-01-24T23:54:25.095574Z'";
     long expectedTimestamp = 1643068465095574L;
 
@@ -3502,7 +3500,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
-  public void testQuery() throws InterruptedException {
+  void testQuery() throws InterruptedException {
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
@@ -3535,7 +3533,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testQueryStatistics() throws InterruptedException {
+  void testQueryStatistics() throws InterruptedException {
     // Use CURRENT_TIMESTAMP to avoid potential caching.
     String query = "SELECT CURRENT_TIMESTAMP() AS ts";
     QueryJobConfiguration config =
@@ -3552,7 +3550,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExecuteSelectDefaultConnectionSettings() throws SQLException {
+  void testExecuteSelectDefaultConnectionSettings() throws SQLException {
     // Use the default connection settings
     Connection connection = bigquery.createConnection();
     String query = "SELECT corpus FROM `bigquery-public-data.samples.shakespeare` GROUP BY corpus;";
@@ -3562,7 +3560,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExecuteSelectWithReadApi() throws SQLException {
+  void testExecuteSelectWithReadApi() throws SQLException {
     final int rowLimit = 5000;
     final String QUERY =
         "SELECT * FROM bigquery-public-data.new_york_taxi_trips.tlc_yellow_trips_2017 LIMIT %s";
@@ -3592,7 +3590,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExecuteSelectWithFastQueryReadApi() throws SQLException {
+  void testExecuteSelectWithFastQueryReadApi() throws SQLException {
     final int rowLimit = 5000;
     final String QUERY =
         "SELECT * FROM bigquery-public-data.new_york_taxi_trips.tlc_yellow_trips_2017 LIMIT %s";
@@ -3619,7 +3617,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExecuteSelectReadApiEmptyResultSet() throws SQLException {
+  void testExecuteSelectReadApiEmptyResultSet() throws SQLException {
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder()
             .setJobTimeoutMs(
@@ -3637,7 +3635,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExecuteSelectWithCredentials() throws SQLException {
+  void testExecuteSelectWithCredentials() throws SQLException {
     // This test validate that executeSelect uses the same credential provided by the BigQuery
     // object used to create the Connection client.
     // This is done the following scenarios:
@@ -3681,7 +3679,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
-  public void testQueryTimeStamp() throws InterruptedException {
+  void testQueryTimeStamp() throws InterruptedException {
     String query = "SELECT TIMESTAMP '2022-01-24T23:54:25.095574Z'";
     Instant beforeQueryInstant = Instant.parse("2022-01-24T23:54:25.095574Z");
     long microsBeforeQuery =
@@ -3718,7 +3716,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
-  public void testQueryCaseInsensitiveSchemaFieldByGetName() throws InterruptedException {
+  void testQueryCaseInsensitiveSchemaFieldByGetName() throws InterruptedException {
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
@@ -3748,7 +3746,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate bigquery.query part of the test case for executeSelect - modify this test case */
   @Test
-  public void testQueryExternalHivePartitioningOptionAutoLayout() throws InterruptedException {
+  void testQueryExternalHivePartitioningOptionAutoLayout() throws InterruptedException {
     String tableName = "test_queryexternalhivepartition_autolayout_table";
     String sourceUri =
         "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/hive-partitioning-samples/autolayout/*";
@@ -3784,7 +3782,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate bigquery.query part of the test case for executeSelect - modify this test case */
   @Test
-  public void testQueryExternalHivePartitioningOptionCustomLayout() throws InterruptedException {
+  void testQueryExternalHivePartitioningOptionCustomLayout() throws InterruptedException {
     String tableName = "test_queryexternalhivepartition_customlayout_table";
     String sourceUri =
         "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/hive-partitioning-samples/customlayout/*";
@@ -3820,7 +3818,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testConnectionImplDryRun() throws SQLException {
+  void testConnectionImplDryRun() throws SQLException {
     String query =
         String.format(
             "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, FloatField, NumericField, TimeField, DateField,  DateTimeField , GeographyField, RecordField.BytesField, RecordField.BooleanField, IntegerArrayField from %s where StringField = ? order by TimestampField",
@@ -3845,7 +3843,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testConnectionImplDryRunNoQueryParameters() throws SQLException {
+  void testConnectionImplDryRunNoQueryParameters() throws SQLException {
     String query =
         String.format(
             "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, "
@@ -3875,7 +3873,7 @@ public class ITBigQueryTest {
   @Test
   // This test case test the order of the records, making sure that the result is not jumbled up due
   // to the multithreaded BigQueryResult implementation
-  public void testBQResultSetMultiThreadedOrder() throws SQLException {
+  void testBQResultSetMultiThreadedOrder() throws SQLException {
     String query =
         "SELECT date FROM "
             + TABLE_ID_LARGE.getTable()
@@ -3902,7 +3900,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testBQResultSetPaginationSlowQuery() throws SQLException {
+  void testBQResultSetPaginationSlowQuery() throws SQLException {
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable()
@@ -3931,7 +3929,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExecuteSelectSinglePageTableRow() throws SQLException {
+  void testExecuteSelectSinglePageTableRow() throws SQLException {
     String query =
         "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, FloatField, "
             + "NumericField, TimeField, DateField,  DateTimeField , GeographyField, RecordField.BytesField, RecordField.BooleanField, IntegerArrayField from "
@@ -3995,7 +3993,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExecuteSelectSinglePageTableRowWithReadAPI() throws SQLException {
+  void testExecuteSelectSinglePageTableRowWithReadAPI() throws SQLException {
     String query =
         "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, FloatField, "
             + "NumericField, TimeField, DateField,  DateTimeField , GeographyField, RecordField.BytesField, RecordField.BooleanField, IntegerArrayField from "
@@ -4060,7 +4058,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testConnectionClose() throws SQLException {
+  void testConnectionClose() throws SQLException {
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable()
@@ -4086,7 +4084,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testBQResultSetPagination() throws SQLException {
+  void testBQResultSetPagination() throws SQLException {
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable()
@@ -4112,8 +4110,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testReadAPIIterationAndOrder()
-      throws SQLException { // use read API to read 300K records and check the order
+    void testReadAPIIterationAndOrder() throws SQLException { // use read API to read 300K records and check the order
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable()
@@ -4149,10 +4146,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testReadAPIIterationAndOrderAsync()
-      throws SQLException,
-          ExecutionException,
-          InterruptedException { // use read API to read 300K records and check the order
+    void testReadAPIIterationAndOrderAsync() throws SQLException, ExecutionException, InterruptedException { // use read API to read 300K records and check the order
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths / 10 FROM "
             + TABLE_ID_LARGE.getTable()
@@ -4197,10 +4191,7 @@ public class ITBigQueryTest {
   // TODO(prasmish): Remove this test case if it turns out to be flaky, as expecting the process to
   // be uncompleted in 1000ms is nondeterministic! Though very likely it won't be complete in the
   // specified amount of time
-  public void testExecuteSelectAsyncCancel()
-      throws SQLException,
-          ExecutionException,
-          InterruptedException { // use read API to read 300K records and check the order
+  void testExecuteSelectAsyncCancel() throws SQLException, ExecutionException, InterruptedException { // use read API to read 300K records and check the order
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable()
@@ -4239,10 +4230,7 @@ public class ITBigQueryTest {
   // TODO(prasmish): Remove this test case if it turns out to be flaky, as expecting the process to
   // be uncompleted in 1000ms is nondeterministic! Though very likely it won't be complete in the
   // specified amount of time
-  public void testExecuteSelectAsyncTimeout()
-      throws SQLException,
-          ExecutionException,
-          InterruptedException { // use read API to read 300K records and check the order
+  void testExecuteSelectAsyncTimeout() throws SQLException, ExecutionException, InterruptedException { // use read API to read 300K records and check the order
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable()
@@ -4269,8 +4257,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExecuteSelectWithNamedQueryParametersAsync()
-      throws BigQuerySQLException, ExecutionException, InterruptedException {
+  void testExecuteSelectWithNamedQueryParametersAsync() throws BigQuerySQLException, ExecutionException, InterruptedException {
     String query =
         "SELECT TimestampField, StringField, BooleanField FROM "
             + TABLE_ID.getTable()
@@ -4299,16 +4286,14 @@ public class ITBigQueryTest {
   // Ref: https://github.com/googleapis/java-bigquery/issues/2070. Adding a pre-submit test to see
   // if bigquery.createConnection() returns null
   @Test
-  public void testCreateDefaultConnection() throws BigQuerySQLException {
+  void testCreateDefaultConnection() throws BigQuerySQLException {
     Connection connection = bigquery.createConnection();
     assertNotNull(connection, "bigquery.createConnection() returned null");
     assertTrue(connection.close());
   }
 
   @Test
-  public void testReadAPIConnectionMultiClose()
-      throws
-          SQLException { // use read API to read 300K records, then closes the connection. This test
+    void testReadAPIConnectionMultiClose() throws SQLException { // use read API to read 300K records, then closes the connection. This test
     // repeats it multiple times and assets if the connection was closed
     String query =
         "SELECT date, county, state_name, confirmed_cases, deaths FROM "
@@ -4342,7 +4327,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExecuteSelectSinglePageTableRowColInd() throws SQLException {
+  void testExecuteSelectSinglePageTableRowColInd() throws SQLException {
     String query =
         "select StringField,  BigNumericField, BooleanField, BytesField, IntegerField, TimestampField, FloatField, "
             + "NumericField, TimeField, DateField,  DateTimeField , GeographyField, RecordField.BytesField, RecordField.BooleanField, IntegerArrayField from "
@@ -4421,7 +4406,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExecuteSelectStruct() throws SQLException {
+  void testExecuteSelectStruct() throws SQLException {
     String query = "select (STRUCT(\"Vancouver\" as city, 5 as years)) as address";
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
@@ -4454,7 +4439,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExecuteSelectStructSubField() throws SQLException {
+  void testExecuteSelectStructSubField() throws SQLException {
     String query =
         "select address.city from (select (STRUCT(\"Vancouver\" as city, 5 as years)) as address)";
     ConnectionSettings connectionSettings =
@@ -4480,7 +4465,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExecuteSelectArray() throws SQLException {
+  void testExecuteSelectArray() throws SQLException {
     String query = "SELECT [1,2,3]";
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder().setDefaultDataset(DatasetId.of(DATASET)).build();
@@ -4503,7 +4488,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExecuteSelectArrayOfStruct() throws SQLException {
+  void testExecuteSelectArrayOfStruct() throws SQLException {
     String query =
         "SELECT [STRUCT(\"Vancouver\" as city, 5 as years), STRUCT(\"Boston\" as city, 10 as years)]";
     ConnectionSettings connectionSettings =
@@ -4543,7 +4528,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
-  public void testFastQueryMultipleRuns() throws InterruptedException {
+  void testFastQueryMultipleRuns() throws InterruptedException {
     String query =
         "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID_FASTQUERY.getTable();
     QueryJobConfiguration config =
@@ -4580,7 +4565,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
-  public void testFastQuerySinglePageDuplicateRequestIds() throws InterruptedException {
+  void testFastQuerySinglePageDuplicateRequestIds() throws InterruptedException {
     String query =
         "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID_FASTQUERY.getTable();
     QueryJobConfiguration config =
@@ -4613,7 +4598,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
-  public void testFastSQLQuery() throws InterruptedException {
+  void testFastSQLQuery() throws InterruptedException {
     String query =
         "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID_FASTQUERY.getTable();
     QueryJobConfiguration config =
@@ -4643,7 +4628,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testProjectIDFastSQLQueryWithJobId() throws InterruptedException {
+  void testProjectIDFastSQLQueryWithJobId() throws InterruptedException {
     String random_project_id = "RANDOM_PROJECT_" + UUID.randomUUID().toString().replace('-', '_');
     System.out.println(random_project_id);
     String query =
@@ -4664,7 +4649,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testLocationFastSQLQueryWithJobId() throws InterruptedException {
+  void testLocationFastSQLQueryWithJobId() throws InterruptedException {
     DatasetInfo infoUK =
         DatasetInfo.newBuilder(UK_DATASET)
             .setDescription(DESCRIPTION)
@@ -4725,7 +4710,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
-  public void testFastSQLQueryMultiPage() throws InterruptedException {
+  void testFastSQLQueryMultiPage() throws InterruptedException {
     String query =
         "SELECT date, county, state_name, county_fips_code, confirmed_cases, deaths FROM "
             + TABLE_ID_LARGE.getTable();
@@ -4758,7 +4743,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testFastDMLQuery() throws InterruptedException {
+  void testFastDMLQuery() throws InterruptedException {
     String tableName = TABLE_ID_FASTQUERY.getTable();
     String dmlQuery =
         String.format("UPDATE %s.%s SET StringField = 'hello' WHERE TRUE", DATASET, tableName);
@@ -4774,7 +4759,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testFastDDLQuery() throws InterruptedException {
+  void testFastDDLQuery() throws InterruptedException {
     String tableName = "test_table_fast_query_ddl";
     String tableNameFastQuery = TABLE_ID_DDL.getTable();
     String ddlQuery =
@@ -4813,7 +4798,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testFastQuerySlowDDL() throws InterruptedException {
+  void testFastQuerySlowDDL() throws InterruptedException {
     String tableName =
         "test_table_fast_query_ddl_slow_" + UUID.randomUUID().toString().substring(0, 8);
     // This query take more than 10s to run and should fall back on the old query path
@@ -4846,7 +4831,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
-  public void testFastQueryHTTPException() throws InterruptedException {
+  void testFastQueryHTTPException() throws InterruptedException {
     String queryInvalid =
         "CREATE OR REPLACE SELECT * FROM UPDATE TABLE SET " + TABLE_ID_FASTQUERY.getTable();
     QueryJobConfiguration configInvalidQuery =
@@ -4880,7 +4865,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testQuerySessionSupport() throws InterruptedException {
+  void testQuerySessionSupport() throws InterruptedException {
     String query = "CREATE TEMPORARY TABLE temptable AS SELECT 17 as foo";
     QueryJobConfiguration queryJobConfiguration =
         QueryJobConfiguration.newBuilder(query)
@@ -4913,7 +4898,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testLoadSessionSupportWriteChannelConfiguration() throws InterruptedException {
+  void testLoadSessionSupportWriteChannelConfiguration() throws InterruptedException {
     TableId sessionTableId = TableId.of("_SESSION", "test_temp_destination_table_from_file");
 
     WriteChannelConfiguration configuration =
@@ -4987,7 +4972,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testLoadSessionSupport() throws InterruptedException {
+  void testLoadSessionSupport() throws InterruptedException {
     // Start the session
     TableId sessionTableId = TableId.of("_SESSION", "test_temp_destination_table");
     LoadJobConfiguration configuration =
@@ -5050,7 +5035,7 @@ public class ITBigQueryTest {
   // }
 
   @Test
-  public void testExecuteSelectSessionSupport() throws BigQuerySQLException {
+  void testExecuteSelectSessionSupport() throws BigQuerySQLException {
     String query = "SELECT 17 as foo";
     ConnectionSettings connectionSettings =
         ConnectionSettings.newBuilder()
@@ -5064,7 +5049,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testDmlStatistics() throws InterruptedException {
+  void testDmlStatistics() throws InterruptedException {
     String tableName = TABLE_ID_FASTQUERY.getTable();
     // Run a DML statement to UPDATE 2 rows of data
     String dmlQuery =
@@ -5086,7 +5071,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
-  public void testTransactionInfo() throws InterruptedException {
+  void testTransactionInfo() throws InterruptedException {
     String tableName = TABLE_ID_FASTQUERY.getTable();
     String transaction =
         String.format(
@@ -5108,7 +5093,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
-  public void testScriptStatistics() throws InterruptedException {
+  void testScriptStatistics() throws InterruptedException {
     String script =
         "-- Declare a variable to hold names as an array.\n"
             + "DECLARE top_names ARRAY<STRING>;\n"
@@ -5161,7 +5146,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testQueryParameterModeWithDryRun() {
+  void testQueryParameterModeWithDryRun() {
     String query =
         "SELECT TimestampField, StringField, BooleanField, BigNumericField, BigNumericField1, BigNumericField2, BigNumericField3, BigNumericField4 FROM "
             + TABLE_ID.getTable()
@@ -5188,7 +5173,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testPositionalQueryParameters() throws InterruptedException {
+  void testPositionalQueryParameters() throws InterruptedException {
     String query =
         "SELECT TimestampField, StringField, BooleanField, BigNumericField, BigNumericField1, BigNumericField2, BigNumericField3, BigNumericField4 FROM "
             + TABLE_ID.getTable()
@@ -5265,7 +5250,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): expand below test case with all the fields shown in the above test case */
   @Test
-  public void testExecuteSelectWithPositionalQueryParameters() throws BigQuerySQLException {
+  void testExecuteSelectWithPositionalQueryParameters() throws BigQuerySQLException {
     String query =
         "SELECT TimestampField, StringField FROM "
             + TABLE_ID.getTable()
@@ -5285,7 +5270,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testNamedQueryParameters() throws InterruptedException {
+  void testNamedQueryParameters() throws InterruptedException {
     String query =
         "SELECT TimestampField, StringField, BooleanField FROM "
             + TABLE_ID.getTable()
@@ -5308,7 +5293,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExecuteSelectWithNamedQueryParameters() throws BigQuerySQLException {
+  void testExecuteSelectWithNamedQueryParameters() throws BigQuerySQLException {
     String query =
         "SELECT TimestampField, StringField, BooleanField FROM "
             + TABLE_ID.getTable()
@@ -5332,7 +5317,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate relevant parts of the test case for executeSelect */
   @Test
-  public void testStructNamedQueryParameters() throws InterruptedException {
+  void testStructNamedQueryParameters() throws InterruptedException {
     QueryParameterValue booleanValue = QueryParameterValue.bool(true);
     QueryParameterValue stringValue = QueryParameterValue.string("test-stringField");
     QueryParameterValue integerValue = QueryParameterValue.int64(10);
@@ -5359,7 +5344,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testRepeatedRecordNamedQueryParameters() throws InterruptedException {
+  void testRepeatedRecordNamedQueryParameters() throws InterruptedException {
     String[] stringValues = new String[] {"test-stringField", "test-stringField2"};
     List<QueryParameterValue> tuples = new ArrayList<>();
     for (int i = 0; i < 2; i++) {
@@ -5400,7 +5385,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testUnnestRepeatedRecordNamedQueryParameter() throws InterruptedException {
+  void testUnnestRepeatedRecordNamedQueryParameter() throws InterruptedException {
     Boolean[] boolValues = new Boolean[] {true, false};
     List<QueryParameterValue> tuples = new ArrayList<>();
     for (int i = 0; i < 2; i++) {
@@ -5439,7 +5424,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testUnnestRepeatedRecordNamedQueryParameterFromDataset() throws InterruptedException {
+  void testUnnestRepeatedRecordNamedQueryParameterFromDataset() throws InterruptedException {
     TableId tableId = TableId.of(DATASET, "test_repeated_record_table");
     setUpRepeatedRecordTable(tableId);
 
@@ -5545,7 +5530,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testEmptyRepeatedRecordNamedQueryParameters() throws InterruptedException {
+  void testEmptyRepeatedRecordNamedQueryParameters() throws InterruptedException {
     QueryParameterValue[] tuples = {};
 
     QueryParameterValue repeatedRecord =
@@ -5566,7 +5551,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testStructQuery() throws InterruptedException {
+  void testStructQuery() throws InterruptedException {
     // query into a table
     String query = String.format("SELECT RecordField FROM %s.%s", DATASET, TABLE_ID.getTable());
     QueryJobConfiguration config =
@@ -5594,7 +5579,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate relevant parts of the test case for executeSelect */
   @Test
-  public void testNestedStructNamedQueryParameters() throws InterruptedException {
+  void testNestedStructNamedQueryParameters() throws InterruptedException {
     QueryParameterValue booleanValue = QueryParameterValue.bool(true);
     QueryParameterValue stringValue = QueryParameterValue.string("test-stringField");
     QueryParameterValue integerValue = QueryParameterValue.int64(10);
@@ -5636,7 +5621,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate relevant parts of the test case for executeSelect */
   @Test
-  public void testBytesParameter() throws Exception {
+  void testBytesParameter() throws Exception {
     String query = "SELECT BYTE_LENGTH(@p) AS length";
     QueryParameterValue bytesParameter = QueryParameterValue.bytes(new byte[] {1, 3});
     QueryJobConfiguration config =
@@ -5657,7 +5642,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testGeographyParameter() throws Exception {
+  void testGeographyParameter() throws Exception {
     // Issues a simple ST_DISTANCE using two geopoints, one being a named geography parameter.
     String query =
         "SELECT ST_DISTANCE(ST_GEOGFROMTEXT(\"POINT(-122.335503 47.625536)\"), @geo) < 3000 as within3k";
@@ -5680,7 +5665,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testListJobs() {
+  void testListJobs() {
     Page<Job> jobs = bigquery.listJobs();
     for (Job job : jobs.getValues()) {
       assertNotNull(job.getJobId());
@@ -5692,7 +5677,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testListJobsWithSelectedFields() {
+  void testListJobsWithSelectedFields() {
     Page<Job> jobs = bigquery.listJobs(JobListOption.fields(JobField.USER_EMAIL));
     for (Job job : jobs.getValues()) {
       assertNotNull(job.getJobId());
@@ -5704,7 +5689,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testListJobsWithCreationBounding() {
+  void testListJobsWithCreationBounding() {
     long currentMillis = currentTimeMillis();
     long lowerBound = currentMillis - 3600 * 1000;
     long upperBound = currentMillis;
@@ -5727,7 +5712,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateAndGetJob() throws InterruptedException, TimeoutException {
+  void testCreateAndGetJob() throws InterruptedException, TimeoutException {
     String sourceTableName = "test_create_and_get_job_source_table";
     String destinationTableName = "test_create_and_get_job_destination_table";
     TableId sourceTable = TableId.of(DATASET, sourceTableName);
@@ -5766,8 +5751,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateJobAndWaitForWithRetryOptions()
-      throws InterruptedException, TimeoutException {
+  void testCreateJobAndWaitForWithRetryOptions() throws InterruptedException, TimeoutException {
     // Note: This only tests the non failure/retry case. For retry cases, see unit tests with mocked
     // RPC calls.
     QueryJobConfiguration config =
@@ -5786,8 +5770,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateAndGetJobWithSelectedFields()
-      throws InterruptedException, TimeoutException {
+  void testCreateAndGetJobWithSelectedFields() throws InterruptedException, TimeoutException {
     String sourceTableName = "test_create_and_get_job_with_selected_fields_source_table";
     String destinationTableName = "test_create_and_get_job_with_selected_fields_destination_table";
     TableId sourceTable = TableId.of(DATASET, sourceTableName);
@@ -5835,7 +5818,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCopyJob() throws InterruptedException, TimeoutException {
+  void testCopyJob() throws InterruptedException, TimeoutException {
     String sourceTableName = "test_copy_job_source_table";
     String destinationTableName = "test_copy_job_destination_table";
     TableId sourceTable = TableId.of(DATASET, sourceTableName);
@@ -5867,7 +5850,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCopyJobStatistics() throws InterruptedException, TimeoutException {
+  void testCopyJobStatistics() throws InterruptedException, TimeoutException {
     String sourceTableName = "test_copy_job_statistics_source_table";
     String destinationTableName = "test_copy_job_statistics_destination_table";
 
@@ -5898,7 +5881,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testSnapshotTableCopyJob() throws InterruptedException {
+  void testSnapshotTableCopyJob() throws InterruptedException {
     String sourceTableName = "test_copy_job_base_table";
     String ddlTableName = TABLE_ID_DDL.getTable();
     // this creates a snapshot table at specified snapshotTime
@@ -5976,7 +5959,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCopyJobWithLabelsAndExpTime() throws InterruptedException {
+  void testCopyJobWithLabelsAndExpTime() throws InterruptedException {
     String destExpiryTime = "2099-12-31T23:59:59.999999999Z";
     String sourceTableName =
         "test_copy_job_source_table_label" + UUID.randomUUID().toString().substring(0, 8);
@@ -6055,7 +6038,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
-  public void testQueryJobWithConnectionProperties() throws InterruptedException {
+  void testQueryJobWithConnectionProperties() throws InterruptedException {
     String tableName = "test_query_job_table_connection_properties";
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     TableId destinationTable = TableId.of(DATASET, tableName);
@@ -6075,7 +6058,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
-  public void testQueryJobWithLabels() throws InterruptedException, TimeoutException {
+  void testQueryJobWithLabels() throws InterruptedException, TimeoutException {
     String tableName = "test_query_job_table";
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     Map<String, String> labels = ImmutableMap.of("test-job-name", "test-query-job");
@@ -6098,7 +6081,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testQueryJobWithSearchReturnsSearchStatisticsUnused() throws InterruptedException {
+  void testQueryJobWithSearchReturnsSearchStatisticsUnused() throws InterruptedException {
     String tableName = "test_query_job_table";
     String query =
         "SELECT * FROM "
@@ -6128,7 +6111,7 @@ public class ITBigQueryTest {
 
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
-  public void testQueryJobWithRangePartitioning() throws InterruptedException {
+  void testQueryJobWithRangePartitioning() throws InterruptedException {
     String tableName = "test_query_job_table_rangepartitioning";
     String query =
         "SELECT IntegerField, TimestampField, StringField, BooleanField FROM "
@@ -6153,7 +6136,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testLoadJobWithRangePartitioning() throws InterruptedException {
+  void testLoadJobWithRangePartitioning() throws InterruptedException {
     String tableName = "test_load_job_table_rangepartitioning";
     TableId destinationTable = TableId.of(DATASET, tableName);
     try {
@@ -6177,7 +6160,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testLoadJobWithDecimalTargetTypes() throws InterruptedException {
+  void testLoadJobWithDecimalTargetTypes() throws InterruptedException {
     String tableName = "test_load_job_table_parquet_decimalTargetTypes";
     TableId destinationTable = TableId.of(DATASET, tableName);
     String sourceUri = "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/numeric/numeric_38_12.parquet";
@@ -6205,7 +6188,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExternalTableWithDecimalTargetTypes() throws InterruptedException {
+  void testExternalTableWithDecimalTargetTypes() throws InterruptedException {
     String tableName = "test_create_external_table_parquet_decimalTargetTypes";
     TableId destinationTable = TableId.of(DATASET, tableName);
     String sourceUri = "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/numeric/numeric_38_12.parquet";
@@ -6225,7 +6208,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testQueryJobWithDryRun() throws InterruptedException, TimeoutException {
+  void testQueryJobWithDryRun() throws InterruptedException, TimeoutException {
     String tableName = "test_query_job_table";
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     TableId destinationTable = TableId.of(DATASET, tableName);
@@ -6243,7 +6226,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExtractJob() throws InterruptedException, TimeoutException {
+  void testExtractJob() throws InterruptedException, TimeoutException {
     String tableName = "test_export_job_table";
     TableId destinationTable = TableId.of(DATASET, tableName);
     Map<String, String> labels = ImmutableMap.of("test-job-name", "test-load-extract-job");
@@ -6283,7 +6266,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExtractJobWithModel() throws InterruptedException {
+  void testExtractJobWithModel() throws InterruptedException {
     String modelName = RemoteBigQueryHelper.generateModelName();
     String sql =
         "CREATE MODEL `"
@@ -6320,7 +6303,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExtractJobWithLabels() throws InterruptedException, TimeoutException {
+  void testExtractJobWithLabels() throws InterruptedException, TimeoutException {
     String tableName = "test_export_job_table_label";
     Map<String, String> labels = ImmutableMap.of("test_job_name", "test_export_job");
     TableId destinationTable = TableId.of(DATASET, tableName);
@@ -6346,7 +6329,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCancelJob() throws InterruptedException, TimeoutException {
+  void testCancelJob() throws InterruptedException, TimeoutException {
     String destinationTableName = "test_cancel_query_job_table";
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     TableId destinationTable = TableId.of(DATASET, destinationTableName);
@@ -6360,12 +6343,12 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCancelNonExistingJob() {
+  void testCancelNonExistingJob() {
     assertFalse(bigquery.cancel("test_cancel_non_existing_job"));
   }
 
   @Test
-  public void testInsertFromFile() throws InterruptedException, IOException, TimeoutException {
+  void testInsertFromFile() throws InterruptedException, IOException, TimeoutException {
     String destinationTableName = "test_insert_from_file_table";
     TableId tableId = TableId.of(DATASET, destinationTableName);
     WriteChannelConfiguration configuration =
@@ -6438,8 +6421,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testInsertFromFileWithLabels()
-      throws InterruptedException, IOException, TimeoutException {
+  void testInsertFromFileWithLabels() throws InterruptedException, IOException, TimeoutException {
     String destinationTableName = "test_insert_from_file_table_with_labels";
     TableId tableId = TableId.of(DATASET, destinationTableName);
     WriteChannelConfiguration configuration =
@@ -6469,8 +6451,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testInsertWithDecimalTargetTypes()
-      throws InterruptedException, IOException, TimeoutException {
+  void testInsertWithDecimalTargetTypes() throws InterruptedException, IOException, TimeoutException {
     String destinationTableName = "test_insert_from_file_table_with_decimal_target_type";
     TableId tableId = TableId.of(DATASET, destinationTableName);
     WriteChannelConfiguration configuration =
@@ -6496,7 +6477,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testLocation() throws Exception {
+  void testLocation() throws Exception {
     String location = "EU";
     String wrongLocation = "US";
 
@@ -6602,7 +6583,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testWriteChannelPreserveAsciiControlCharacters()
+  void testWriteChannelPreserveAsciiControlCharacters()
       throws InterruptedException, IOException, TimeoutException {
     String destinationTableName = "test_write_channel_preserve_ascii_control_characters";
     TableId tableId = TableId.of(DATASET, destinationTableName);
@@ -6629,7 +6610,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testLoadJobPreserveAsciiControlCharacters() throws InterruptedException {
+  void testLoadJobPreserveAsciiControlCharacters() throws InterruptedException {
     String destinationTableName = "test_load_job_preserve_ascii_control_characters";
     TableId destinationTable = TableId.of(DATASET, destinationTableName);
 
@@ -6649,7 +6630,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testReferenceFileSchemaUriForAvro() {
+  void testReferenceFileSchemaUriForAvro() {
     try {
       String destinationTableName = "test_reference_file_schema_avro";
       TableId tableId = TableId.of(DATASET, destinationTableName);
@@ -6708,7 +6689,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testReferenceFileSchemaUriForParquet() {
+  void testReferenceFileSchemaUriForParquet() {
     try {
       String destinationTableName = "test_reference_file_schema_parquet";
       TableId tableId = TableId.of(DATASET, destinationTableName);
@@ -6766,7 +6747,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateExternalTableWithReferenceFileSchemaAvro() {
+  void testCreateExternalTableWithReferenceFileSchemaAvro() {
     String destinationTableName = "test_create_external_table_reference_file_schema_avro";
     TableId tableId = TableId.of(DATASET, destinationTableName);
     Schema expectedSchema =
@@ -6805,7 +6786,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCreateExternalTableWithReferenceFileSchemaParquet() {
+  void testCreateExternalTableWithReferenceFileSchemaParquet() {
     String destinationTableName = "test_create_external_table_reference_file_schema_parquet";
     TableId tableId = TableId.of(DATASET, destinationTableName);
     Schema expectedSchema =
@@ -6846,7 +6827,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testCloneTableCopyJob() throws InterruptedException {
+  void testCloneTableCopyJob() throws InterruptedException {
     String sourceTableName = "test_copy_job_base_table";
     String ddlTableName = TABLE_ID_DDL.getTable();
     String cloneTableName = "test_clone_table";
@@ -6899,7 +6880,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testHivePartitioningOptionsFieldsFieldExistence() throws InterruptedException {
+  void testHivePartitioningOptionsFieldsFieldExistence() throws InterruptedException {
     String tableName = "hive_partitioned_external_table";
 
     // Create data on GCS
@@ -6943,7 +6924,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testPrimaryKey() {
+  void testPrimaryKey() {
     String tableName = "test_primary_key";
     TableId tableId = TableId.of(DATASET, tableName);
     PrimaryKey primaryKey = PrimaryKey.newBuilder().setColumns(Arrays.asList("ID")).build();
@@ -6968,7 +6949,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testPrimaryKeyUpdate() {
+  void testPrimaryKeyUpdate() {
     String tableName = "test_primary_key_update";
     TableId tableId = TableId.of(DATASET, tableName);
     PrimaryKey primaryKey =
@@ -6997,7 +6978,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testForeignKeys() {
+  void testForeignKeys() {
     String tableNamePk = "test_foreign_key";
     String tableNameFk = "test_foreign_key2";
     // TableIds referenced by foreign keys need project id to be specified
@@ -7047,7 +7028,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testForeignKeysUpdate() {
+  void testForeignKeysUpdate() {
     String tableNameFk = "test_foreign_key";
     String tableNamePk1 = "test_foreign_key2";
     String tableNamePk2 = "test_foreign_key3";
@@ -7145,7 +7126,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testAlreadyExistJobExceptionHandling() throws InterruptedException {
+  void testAlreadyExistJobExceptionHandling() throws InterruptedException {
     String query =
         "SELECT TimestampField, StringField, BooleanField FROM "
             + DATASET
@@ -7172,7 +7153,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testStatelessQueries() throws InterruptedException {
+  void testStatelessQueries() throws InterruptedException {
     // Create local BigQuery to not contaminate global test parameters.
     RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
     BigQuery bigQuery = bigqueryHelper.getOptions().getService();
@@ -7206,7 +7187,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testTableResultJobIdAndQueryId() throws InterruptedException {
+  void testTableResultJobIdAndQueryId() throws InterruptedException {
     // For stateless queries, jobId and queryId are populated based on the following criteria:
     // 1. For stateless queries, then queryId is populated.
     // 2. For queries that fails the requirements to be stateless, then jobId is populated and
@@ -7258,7 +7239,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testStatelessQueriesWithLocation() throws Exception {
+  void testStatelessQueriesWithLocation() throws Exception {
     // This test validates BigQueryOption location is used for stateless query by verifying that the
     // stateless query fails when the BigQueryOption location does not match the dataset location.
     String location = "EU";
@@ -7310,7 +7291,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testQueryWithTimeout() throws InterruptedException {
+  void testQueryWithTimeout() throws InterruptedException {
     // Validate that queryWithTimeout returns either TableResult or Job object
 
     RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
@@ -7354,7 +7335,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testUniverseDomainWithInvalidUniverseDomain() {
+  void testUniverseDomainWithInvalidUniverseDomain() {
     RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
     BigQueryOptions bigQueryOptions =
         bigqueryHelper.getOptions().toBuilder()
@@ -7377,7 +7358,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testInvalidUniverseDomainWithMismatchCredentials() {
+  void testInvalidUniverseDomainWithMismatchCredentials() {
     RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
     BigQueryOptions bigQueryOptions =
         bigqueryHelper.getOptions().toBuilder()
@@ -7399,7 +7380,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testUniverseDomainWithMatchingDomain() {
+  void testUniverseDomainWithMatchingDomain() {
     // Test a valid domain using the default credentials and Google default universe domain.
     RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
     BigQueryOptions bigQueryOptions =
@@ -7424,7 +7405,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExternalTableMetadataCachingNotEnable() throws InterruptedException {
+  void testExternalTableMetadataCachingNotEnable() throws InterruptedException {
     String tableName = "test_metadata_cache_not_enable";
     TableId tableId = TableId.of(DATASET, tableName);
     ExternalTableDefinition externalTableDefinition =
@@ -7465,7 +7446,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testExternalMetadataCacheModeFailForNonBiglake() {
+  void testExternalMetadataCacheModeFailForNonBiglake() {
     // Validate that MetadataCacheMode is passed to the backend.
     // TODO: Enhance this test after BigLake testing infrastructure is inplace.
     String tableName = "test_metadata_cache_mode_fail_for_non_biglake";
@@ -7492,7 +7473,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testObjectTable() throws InterruptedException {
+  void testObjectTable() throws InterruptedException {
     String tableName = "test_object_table";
     TableId tableId = TableId.of(DATASET, tableName);
 
@@ -7535,7 +7516,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testQueryExportStatistics() throws InterruptedException {
+  void testQueryExportStatistics() throws InterruptedException {
     String query =
         String.format(
             "EXPORT DATA OPTIONS(\n"
@@ -7559,7 +7540,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testLoadConfigurationFlexibleColumnName() throws InterruptedException {
+  void testLoadConfigurationFlexibleColumnName() throws InterruptedException {
     // See https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#columnnamecharactermap for
     // mapping.
 
@@ -7615,7 +7596,7 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testStatementType() throws InterruptedException {
+  void testStatementType() throws InterruptedException {
     String tableName = "test_materialized_view_table_statemnt_type";
     String createQuery =
         String.format(

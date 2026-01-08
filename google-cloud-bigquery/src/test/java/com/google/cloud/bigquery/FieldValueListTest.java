@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-public class FieldValueListTest {
+class FieldValueListTest {
   private static final byte[] BYTES = {0xD, 0xE, 0xA, 0xD};
   private static final String BYTES_BASE64 = BaseEncoding.base64().encode(BYTES);
   private static final TableCell booleanPb = new TableCell().setV("false");
@@ -138,7 +138,7 @@ public class FieldValueListTest {
           schemaLosslessTimestamp);
 
   @Test
-  public void testFromPb() {
+  void testFromPb() {
     assertEquals(fieldValues, FieldValueList.fromPb(fieldValuesPb, schema));
     // Schema does not influence values equality
     assertEquals(fieldValues, FieldValueList.fromPb(fieldValuesPb, null));
@@ -151,7 +151,7 @@ public class FieldValueListTest {
   }
 
   @Test
-  public void testGetByIndex() {
+  void testGetByIndex() {
     assertEquals(11, fieldValues.size());
     assertEquals(booleanFv, fieldValues.get(0));
     assertEquals(integerFv, fieldValues.get(1));
@@ -173,7 +173,7 @@ public class FieldValueListTest {
   }
 
   @Test
-  public void testGetByName() {
+  void testGetByName() {
     assertEquals(11, fieldValues.size());
     assertEquals(booleanFv, fieldValues.get("first"));
     assertEquals(integerFv, fieldValues.get("second"));
@@ -195,7 +195,7 @@ public class FieldValueListTest {
   }
 
   @Test
-  public void testNullSchema() {
+  void testNullSchema() {
     FieldValueList fieldValuesNoSchema =
         FieldValueList.of(
             ImmutableList.of(
@@ -213,25 +213,15 @@ public class FieldValueListTest {
 
     assertEquals(fieldValues, fieldValuesNoSchema);
 
-    UnsupportedOperationException exception = null;
-    try {
-      fieldValuesNoSchema.get("first");
-    } catch (UnsupportedOperationException e) {
-      exception = e;
-    }
-
+    UnsupportedOperationException exception =
+        assertThrows(UnsupportedOperationException.class, () -> fieldValuesNoSchema.get("first"));
     assertNotNull(exception);
   }
 
   @Test
-  public void testGetNonExistentField() {
-    IllegalArgumentException exception = null;
-    try {
-      fieldValues.get("nonexistent");
-    } catch (IllegalArgumentException e) {
-      exception = e;
-    }
-
+  void testGetNonExistentField() {
+    IllegalArgumentException exception =
+        assertThrows(IllegalArgumentException.class, () -> fieldValues.get("nonexistent"));
     assertNotNull(exception);
   }
 }
