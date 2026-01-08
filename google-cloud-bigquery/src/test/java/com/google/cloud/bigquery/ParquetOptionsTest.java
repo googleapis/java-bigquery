@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-public class ParquetOptionsTest {
+class ParquetOptionsTest {
 
   private static final ParquetOptions OPTIONS =
       ParquetOptions.newBuilder()
@@ -31,7 +31,7 @@ public class ParquetOptionsTest {
           .build();
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareParquetOptions(OPTIONS, OPTIONS.toBuilder().build());
     ParquetOptions parquetOptions = OPTIONS.toBuilder().setEnableListInference(true).build();
     assertEquals(true, parquetOptions.getEnableListInference());
@@ -44,14 +44,14 @@ public class ParquetOptionsTest {
   }
 
   @Test
-  public void testToBuilderIncomplete() {
+  void testToBuilderIncomplete() {
     ParquetOptions parquetOptions =
         ParquetOptions.newBuilder().setEnableListInference(true).build();
     assertEquals(parquetOptions, parquetOptions.toBuilder().build());
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertEquals(FormatOptions.PARQUET, OPTIONS.getType());
     assertEquals(true, OPTIONS.getEnableListInference());
     assertEquals(true, OPTIONS.getEnumAsString());
@@ -59,7 +59,7 @@ public class ParquetOptionsTest {
   }
 
   @Test
-  public void testToAndFromPb() {
+  void testToAndFromPb() {
     compareParquetOptions(OPTIONS, ParquetOptions.fromPb(OPTIONS.toPb()));
     ParquetOptions parquetOptions =
         ParquetOptions.newBuilder().setEnableListInference(true).build();

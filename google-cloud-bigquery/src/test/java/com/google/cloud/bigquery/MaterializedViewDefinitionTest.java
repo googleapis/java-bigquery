@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.common.collect.ImmutableList;
 import org.junit.jupiter.api.Test;
 
-public class MaterializedViewDefinitionTest {
+class MaterializedViewDefinitionTest {
 
   private static final String MATERIALIZED_VIEW_QUERY = "MATERIALIZED_VIEW_QUERY";
   private static final Long LAST_REFRESH_TIME = 1580302008L;
@@ -45,7 +45,7 @@ public class MaterializedViewDefinitionTest {
           .build();
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareMaterializedView(
         MATERIALIZED_VIEW_DEFINITION, MATERIALIZED_VIEW_DEFINITION.toBuilder().build());
     MaterializedViewDefinition materializedViewDefinition =
@@ -57,14 +57,14 @@ public class MaterializedViewDefinitionTest {
   }
 
   @Test
-  public void testToBuilderIncomplete() {
+  void testToBuilderIncomplete() {
     TableDefinition materializedViewDefinition =
         MaterializedViewDefinition.of(MATERIALIZED_VIEW_QUERY);
     assertEquals(materializedViewDefinition, materializedViewDefinition.toBuilder().build());
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertEquals(MATERIALIZED_VIEW_QUERY, MATERIALIZED_VIEW_DEFINITION.getQuery());
     assertEquals(TableDefinition.Type.MATERIALIZED_VIEW, MATERIALIZED_VIEW_DEFINITION.getType());
     assertEquals(LAST_REFRESH_TIME, MATERIALIZED_VIEW_DEFINITION.getLastRefreshTime());
@@ -82,7 +82,7 @@ public class MaterializedViewDefinitionTest {
   }
 
   @Test
-  public void testToAndFromPb() {
+  void testToAndFromPb() {
     MaterializedViewDefinition materializedViewDefinition =
         MATERIALIZED_VIEW_DEFINITION.toBuilder().build();
     assertTrue(

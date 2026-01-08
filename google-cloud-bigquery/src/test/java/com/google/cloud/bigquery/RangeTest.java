@@ -18,10 +18,10 @@ package com.google.cloud.bigquery;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-public class RangeTest {
+class RangeTest {
   private static final Range RANGE_DATE =
       Range.newBuilder()
           .setType(FieldElementType.newBuilder().setType("DATE").build())
@@ -44,7 +44,7 @@ public class RangeTest {
           .build();
 
   @Test
-  public void testOf() {
+  void testOf() {
     compareRange(null, null, Range.of("[null, NULL)"));
     compareRange(null, null, Range.of("[unbounded, UNBOUNDED)"));
     compareRange(null, null, Range.of("[nUlL, uNbOuNdEd)"));
@@ -55,7 +55,7 @@ public class RangeTest {
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertEquals("1970-01-02", RANGE_DATE.getStart().getStringValue());
     assertEquals("1970-03-04", RANGE_DATE.getEnd().getStringValue());
     assertEquals(FieldElementType.newBuilder().setType("DATE").build(), RANGE_DATE.getType());
@@ -72,14 +72,14 @@ public class RangeTest {
   }
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareRange(RANGE_DATE, RANGE_DATE.toBuilder().build());
     compareRange(RANGE_DATETIME, RANGE_DATETIME.toBuilder().build());
     compareRange(RANGE_TIMESTAMP, RANGE_TIMESTAMP.toBuilder().build());
   }
 
   @Test
-  public void testGetValues() {
+  void testGetValues() {
     compareRange(null, null, Range.of("[null, NULL)").getValues());
     compareRange(null, null, Range.of("[unbounded, UNBOUNDED)").getValues());
     compareRange(null, null, Range.of("[nUlL, uNbOuNdEd)").getValues());
@@ -111,7 +111,7 @@ public class RangeTest {
   }
 
   private static void compareRange(
-      String expectedStart, String expectedEnd, ImmutableMap<String, String> values) {
+      String expectedStart, String expectedEnd, Map<String, String> values) {
     assertEquals(expectedStart, values.get("start"));
     assertEquals(expectedEnd, values.get("end"));
   }

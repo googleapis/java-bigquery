@@ -36,7 +36,7 @@ import java.util.Map.Entry;
 import org.junit.jupiter.api.Test;
 import org.threeten.extra.PeriodDuration;
 
-public class FieldValueTest {
+class FieldValueTest {
 
   private static final byte[] BYTES = {0xD, 0xE, 0xA, 0xD};
   private static final String BYTES_BASE64 = BaseEncoding.base64().encode(BYTES);
@@ -65,7 +65,7 @@ public class FieldValueTest {
       ImmutableMap.<String, Object>of("f", ImmutableList.<Object>of(FLOAT_FIELD, TIMESTAMP_FIELD));
 
   @Test
-  public void testFromPb() {
+  void testFromPb() {
     FieldValue value = FieldValue.fromPb(BOOLEAN_FIELD);
     assertEquals(FieldValue.Attribute.PRIMITIVE, value.getAttribute());
     assertFalse(value.getBooleanValue());
@@ -125,7 +125,7 @@ public class FieldValueTest {
   }
 
   @Test
-  public void testTimestamp() {
+  void testTimestamp() {
     FieldValue fieldValue = FieldValue.of(FieldValue.Attribute.PRIMITIVE, "-1.9954383398377106E10");
     long received = fieldValue.getTimestampValue();
     long expected = -19954383398377106L;
@@ -133,7 +133,7 @@ public class FieldValueTest {
   }
 
   @Test
-  public void testInt64Timestamp() {
+  void testInt64Timestamp() {
     FieldValue lossyFieldValue =
         FieldValue.of(FieldValue.Attribute.PRIMITIVE, "1.9954383398377106E10");
     long lossy = lossyFieldValue.getTimestampValue();
@@ -152,7 +152,7 @@ public class FieldValueTest {
   }
 
   @Test
-  public void testEquals() {
+  void testEquals() {
     FieldValue booleanValue = FieldValue.of(FieldValue.Attribute.PRIMITIVE, "false");
     assertEquals(booleanValue, FieldValue.fromPb(BOOLEAN_FIELD));
     assertEquals(booleanValue.hashCode(), FieldValue.fromPb(BOOLEAN_FIELD).hashCode());
@@ -206,7 +206,7 @@ public class FieldValueTest {
   }
 
   @Test
-  public void testParseCanonicalInterval() {
+  void testParseCanonicalInterval() {
     Map<String, PeriodDuration> intervalToPeriodDuration = new LinkedHashMap<>();
     intervalToPeriodDuration.put(
         "125-7 -19 -0:24:12.001", PeriodDuration.parse("P125Y7M-19DT0H-24M-12.001S"));

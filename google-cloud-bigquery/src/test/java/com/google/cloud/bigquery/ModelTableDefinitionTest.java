@@ -17,7 +17,6 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.junit.jupiter.api.Assertions;
@@ -53,15 +52,14 @@ class ModelTableDefinitionTest {
 
   @Test
   void testToBuilder() {
-    compareModelTableDefinition(MODEL_TABLE_DEFINITION, MODEL_TABLE_DEFINITION.toBuilder().build());
+    compareModelTableDefinition(MODEL_TABLE_DEFINITION.toBuilder().build());
   }
 
   @Test
   void testTypeNullPointerException() {
+    ModelTableDefinition.Builder builder = MODEL_TABLE_DEFINITION.toBuilder();
     NullPointerException ex =
-        Assertions.assertThrows(
-            NullPointerException.class,
-            () -> MODEL_TABLE_DEFINITION.toBuilder().setType(null).build());
+        Assertions.assertThrows(NullPointerException.class, () -> builder.setType(null));
     assertNotNull(ex.getMessage());
   }
 
@@ -79,30 +77,21 @@ class ModelTableDefinitionTest {
 
   @Test
   void testBuilder() {
-    assertEquals(MODEL_TABLE_DEFINITION.getSchema(), TABLE_SCHEMA);
-    assertEquals(MODEL_TABLE_DEFINITION.getType(), TableDefinition.Type.MODEL);
-    assertEquals(MODEL_TABLE_DEFINITION.getLocation(), LOCATION);
-    assertEquals(MODEL_TABLE_DEFINITION.getNumBytes(), NUM_BYTES);
+    assertEquals(TABLE_SCHEMA, MODEL_TABLE_DEFINITION.getSchema());
+    assertEquals(TableDefinition.Type.MODEL, MODEL_TABLE_DEFINITION.getType());
+    assertEquals(LOCATION, MODEL_TABLE_DEFINITION.getLocation());
+    assertEquals(NUM_BYTES, MODEL_TABLE_DEFINITION.getNumBytes());
   }
 
-  @Test
-  void testEquals() {
-    assertEquals(MODEL_TABLE_DEFINITION, MODEL_TABLE_DEFINITION);
-  }
-
-  @Test
-  void testNotEquals() {
-    assertNotEquals(MODEL_TABLE_DEFINITION, LOCATION);
-  }
-
-  private void compareModelTableDefinition(
-      ModelTableDefinition expected, ModelTableDefinition value) {
-    assertEquals(expected, value);
-    assertEquals(expected.getSchema(), value.getSchema());
-    assertEquals(expected.getType(), value.getType());
-    assertEquals(expected.getLocation(), value.getLocation());
-    assertEquals(expected.getNumBytes(), value.getNumBytes());
-    assertEquals(expected.hashCode(), value.hashCode());
-    assertEquals(expected.toString(), value.toString());
+  private void compareModelTableDefinition(ModelTableDefinition value) {
+    assertEquals(ModelTableDefinitionTest.MODEL_TABLE_DEFINITION, value);
+    assertEquals(ModelTableDefinitionTest.MODEL_TABLE_DEFINITION.getSchema(), value.getSchema());
+    assertEquals(ModelTableDefinitionTest.MODEL_TABLE_DEFINITION.getType(), value.getType());
+    assertEquals(
+        ModelTableDefinitionTest.MODEL_TABLE_DEFINITION.getLocation(), value.getLocation());
+    assertEquals(
+        ModelTableDefinitionTest.MODEL_TABLE_DEFINITION.getNumBytes(), value.getNumBytes());
+    assertEquals(ModelTableDefinitionTest.MODEL_TABLE_DEFINITION.hashCode(), value.hashCode());
+    assertEquals(ModelTableDefinitionTest.MODEL_TABLE_DEFINITION.toString(), value.toString());
   }
 }

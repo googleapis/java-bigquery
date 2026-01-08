@@ -17,6 +17,7 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.junit.jupiter.api.Test;
 
@@ -27,7 +28,7 @@ class DatasetIdTest {
 
   @Test
   void testOf() {
-    assertEquals(null, DATASET.getProject());
+    assertNull(DATASET.getProject());
     assertEquals("dataset", DATASET.getDataset());
     assertEquals("project", DATASET_COMPLETE.getProject());
     assertEquals("dataset", DATASET_COMPLETE.getDataset());

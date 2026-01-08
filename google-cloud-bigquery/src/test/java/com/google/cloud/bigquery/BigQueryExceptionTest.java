@@ -38,14 +38,14 @@ import com.google.cloud.bigquery.spi.v2.BigQueryRpc;
 import com.google.cloud.bigquery.spi.v2.HttpBigQueryRpc;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class BigQueryExceptionTest {
+class BigQueryExceptionTest {
 
   @Test
   void testBigQueryException() {
@@ -137,7 +137,7 @@ public class BigQueryExceptionTest {
   }
 
   @Test
-  void testTranslateAndThrow() throws Exception {
+  void testTranslateAndThrow() {
     Exception cause = new BigQueryException(503, "message");
     RetryHelperException exceptionMock = mock(RetryHelperException.class);
     when(exceptionMock.getCause()).thenReturn(cause);
@@ -176,7 +176,7 @@ public class BigQueryExceptionTest {
 
     final com.google.api.services.bigquery.model.Dataset datasetPb =
         info.setProjectId(defaultOptions.getProjectId()).toPb();
-    final Map<BigQueryRpc.Option, ?> optionsMap = new HashMap<>();
+    final Map<BigQueryRpc.Option, ?> optionsMap = new EnumMap<>(BigQueryRpc.Option.class);
 
     BigQueryOptions mockOptions = spy(defaultOptions);
     HttpBigQueryRpc bigQueryRpcMock = mock(HttpBigQueryRpc.class);
@@ -214,7 +214,7 @@ public class BigQueryExceptionTest {
 
     final com.google.api.services.bigquery.model.Dataset datasetPb =
         info.setProjectId(defaultOptions.getProjectId()).toPb();
-    final Map<BigQueryRpc.Option, ?> optionsMap = new HashMap<>();
+    final Map<BigQueryRpc.Option, ?> optionsMap = new EnumMap<>(BigQueryRpc.Option.class);
 
     BigQueryOptions mockOptions = spy(defaultOptions);
     HttpBigQueryRpc bigQueryRpcRetryMock = mock(HttpBigQueryRpc.class);
@@ -227,7 +227,7 @@ public class BigQueryExceptionTest {
     try {
       dataset = bigquery.create(info);
     } catch (BigQueryException e) {
-      assertEquals(e.getCause().getClass(), java.util.EmptyStackException.class);
+      assertEquals(java.util.EmptyStackException.class, e.getCause().getClass());
       assertNull(dataset);
     } finally {
       verify(bigQueryRpcRetryMock, times(6)).createSkipExceptionTranslation(datasetPb, optionsMap);

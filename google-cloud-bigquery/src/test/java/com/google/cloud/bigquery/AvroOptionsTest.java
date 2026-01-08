@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-public class AvroOptionsTest {
+class AvroOptionsTest {
 
   private static final Boolean USE_AVRO_LOGICAL_TYPES = true;
   private static final AvroOptions AVRO_OPTIONS =

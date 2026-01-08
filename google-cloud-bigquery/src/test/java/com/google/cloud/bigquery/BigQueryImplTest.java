@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -84,7 +85,7 @@ import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class BigQueryImplTest {
+class BigQueryImplTest {
 
   private static final String PROJECT = "project";
   private static final String LOCATION = "US";
@@ -104,7 +105,6 @@ public class BigQueryImplTest {
   private static final Long LAST_MODIFIED_TIME = 20L;
   private static final String LANGUAGE = "SQL";
   private static final String UPLOAD_ID = "uploadid";
-  private static final int MIN_CHUNK_SIZE = 256 * 1024;
   private static final List<Acl> ACCESS_RULES =
       ImmutableList.of(
           Acl.of(Acl.Group.ofAllAuthenticatedUsers(), Acl.Role.READER),
@@ -159,7 +159,7 @@ public class BigQueryImplTest {
           .setField("timestampField");
   private static final TimePartitioning TIME_PARTITIONING_NULL_TYPE =
       TimePartitioning.fromPb(PB_TIMEPARTITIONING);
-  private static final ImmutableMap<String, String> LABELS = ImmutableMap.of("key", "value");
+  private static final Map<String, String> LABELS = ImmutableMap.of("key", "value");
   private static final StandardTableDefinition TABLE_DEFINITION_WITH_PARTITIONING =
       StandardTableDefinition.newBuilder()
           .setSchema(TABLE_SCHEMA)
@@ -254,7 +254,7 @@ public class BigQueryImplTest {
   private static final String CURSOR = "cursor";
   private static final TableCell CELL_PB1 = new TableCell().setV("Value1");
   private static final TableCell CELL_PB2 = new TableCell().setV("Value2");
-  private static final ImmutableList<FieldValueList> TABLE_DATA =
+  private static final List<FieldValueList> TABLE_DATA =
       ImmutableList.of(
           FieldValueList.of(ImmutableList.of(FieldValue.fromPb(CELL_PB1))),
           FieldValueList.of(ImmutableList.of(FieldValue.fromPb(CELL_PB2))));
@@ -657,8 +657,7 @@ public class BigQueryImplTest {
     options.setThrowNotFound(true);
     bigquery = options.getService();
     BigQueryException ex =
-        Assertions.assertThrows(
-            BigQueryException.class, () -> bigquery.getDataset("dataset-not-found"));
+        assertThrows(BigQueryException.class, () -> bigquery.getDataset("dataset-not-found"));
     Assertions.assertNotNull(ex.getMessage());
     verify(bigqueryRpcMock)
         .getDatasetSkipExceptionTranslation(PROJECT, "dataset-not-found", EMPTY_RPC_OPTIONS);
@@ -1145,7 +1144,7 @@ public class BigQueryImplTest {
   @Test
   void testListTablesFromDatasetId() throws IOException {
     bigquery = options.getService();
-    ImmutableList<Table> tableList =
+    List<Table> tableList =
         ImmutableList.of(
             new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO_WITH_PROJECT)),
             new Table(bigquery, new TableInfo.BuilderImpl(OTHER_TABLE_INFO)));
@@ -1682,7 +1681,7 @@ public class BigQueryImplTest {
     verify(bigqueryRpcMock)
         .listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, TABLE_DATA_LIST_OPTIONS);
     assertArrayEquals(TABLE_DATA.toArray(), Iterables.toArray(page.getValues(), List.class));
-    Map<BigQueryRpc.Option, ?> SECOND_TABLE_DATA_LIST_OPTIONS =
+    Map<BigQueryRpc.Option, ?> secondTableDataListOptions =
         ImmutableMap.of(BigQueryRpc.Option.PAGE_TOKEN, CURSOR, BigQueryRpc.Option.START_INDEX, 0L);
     doReturn(
             new TableDataList()
@@ -1693,14 +1692,12 @@ public class BigQueryImplTest {
                         new TableRow().setF(ImmutableList.of(new TableCell().setV("Value3"))),
                         new TableRow().setF(ImmutableList.of(new TableCell().setV("Value4"))))))
         .when(bigqueryRpcMock)
-        .listTableDataSkipExceptionTranslation(
-            PROJECT, DATASET, TABLE, SECOND_TABLE_DATA_LIST_OPTIONS);
+        .listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, secondTableDataListOptions);
     assertTrue(page.hasNextPage());
     page = page.getNextPage();
     assertNull(page.getNextPageToken());
     verify(bigqueryRpcMock)
-        .listTableDataSkipExceptionTranslation(
-            PROJECT, DATASET, TABLE, SECOND_TABLE_DATA_LIST_OPTIONS);
+        .listTableDataSkipExceptionTranslation(PROJECT, DATASET, TABLE, secondTableDataListOptions);
   }
 
   // The "minimally initialized" Job that lets Job.fromPb run without throwing.
@@ -1830,14 +1827,11 @@ public class BigQueryImplTest {
             .build()
             .getService();
 
+    JobInfo jobInfo = JobInfo.of(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY);
     BigQueryException e =
-        Assertions.assertThrows(
+        assertThrows(
             BigQueryException.class,
-            () ->
-                ((BigQueryImpl) bigquery)
-                    .create(
-                        JobInfo.of(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY),
-                        bigQueryRetryConfigOption));
+            () -> ((BigQueryImpl) bigquery).create(jobInfo, bigQueryRetryConfigOption));
     assertNotNull(e.getMessage());
     // Verify that getQueryResults is attempted only once and not retried since the error message
     // does not match.
@@ -1893,12 +1887,10 @@ public class BigQueryImplTest {
             .build()
             .getService();
 
+    JobInfo jobInfo = JobInfo.of(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY);
     BigQueryException e =
-        Assertions.assertThrows(
-            BigQueryException.class,
-            () ->
-                ((BigQueryImpl) bigquery)
-                    .create(JobInfo.of(QUERY_JOB_CONFIGURATION_FOR_DMLQUERY), retryOptions));
+        assertThrows(
+            BigQueryException.class, () -> ((BigQueryImpl) bigquery).create(jobInfo, retryOptions));
     assertNotNull(e.getMessage());
     verify(bigqueryRpcMock, times(1))
         .createSkipExceptionTranslation(jobCapture.capture(), eq(bigQueryRpcOptions));
@@ -1936,10 +1928,8 @@ public class BigQueryImplTest {
         .thenThrow(new BigQueryException(409, "already exists, for some reason"));
 
     bigquery = options.getService();
-    BigQueryException e =
-        Assertions.assertThrows(
-            BigQueryException.class,
-            () -> bigquery.create(JobInfo.of(jobId, QueryJobConfiguration.of(query))));
+    JobInfo jobInfo = JobInfo.of(jobId, QueryJobConfiguration.of(query));
+    assertThrows(BigQueryException.class, () -> bigquery.create(jobInfo));
     assertThat(jobCapture.getValue().getJobReference().getJobId()).isEqualTo(id);
     verify(bigqueryRpcMock)
         .createSkipExceptionTranslation(jobCapture.capture(), eq(EMPTY_RPC_OPTIONS));
@@ -1949,13 +1939,7 @@ public class BigQueryImplTest {
   void testCreateJobTryGet() throws IOException {
     final String id = "testCreateJobTryGet-id";
     String query = "SELECT * in FOO";
-    Supplier<JobId> idProvider =
-        new Supplier<JobId>() {
-          @Override
-          public JobId get() {
-            return JobId.of(id);
-          }
-        };
+    Supplier<JobId> idProvider = () -> JobId.of(id);
 
     when(bigqueryRpcMock.createSkipExceptionTranslation(
             jobCapture.capture(), eq(EMPTY_RPC_OPTIONS)))
@@ -2080,7 +2064,7 @@ public class BigQueryImplTest {
     options.setThrowNotFound(true);
     bigquery = options.getService();
     BigQueryException ex =
-        Assertions.assertThrows(BigQueryException.class, () -> bigquery.getJob("job-not-found"));
+        assertThrows(BigQueryException.class, () -> bigquery.getJob("job-not-found"));
     Assertions.assertNotNull(ex.getMessage());
     verify(bigqueryRpcMock)
         .getJobSkipExceptionTranslation(PROJECT, "job-not-found", null, EMPTY_RPC_OPTIONS);
@@ -2674,8 +2658,8 @@ public class BigQueryImplTest {
         .thenReturn(responsePb);
     bigquery = options.getService();
     QueryResponse response = bigquery.getQueryResults(queryJob);
-    assertEquals(true, response.getCompleted());
-    assertEquals(null, response.getSchema());
+    assertTrue(response.getCompleted());
+    assertNull(response.getSchema());
     verify(bigqueryRpcMock)
         .getQueryResultsSkipExceptionTranslation(PROJECT, JOB, null, EMPTY_RPC_OPTIONS);
   }
@@ -2804,18 +2788,9 @@ public class BigQueryImplTest {
             .setRetrySettings(ServiceOptions.getDefaultRetrySettings())
             .build()
             .getService();
+    DatasetId datasetId = DatasetId.of(DATASET);
     BigQueryException ex =
-<<<<<<< HEAD
-<<<<<<< HEAD
-        Assertions.assertThrows(
-            BigQueryException.class, () -> bigquery.getDataset(DatasetId.of(DATASET)));
-=======
-        Assertions.assertThrows(BigQueryException.class, () -> bigquery.getDataset(DatasetId.of(DATASET)));
->>>>>>> 91dc2386 (feat: migrate tests to JUnit 5 assertThrows and static imports)
-=======
-        Assertions.assertThrows(
-            BigQueryException.class, () -> bigquery.getDataset(DatasetId.of(DATASET)));
->>>>>>> 6742a076 (chore: Remove wildcard imports)
+        assertThrows(BigQueryException.class, () -> bigquery.getDataset(datasetId));
     assertEquals(exceptionMessage, ex.getMessage());
     verify(bigqueryRpcMock).getDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS);
   }
@@ -2831,16 +2806,16 @@ public class BigQueryImplTest {
             .build()
             .getService();
     BigQueryException ex =
-        Assertions.assertThrows(BigQueryException.class, () -> bigquery.getDataset(DATASET));
+        assertThrows(BigQueryException.class, () -> bigquery.getDataset(DATASET));
     assertTrue(ex.getMessage().endsWith(exceptionMessage));
     verify(bigqueryRpcMock).getDatasetSkipExceptionTranslation(PROJECT, DATASET, EMPTY_RPC_OPTIONS);
   }
 
   @Test
-  void testQueryDryRun() throws Exception {
+  void testQueryDryRun() {
     // https://github.com/googleapis/google-cloud-java/issues/2479
     UnsupportedOperationException ex =
-        Assertions.assertThrows(
+        assertThrows(
             UnsupportedOperationException.class,
             () ->
                 options.toBuilder()
@@ -2982,7 +2957,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  void testRateLimitRegEx() throws Exception {
+  void testRateLimitRegEx() {
     String msg2 =
         "Job eceeded rate limits: Your table exceeded quota for table update operations. For more information, see https://cloud.google.com/bigquery/docs/troubleshoot-quotas";
     String msg3 = "exceeded rate exceeded quota for table update";
@@ -3046,7 +3021,7 @@ public class BigQueryImplTest {
   }
 
   @Test
-  void testFastQueryBigQueryException() throws InterruptedException, IOException {
+  void testFastQueryBigQueryException() throws IOException {
     List<ErrorProto> errorProtoList =
         ImmutableList.of(
             new ErrorProto()
@@ -3068,7 +3043,7 @@ public class BigQueryImplTest {
 
     bigquery = options.getService();
     BigQueryException ex =
-        Assertions.assertThrows(
+        assertThrows(
             BigQueryException.class, () -> bigquery.query(QUERY_JOB_CONFIGURATION_FOR_QUERY));
     assertEquals(Lists.transform(errorProtoList, BigQueryError.FROM_PB_FUNCTION), ex.getErrors());
 
@@ -3127,7 +3102,7 @@ public class BigQueryImplTest {
     options.setThrowNotFound(true);
     bigquery = options.getService();
     BigQueryException ex =
-        Assertions.assertThrows(BigQueryException.class, () -> bigquery.getRoutine(ROUTINE_ID));
+        assertThrows(BigQueryException.class, () -> bigquery.getRoutine(ROUTINE_ID));
     assertEquals("Routine not found", ex.getMessage());
     verify(bigqueryRpcMock)
         .getRoutineSkipExceptionTranslation(PROJECT, DATASET, ROUTINE, EMPTY_RPC_OPTIONS);
@@ -3233,7 +3208,7 @@ public class BigQueryImplTest {
     writer = new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION);
     writer.close();
     assertEquals(job, writer.getJob());
-    bigquery.writer(LOAD_CONFIGURATION);
+    writer = bigquery.writer(LOAD_CONFIGURATION);
     verify(bigqueryRpcMock)
         .openSkipExceptionTranslation(
             new com.google.api.services.bigquery.model.Job()
@@ -3242,6 +3217,7 @@ public class BigQueryImplTest {
     verify(bigqueryRpcMock)
         .writeSkipExceptionTranslation(
             eq(UPLOAD_ID), capturedBuffer.capture(), eq(0), eq(0L), eq(0), eq(true));
+    writer.close();
   }
 
   @Test
@@ -3254,7 +3230,7 @@ public class BigQueryImplTest {
         .thenReturn(apiPolicy);
     bigquery = options.getService();
     Policy policy = bigquery.getIamPolicy(TABLE_ID);
-    assertEquals(policy, SAMPLE_IAM_POLICY);
+    assertEquals(SAMPLE_IAM_POLICY, policy);
     verify(bigqueryRpcMock).getIamPolicySkipExceptionTranslation(resourceId, EMPTY_RPC_OPTIONS);
   }
 
@@ -3269,7 +3245,7 @@ public class BigQueryImplTest {
         .thenReturn(apiPolicy);
     bigquery = options.getService();
     Policy returnedPolicy = bigquery.setIamPolicy(TABLE_ID, SAMPLE_IAM_POLICY);
-    assertEquals(returnedPolicy, SAMPLE_IAM_POLICY);
+    assertEquals(SAMPLE_IAM_POLICY, returnedPolicy);
     verify(bigqueryRpcMock)
         .setIamPolicySkipExceptionTranslation(resourceId, apiPolicy, EMPTY_RPC_OPTIONS);
   }

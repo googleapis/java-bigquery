@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-public class StandardSQLFieldTest {
+class StandardSQLFieldTest {
 
   private static final String NAME = "field_name";
   private static final StandardSQLDataType STRING_DATA_TYPE =
@@ -32,20 +32,20 @@ public class StandardSQLFieldTest {
       StandardSQLField.newBuilder(NAME, ARRAY_OF_STRING_DATA_TYPE).build();
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareStandardSQLField(STANDARD_SQL_FIELD_1, STANDARD_SQL_FIELD_1.toBuilder().build());
     compareStandardSQLField(STANDARD_SQL_FIELD_2, STANDARD_SQL_FIELD_2.toBuilder().build());
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertEquals(null, STANDARD_SQL_FIELD_1.getName());
     assertEquals(STRING_DATA_TYPE, STANDARD_SQL_FIELD_1.getDataType());
     assertEquals(ARRAY_OF_STRING_DATA_TYPE, STANDARD_SQL_FIELD_2.getDataType());
   }
 
   @Test
-  public void testToAndFromPb() {
+  void testToAndFromPb() {
     compareStandardSQLField(
         STANDARD_SQL_FIELD_1, StandardSQLField.fromPb(STANDARD_SQL_FIELD_1.toPb()));
   }

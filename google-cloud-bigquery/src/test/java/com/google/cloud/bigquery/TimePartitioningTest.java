@@ -17,7 +17,6 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -86,7 +85,6 @@ class TimePartitioningTest {
     assertNull(partitioning.getRequirePartitionFilter());
     assertNull(partitioning.getField());
     compareTimePartitioning(TIME_PARTITIONING_HOUR, TIME_PARTITIONING_HOUR.toBuilder().build());
-    assertNotEquals(TIME_PARTITIONING_DAY, TYPE_DAY);
   }
 
   @Test

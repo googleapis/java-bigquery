@@ -29,12 +29,11 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class ConnectionSettingsTest {
-  private static final String TEST_PROJECT_ID = "test-project-id";
   private static final DatasetId DATASET_ID = DatasetId.of("dataset");
   private static final TableId TABLE_ID = TableId.of("dataset", "table");
-  private static final Long REQUEST_TIMEOUT = 10l;
+  private static final Long REQUEST_TIMEOUT = 10L;
   private static final Integer NUM_BUFFERED_ROWS = 100;
-  private static final Long MAX_RESULTS = 1000l;
+  private static final Long MAX_RESULTS = 1000L;
   private static final List<String> SOURCE_URIS = ImmutableList.of("uri1", "uri2");
   private static final String KEY = "time_zone";
   private static final String VALUE = "US/Eastern";

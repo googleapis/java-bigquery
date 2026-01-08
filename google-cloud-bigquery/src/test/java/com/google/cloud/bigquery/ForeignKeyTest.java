@@ -17,7 +17,7 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -82,7 +82,7 @@ class ForeignKeyTest {
   @Test
   void testToAndFromPb() {
     ForeignKey foreignKey = FOREIGN_KEY.toBuilder().build();
-    assertTrue(ForeignKey.fromPb(foreignKey.toPb()) instanceof ForeignKey);
+    assertInstanceOf(ForeignKey.class, ForeignKey.fromPb(foreignKey.toPb()));
     compareForeignKeyDefinition(foreignKey, ForeignKey.fromPb(foreignKey.toPb()));
   }
 

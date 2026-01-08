@@ -51,7 +51,6 @@ import com.google.cloud.bigquery.TableInfo;
 import com.google.cloud.bigquery.testing.RemoteBigQueryHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
@@ -74,7 +73,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
 @Timeout(value = 1800) // 30 min timeout
-public class ITNightlyBigQueryTest {
+class ITNightlyBigQueryTest {
   private static final Logger logger = Logger.getLogger(ITNightlyBigQueryTest.class.getName());
   private static final String DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String TABLE =
@@ -174,16 +173,16 @@ public class ITNightlyBigQueryTest {
               .build());
 
   @BeforeAll
-  public static void beforeClass() throws InterruptedException, IOException {
+  static void beforeClass() {
     RemoteBigQueryHelper bigqueryHelper = RemoteBigQueryHelper.create();
     bigquery = bigqueryHelper.getOptions().getService();
     createDataset(DATASET);
-    createTable(DATASET, TABLE, BQ_SCHEMA);
+    createTable();
     populateTestRecords(DATASET, TABLE);
   }
 
   @AfterAll
-  public static void afterClass() {
+  static void afterClass() {
     try {
       if (bigquery != null) {
         deleteTable(DATASET, TABLE);
@@ -195,7 +194,7 @@ public class ITNightlyBigQueryTest {
   }
 
   @Test
-  public void testInvalidQuery() throws BigQuerySQLException {
+  void testInvalidQuery() throws BigQuerySQLException {
     Connection connection = getConnection();
     try {
       BigQuerySQLException ex =
@@ -211,7 +210,7 @@ public class ITNightlyBigQueryTest {
   This tests for the order of the records as well as the value of the records using testForAllDataTypeValues
    */
   @Test
-  public void testIterateAndOrder() throws SQLException {
+  void testIterateAndOrder() throws SQLException {
     Connection connection = getConnection();
     try {
       BigQueryResult bigQueryResult = connection.executeSelect(QUERY);
@@ -503,7 +502,7 @@ public class ITNightlyBigQueryTest {
   }
 
   @Test
-  // This testcase reads rows in bulk for a public table to make sure we do not get
+  // This testcase reads rows in bulk for a table to make sure we do not get
   // table-not-found exception. Ref: b/241134681 . This exception has been seen while reading data
   // in bulk
   void testForTableNotFound() throws SQLException {
@@ -582,7 +581,7 @@ public class ITNightlyBigQueryTest {
     }
 
     // BigNumeric, int and Numeric
-    assertTrue(10000000L + cnt == rs.getDouble("BigNumericField"));
+    assertEquals(10000000L + cnt, rs.getDouble("BigNumericField"));
     assertEquals(1 + cnt, rs.getInt("IntegerField"));
     assertEquals(100 + cnt, rs.getLong("NumericField"));
     // Test Byte field
@@ -638,10 +637,10 @@ public class ITNightlyBigQueryTest {
     }
   }
 
-  static void createTable(String datasetName, String tableName, Schema schema) {
+  static void createTable() {
     try {
-      TableId tableId = TableId.of(datasetName, tableName);
-      TableDefinition tableDefinition = StandardTableDefinition.of(schema);
+      TableId tableId = TableId.of(ITNightlyBigQueryTest.DATASET, ITNightlyBigQueryTest.TABLE);
+      TableDefinition tableDefinition = StandardTableDefinition.of(ITNightlyBigQueryTest.BQ_SCHEMA);
       TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build();
       Table table = bigquery.create(tableInfo);
       assertTrue(table.exists());

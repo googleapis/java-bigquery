@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-public class JobInfoTest {
+class JobInfoTest {
 
   private static final String ETAG = "etag";
   private static final String GENERATED_ID = "id";
@@ -111,7 +111,6 @@ public class JobInfoTest {
           .setCompression(COMPRESSION)
           .setFormat(FORMAT)
           .build();
-  private static final List<String> PROJECTION_FIELDS = ImmutableList.of("field1", "field2");
   private static final Integer MAX_BAD_RECORDS = 42;
   private static final Boolean IGNORE_UNKNOWN_VALUES = true;
   private static final CsvOptions CSV_OPTIONS = CsvOptions.newBuilder().build();
@@ -204,7 +203,7 @@ public class JobInfoTest {
           .build();
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareJobInfo(COPY_JOB, COPY_JOB.toBuilder().build());
     compareJobInfo(EXTRACT_JOB, EXTRACT_JOB.toBuilder().build());
     compareJobInfo(LOAD_JOB, LOAD_JOB.toBuilder().build());
@@ -228,7 +227,7 @@ public class JobInfoTest {
   }
 
   @Test
-  public void testOf() {
+  void testOf() {
     JobInfo job = JobInfo.of(COPY_CONFIGURATION);
     assertEquals(COPY_CONFIGURATION, job.getConfiguration());
     job = JobInfo.of(EXTRACT_CONFIGURATION);
@@ -252,13 +251,13 @@ public class JobInfoTest {
   }
 
   @Test
-  public void testToBuilderIncomplete() {
+  void testToBuilderIncomplete() {
     JobInfo job = JobInfo.of(COPY_CONFIGURATION);
     compareJobInfo(job, job.toBuilder().build());
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertEquals(ETAG, COPY_JOB.getEtag());
     assertEquals(GENERATED_ID, COPY_JOB.getGeneratedId());
     assertEquals(SELF_LINK, COPY_JOB.getSelfLink());
@@ -297,7 +296,7 @@ public class JobInfoTest {
   }
 
   @Test
-  public void testToPbAndFromPb() {
+  void testToPbAndFromPb() {
     assertNotNull(COPY_JOB.toPb().getConfiguration().getCopy());
     assertNull(COPY_JOB.toPb().getConfiguration().getExtract());
     assertNull(COPY_JOB.toPb().getConfiguration().getLoad());
@@ -334,7 +333,7 @@ public class JobInfoTest {
   }
 
   @Test
-  public void testSetProjectId() {
+  void testSetProjectId() {
     JobInfo jobInfo = COPY_JOB.setProjectId("p");
     assertEquals("p", jobInfo.getJobId().getProject());
     CopyJobConfiguration copyConfiguration = jobInfo.getConfiguration();

@@ -36,7 +36,7 @@ class StandardSQLStructTypeTest {
 
   @Test
   void testToBuilder() {
-    compareStandardSQLStructType(STRUCT_TYPE, STRUCT_TYPE.toBuilder().build());
+    compareStandardSQLStructType(STRUCT_TYPE.toBuilder().build());
   }
 
   @Test
@@ -47,13 +47,12 @@ class StandardSQLStructTypeTest {
 
   @Test
   void testToAndFromPb() {
-    compareStandardSQLStructType(STRUCT_TYPE, StandardSQLStructType.fromPb(STRUCT_TYPE.toPb()));
+    compareStandardSQLStructType(StandardSQLStructType.fromPb(STRUCT_TYPE.toPb()));
   }
 
-  private void compareStandardSQLStructType(
-      StandardSQLStructType expected, StandardSQLStructType value) {
-    assertEquals(expected, value);
-    assertEquals(expected.getFields(), value.getFields());
-    assertEquals(expected.hashCode(), value.hashCode());
+  private void compareStandardSQLStructType(StandardSQLStructType value) {
+    assertEquals(StandardSQLStructTypeTest.STRUCT_TYPE, value);
+    assertEquals(StandardSQLStructTypeTest.STRUCT_TYPE.getFields(), value.getFields());
+    assertEquals(StandardSQLStructTypeTest.STRUCT_TYPE.hashCode(), value.hashCode());
   }
 }

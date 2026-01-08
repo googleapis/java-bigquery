@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
-public class CloneDefinitionTest {
+class CloneDefinitionTest {
   private static final TableId BASE_TABLE_ID = TableId.of("DATASET_NAME", "BASE_TABLE_NAME");
   private static final String CLONE_TIME = "2021-05-19T11:32:26.553Z";
   private static final CloneDefinition CLONETABLE_DEFINITION =

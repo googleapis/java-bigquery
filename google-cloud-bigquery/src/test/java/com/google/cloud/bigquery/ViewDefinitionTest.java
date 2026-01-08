@@ -17,11 +17,10 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -44,15 +43,15 @@ class ViewDefinitionTest {
     compareViewDefinition(VIEW_DEFINITION, viewDefinition);
 
     viewDefinition = viewDefinition.toBuilder().setUseLegacySql(true).build();
-    assertTrue(viewDefinition.useLegacySql());
-    assertNotEquals(VIEW_DEFINITION, VIEW_QUERY);
+    assertEquals(Boolean.TRUE, viewDefinition.useLegacySql());
   }
 
   @Test
   void testTypeNullPointerException() {
+    ViewDefinition.Builder builder = VIEW_DEFINITION.toBuilder();
     NullPointerException ex =
         org.junit.jupiter.api.Assertions.assertThrows(
-            NullPointerException.class, () -> VIEW_DEFINITION.toBuilder().setType(null).build());
+            NullPointerException.class, () -> builder.setType(null));
     assertNotNull(ex.getMessage());
   }
 
@@ -76,7 +75,7 @@ class ViewDefinitionTest {
     assertEquals(VIEW_QUERY, viewDefinition.getQuery());
     assertEquals(TableDefinition.Type.VIEW, viewDefinition.getType());
     assertEquals(USER_DEFINED_FUNCTIONS, viewDefinition.getUserDefinedFunctions());
-    assertFalse(viewDefinition.useLegacySql());
+    assertNotEquals(Boolean.TRUE, viewDefinition.useLegacySql());
 
     viewDefinition =
         ViewDefinition.newBuilder(
@@ -87,25 +86,25 @@ class ViewDefinitionTest {
     assertEquals(VIEW_QUERY, viewDefinition.getQuery());
     assertEquals(TableDefinition.Type.VIEW, viewDefinition.getType());
     assertEquals(USER_DEFINED_FUNCTIONS, viewDefinition.getUserDefinedFunctions());
-    assertFalse(viewDefinition.useLegacySql());
+    assertNotEquals(Boolean.TRUE, viewDefinition.useLegacySql());
 
     viewDefinition = ViewDefinition.newBuilder(VIEW_QUERY).build();
     assertEquals(VIEW_QUERY, viewDefinition.getQuery());
     assertEquals(TableDefinition.Type.VIEW, viewDefinition.getType());
     assertNull(viewDefinition.getUserDefinedFunctions());
-    assertFalse(viewDefinition.useLegacySql());
+    assertNotEquals(Boolean.TRUE, viewDefinition.useLegacySql());
 
     viewDefinition = ViewDefinition.newBuilder(VIEW_QUERY).setUseLegacySql(true).build();
     assertEquals(VIEW_QUERY, viewDefinition.getQuery());
     assertEquals(TableDefinition.Type.VIEW, viewDefinition.getType());
     assertNull(viewDefinition.getUserDefinedFunctions());
-    assertTrue(viewDefinition.useLegacySql());
+    assertEquals(Boolean.TRUE, viewDefinition.useLegacySql());
   }
 
   @Test
   void testToAndFromPb() {
     ViewDefinition viewDefinition = VIEW_DEFINITION.toBuilder().setUseLegacySql(false).build();
-    assertTrue(TableDefinition.fromPb(viewDefinition.toPb()) instanceof ViewDefinition);
+    assertInstanceOf(ViewDefinition.class, TableDefinition.fromPb(viewDefinition.toPb()));
     compareViewDefinition(
         viewDefinition, TableDefinition.<ViewDefinition>fromPb(viewDefinition.toPb()));
   }

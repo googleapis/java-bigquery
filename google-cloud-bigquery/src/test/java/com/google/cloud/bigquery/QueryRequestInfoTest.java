@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-public class QueryRequestInfoTest {
+class QueryRequestInfoTest {
 
   private static final String QUERY = "BigQuery SQL";
   private static final DatasetId DATASET_ID = DatasetId.of("dataset");
@@ -106,8 +106,6 @@ public class QueryRequestInfoTest {
       QueryParameterValue.timestamp("2014-01-01 07:00:00.000000+00:00");
   private static final List<QueryParameterValue> POSITIONAL_PARAMETER =
       ImmutableList.of(STRING_PARAMETER, TIMESTAMP_PARAMETER);
-  private static final Map<String, QueryParameterValue> NAME_PARAMETER =
-      ImmutableMap.of("string", STRING_PARAMETER, "timestamp", TIMESTAMP_PARAMETER);
   private static final JobCreationMode jobCreationModeRequired =
       JobCreationMode.JOB_CREATION_REQUIRED;
   private static final String RESERVATION = "reservation";
@@ -140,7 +138,7 @@ public class QueryRequestInfoTest {
           .setJobCreationMode(jobCreationModeRequired)
           .setReservation(RESERVATION)
           .build();
-  QueryRequestInfo REQUEST_INFO =
+  private static final QueryRequestInfo REQUEST_INFO =
       new QueryRequestInfo(QUERY_JOB_CONFIGURATION, DataFormatOptions.newBuilder().build());
   private static final QueryJobConfiguration QUERY_JOB_CONFIGURATION_SUPPORTED =
       QueryJobConfiguration.newBuilder(QUERY)
@@ -156,28 +154,28 @@ public class QueryRequestInfoTest {
           .setMaxResults(100L)
           .setReservation(RESERVATION)
           .build();
-  QueryRequestInfo REQUEST_INFO_SUPPORTED =
+  private static final QueryRequestInfo REQUEST_INFO_SUPPORTED =
       new QueryRequestInfo(
           QUERY_JOB_CONFIGURATION_SUPPORTED, DataFormatOptions.newBuilder().build());
 
   @Test
-  public void testIsFastQuerySupported() {
+  void testIsFastQuerySupported() {
     JobId jobIdSupported = JobId.newBuilder().build();
     JobId jobIdNotSupported = JobId.newBuilder().setJob("random-job-id").build();
-    assertEquals(false, REQUEST_INFO.isFastQuerySupported(jobIdSupported));
-    assertEquals(true, REQUEST_INFO_SUPPORTED.isFastQuerySupported(jobIdSupported));
-    assertEquals(false, REQUEST_INFO.isFastQuerySupported(jobIdNotSupported));
-    assertEquals(false, REQUEST_INFO_SUPPORTED.isFastQuerySupported(jobIdNotSupported));
+    assertFalse(REQUEST_INFO.isFastQuerySupported(jobIdSupported));
+    assertTrue(REQUEST_INFO_SUPPORTED.isFastQuerySupported(jobIdSupported));
+    assertFalse(REQUEST_INFO.isFastQuerySupported(jobIdNotSupported));
+    assertFalse(REQUEST_INFO_SUPPORTED.isFastQuerySupported(jobIdNotSupported));
   }
 
   @Test
-  public void testToPb() {
+  void testToPb() {
     QueryRequest requestPb = REQUEST_INFO.toPb();
     assertEquals(requestPb, REQUEST_INFO.toPb());
   }
 
   @Test
-  public void equalTo() {
+  void equalTo() {
     compareQueryRequestInfo(
         new QueryRequestInfo(
             QUERY_JOB_CONFIGURATION_SUPPORTED, DataFormatOptions.newBuilder().build()),
@@ -188,7 +186,7 @@ public class QueryRequestInfoTest {
   }
 
   @Test
-  public void testInt64Timestamp() {
+  void testInt64Timestamp() {
     QueryRequestInfo requestInfo =
         new QueryRequestInfo(QUERY_JOB_CONFIGURATION, DataFormatOptions.newBuilder().build());
     QueryRequest requestPb = requestInfo.toPb();

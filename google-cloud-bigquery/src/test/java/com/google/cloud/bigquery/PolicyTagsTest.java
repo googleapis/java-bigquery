@@ -17,52 +17,49 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-public class PolicyTagsTest {
+class PolicyTagsTest {
 
   private static final List<String> POLICIES = ImmutableList.of("test/policy1", "test/policy2");
   private static final PolicyTags POLICY_TAGS = PolicyTags.newBuilder().setNames(POLICIES).build();
 
   @Test
-  public void testToBuilder() {
-    comparePolicyTags(POLICY_TAGS, POLICY_TAGS.toBuilder().build());
+  void testToBuilder() {
+    comparePolicyTags(POLICY_TAGS.toBuilder().build());
   }
 
   @Test
-  public void testToBuilderIncomplete() {
+  void testToBuilderIncomplete() {
     PolicyTags policyTags = PolicyTags.newBuilder().build();
-    assertEquals(policyTags, policyTags);
     assertEquals(policyTags, policyTags.toBuilder().build());
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertEquals(POLICIES, POLICY_TAGS.getNames());
-    assertNotEquals(POLICY_TAGS, POLICIES);
   }
 
   @Test
-  public void testWithoutNames() {
-    com.google.api.services.bigquery.model.TableFieldSchema.PolicyTags PARTIALTAG =
+  void testWithoutNames() {
+    com.google.api.services.bigquery.model.TableFieldSchema.PolicyTags partialTags =
         new com.google.api.services.bigquery.model.TableFieldSchema.PolicyTags();
-    assertNull(PolicyTags.fromPb(PARTIALTAG));
+    assertNull(PolicyTags.fromPb(partialTags));
   }
 
   @Test
-  public void testFromAndPb() {
+  void testFromAndPb() {
     assertEquals(POLICY_TAGS, PolicyTags.fromPb(POLICY_TAGS.toPb()));
   }
 
-  private void comparePolicyTags(PolicyTags expected, PolicyTags value) {
-    assertEquals(expected, value);
-    assertEquals(expected.getNames(), value.getNames());
-    assertEquals(expected.hashCode(), value.hashCode());
-    assertEquals(expected.toString(), value.toString());
+  private void comparePolicyTags(PolicyTags value) {
+    assertEquals(PolicyTagsTest.POLICY_TAGS, value);
+    assertEquals(PolicyTagsTest.POLICY_TAGS.getNames(), value.getNames());
+    assertEquals(PolicyTagsTest.POLICY_TAGS.hashCode(), value.hashCode());
+    assertEquals(PolicyTagsTest.POLICY_TAGS.toString(), value.toString());
   }
 }

@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-public class ConnectionPropertyTest {
+class ConnectionPropertyTest {
 
   private static final String KEY = "time_zone";
   private static final String VALUE = "US/Eastern";

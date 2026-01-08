@@ -16,8 +16,8 @@
 
 package com.google.cloud.bigquery;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -31,7 +31,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 import org.junit.jupiter.api.Test;
 
-public class StandardTableDefinitionTest {
+class StandardTableDefinitionTest {
 
   private static final Field FIELD_SCHEMA1 =
       Field.newBuilder("StringField", LegacySQLTypeName.STRING)
@@ -93,7 +93,7 @@ public class StandardTableDefinitionTest {
           .build();
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareStandardTableDefinition(TABLE_DEFINITION, TABLE_DEFINITION.toBuilder().build());
     StandardTableDefinition tableDefinition =
         TABLE_DEFINITION.toBuilder().setLocation("EU").build();
@@ -103,13 +103,13 @@ public class StandardTableDefinitionTest {
   }
 
   @Test
-  public void testToBuilderIncomplete() {
+  void testToBuilderIncomplete() {
     StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
     assertEquals(tableDefinition, tableDefinition.toBuilder().build());
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertEquals(TableDefinition.Type.TABLE, TABLE_DEFINITION.getType());
     assertEquals(TABLE_SCHEMA, TABLE_DEFINITION.getSchema());
     assertEquals(LOCATION, TABLE_DEFINITION.getLocation());
@@ -126,19 +126,17 @@ public class StandardTableDefinitionTest {
     assertEquals(STREAMING_BUFFER, TABLE_DEFINITION.getStreamingBuffer());
     assertEquals(TIME_PARTITIONING, TABLE_DEFINITION.getTimePartitioning());
     assertEquals(CLUSTERING, TABLE_DEFINITION.getClustering());
-    assertNotEquals(TABLE_DEFINITION, TableDefinition.Type.TABLE);
   }
 
   @Test
-  public void testTypeNullPointerException() {
-    NullPointerException ex =
-        assertThrows(
-            NullPointerException.class, () -> TABLE_DEFINITION.toBuilder().setType(null).build());
+  void testTypeNullPointerException() {
+    StandardTableDefinition.Builder builder = TABLE_DEFINITION.toBuilder();
+    NullPointerException ex = assertThrows(NullPointerException.class, () -> builder.setType(null));
     assertNotNull(ex.getMessage());
   }
 
   @Test
-  public void testOf() {
+  void testOf() {
     StandardTableDefinition definition = StandardTableDefinition.of(TABLE_SCHEMA);
     assertEquals(TableDefinition.Type.TABLE, TABLE_DEFINITION.getType());
     assertEquals(TABLE_SCHEMA, TABLE_DEFINITION.getSchema());
@@ -159,7 +157,7 @@ public class StandardTableDefinitionTest {
   }
 
   @Test
-  public void testToAndFromPb() {
+  void testToAndFromPb() {
     assertTrue(TableDefinition.fromPb(TABLE_DEFINITION.toPb()) instanceof StandardTableDefinition);
     compareStandardTableDefinition(
         TABLE_DEFINITION, TableDefinition.<StandardTableDefinition>fromPb(TABLE_DEFINITION.toPb()));
@@ -170,7 +168,7 @@ public class StandardTableDefinitionTest {
   }
 
   @Test
-  public void testFromPbWithUnexpectedTimePartitioningTypeRaisesInvalidArgumentException() {
+  void testFromPbWithUnexpectedTimePartitioningTypeRaisesInvalidArgumentException() {
     Table invalidTable =
         new Table()
             .setType("TABLE")
@@ -190,14 +188,15 @@ public class StandardTableDefinitionTest {
   }
 
   @Test
-  public void testFromPbWithNullEstimatedRowsAndBytes() {
-    StandardTableDefinition.fromPb(
-        TABLE_DEFINITION.toPb().setStreamingBuffer(new Streamingbuffer()));
+  void testFromPbWithNullEstimatedRowsAndBytes() {
+    Table tablePb = TABLE_DEFINITION.toPb().setStreamingBuffer(new Streamingbuffer());
+    assertDoesNotThrow(() -> StandardTableDefinition.fromPb(tablePb));
   }
 
   @Test
-  public void testStreamingBufferWithNullFieldsToPb() {
-    new StreamingBuffer(null, null, null).toPb();
+  void testStreamingBufferWithNullFieldsToPb() {
+    StreamingBuffer streamingBuffer = new StreamingBuffer(null, null, null);
+    assertDoesNotThrow(streamingBuffer::toPb);
   }
 
   private void compareStandardTableDefinition(

@@ -17,7 +17,7 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -105,7 +105,7 @@ class TableConstraintsTest {
   @Test
   void testToAndFromPb() {
     TableConstraints tableConstraints = TABLE_CONSTRAINTS.toBuilder().build();
-    assertTrue(TableConstraints.fromPb(tableConstraints.toPb()) instanceof TableConstraints);
+    assertInstanceOf(TableConstraints.class, TableConstraints.fromPb(tableConstraints.toPb()));
     compareTableConstraintsDefinition(
         tableConstraints, TableConstraints.fromPb(tableConstraints.toPb()));
   }

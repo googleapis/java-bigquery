@@ -24,7 +24,6 @@ import com.google.api.services.bigquery.model.QueryParameterType;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
 import java.math.BigDecimal;
-import java.text.ParseException;
 import java.time.Instant;
 import java.time.Period;
 import java.util.ArrayList;
@@ -35,7 +34,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.threeten.extra.PeriodDuration;
 
-public class QueryParameterValueTest {
+class QueryParameterValueTest {
 
   private static final QueryParameterValue QUERY_PARAMETER_VALUE =
       QueryParameterValue.newBuilder()
@@ -44,7 +43,7 @@ public class QueryParameterValueTest {
           .build();
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     QueryParameterValue value = QUERY_PARAMETER_VALUE.toBuilder().build();
     assertThat(value).isEqualTo(QUERY_PARAMETER_VALUE);
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.STRING);
@@ -56,16 +55,14 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testTypeNullPointerException() {
-    NullPointerException ex =
-        assertThrows(
-            NullPointerException.class,
-            () -> QUERY_PARAMETER_VALUE.toBuilder().setType(null).build());
+  void testTypeNullPointerException() {
+    QueryParameterValue.Builder builder = QUERY_PARAMETER_VALUE.toBuilder();
+    NullPointerException ex = assertThrows(NullPointerException.class, () -> builder.setType(null));
     assertThat(ex).isNotNull();
   }
 
   @Test
-  public void testBool() {
+  void testBool() {
     QueryParameterValue value = QueryParameterValue.bool(true);
     assertThat(value.getValue()).isEqualTo("true");
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.BOOL);
@@ -74,7 +71,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testInt64() {
+  void testInt64() {
     QueryParameterValue value = QueryParameterValue.int64(8L);
     assertThat(value.getValue()).isEqualTo("8");
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.INT64);
@@ -83,7 +80,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testInt64FromInteger() {
+  void testInt64FromInteger() {
     QueryParameterValue value = QueryParameterValue.int64(7);
     assertThat(value.getValue()).isEqualTo("7");
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.INT64);
@@ -92,7 +89,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testFloat64() {
+  void testFloat64() {
     QueryParameterValue value = QueryParameterValue.float64(1.2);
     assertThat(value.getValue()).isEqualTo("1.2");
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.FLOAT64);
@@ -101,7 +98,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testFloat64FromFloat() {
+  void testFloat64FromFloat() {
     QueryParameterValue value = QueryParameterValue.float64(1.2f);
     assertThat(value.getValue()).isEqualTo("1.2");
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.FLOAT64);
@@ -110,7 +107,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testNumeric() {
+  void testNumeric() {
     QueryParameterValue value = QueryParameterValue.numeric(new BigDecimal("123.456"));
     assertThat(value.getValue()).isEqualTo("123.456");
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.NUMERIC);
@@ -119,7 +116,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testBigNumeric() {
+  void testBigNumeric() {
     QueryParameterValue value =
         QueryParameterValue.bigNumeric(new BigDecimal("0.33333333333333333333333333333333333333"));
     QueryParameterValue value1 =
@@ -162,7 +159,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testString() {
+  void testString() {
     QueryParameterValue value = QueryParameterValue.string("foo");
     assertThat(value.getValue()).isEqualTo("foo");
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.STRING);
@@ -171,7 +168,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testGeography() {
+  void testGeography() {
     QueryParameterValue value = QueryParameterValue.geography("POINT(-122.350220 47.649154)");
     assertThat(value.getValue()).isEqualTo("POINT(-122.350220 47.649154)");
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.GEOGRAPHY);
@@ -180,7 +177,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testJson() {
+  void testJson() {
     QueryParameterValue value =
         QueryParameterValue.json("{\"class\" : {\"students\" : [{\"name\" : \"Jane\"}]}}");
     JsonObject jsonObject = new JsonObject();
@@ -198,7 +195,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testInterval() {
+  void testInterval() {
     QueryParameterValue value = QueryParameterValue.interval("123-7 -19 0:24:12.000006");
     QueryParameterValue value1 = QueryParameterValue.interval("P123Y7M-19DT0H24M12.000006S");
     QueryParameterValue value2 =
@@ -216,7 +213,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testBytes() {
+  void testBytes() {
     QueryParameterValue value = QueryParameterValue.bytes(new byte[] {1, 3});
     assertThat(value.getValue()).isEqualTo("AQM=");
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.BYTES);
@@ -225,7 +222,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testBoolArray() {
+  void testBoolArray() {
     QueryParameterValue value =
         QueryParameterValue.array(new Boolean[] {true, false}, Boolean.class);
     assertThat(value.getValue()).isNull();
@@ -236,7 +233,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testInt64Array() {
+  void testInt64Array() {
     QueryParameterValue value = QueryParameterValue.array(new Long[] {2L, 5L}, Long.class);
     assertThat(value.getValue()).isNull();
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.ARRAY);
@@ -246,7 +243,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testInt64ArrayFromIntegers() {
+  void testInt64ArrayFromIntegers() {
     QueryParameterValue value = QueryParameterValue.array(new Integer[] {2, 5}, Integer.class);
     assertThat(value.getValue()).isNull();
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.ARRAY);
@@ -256,7 +253,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testFloat64Array() {
+  void testFloat64Array() {
     QueryParameterValue value = QueryParameterValue.array(new Double[] {2.6, 5.4}, Double.class);
     assertThat(value.getValue()).isNull();
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.ARRAY);
@@ -266,7 +263,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testFloat64ArrayFromFloats() {
+  void testFloat64ArrayFromFloats() {
     QueryParameterValue value = QueryParameterValue.array(new Float[] {2.6f, 5.4f}, Float.class);
     assertThat(value.getValue()).isNull();
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.ARRAY);
@@ -276,7 +273,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testNumericArray() {
+  void testNumericArray() {
     QueryParameterValue value =
         QueryParameterValue.array(
             new BigDecimal[] {new BigDecimal("3.14"), new BigDecimal("1.59")}, BigDecimal.class);
@@ -288,7 +285,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testStringArray() {
+  void testStringArray() {
     QueryParameterValue value =
         QueryParameterValue.array(new String[] {"Ana", "Marv"}, String.class);
     assertThat(value.getValue()).isNull();
@@ -299,14 +296,14 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testTimestampFromLong() {
+  void testTimestampFromLong() {
     // Expects output to be ISO8601 string with microsecond precision
     assertTimestampValue(
         QueryParameterValue.timestamp(1408452095220000L), "2014-08-19 12:41:35.220000+00:00");
   }
 
   @Test
-  public void testTimestampWithFormatter() {
+  void testTimestampWithFormatter() {
     long timestampInMicroseconds = 1571068536842L * 1000 + 123;
     long microseconds = 1_000_000;
     long secs = Math.floorDiv(timestampInMicroseconds, microseconds);
@@ -317,7 +314,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testTimestampFromString() {
+  void testTimestampFromString() {
     assertTimestampValue(
         QueryParameterValue.timestamp("2014-08-19 12:41:35.220000+00:00"),
         "2014-08-19 12:41:35.220000+00:00");
@@ -346,7 +343,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testTimestampWithDateTimeFormatterBuilder() {
+  void testTimestampWithDateTimeFormatterBuilder() {
     assertTimestampValue(
         QueryParameterValue.timestamp("2019-02-14 12:34:45.938993Z"),
         "2019-02-14 12:34:45.938993Z");
@@ -359,7 +356,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testInvalidTimestampStringValues() {
+  void testInvalidTimestampStringValues() {
     assertThrows(IllegalArgumentException.class, () -> QueryParameterValue.timestamp("abc"));
 
     // missing the time
@@ -386,7 +383,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testDate() {
+  void testDate() {
     QueryParameterValue value = QueryParameterValue.date("2014-08-19");
     assertThat(value.getValue()).isEqualTo("2014-08-19");
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.DATE);
@@ -395,7 +392,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testStandardDate() throws ParseException {
+  void testStandardDate() {
     com.google.cloud.Date gcDate = com.google.cloud.Date.parseDate("2016-09-18");
     Date date = com.google.cloud.Date.toJavaUtilDate(gcDate);
     QueryParameterValue value = QueryParameterValue.of(date, Date.class);
@@ -406,7 +403,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testInvalidDate() {
+  void testInvalidDate() {
     // not supposed to have the time
     assertThrows(
         IllegalArgumentException.class,
@@ -414,7 +411,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testTime() {
+  void testTime() {
     QueryParameterValue value = QueryParameterValue.time("05:41:35.220000");
     assertThat(value.getValue()).isEqualTo("05:41:35.220000");
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.TIME);
@@ -423,7 +420,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testInvalidTime() {
+  void testInvalidTime() {
     // not supposed to have the date
     assertThrows(
         IllegalArgumentException.class,
@@ -431,7 +428,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testDateTime() {
+  void testDateTime() {
     QueryParameterValue value = QueryParameterValue.dateTime("2014-08-19 05:41:35.220000");
     assertThat(value.getValue()).isEqualTo("2014-08-19 05:41:35.220000");
     assertThat(value.getType()).isEqualTo(StandardSQLTypeName.DATETIME);
@@ -440,13 +437,13 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testInvalidDateTime() {
+  void testInvalidDateTime() {
     // missing the time
     assertThrows(IllegalArgumentException.class, () -> QueryParameterValue.dateTime("2014-08-19"));
   }
 
   @Test
-  public void testTimestampArrayFromLongs() {
+  void testTimestampArrayFromLongs() {
     QueryParameterValue value =
         QueryParameterValue.array(
             new Long[] {1408452095220000L, 1481041545110000L}, StandardSQLTypeName.TIMESTAMP);
@@ -460,7 +457,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testTimestampArray() {
+  void testTimestampArray() {
     QueryParameterValue value =
         QueryParameterValue.array(
             new String[] {"2014-08-19 12:41:35.220000+00:00", "2016-12-06 16:25:45.110000+00:00"},
@@ -475,7 +472,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testTimestampArrayWithDateTimeFormatterBuilder() {
+  void testTimestampArrayWithDateTimeFormatterBuilder() {
     QueryParameterValue value =
         QueryParameterValue.array(
             new String[] {
@@ -498,7 +495,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testFromEmptyArray() {
+  void testFromEmptyArray() {
     QueryParameterType typePb =
         new QueryParameterType()
             .setType("ARRAY")
@@ -512,7 +509,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testStruct() {
+  void testStruct() {
     QueryParameterValue booleanField = QueryParameterValue.bool(true);
     QueryParameterValue integerField = QueryParameterValue.int64(15);
     QueryParameterValue stringField = QueryParameterValue.string("test-string");
@@ -538,7 +535,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testNestedStruct() {
+  void testNestedStruct() {
     QueryParameterValue booleanField = QueryParameterValue.bool(true);
     QueryParameterValue integerField = QueryParameterValue.int64(15);
     QueryParameterValue stringField = QueryParameterValue.string("test-string");
@@ -574,7 +571,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testStructArray() {
+  void testStructArray() {
     Boolean[] boolValues = new Boolean[] {true, false};
     Integer[] intValues = new Integer[] {15, 20};
     String[] stringValues = new String[] {"test-string", "test-string2"};
@@ -630,7 +627,7 @@ public class QueryParameterValueTest {
   }
 
   @Test
-  public void testRange() {
+  void testRange() {
     testRangeDataEquals(null, null, FieldElementType.newBuilder().setType("DATE").build());
     testRangeDataEquals(null, "1971-02-03", FieldElementType.newBuilder().setType("DATE").build());
     testRangeDataEquals("1970-01-02", null, FieldElementType.newBuilder().setType("DATE").build());

@@ -17,7 +17,7 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import java.util.Arrays;
 import java.util.List;
@@ -45,7 +45,7 @@ class PrimaryKeyTest {
   @Test
   void testToAndFromPb() {
     PrimaryKey primaryKey = PRIMARY_KEY.toBuilder().build();
-    assertTrue(PrimaryKey.fromPb(primaryKey.toPb()) instanceof PrimaryKey);
+    assertInstanceOf(PrimaryKey.class, PrimaryKey.fromPb(primaryKey.toPb()));
     comparePrimaryKeyDefinition(primaryKey, PrimaryKey.fromPb(primaryKey.toPb()));
   }
 

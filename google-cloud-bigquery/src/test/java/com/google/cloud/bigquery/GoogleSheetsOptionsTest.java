@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-public class GoogleSheetsOptionsTest {
+class GoogleSheetsOptionsTest {
 
   private static final long SKIP_LEADING_ROWS = 42L;
   private static final String RANGE = "sheet1!A1:B20";
@@ -33,7 +33,7 @@ public class GoogleSheetsOptionsTest {
           .build();
 
   @Test
-  public void testToBuilder() {
+  void testToBuilder() {
     compareGoogleSheetsOptions(GOOGLE_SHEETS_OPTIONS, GOOGLE_SHEETS_OPTIONS.toBuilder().build());
     GoogleSheetsOptions googleSheetsOptions =
         GOOGLE_SHEETS_OPTIONS.toBuilder().setSkipLeadingRows(123).build();
@@ -59,13 +59,13 @@ public class GoogleSheetsOptionsTest {
   }
 
   @Test
-  public void testToBuilderIncomplete() {
+  void testToBuilderIncomplete() {
     GoogleSheetsOptions googleSheetsOptions = GoogleSheetsOptions.newBuilder().build();
     assertThat(googleSheetsOptions.toBuilder().build()).isEqualTo(googleSheetsOptions);
   }
 
   @Test
-  public void testBuilder() {
+  void testBuilder() {
     assertThat(GOOGLE_SHEETS_OPTIONS.getType()).isEqualTo(FormatOptions.GOOGLE_SHEETS);
     assertThat(GOOGLE_SHEETS_OPTIONS.getSkipLeadingRows()).isEqualTo(SKIP_LEADING_ROWS);
     assertThat(GOOGLE_SHEETS_OPTIONS_RANGE.getType()).isEqualTo(FormatOptions.GOOGLE_SHEETS);
@@ -74,7 +74,7 @@ public class GoogleSheetsOptionsTest {
   }
 
   @Test
-  public void testToAndFromPb() {
+  void testToAndFromPb() {
     compareGoogleSheetsOptions(
         GOOGLE_SHEETS_OPTIONS, GoogleSheetsOptions.fromPb(GOOGLE_SHEETS_OPTIONS.toPb()));
     GoogleSheetsOptions googleSheetsOptions = GoogleSheetsOptions.newBuilder().build();

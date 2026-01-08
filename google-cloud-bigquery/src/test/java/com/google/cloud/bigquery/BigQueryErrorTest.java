@@ -17,10 +17,11 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.junit.jupiter.api.Test;
 
-public class BigQueryErrorTest {
+class BigQueryErrorTest {
 
   private static final String REASON = "reason";
   private static final String LOCATION = "location";
@@ -39,7 +40,7 @@ public class BigQueryErrorTest {
     assertEquals(MESSAGE, ERROR.getMessage());
     assertEquals(REASON, ERROR_INCOMPLETE.getReason());
     assertEquals(LOCATION, ERROR_INCOMPLETE.getLocation());
-    assertEquals(null, ERROR_INCOMPLETE.getDebugInfo());
+    assertNull(ERROR_INCOMPLETE.getDebugInfo());
     assertEquals(MESSAGE, ERROR_INCOMPLETE.getMessage());
   }
 
