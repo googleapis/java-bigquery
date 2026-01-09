@@ -3505,6 +3505,8 @@ class ITBigQueryTest {
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
     Job job = bigquery.create(JobInfo.of(JobId.of(), config));
+    job = job.waitFor();
+    assertNotNull(job);
 
     TableResult result = job.getQueryResults();
     assertNotNull(result.getJobId());
@@ -3527,8 +3529,8 @@ class ITBigQueryTest {
     }
     assertEquals(2, rowCount);
 
-    Job job2 = bigquery.getJob(job.getJobId());
-    JobStatistics.QueryStatistics statistics = job2.getStatistics();
+    // Query Plan will exist for a completed job
+    JobStatistics.QueryStatistics statistics = job.getStatistics();
     assertNotNull(statistics.getQueryPlan());
   }
 
@@ -4685,10 +4687,15 @@ class ITBigQueryTest {
     TableResult result = bigquery.query(config);
     assertNotNull(result.getJobId());
     assertEquals(SIMPLE_SCHEMA, result.getSchema());
-    assertEquals(1, result.getTotalRows());
     assertNull(result.getNextPage());
     assertNull(result.getNextPageToken());
     assertFalse(result.hasNextPage());
+
+    // Use `getNumDmlAffectedRows()` for DML operations
+    Job queryJob = bigquery.getJob(result.getJobId());
+    JobStatistics.QueryStatistics statistics = queryJob.getStatistics();
+    assertEquals(1L, statistics.getNumDmlAffectedRows().longValue());
+
     // Verify correctness of table content
     for (FieldValueList row : result.getValues()) {
       FieldValue stringCell = row.get(0);
