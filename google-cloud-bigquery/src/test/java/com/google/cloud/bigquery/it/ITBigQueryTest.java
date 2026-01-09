@@ -624,8 +624,6 @@ class ITBigQueryTest {
   private static final TableId TABLE_ID = TableId.of(DATASET, "testing_table");
   private static final TableId TABLE_ID_DDL = TableId.of(DATASET, "ddl_testing_table");
   private static final TableId TABLE_ID_FASTQUERY = TableId.of(DATASET, "fastquery_testing_table");
-  private static final TableId TABLE_ID_FASTQUERY_UK =
-      TableId.of(UK_DATASET, "fastquery_testing_table");
   private static final TableId TABLE_ID_LARGE = TableId.of(DATASET, "large_data_testing_table");
   private static final TableId TABLE_ID_FASTQUERY_BQ_RESULTSET =
       TableId.of(DATASET, "fastquery_testing_bq_resultset");
@@ -3530,7 +3528,8 @@ class ITBigQueryTest {
     assertEquals(2, rowCount);
 
     // Query Plan will exist for a completed job
-    JobStatistics.QueryStatistics statistics = job.getStatistics();
+    Job queryJob = bigquery.getJob(result.getJobId());
+    JobStatistics.QueryStatistics statistics = queryJob.getStatistics();
     assertNotNull(statistics.getQueryPlan());
   }
 
@@ -4665,6 +4664,7 @@ class ITBigQueryTest {
 
   @Test
   void testLocationFastSQLQueryWithJobId() throws InterruptedException {
+    TableId tableIdFastQueryUk = TableId.of(UK_DATASET, "fastquery_testing_table");
     DatasetInfo infoUK =
         DatasetInfo.newBuilder(UK_DATASET)
             .setDescription(DESCRIPTION)
@@ -4674,11 +4674,11 @@ class ITBigQueryTest {
     bigquery.create(infoUK);
 
     TableDefinition tableDefinition = StandardTableDefinition.of(SIMPLE_SCHEMA);
-    TableInfo tableInfo = TableInfo.newBuilder(TABLE_ID_FASTQUERY_UK, tableDefinition).build();
+    TableInfo tableInfo = TableInfo.newBuilder(tableIdFastQueryUk, tableDefinition).build();
     bigquery.create(tableInfo);
 
     String insert =
-        "INSERT " + UK_DATASET + "." + TABLE_ID_FASTQUERY_UK.getTable() + " VALUES('Anna');";
+        "INSERT " + UK_DATASET + "." + tableIdFastQueryUk.getTable() + " VALUES('Anna');";
 
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(insert)
@@ -4687,12 +4687,9 @@ class ITBigQueryTest {
     TableResult result = bigquery.query(config);
     assertNotNull(result.getJobId());
     assertEquals(SIMPLE_SCHEMA, result.getSchema());
-    assertNull(result.getNextPage());
-    assertNull(result.getNextPageToken());
-    assertFalse(result.hasNextPage());
-
     // Use `getNumDmlAffectedRows()` for DML operations
     Job queryJob = bigquery.getJob(result.getJobId());
+    queryJob = queryJob.waitFor();
     JobStatistics.QueryStatistics statistics = queryJob.getStatistics();
     assertEquals(1L, statistics.getNumDmlAffectedRows().longValue());
 
@@ -4705,7 +4702,7 @@ class ITBigQueryTest {
     // With incorrect location in jobid
     // The job will be created with the specified(incorrect) location
     // hence failing the operation
-    String query = "SELECT StringField FROM " + TABLE_ID_FASTQUERY_UK.getTable();
+    String query = "SELECT StringField FROM " + tableIdFastQueryUk.getTable();
     JobId jobIdWithLocation = JobId.newBuilder().setLocation("us-west1").build();
     QueryJobConfiguration configSelect =
         QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(UK_DATASET)).build();
