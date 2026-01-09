@@ -3528,8 +3528,8 @@ class ITBigQueryTest {
     assertEquals(2, rowCount);
 
     // Query Plan will exist for a completed job
-    Job queryJob = bigquery.getJob(result.getJobId());
-    JobStatistics.QueryStatistics statistics = queryJob.getStatistics();
+    Job job2 = bigquery.getJob(job.getJobId());
+    JobStatistics.QueryStatistics statistics = job2.getStatistics();
     assertNotNull(statistics.getQueryPlan());
   }
 
