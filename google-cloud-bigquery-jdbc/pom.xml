@@ -74,14 +74,6 @@
       <artifactId>google-cloud-bigquerystorage</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.httpcomponents.core5</groupId>
-      <artifactId>httpcore5</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents.client5</groupId>
-      <artifactId>httpclient5</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.google.http-client</groupId>
       <artifactId>google-http-client-apache-v5</artifactId>
       <exclusions> <!-- Exclusions are here for removing EOL vulnerability -->
@@ -95,6 +87,7 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <!--  Test Dependencies  -->
     <dependency>
       <groupId>com.google.truth</groupId>
       <artifactId>truth</artifactId>
