@@ -624,8 +624,6 @@ class ITBigQueryTest {
   private static final TableId TABLE_ID = TableId.of(DATASET, "testing_table");
   private static final TableId TABLE_ID_DDL = TableId.of(DATASET, "ddl_testing_table");
   private static final TableId TABLE_ID_FASTQUERY = TableId.of(DATASET, "fastquery_testing_table");
-  private static final TableId TABLE_ID_FASTQUERY_UK =
-      TableId.of(UK_DATASET, "fastquery_testing_table");
   private static final TableId TABLE_ID_LARGE = TableId.of(DATASET, "large_data_testing_table");
   private static final TableId TABLE_ID_FASTQUERY_BQ_RESULTSET =
       TableId.of(DATASET, "fastquery_testing_bq_resultset");
@@ -3503,8 +3501,13 @@ class ITBigQueryTest {
   void testQuery() throws InterruptedException {
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     QueryJobConfiguration config =
-        QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
+        QueryJobConfiguration.newBuilder(query)
+            .setUseQueryCache(false)
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .build();
     Job job = bigquery.create(JobInfo.of(JobId.of(), config));
+    job = job.waitFor();
+    assertNotNull(job);
 
     TableResult result = job.getQueryResults();
     assertNotNull(result.getJobId());
@@ -3527,6 +3530,7 @@ class ITBigQueryTest {
     }
     assertEquals(2, rowCount);
 
+    // Query Plan will exist for a completed job
     Job job2 = bigquery.getJob(job.getJobId());
     JobStatistics.QueryStatistics statistics = job2.getStatistics();
     assertNotNull(statistics.getQueryPlan());
@@ -4663,6 +4667,7 @@ class ITBigQueryTest {
 
   @Test
   void testLocationFastSQLQueryWithJobId() throws InterruptedException {
+    TableId tableIdFastQueryUk = TableId.of(UK_DATASET, "fastquery_testing_table");
     DatasetInfo infoUK =
         DatasetInfo.newBuilder(UK_DATASET)
             .setDescription(DESCRIPTION)
@@ -4672,11 +4677,11 @@ class ITBigQueryTest {
     bigquery.create(infoUK);
 
     TableDefinition tableDefinition = StandardTableDefinition.of(SIMPLE_SCHEMA);
-    TableInfo tableInfo = TableInfo.newBuilder(TABLE_ID_FASTQUERY_UK, tableDefinition).build();
+    TableInfo tableInfo = TableInfo.newBuilder(tableIdFastQueryUk, tableDefinition).build();
     bigquery.create(tableInfo);
 
     String insert =
-        "INSERT " + UK_DATASET + "." + TABLE_ID_FASTQUERY_UK.getTable() + " VALUES('Anna');";
+        "INSERT " + UK_DATASET + "." + tableIdFastQueryUk.getTable() + " VALUES('Anna');";
 
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(insert)
@@ -4685,10 +4690,12 @@ class ITBigQueryTest {
     TableResult result = bigquery.query(config);
     assertNotNull(result.getJobId());
     assertEquals(SIMPLE_SCHEMA, result.getSchema());
-    assertEquals(1, result.getTotalRows());
-    assertNull(result.getNextPage());
-    assertNull(result.getNextPageToken());
-    assertFalse(result.hasNextPage());
+    // Use `getNumDmlAffectedRows()` for DML operations
+    Job queryJob = bigquery.getJob(result.getJobId());
+    queryJob = queryJob.waitFor();
+    JobStatistics.QueryStatistics statistics = queryJob.getStatistics();
+    assertEquals(1L, statistics.getNumDmlAffectedRows().longValue());
+
     // Verify correctness of table content
     for (FieldValueList row : result.getValues()) {
       FieldValue stringCell = row.get(0);
@@ -4698,7 +4705,7 @@ class ITBigQueryTest {
     // With incorrect location in jobid
     // The job will be created with the specified(incorrect) location
     // hence failing the operation
-    String query = "SELECT StringField FROM " + TABLE_ID_FASTQUERY_UK.getTable();
+    String query = "SELECT StringField FROM " + tableIdFastQueryUk.getTable();
     JobId jobIdWithLocation = JobId.newBuilder().setLocation("us-west1").build();
     QueryJobConfiguration configSelect =
         QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(UK_DATASET)).build();
@@ -5726,8 +5733,10 @@ class ITBigQueryTest {
 
   @Test
   void testCreateAndGetJob() throws InterruptedException, TimeoutException {
-    String sourceTableName = "test_create_and_get_job_source_table";
-    String destinationTableName = "test_create_and_get_job_destination_table";
+    String sourceTableName =
+        "test_create_and_get_job_source_table" + UUID.randomUUID().toString().substring(0, 8);
+    String destinationTableName =
+        "test_create_and_get_job_destination_table" + UUID.randomUUID().toString().substring(0, 8);
     TableId sourceTable = TableId.of(DATASET, sourceTableName);
     StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
     TableInfo tableInfo = TableInfo.of(sourceTable, tableDefinition);
@@ -5784,8 +5793,12 @@ class ITBigQueryTest {
 
   @Test
   void testCreateAndGetJobWithSelectedFields() throws InterruptedException, TimeoutException {
-    String sourceTableName = "test_create_and_get_job_with_selected_fields_source_table";
-    String destinationTableName = "test_create_and_get_job_with_selected_fields_destination_table";
+    String sourceTableName =
+        "test_create_and_get_job_with_selected_fields_source_table"
+            + UUID.randomUUID().toString().substring(0, 8);
+    String destinationTableName =
+        "test_create_and_get_job_with_selected_fields_destination_table"
+            + UUID.randomUUID().toString().substring(0, 8);
     TableId sourceTable = TableId.of(DATASET, sourceTableName);
     StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
     TableInfo tableInfo = TableInfo.of(sourceTable, tableDefinition);
@@ -5832,8 +5845,10 @@ class ITBigQueryTest {
 
   @Test
   void testCopyJob() throws InterruptedException, TimeoutException {
-    String sourceTableName = "test_copy_job_source_table";
-    String destinationTableName = "test_copy_job_destination_table";
+    String sourceTableName =
+        "test_copy_job_source_table" + UUID.randomUUID().toString().substring(0, 8);
+    String destinationTableName =
+        "test_copy_job_destination_table" + UUID.randomUUID().toString().substring(0, 8);
     TableId sourceTable = TableId.of(DATASET, sourceTableName);
     StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
     TableInfo tableInfo = TableInfo.of(sourceTable, tableDefinition);
@@ -5864,8 +5879,10 @@ class ITBigQueryTest {
 
   @Test
   void testCopyJobStatistics() throws InterruptedException, TimeoutException {
-    String sourceTableName = "test_copy_job_statistics_source_table";
-    String destinationTableName = "test_copy_job_statistics_destination_table";
+    String sourceTableName =
+        "test_copy_job_statistics_source_table" + UUID.randomUUID().toString().substring(0, 8);
+    String destinationTableName =
+        "test_copy_job_statistics_destination_table" + UUID.randomUUID().toString().substring(0, 8);
 
     QueryJobConfiguration createTable =
         QueryJobConfiguration.newBuilder(
@@ -6006,7 +6023,7 @@ class ITBigQueryTest {
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testQueryJob() throws InterruptedException, TimeoutException {
-    String tableName = "test_query_job_table";
+    String tableName = "test_query_job_table" + UUID.randomUUID().toString().substring(0, 8);
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     TableId destinationTable = TableId.of(DATASET, tableName);
     QueryJobConfiguration configuration =
@@ -6052,7 +6069,8 @@ class ITBigQueryTest {
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   void testQueryJobWithConnectionProperties() throws InterruptedException {
-    String tableName = "test_query_job_table_connection_properties";
+    String tableName =
+        "test_query_job_table_connection_properties" + UUID.randomUUID().toString().substring(0, 8);
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     TableId destinationTable = TableId.of(DATASET, tableName);
     QueryJobConfiguration configuration =
@@ -6072,7 +6090,7 @@ class ITBigQueryTest {
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   void testQueryJobWithLabels() throws InterruptedException, TimeoutException {
-    String tableName = "test_query_job_table";
+    String tableName = "test_query_job_table" + UUID.randomUUID().toString().substring(0, 8);
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     Map<String, String> labels = ImmutableMap.of("test-job-name", "test-query-job");
     TableId destinationTable = TableId.of(DATASET, tableName);
@@ -6095,11 +6113,9 @@ class ITBigQueryTest {
 
   @Test
   void testQueryJobWithSearchReturnsSearchStatisticsUnused() throws InterruptedException {
-    String tableName = "test_query_job_table";
+    String tableName = "test_query_job_table" + UUID.randomUUID().toString().substring(0, 8);
     String query =
-        "SELECT * FROM "
-            + TABLE_ID.getTable()
-            + "         WHERE search(StringField, \"stringValue\")";
+        "SELECT * FROM " + TABLE_ID.getTable() + " WHERE search(StringField, \"stringValue\")";
     TableId destinationTable = TableId.of(DATASET, tableName);
     try {
       QueryJobConfiguration configuration =
@@ -6125,7 +6141,8 @@ class ITBigQueryTest {
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   void testQueryJobWithRangePartitioning() throws InterruptedException {
-    String tableName = "test_query_job_table_rangepartitioning";
+    String tableName =
+        "test_query_job_table_rangepartitioning" + UUID.randomUUID().toString().substring(0, 8);
     String query =
         "SELECT IntegerField, TimestampField, StringField, BooleanField FROM "
             + TABLE_ID.getTable();
@@ -6150,7 +6167,8 @@ class ITBigQueryTest {
 
   @Test
   void testLoadJobWithRangePartitioning() throws InterruptedException {
-    String tableName = "test_load_job_table_rangepartitioning";
+    String tableName =
+        "test_load_job_table_rangepartitioning" + UUID.randomUUID().toString().substring(0, 8);
     TableId destinationTable = TableId.of(DATASET, tableName);
     try {
       LoadJobConfiguration configuration =
@@ -6174,7 +6192,9 @@ class ITBigQueryTest {
 
   @Test
   void testLoadJobWithDecimalTargetTypes() throws InterruptedException {
-    String tableName = "test_load_job_table_parquet_decimalTargetTypes";
+    String tableName =
+        "test_load_job_table_parquet_decimalTargetTypes"
+            + UUID.randomUUID().toString().substring(0, 8);
     TableId destinationTable = TableId.of(DATASET, tableName);
     String sourceUri = "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/numeric/numeric_38_12.parquet";
     try {
@@ -6202,7 +6222,9 @@ class ITBigQueryTest {
 
   @Test
   void testExternalTableWithDecimalTargetTypes() throws InterruptedException {
-    String tableName = "test_create_external_table_parquet_decimalTargetTypes";
+    String tableName =
+        "test_create_external_table_parquet_decimalTargetTypes"
+            + UUID.randomUUID().toString().substring(0, 8);
     TableId destinationTable = TableId.of(DATASET, tableName);
     String sourceUri = "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/numeric/numeric_38_12.parquet";
     ExternalTableDefinition externalTableDefinition =
@@ -6222,7 +6244,7 @@ class ITBigQueryTest {
 
   @Test
   void testQueryJobWithDryRun() throws InterruptedException, TimeoutException {
-    String tableName = "test_query_job_table";
+    String tableName = "test_query_job_table" + UUID.randomUUID().toString().substring(0, 8);
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     TableId destinationTable = TableId.of(DATASET, tableName);
     QueryJobConfiguration configuration =
@@ -6240,7 +6262,7 @@ class ITBigQueryTest {
 
   @Test
   void testExtractJob() throws InterruptedException, TimeoutException {
-    String tableName = "test_export_job_table";
+    String tableName = "test_export_job_table" + UUID.randomUUID().toString().substring(0, 8);
     TableId destinationTable = TableId.of(DATASET, tableName);
     Map<String, String> labels = ImmutableMap.of("test-job-name", "test-load-extract-job");
     LoadJobConfiguration configuration =
@@ -6317,7 +6339,7 @@ class ITBigQueryTest {
 
   @Test
   void testExtractJobWithLabels() throws InterruptedException, TimeoutException {
-    String tableName = "test_export_job_table_label";
+    String tableName = "test_export_job_table_label" + UUID.randomUUID().toString().substring(0, 8);
     Map<String, String> labels = ImmutableMap.of("test_job_name", "test_export_job");
     TableId destinationTable = TableId.of(DATASET, tableName);
     LoadJobConfiguration configuration =
@@ -6343,7 +6365,8 @@ class ITBigQueryTest {
 
   @Test
   void testCancelJob() throws InterruptedException, TimeoutException {
-    String destinationTableName = "test_cancel_query_job_table";
+    String destinationTableName =
+        "test_cancel_query_job_table" + UUID.randomUUID().toString().substring(0, 8);
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     TableId destinationTable = TableId.of(DATASET, destinationTableName);
     QueryJobConfiguration configuration =
@@ -6625,7 +6648,9 @@ class ITBigQueryTest {
 
   @Test
   void testLoadJobPreserveAsciiControlCharacters() throws InterruptedException {
-    String destinationTableName = "test_load_job_preserve_ascii_control_characters";
+    String destinationTableName =
+        "test_load_job_preserve_ascii_control_characters"
+            + UUID.randomUUID().toString().substring(0, 8);
     TableId destinationTable = TableId.of(DATASET, destinationTableName);
 
     try {

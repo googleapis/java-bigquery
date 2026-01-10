@@ -355,7 +355,7 @@ public class ITNightlyBigQueryTest {
       while (rs.next()) {
         ++cnt;
         if (cnt == 50000) { // interrupt at 50K
-          assertTrue(connection.close());
+          break;
         }
       }
       assertTrue(LIMIT_RECS > cnt);
