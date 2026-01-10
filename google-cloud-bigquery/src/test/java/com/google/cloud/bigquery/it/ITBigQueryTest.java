@@ -3501,7 +3501,10 @@ class ITBigQueryTest {
   void testQuery() throws InterruptedException {
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     QueryJobConfiguration config =
-        QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
+        QueryJobConfiguration.newBuilder(query)
+            .setUseQueryCache(false)
+            .setDefaultDataset(DatasetId.of(DATASET))
+            .build();
     Job job = bigquery.create(JobInfo.of(JobId.of(), config));
     job = job.waitFor();
     assertNotNull(job);
