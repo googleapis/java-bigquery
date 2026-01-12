@@ -4657,7 +4657,6 @@ class ITBigQueryTest {
   @Test
   void testProjectIDFastSQLQueryWithJobId() throws InterruptedException {
     String invalidProjectId = "RANDOM_PROJECT_" + UUID.randomUUID().toString().replace('-', '_');
-    System.out.println(invalidProjectId);
     String query =
         "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID_FAST_QUERY.getTable();
     // With incorrect projectID in jobid
@@ -4670,7 +4669,7 @@ class ITBigQueryTest {
       bigquery.query(configSelect, jobIdWithProjectId);
     } catch (Exception exception) {
       // error message for non-existent project
-      assertTrue(exception.getMessage().contains("Cannot parse as CloudRegion"));
+      assertEquals("Cannot parse  as CloudRegion.", exception.getMessage());
       assertEquals(BigQueryException.class, exception.getClass());
     }
   }
