@@ -3510,6 +3510,8 @@ class ITBigQueryTest {
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     QueryJobConfiguration config =
         QueryJobConfiguration.newBuilder(query)
+            // Disable the cache as query plans do not exist from cached results
+            // This will force generation of execution plan
             .setUseQueryCache(false)
             .setDefaultDataset(DatasetId.of(DATASET))
             .build();
