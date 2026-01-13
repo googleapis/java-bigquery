@@ -17,7 +17,7 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import org.junit.jupiter.api.Test;
 
@@ -47,7 +47,7 @@ class CloneDefinitionTest {
   @Test
   void testToAndFromPb() {
     CloneDefinition cloneDefinition = CLONETABLE_DEFINITION.toBuilder().build();
-    assertTrue(CloneDefinition.fromPb(cloneDefinition.toPb()) instanceof CloneDefinition);
+    assertInstanceOf(CloneDefinition.class, CloneDefinition.fromPb(cloneDefinition.toPb()));
     compareCloneTableDefinition(cloneDefinition, CloneDefinition.fromPb(cloneDefinition.toPb()));
   }
 

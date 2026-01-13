@@ -241,9 +241,9 @@ class BigQueryExceptionTest {
         .createSkipExceptionTranslation(datasetPb, optionsMap);
     bigquery = mockOptionsAbort.getService();
     try {
-      dataset = bigquery.create(info);
+      bigquery.create(info);
     } catch (BigQueryException e) {
-      assertEquals(e.getCause().getClass(), RuntimeException.class);
+      assertEquals(RuntimeException.class, e.getCause().getClass());
       assertNull(dataset);
     } finally {
       verify(bigQueryRpcAbortMock, times(1)).createSkipExceptionTranslation(datasetPb, optionsMap);

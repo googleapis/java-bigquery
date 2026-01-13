@@ -709,7 +709,7 @@ class BigQueryImplTest {
   @Test
   void testListDatasets() throws IOException {
     bigquery = options.getService();
-    ImmutableList<Dataset> datasetList =
+    List<Dataset> datasetList =
         ImmutableList.of(
             new Dataset(bigquery, new DatasetInfo.BuilderImpl(DATASET_INFO_WITH_PROJECT)),
             new Dataset(bigquery, new DatasetInfo.BuilderImpl(OTHER_DATASET_INFO)));
@@ -727,7 +727,7 @@ class BigQueryImplTest {
   @Test
   void testListDatasetsWithProjects() throws IOException {
     bigquery = options.getService();
-    ImmutableList<Dataset> datasetList =
+    List<Dataset> datasetList =
         ImmutableList.of(
             new Dataset(
                 bigquery, new DatasetInfo.BuilderImpl(DATASET_INFO.setProjectId(OTHER_PROJECT))));
@@ -744,7 +744,7 @@ class BigQueryImplTest {
 
   @Test
   void testListEmptyDatasets() throws IOException {
-    ImmutableList<com.google.api.services.bigquery.model.Dataset> datasets = ImmutableList.of();
+    List<com.google.api.services.bigquery.model.Dataset> datasets = ImmutableList.of();
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Dataset>> result =
         Tuple.<String, Iterable<com.google.api.services.bigquery.model.Dataset>>of(null, datasets);
     when(bigqueryRpcMock.listDatasetsSkipExceptionTranslation(PROJECT, EMPTY_RPC_OPTIONS))
@@ -760,7 +760,7 @@ class BigQueryImplTest {
   @Test
   void testListDatasetsWithOptions() throws IOException {
     bigquery = options.getService();
-    ImmutableList<Dataset> datasetList =
+    List<Dataset> datasetList =
         ImmutableList.of(
             new Dataset(bigquery, new DatasetInfo.BuilderImpl(DATASET_INFO_WITH_PROJECT)),
             new Dataset(bigquery, new DatasetInfo.BuilderImpl(OTHER_DATASET_INFO)));
@@ -1075,7 +1075,7 @@ class BigQueryImplTest {
   @Test
   void testListTables() throws IOException {
     bigquery = options.getService();
-    ImmutableList<Table> tableList =
+    List<Table> tableList =
         ImmutableList.of(
             new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO_WITH_PROJECT)),
             new Table(bigquery, new TableInfo.BuilderImpl(OTHER_TABLE_INFO)),
@@ -1093,7 +1093,7 @@ class BigQueryImplTest {
   @Test
   void testListTablesReturnedParameters() throws IOException {
     bigquery = options.getService();
-    ImmutableList<Table> tableList =
+    List<Table> tableList =
         ImmutableList.of(
             new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO_WITH_PARTITIONS)));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Table>> result =
@@ -1110,7 +1110,7 @@ class BigQueryImplTest {
   @Test
   void testListTablesReturnedParametersNullType() throws IOException {
     bigquery = options.getService();
-    ImmutableList<Table> tableList =
+    List<Table> tableList =
         ImmutableList.of(
             new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO_WITH_PARTITIONS_NULL_TYPE)));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Table>> result =
@@ -1127,7 +1127,7 @@ class BigQueryImplTest {
   @Test
   void testListTablesWithRangePartitioning() throws IOException {
     bigquery = options.getService();
-    ImmutableList<Table> tableList =
+    List<Table> tableList =
         ImmutableList.of(
             new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO_RANGE_PARTITIONING)));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Table>> result =
@@ -1161,7 +1161,7 @@ class BigQueryImplTest {
   @Test
   void testListTablesFromDatasetIdWithProject() throws IOException {
     bigquery = options.getService();
-    ImmutableList<Table> tableList =
+    List<Table> tableList =
         ImmutableList.of(
             new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO.setProjectId(OTHER_PROJECT))));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Table>> result =
@@ -1179,7 +1179,7 @@ class BigQueryImplTest {
   @Test
   void testListTablesWithLabels() throws IOException {
     bigquery = options.getService();
-    ImmutableList<Table> tableList =
+    List<Table> tableList =
         ImmutableList.of(
             new Table(bigquery, new TableInfo.BuilderImpl(OTHER_TABLE_WITH_LABELS_INFO)));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Table>> result =
@@ -1196,7 +1196,7 @@ class BigQueryImplTest {
   @Test
   void testListTablesWithOptions() throws IOException {
     bigquery = options.getService();
-    ImmutableList<Table> tableList =
+    List<Table> tableList =
         ImmutableList.of(
             new Table(bigquery, new TableInfo.BuilderImpl(TABLE_INFO_WITH_PROJECT)),
             new Table(bigquery, new TableInfo.BuilderImpl(OTHER_TABLE_INFO)));
@@ -1214,7 +1214,7 @@ class BigQueryImplTest {
   @Test
   void testListModels() throws IOException {
     bigquery = options.getService();
-    ImmutableList<Model> modelList =
+    List<Model> modelList =
         ImmutableList.of(
             new Model(bigquery, new ModelInfo.BuilderImpl(MODEL_INFO_WITH_PROJECT)),
             new Model(bigquery, new ModelInfo.BuilderImpl(OTHER_MODEL_INFO)));
@@ -1231,7 +1231,7 @@ class BigQueryImplTest {
   @Test
   void testListModelsWithModelId() throws IOException {
     bigquery = options.getService();
-    ImmutableList<Model> modelList =
+    List<Model> modelList =
         ImmutableList.of(
             new Model(bigquery, new ModelInfo.BuilderImpl(MODEL_INFO_WITH_PROJECT)),
             new Model(bigquery, new ModelInfo.BuilderImpl(OTHER_MODEL_INFO)));
@@ -2124,7 +2124,7 @@ class BigQueryImplTest {
   @Test
   void testListJobs() throws IOException {
     bigquery = options.getService();
-    ImmutableList<Job> jobList =
+    List<Job> jobList =
         ImmutableList.of(
             new Job(bigquery, new JobInfo.BuilderImpl(COMPLETE_QUERY_JOB)),
             new Job(bigquery, new JobInfo.BuilderImpl(COMPLETE_LOAD_JOB)));
@@ -2150,7 +2150,7 @@ class BigQueryImplTest {
   @Test
   void testListJobsWithOptions() throws IOException {
     bigquery = options.getService();
-    ImmutableList<Job> jobList =
+    List<Job> jobList =
         ImmutableList.of(
             new Job(bigquery, new JobInfo.BuilderImpl(COMPLETE_QUERY_JOB)),
             new Job(bigquery, new JobInfo.BuilderImpl(COMPLETE_LOAD_JOB)));
@@ -2178,7 +2178,7 @@ class BigQueryImplTest {
   @Test
   void testListJobsWithSelectedFields() throws IOException {
     bigquery = options.getService();
-    ImmutableList<Job> jobList =
+    List<Job> jobList =
         ImmutableList.of(
             new Job(bigquery, new JobInfo.BuilderImpl(COMPLETE_QUERY_JOB)),
             new Job(bigquery, new JobInfo.BuilderImpl(COMPLETE_LOAD_JOB)));
@@ -2755,8 +2755,8 @@ class BigQueryImplTest {
             QUERY_RESULTS_OPTION_INDEX,
             QUERY_RESULTS_OPTION_PAGE_SIZE,
             QUERY_RESULTS_OPTION_PAGE_TOKEN);
-    assertEquals(true, response.getCompleted());
-    assertEquals(null, response.getSchema());
+    assertTrue(response.getCompleted());
+    assertNull(response.getSchema());
     verify(bigqueryRpcMock)
         .getQueryResultsSkipExceptionTranslation(PROJECT, JOB, null, QUERY_RESULTS_OPTIONS);
   }
@@ -3129,7 +3129,7 @@ class BigQueryImplTest {
   @Test
   void testListRoutines() throws IOException {
     bigquery = options.getService();
-    ImmutableList<Routine> routineList =
+    List<Routine> routineList =
         ImmutableList.of(new Routine(bigquery, new RoutineInfo.BuilderImpl(ROUTINE_INFO)));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Routine>> result =
         Tuple.of(CURSOR, Iterables.transform(routineList, RoutineInfo.TO_PB_FUNCTION));
@@ -3145,7 +3145,7 @@ class BigQueryImplTest {
   @Test
   void testListRoutinesWithDatasetId() throws IOException {
     bigquery = options.getService();
-    ImmutableList<Routine> routineList =
+    List<Routine> routineList =
         ImmutableList.of(new Routine(bigquery, new RoutineInfo.BuilderImpl(ROUTINE_INFO)));
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Routine>> result =
         Tuple.of(CURSOR, Iterables.transform(routineList, RoutineInfo.TO_PB_FUNCTION));
@@ -3182,15 +3182,16 @@ class BigQueryImplTest {
     writer = new TableDataWriteChannel(options, JOB_INFO.getJobId(), LOAD_CONFIGURATION);
     writer.close();
     assertEquals(job, writer.getJob());
-    bigquery.writer(JOB_INFO.getJobId(), LOAD_CONFIGURATION);
-    verify(bigqueryRpcMock)
-        .openSkipExceptionTranslation(
-            new com.google.api.services.bigquery.model.Job()
-                .setJobReference(JOB_INFO.getJobId().toPb())
-                .setConfiguration(LOAD_CONFIGURATION.toPb()));
-    verify(bigqueryRpcMock)
-        .writeSkipExceptionTranslation(
-            eq(UPLOAD_ID), capturedBuffer.capture(), eq(0), eq(0L), eq(0), eq(true));
+    try (TableDataWriteChannel ignored = bigquery.writer(JOB_INFO.getJobId(), LOAD_CONFIGURATION)) {
+      verify(bigqueryRpcMock)
+          .openSkipExceptionTranslation(
+              new com.google.api.services.bigquery.model.Job()
+                  .setJobReference(JOB_INFO.getJobId().toPb())
+                  .setConfiguration(LOAD_CONFIGURATION.toPb()));
+      verify(bigqueryRpcMock)
+          .writeSkipExceptionTranslation(
+              eq(UPLOAD_ID), capturedBuffer.capture(), eq(0), eq(0L), eq(0), eq(true));
+    }
   }
 
   @Test

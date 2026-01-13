@@ -37,7 +37,7 @@ class StandardSQLTableTypeTest {
 
   @Test
   void testToBuilder() {
-    compareStandardSQLTableType(TABLE_TYPE, TABLE_TYPE.toBuilder().build());
+    compareStandardSQLTableType(TABLE_TYPE.toBuilder().build());
   }
 
   @Test
@@ -48,13 +48,12 @@ class StandardSQLTableTypeTest {
 
   @Test
   void testToAndFromPb() {
-    compareStandardSQLTableType(TABLE_TYPE, StandardSQLTableType.fromPb(TABLE_TYPE.toPb()));
+    compareStandardSQLTableType(StandardSQLTableType.fromPb(TABLE_TYPE.toPb()));
   }
 
-  private void compareStandardSQLTableType(
-      StandardSQLTableType expected, StandardSQLTableType value) {
-    assertEquals(expected, value);
-    assertEquals(expected.getColumns(), value.getColumns());
-    assertEquals(expected.hashCode(), value.hashCode());
+  private void compareStandardSQLTableType(StandardSQLTableType value) {
+    assertEquals(StandardSQLTableTypeTest.TABLE_TYPE, value);
+    assertEquals(StandardSQLTableTypeTest.TABLE_TYPE.getColumns(), value.getColumns());
+    assertEquals(StandardSQLTableTypeTest.TABLE_TYPE.hashCode(), value.hashCode());
   }
 }

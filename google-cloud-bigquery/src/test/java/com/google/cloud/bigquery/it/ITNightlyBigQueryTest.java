@@ -178,7 +178,7 @@ class ITNightlyBigQueryTest {
     bigquery = bigqueryHelper.getOptions().getService();
     createDataset(DATASET);
     createTable();
-    populateTestRecords(DATASET, TABLE);
+    populateTestRecords();
   }
 
   @AfterAll
@@ -226,13 +226,13 @@ class ITNightlyBigQueryTest {
           Object intAryField = rs.getObject("IntegerArrayField");
           if (intAryField instanceof JsonStringArrayList) {
             assertEquals(
-                new JsonStringArrayList(),
-                ((JsonStringArrayList) intAryField)); // null array is returned as an empty array
+                new JsonStringArrayList<>(),
+                intAryField); // null array is returned as an empty array
           }
           assertFalse(rs.getBoolean("BooleanField"));
-          assertTrue(0.0d == rs.getDouble("BigNumericField"));
-          assertTrue(0 == rs.getInt("IntegerField"));
-          assertTrue(0L == rs.getLong("NumericField"));
+          assertEquals(0.0d, rs.getDouble("BigNumericField"));
+          assertEquals(0, rs.getInt("IntegerField"));
+          assertEquals(0L, rs.getLong("NumericField"));
           assertNull(rs.getBytes("BytesField"));
           assertNull(rs.getTimestamp("TimestampField"));
           assertNull(rs.getTime("TimeField"));
@@ -293,13 +293,13 @@ class ITNightlyBigQueryTest {
           Object intAryField = rs.getObject("IntegerArrayField");
           if (intAryField instanceof JsonStringArrayList) {
             assertEquals(
-                new JsonStringArrayList(),
-                ((JsonStringArrayList) intAryField)); // null array is returned as an empty array
+                new JsonStringArrayList<>(),
+                intAryField); // null array is returned as an empty array
           }
           assertFalse(rs.getBoolean("BooleanField"));
-          assertTrue(0.0d == rs.getDouble("BigNumericField"));
-          assertTrue(0 == rs.getInt("IntegerField"));
-          assertTrue(0L == rs.getLong("NumericField"));
+          assertEquals(0.0d, rs.getDouble("BigNumericField"));
+          assertEquals(0, rs.getInt("IntegerField"));
+          assertEquals(0L, rs.getLong("NumericField"));
           assertNull(rs.getBytes("BytesField"));
           assertNull(rs.getTimestamp("TimestampField"));
           assertNull(rs.getTime("TimeField"));
@@ -386,13 +386,13 @@ class ITNightlyBigQueryTest {
           Object intAryField = rs.getObject("IntegerArrayField");
           if (intAryField instanceof JsonStringArrayList) {
             assertEquals(
-                new JsonStringArrayList(),
-                ((JsonStringArrayList) intAryField)); // null array is returned as an empty array
+                new JsonStringArrayList<>(),
+                intAryField); // null array is returned as an empty array
           }
           assertFalse(rs.getBoolean("BooleanField"));
-          assertTrue(0.0d == rs.getDouble("BigNumericField"));
-          assertTrue(0 == rs.getInt("IntegerField"));
-          assertTrue(0L == rs.getLong("NumericField"));
+          assertEquals(0.0d, rs.getDouble("BigNumericField"));
+          assertEquals(0, rs.getInt("IntegerField"));
+          assertEquals(0L, rs.getLong("NumericField"));
           assertNull(rs.getBytes("BytesField"));
           assertNull(rs.getTimestamp("TimestampField"));
           assertNull(rs.getTime("TimeField"));
@@ -431,13 +431,13 @@ class ITNightlyBigQueryTest {
           Object intAryField = rs.getObject("IntegerArrayField");
           if (intAryField instanceof JsonStringArrayList) {
             assertEquals(
-                new JsonStringArrayList(),
-                ((JsonStringArrayList) intAryField)); // null array is returned as an empty array
+                new JsonStringArrayList<>(),
+                intAryField); // null array is returned as an empty array
           }
           assertFalse(rs.getBoolean("BooleanField"));
-          assertTrue(0.0d == rs.getDouble("BigNumericField"));
-          assertTrue(0 == rs.getInt("IntegerField"));
-          assertTrue(0L == rs.getLong("NumericField"));
+          assertEquals(0.0d, rs.getDouble("BigNumericField"));
+          assertEquals(0, rs.getInt("IntegerField"));
+          assertEquals(0L, rs.getLong("NumericField"));
           assertNull(rs.getBytes("BytesField"));
           assertNull(rs.getTimestamp("TimestampField"));
           assertNull(rs.getTime("TimeField"));
@@ -573,7 +573,8 @@ class ITNightlyBigQueryTest {
 
     // Array type tests
     if (rs.getObject("IntegerArrayField") instanceof JsonStringArrayList) {
-      JsonStringArrayList<BigDecimal> ary = (JsonStringArrayList) rs.getObject("IntegerArrayField");
+      JsonStringArrayList<BigDecimal> ary =
+          (JsonStringArrayList<BigDecimal>) rs.getObject("IntegerArrayField");
       assertEquals(3, ary.size());
       assertEquals(1, ary.get(0).intValue());
       assertEquals(2, ary.get(1).intValue());
@@ -605,8 +606,8 @@ class ITNightlyBigQueryTest {
         rs.getTime("TimeField").getTime());
   }
 
-  private static void populateTestRecords(String datasetName, String tableName) {
-    TableId tableId = TableId.of(datasetName, tableName);
+  private static void populateTestRecords() {
+    TableId tableId = TableId.of(ITNightlyBigQueryTest.DATASET, ITNightlyBigQueryTest.TABLE);
     for (int batchCnt = 1; batchCnt <= NUM_BATCHES; batchCnt++) {
       addBatchRecords(tableId);
     }

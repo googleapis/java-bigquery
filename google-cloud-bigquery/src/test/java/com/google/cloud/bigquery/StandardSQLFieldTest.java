@@ -16,6 +16,7 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.junit.jupiter.api.Test;
 
@@ -39,7 +40,7 @@ class StandardSQLFieldTest {
 
   @Test
   void testBuilder() {
-    assertEquals(null, STANDARD_SQL_FIELD_1.getName());
+    assertNull(STANDARD_SQL_FIELD_1.getName());
     assertEquals(STRING_DATA_TYPE, STANDARD_SQL_FIELD_1.getDataType());
     assertEquals(ARRAY_OF_STRING_DATA_TYPE, STANDARD_SQL_FIELD_2.getDataType());
   }

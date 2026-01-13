@@ -61,8 +61,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class ConnectionImplTest {
-  private BigQueryOptions options;
-  private BigQueryRpcFactory rpcFactoryMock;
   private HttpBigQueryRpc bigqueryRpcMock;
   private BigQuery bigquery;
   private ConnectionImpl connection;
@@ -143,10 +141,10 @@ class ConnectionImplTest {
 
   @BeforeEach
   void setUp() {
-    rpcFactoryMock = mock(BigQueryRpcFactory.class);
+    BigQueryRpcFactory rpcFactoryMock = mock(BigQueryRpcFactory.class);
     bigqueryRpcMock = mock(HttpBigQueryRpc.class);
     when(rpcFactoryMock.create(any(BigQueryOptions.class))).thenReturn(bigqueryRpcMock);
-    options = createBigQueryOptionsForProject(PROJECT, rpcFactoryMock);
+    BigQueryOptions options = createBigQueryOptionsForProject(PROJECT, rpcFactoryMock);
     bigquery = options.getService();
 
     connectionSettings =

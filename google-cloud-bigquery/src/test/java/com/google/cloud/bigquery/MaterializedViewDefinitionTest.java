@@ -17,7 +17,7 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import com.google.common.collect.ImmutableList;
 import org.junit.jupiter.api.Test;
@@ -85,9 +85,9 @@ class MaterializedViewDefinitionTest {
   void testToAndFromPb() {
     MaterializedViewDefinition materializedViewDefinition =
         MATERIALIZED_VIEW_DEFINITION.toBuilder().build();
-    assertTrue(
-        TableDefinition.fromPb(materializedViewDefinition.toPb())
-            instanceof MaterializedViewDefinition);
+    assertInstanceOf(
+        MaterializedViewDefinition.class,
+        TableDefinition.fromPb(materializedViewDefinition.toPb()));
     compareMaterializedView(
         materializedViewDefinition,
         TableDefinition.<MaterializedViewDefinition>fromPb(materializedViewDefinition.toPb()));

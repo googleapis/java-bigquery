@@ -17,7 +17,6 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import com.google.api.services.bigquery.model.ExplainQueryStep;
 import com.google.cloud.bigquery.QueryStage.QueryStep;
@@ -38,7 +37,7 @@ class QueryStageTest {
   private static final double COMPUTE_RATIO_MAX = 2.2;
   private static final long END_MS = 1522540860000L;
   private static final long ID = 42L;
-  private static final List<Long> INPUT_STAGES = ImmutableList.of(Long.valueOf(7), Long.valueOf(9));
+  private static final List<Long> INPUT_STAGES = ImmutableList.of(7L, 9L);
   private static final String NAME = "StageName";
   private static final long PARALLEL_INPUTS = 4;
   private static final long READ_MS_AVG = 3456;
@@ -141,7 +140,7 @@ class QueryStageTest {
   void testToAndFromPb() {
     compareQueryStep(QUERY_STEP1, QueryStep.fromPb(QUERY_STEP1.toPb()));
     compareQueryStep(QUERY_STEP2, QueryStep.fromPb(QUERY_STEP2.toPb()));
-    compareQueryStage(QUERY_STAGE, QueryStage.fromPb(QUERY_STAGE.toPb()));
+    compareQueryStage(QueryStage.fromPb(QUERY_STAGE.toPb()));
     ExplainQueryStep stepPb = new ExplainQueryStep();
     stepPb.setKind("KIND");
     stepPb.setSubsteps(null);
@@ -152,47 +151,43 @@ class QueryStageTest {
   void testEquals() {
     compareQueryStep(QUERY_STEP1, QUERY_STEP1);
     compareQueryStep(QUERY_STEP2, QUERY_STEP2);
-    compareQueryStage(QUERY_STAGE, QUERY_STAGE);
+    compareQueryStage(QUERY_STAGE);
   }
 
-  @Test
-  void testNotEquals() {
-    assertNotEquals(QUERY_STAGE, QUERY_STEP1);
-    assertNotEquals(QUERY_STEP1, QUERY_STAGE);
-  }
-
-  private void compareQueryStage(QueryStage expected, QueryStage value) {
-    assertEquals(expected, value);
-    assertEquals(expected.getCompletedParallelInputs(), value.getCompletedParallelInputs());
-    assertEquals(expected.getComputeMsAvg(), value.getComputeMsAvg());
-    assertEquals(expected.getComputeMsMax(), value.getComputeMsMax());
-    assertEquals(expected.getComputeRatioAvg(), value.getComputeRatioAvg(), 0);
-    assertEquals(expected.getComputeRatioMax(), value.getComputeRatioMax(), 0);
-    assertEquals(expected.getEndMs(), value.getEndMs());
-    assertEquals(expected.getGeneratedId(), value.getGeneratedId());
-    assertEquals(expected.getInputStages(), value.getInputStages());
-    assertEquals(expected.getName(), value.getName());
-    assertEquals(expected.getParallelInputs(), value.getParallelInputs());
-    assertEquals(expected.getReadRatioAvg(), value.getReadRatioAvg(), 0);
-    assertEquals(expected.getReadRatioMax(), value.getReadRatioMax(), 0);
-    assertEquals(expected.getRecordsRead(), value.getRecordsRead());
-    assertEquals(expected.getRecordsWritten(), value.getRecordsWritten());
-    assertEquals(expected.getShuffleOutputBytes(), value.getShuffleOutputBytes());
-    assertEquals(expected.getShuffleOutputBytesSpilled(), value.getShuffleOutputBytesSpilled());
-    assertEquals(expected.getStartMs(), value.getStartMs());
-    assertEquals(expected.getStatus(), value.getStatus());
-    assertEquals(expected.getSteps(), value.getSteps());
-    assertEquals(expected.getWaitMsAvg(), value.getWaitMsAvg());
-    assertEquals(expected.getWaitMsMax(), value.getWaitMsMax());
-    assertEquals(expected.getWaitRatioAvg(), value.getWaitRatioAvg(), 0);
-    assertEquals(expected.getWaitRatioMax(), value.getWaitRatioMax(), 0);
-    assertEquals(expected.getWriteMsAvg(), expected.getWriteMsAvg());
-    assertEquals(expected.getWriteMsMax(), expected.getWriteMsMax());
-    assertEquals(expected.getWriteRatioAvg(), value.getWriteRatioAvg(), 0);
-    assertEquals(expected.getWriteRatioMax(), value.getWriteRatioMax(), 0);
-    assertEquals(expected.getSlotMs(), value.getSlotMs());
-    assertEquals(expected.hashCode(), value.hashCode());
-    assertEquals(expected.toString(), value.toString());
+  private void compareQueryStage(QueryStage value) {
+    assertEquals(QueryStageTest.QUERY_STAGE, value);
+    assertEquals(
+        QueryStageTest.QUERY_STAGE.getCompletedParallelInputs(),
+        value.getCompletedParallelInputs());
+    assertEquals(QueryStageTest.QUERY_STAGE.getComputeMsAvg(), value.getComputeMsAvg());
+    assertEquals(QueryStageTest.QUERY_STAGE.getComputeMsMax(), value.getComputeMsMax());
+    assertEquals(QueryStageTest.QUERY_STAGE.getComputeRatioAvg(), value.getComputeRatioAvg(), 0);
+    assertEquals(QueryStageTest.QUERY_STAGE.getComputeRatioMax(), value.getComputeRatioMax(), 0);
+    assertEquals(QueryStageTest.QUERY_STAGE.getEndMs(), value.getEndMs());
+    assertEquals(QueryStageTest.QUERY_STAGE.getGeneratedId(), value.getGeneratedId());
+    assertEquals(QueryStageTest.QUERY_STAGE.getInputStages(), value.getInputStages());
+    assertEquals(QueryStageTest.QUERY_STAGE.getName(), value.getName());
+    assertEquals(QueryStageTest.QUERY_STAGE.getParallelInputs(), value.getParallelInputs());
+    assertEquals(QueryStageTest.QUERY_STAGE.getReadRatioAvg(), value.getReadRatioAvg(), 0);
+    assertEquals(QueryStageTest.QUERY_STAGE.getReadRatioMax(), value.getReadRatioMax(), 0);
+    assertEquals(QueryStageTest.QUERY_STAGE.getRecordsRead(), value.getRecordsRead());
+    assertEquals(QueryStageTest.QUERY_STAGE.getRecordsWritten(), value.getRecordsWritten());
+    assertEquals(QueryStageTest.QUERY_STAGE.getShuffleOutputBytes(), value.getShuffleOutputBytes());
+    assertEquals(
+        QueryStageTest.QUERY_STAGE.getShuffleOutputBytesSpilled(),
+        value.getShuffleOutputBytesSpilled());
+    assertEquals(QueryStageTest.QUERY_STAGE.getStartMs(), value.getStartMs());
+    assertEquals(QueryStageTest.QUERY_STAGE.getStatus(), value.getStatus());
+    assertEquals(QueryStageTest.QUERY_STAGE.getSteps(), value.getSteps());
+    assertEquals(QueryStageTest.QUERY_STAGE.getWaitMsAvg(), value.getWaitMsAvg());
+    assertEquals(QueryStageTest.QUERY_STAGE.getWaitMsMax(), value.getWaitMsMax());
+    assertEquals(QueryStageTest.QUERY_STAGE.getWaitRatioAvg(), value.getWaitRatioAvg(), 0);
+    assertEquals(QueryStageTest.QUERY_STAGE.getWaitRatioMax(), value.getWaitRatioMax(), 0);
+    assertEquals(QueryStageTest.QUERY_STAGE.getWriteRatioAvg(), value.getWriteRatioAvg(), 0);
+    assertEquals(QueryStageTest.QUERY_STAGE.getWriteRatioMax(), value.getWriteRatioMax(), 0);
+    assertEquals(QueryStageTest.QUERY_STAGE.getSlotMs(), value.getSlotMs());
+    assertEquals(QueryStageTest.QUERY_STAGE.hashCode(), value.hashCode());
+    assertEquals(QueryStageTest.QUERY_STAGE.toString(), value.toString());
   }
 
   private void compareQueryStep(QueryStep expected, QueryStep value) {

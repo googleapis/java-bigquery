@@ -18,6 +18,7 @@ package com.google.cloud.bigquery;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.google.cloud.bigquery.JobStatistics.CopyStatistics;
 import com.google.cloud.bigquery.JobStatistics.ExtractStatistics;
@@ -325,25 +326,25 @@ class JobStatisticsTest {
     assertEquals(INPUT_BYTES, LOAD_STATISTICS_INCOMPLETE.getInputBytes());
     assertEquals(INPUT_FILES, LOAD_STATISTICS_INCOMPLETE.getInputFiles());
     assertEquals(BAD_RECORDS, LOAD_STATISTICS_INCOMPLETE.getBadRecords());
-    assertEquals(null, LOAD_STATISTICS_INCOMPLETE.getOutputBytes());
-    assertEquals(null, LOAD_STATISTICS_INCOMPLETE.getOutputRows());
+    assertNull(LOAD_STATISTICS_INCOMPLETE.getOutputBytes());
+    assertNull(LOAD_STATISTICS_INCOMPLETE.getOutputRows());
 
     assertEquals(CREATION_TIME, QUERY_STATISTICS_INCOMPLETE.getCreationTime());
     assertEquals(START_TIME, QUERY_STATISTICS_INCOMPLETE.getStartTime());
     assertEquals(END_TIME, QUERY_STATISTICS_INCOMPLETE.getEndTime());
     assertEquals(BILLING_TIER, QUERY_STATISTICS_INCOMPLETE.getBillingTier());
     assertEquals(CACHE_HIT, QUERY_STATISTICS_INCOMPLETE.getCacheHit());
-    assertEquals(null, QUERY_STATISTICS_INCOMPLETE.getDdlOperationPerformed());
-    assertEquals(null, QUERY_STATISTICS_INCOMPLETE.getDdlTargetTable());
-    assertEquals(null, QUERY_STATISTICS_INCOMPLETE.getDdlTargetRoutine());
-    assertEquals(null, QUERY_STATISTICS_INCOMPLETE.getEstimatedBytesProcessed());
-    assertEquals(null, QUERY_STATISTICS_INCOMPLETE.getNumDmlAffectedRows());
-    assertEquals(null, QUERY_STATISTICS_INCOMPLETE.getTotalBytesBilled());
-    assertEquals(null, QUERY_STATISTICS_INCOMPLETE.getTotalBytesProcessed());
-    assertEquals(null, QUERY_STATISTICS_INCOMPLETE.getTotalPartitionsProcessed());
-    assertEquals(null, QUERY_STATISTICS_INCOMPLETE.getTotalSlotMs());
-    assertEquals(null, QUERY_STATISTICS_INCOMPLETE.getReferencedTables());
-    assertEquals(null, QUERY_STATISTICS_INCOMPLETE.getQueryPlan());
+    assertNull(QUERY_STATISTICS_INCOMPLETE.getDdlOperationPerformed());
+    assertNull(QUERY_STATISTICS_INCOMPLETE.getDdlTargetTable());
+    assertNull(QUERY_STATISTICS_INCOMPLETE.getDdlTargetRoutine());
+    assertNull(QUERY_STATISTICS_INCOMPLETE.getEstimatedBytesProcessed());
+    assertNull(QUERY_STATISTICS_INCOMPLETE.getNumDmlAffectedRows());
+    assertNull(QUERY_STATISTICS_INCOMPLETE.getTotalBytesBilled());
+    assertNull(QUERY_STATISTICS_INCOMPLETE.getTotalBytesProcessed());
+    assertNull(QUERY_STATISTICS_INCOMPLETE.getTotalPartitionsProcessed());
+    assertNull(QUERY_STATISTICS_INCOMPLETE.getTotalSlotMs());
+    assertNull(QUERY_STATISTICS_INCOMPLETE.getReferencedTables());
+    assertNull(QUERY_STATISTICS_INCOMPLETE.getQueryPlan());
 
     assertEquals(EVALUATIONKIND_TYPE_STATEMENT, STATEMENT_SCRIPT_STATISTICS.getEvaluationKind());
     assertEquals(
@@ -359,9 +360,8 @@ class JobStatisticsTest {
 
   @Test
   void testToPbAndFromPb() {
-    compareExtractStatistics(
-        EXTRACT_STATISTICS, ExtractStatistics.fromPb(EXTRACT_STATISTICS.toPb()));
-    compareCopyStatistics(COPY_STATISTICS, CopyStatistics.fromPb(COPY_STATISTICS.toPb()));
+    compareExtractStatistics(ExtractStatistics.fromPb(EXTRACT_STATISTICS.toPb()));
+    compareCopyStatistics(CopyStatistics.fromPb(COPY_STATISTICS.toPb()));
     compareLoadStatistics(LOAD_STATISTICS, LoadStatistics.fromPb(LOAD_STATISTICS.toPb()));
     compareQueryStatistics(QUERY_STATISTICS, QueryStatistics.fromPb(QUERY_STATISTICS.toPb()));
     compareStatistics(COPY_STATISTICS, CopyStatistics.fromPb(COPY_STATISTICS.toPb()));
@@ -380,9 +380,9 @@ class JobStatisticsTest {
     for (ScriptStackFrame stackFrame : EXPRESSION_SCRIPT_STATISTICS.getStackFrames()) {
       compareStackFrames(stackFrame, ScriptStackFrame.fromPb(stackFrame.toPb()));
     }
-    compareReservation(RESERVATION_USAGE, ReservationUsage.fromPb(RESERVATION_USAGE.toPb()));
-    compareTransactionInfo(TRANSACTION_INFO, TransactionInfo.fromPb(TRANSACTION_INFO.toPb()));
-    compareSessionInfo(SESSION_INFO, SessionInfo.fromPb(SESSION_INFO.toPb()));
+    compareReservation(ReservationUsage.fromPb(RESERVATION_USAGE.toPb()));
+    compareTransactionInfo(TransactionInfo.fromPb(TRANSACTION_INFO.toPb()));
+    compareSessionInfo(SessionInfo.fromPb(SESSION_INFO.toPb()));
   }
 
   @Test
@@ -421,18 +421,21 @@ class JobStatisticsTest {
     assertThat(jobStatistics).isInstanceOf(QueryStatistics.class);
   }
 
-  private void compareExtractStatistics(ExtractStatistics expected, ExtractStatistics value) {
-    assertEquals(expected, value);
-    compareStatistics(expected, value);
-    assertEquals(expected.getDestinationUriFileCounts(), value.getDestinationUriFileCounts());
-    assertEquals(expected.getInputBytes(), value.getInputBytes());
+  private void compareExtractStatistics(ExtractStatistics value) {
+    assertEquals(JobStatisticsTest.EXTRACT_STATISTICS, value);
+    compareStatistics(JobStatisticsTest.EXTRACT_STATISTICS, value);
+    assertEquals(
+        JobStatisticsTest.EXTRACT_STATISTICS.getDestinationUriFileCounts(),
+        value.getDestinationUriFileCounts());
+    assertEquals(JobStatisticsTest.EXTRACT_STATISTICS.getInputBytes(), value.getInputBytes());
   }
 
-  private void compareCopyStatistics(CopyStatistics expected, CopyStatistics value) {
-    assertEquals(expected, value);
-    compareStatistics(expected, value);
-    assertEquals(expected.getCopiedLogicalBytes(), value.getCopiedLogicalBytes());
-    assertEquals(expected.getCopiedRows(), value.getCopiedRows());
+  private void compareCopyStatistics(CopyStatistics value) {
+    assertEquals(JobStatisticsTest.COPY_STATISTICS, value);
+    compareStatistics(JobStatisticsTest.COPY_STATISTICS, value);
+    assertEquals(
+        JobStatisticsTest.COPY_STATISTICS.getCopiedLogicalBytes(), value.getCopiedLogicalBytes());
+    assertEquals(JobStatisticsTest.COPY_STATISTICS.getCopiedRows(), value.getCopiedRows());
   }
 
   private void compareLoadStatistics(LoadStatistics expected, LoadStatistics value) {
@@ -503,28 +506,28 @@ class JobStatisticsTest {
     assertEquals(expected.getText(), value.getText());
   }
 
-  private void compareReservation(ReservationUsage expected, ReservationUsage value) {
-    assertEquals(expected, value);
-    assertEquals(expected.hashCode(), value.hashCode());
-    assertEquals(expected.toString(), value.toString());
-    assertEquals(expected.toPb(), value.toPb());
-    assertEquals(expected.getName(), value.getName());
-    assertEquals(expected.getSlotMs(), value.getSlotMs());
+  private void compareReservation(ReservationUsage value) {
+    assertEquals(JobStatisticsTest.RESERVATION_USAGE, value);
+    assertEquals(JobStatisticsTest.RESERVATION_USAGE.hashCode(), value.hashCode());
+    assertEquals(JobStatisticsTest.RESERVATION_USAGE.toString(), value.toString());
+    assertEquals(JobStatisticsTest.RESERVATION_USAGE.toPb(), value.toPb());
+    assertEquals(JobStatisticsTest.RESERVATION_USAGE.getName(), value.getName());
+    assertEquals(JobStatisticsTest.RESERVATION_USAGE.getSlotMs(), value.getSlotMs());
   }
 
-  private void compareTransactionInfo(TransactionInfo expected, TransactionInfo value) {
-    assertEquals(expected, value);
-    assertEquals(expected.hashCode(), value.hashCode());
-    assertEquals(expected.toString(), value.toString());
-    assertEquals(expected.toPb(), value.toPb());
-    assertEquals(expected.getTransactionId(), value.getTransactionId());
+  private void compareTransactionInfo(TransactionInfo value) {
+    assertEquals(JobStatisticsTest.TRANSACTION_INFO, value);
+    assertEquals(JobStatisticsTest.TRANSACTION_INFO.hashCode(), value.hashCode());
+    assertEquals(JobStatisticsTest.TRANSACTION_INFO.toString(), value.toString());
+    assertEquals(JobStatisticsTest.TRANSACTION_INFO.toPb(), value.toPb());
+    assertEquals(JobStatisticsTest.TRANSACTION_INFO.getTransactionId(), value.getTransactionId());
   }
 
-  private void compareSessionInfo(SessionInfo expected, SessionInfo value) {
-    assertEquals(expected, value);
-    assertEquals(expected.hashCode(), value.hashCode());
-    assertEquals(expected.toString(), value.toString());
-    assertEquals(expected.toPb(), value.toPb());
-    assertEquals(expected.getSessionId(), value.getSessionId());
+  private void compareSessionInfo(SessionInfo value) {
+    assertEquals(JobStatisticsTest.SESSION_INFO, value);
+    assertEquals(JobStatisticsTest.SESSION_INFO.hashCode(), value.hashCode());
+    assertEquals(JobStatisticsTest.SESSION_INFO.toString(), value.toString());
+    assertEquals(JobStatisticsTest.SESSION_INFO.toPb(), value.toPb());
+    assertEquals(JobStatisticsTest.SESSION_INFO.getSessionId(), value.getSessionId());
   }
 }

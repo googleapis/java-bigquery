@@ -18,10 +18,10 @@ package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.api.services.bigquery.model.Streamingbuffer;
 import com.google.api.services.bigquery.model.Table;
@@ -158,11 +158,12 @@ class StandardTableDefinitionTest {
 
   @Test
   void testToAndFromPb() {
-    assertTrue(TableDefinition.fromPb(TABLE_DEFINITION.toPb()) instanceof StandardTableDefinition);
+    assertInstanceOf(
+        StandardTableDefinition.class, TableDefinition.fromPb(TABLE_DEFINITION.toPb()));
     compareStandardTableDefinition(
         TABLE_DEFINITION, TableDefinition.<StandardTableDefinition>fromPb(TABLE_DEFINITION.toPb()));
     StandardTableDefinition definition = StandardTableDefinition.of(TABLE_SCHEMA);
-    assertTrue(TableDefinition.fromPb(definition.toPb()) instanceof StandardTableDefinition);
+    assertInstanceOf(StandardTableDefinition.class, TableDefinition.fromPb(definition.toPb()));
     compareStandardTableDefinition(
         definition, TableDefinition.<StandardTableDefinition>fromPb(definition.toPb()));
   }

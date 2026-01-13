@@ -45,8 +45,7 @@ class ColumnReferenceTest {
     assertEquals("column1", COLUMN_REFERENCE.getReferencingColumn());
     assertEquals("column2", COLUMN_REFERENCE.getReferencedColumn());
     ColumnReference columnReference =
-        COLUMN_REFERENCE
-            .newBuilder()
+        ColumnReference.newBuilder()
             .setReferencingColumn("column1")
             .setReferencedColumn("column2")
             .build();

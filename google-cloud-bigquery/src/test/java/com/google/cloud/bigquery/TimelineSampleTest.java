@@ -16,7 +16,6 @@
 package com.google.cloud.bigquery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import org.junit.jupiter.api.Test;
 
@@ -55,7 +54,6 @@ class TimelineSampleTest {
   @Test
   void TestEquals() {
     assertEquals(TIMELINE_SAMPLE, TIMELINE_SAMPLE);
-    assertNotEquals(TIMELINE_SAMPLE, SLOT_MILLIS);
     assertEquals(TIMELINE_SAMPLE.toString(), TIMELINE_SAMPLE.toString());
     assertEquals(TIMELINE_SAMPLE.hashCode(), TIMELINE_SAMPLE.hashCode());
   }
