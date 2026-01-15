@@ -1,4 +1,3 @@
-SECRET=`cat $(GOOGLE_APPLICATION_CREDENTIALS)`
 CONTAINER_NAME=jdbc
 PACKAGE_DESTINATION=$(PWD)/drivers
 SRC="$(PWD)/.."
@@ -85,7 +84,7 @@ generate-dependency-list:
 		-e "GOOGLE_APPLICATION_CREDENTIALS=/auth/application_creds.json" \
 		-v $(SRC):/src \
 		-e "SA_EMAIL=test_email" \
-		-e "SA_SECRET=$(SECRET)" \
+		-e "SA_SECRET=/auth/application_creds.json" \
 		-e "SA_SECRET_P12=/auth/application_creds.p12" \
 		$(CONTAINER_NAME) $(args)
 
