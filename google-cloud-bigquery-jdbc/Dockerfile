@@ -1,7 +1,7 @@
 FROM gcr.io/cloud-devrel-public-resources/java11
 
 ENV JDBC_DOCKER_ENV=true
-RUN apt install zip
+RUN apt-get update && apt-get install -y zip && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /tst
 COPY ./pom.xml /src/pom.xml
