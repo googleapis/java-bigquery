@@ -14,4 +14,4 @@ samples/**/*.java       @googleapis/cloud-java-team-teamsync @googleapis/java-sa
 samples/snippets/generated/      @googleapis/cloud-java-team-teamsync @googleapis/yoshi-java
 
 # JDBC Driver
-google-cloud-bigquery-jdbc/**    @googleapis/bq-developer-tools
+google-cloud-bigquery-jdbc/**    @googleapis/bq-developer-tools @googleapis/cloud-java-team-teamsync
