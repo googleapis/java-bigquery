@@ -14,7 +14,7 @@ COPY ./google-cloud-bigquery-bom /src/google-cloud-bigquery-bom
 
 
 WORKDIR /src
-RUN mvn install
+RUN mvn install -DskipTests
 
 WORKDIR /src/google-cloud-bigquery-jdbc
 

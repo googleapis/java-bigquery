@@ -1,6 +1,7 @@
 SECRET=`cat $(GOOGLE_APPLICATION_CREDENTIALS)`
 CONTAINER_NAME=jdbc
-PACKAGE_DESTINATION=$(PWD)/bigquery-external-jdbc-tests/drivers
+PACKAGE_DESTINATION=$(PWD)/drivers
+SRC="$(PWD)/.."
 skipSurefire ?= true
 
 # no indendation for ifndef\endif due to their evaluation before execution
@@ -41,21 +42,20 @@ integration-test: .check-env
 
 unit-test-coverage:
 	$(MAKE) unittest
-	mvn -B -ntp --projects=google-cloud-bigquery-jdbc jacoco:report
-	BUILD_DIR=$$(mvn -B -ntp --projects=google-cloud-bigquery-jdbc help:evaluate -Dexpression=project.build.directory -q -DforceStdout); \
+	mvn -B -ntp jacoco:report
+	BUILD_DIR=$$(mvn -B -ntp help:evaluate -Dexpression=project.build.directory -q -DforceStdout); \
 	cd $$BUILD_DIR/site && zip -r $$OLDPWD/jacoco-unittests.zip jacoco && cd $$OLDPWD
 
 full-coverage: .check-env
 	$(MAKE) integration-test skipSurefire=false test=ITBigQueryJDBCTest,ITNightlyBigQueryTest
-	mvn -B -ntp --projects=google-cloud-bigquery-jdbc jacoco:report
-	BUILD_DIR=$$(mvn -B -ntp --projects=google-cloud-bigquery-jdbc help:evaluate -Dexpression=project.build.directory -q -DforceStdout); \
+	mvn -B -ntp jacoco:report
+	BUILD_DIR=$$(mvn -B -ntp  help:evaluate -Dexpression=project.build.directory -q -DforceStdout); \
 	cd $$BUILD_DIR/site && zip -r $$OLDPWD/jacoco-full.zip jacoco && cd $$OLDPWD
 
 package: 
 	mvn clean package \
 		-DincludeScope=runtime \
-		-Dmaven.test.skip=true \
-		--projects=google-cloud-bigquery-jdbc
+		-Dmaven.test.skip=true
 	mvn dependency:copy-dependencies \
 		-DincludeScope=runtime
 	${MAKE} generate-dependency-list
@@ -64,20 +64,17 @@ package-all-dependencies:
 	mvn package \
 		-DincludeScope=runtime \
 		-Dmaven.test.skip=true \
-		-P=release-all-dependencies \
-		--projects=google-cloud-bigquery-jdbc
+		-P=release-all-dependencies
 
 package-all-dependencies-shaded:
 	mvn package \
 		-DincludeScope=runtime \
 		-Dmaven.test.skip=true \
-		-P=release-all-dependencies,release-all-dependencies-shaded \
-		--projects=google-cloud-bigquery-jdbc
+		-P=release-all-dependencies,release-all-dependencies-shaded
 
 generate-dependency-list:
 	mvn -B dependency:list \
-		-f google-cloud-bigquery-jdbc/pom.xml \
-		-DexcludeTransitive \
+		-f pom.xml \
 		-DincludeScope=runtime | grep :jar: | sed -E "s/^.* ([^: ]+):([^:]+):([^:]+):([^:]+).*/<dependency><groupId>\1<\/groupId><artifactId>\2<\/artifactId><version>\4<\/version><\/dependency>/g" > dependencies.txt
 
 # Commands for dockerized environments
@@ -86,7 +83,7 @@ generate-dependency-list:
 		-v $(GOOGLE_APPLICATION_CREDENTIALS):/auth/application_creds.json \
 		-v "$(GOOGLE_APPLICATION_CREDENTIALS).p12":/auth/application_creds.p12 \
 		-e "GOOGLE_APPLICATION_CREDENTIALS=/auth/application_creds.json" \
-		-v $(PWD)/..:/src \
+		-v $(SRC):/src \
 		-e "SA_EMAIL=test_email" \
 		-e "SA_SECRET=$(SECRET)" \
 		-e "SA_SECRET_P12=/auth/application_creds.p12" \
@@ -101,7 +98,7 @@ docker-session:
 docker-package-all-dependencies: docker-build
 	mkdir -p $(PACKAGE_DESTINATION)
 	docker run \
-		-v $(PWD):/src \
+		-v $(SRC):/src \
 		-v $(PACKAGE_DESTINATION):/pkg \
 		$(CONTAINER_NAME) \
 		sh -c "make package-all-dependencies && \
@@ -111,7 +108,7 @@ docker-package-all-dependencies: docker-build
 docker-package-all-dependencies-shaded: docker-build
 	mkdir -p $(PACKAGE_DESTINATION)
 	docker run \
-		-v $(PWD):/src \
+		-v $(SRC):/src \
 		-v $(PACKAGE_DESTINATION):/pkg \
 		$(CONTAINER_NAME) \
 		sh -c "make package-all-dependencies-shaded && \
@@ -119,9 +116,9 @@ docker-package-all-dependencies-shaded: docker-build
 			rm -f /pkg/*tests.jar"
 
 docker-package: docker-build
-	mkdir -p bigquery-external-jdbc-tests/drivers/
+	mkdir -p $(PACKAGE_DESTINATION)
 	docker run \
-		-v $(PWD):/src \
+		-v $(SRC):/src \
 		-v $(PACKAGE_DESTINATION):/pkg \
 		$(CONTAINER_NAME) \
 		sh -c "make package && \
