@@ -2625,13 +2625,13 @@ class ITBigQueryTest {
 
   @Test
   void testListTablesWithPartitioning() {
-    long paritionExpirationMs = 86400000L;
-    String tableName = "test_list_tables_partitioning";
+    long expirationMs = 86400000L;
     Type paritionType = Type.DAY;
+    String tableName = "test_list_tables_partitioning";
     StandardTableDefinition tableDefinition =
         StandardTableDefinition.newBuilder()
             .setSchema(TABLE_SCHEMA)
-            .setTimePartitioning(TimePartitioning.of(paritionType, paritionExpirationMs))
+            .setTimePartitioning(TimePartitioning.of(paritionType, expirationMs))
             .build();
     TableInfo tableInfo = TableInfo.of(TableId.of(DATASET, tableName), tableDefinition);
     Table createdPartitioningTable = bigquery.create(tableInfo);
@@ -2640,8 +2640,9 @@ class ITBigQueryTest {
       Page<Table> tables = bigquery.listTables(DATASET);
       boolean found = false;
       for (Table table : tables.getValues()) {
-        // Look for the that matches the newly partitioned table as other tables in the dataset
-        // may not be partitioned or may be partitioned but may not be expiring.
+        // Look for the table that matches the newly partitioned table. Other tables in the
+        // dataset may not be partitioned or may be partitioned but may not be expiring
+        // (e.g. `null` expirationMs).
         if (!table
             .getTableId()
             .getTable()
@@ -2654,7 +2655,7 @@ class ITBigQueryTest {
         assertNotNull(timePartitioning);
         assertNotNull(timePartitioning.getExpirationMs());
         if (timePartitioning.getType().equals(paritionType)
-            && timePartitioning.getExpirationMs().equals(paritionExpirationMs)) {
+            && timePartitioning.getExpirationMs().equals(expirationMs)) {
           found = true;
           break;
         }
