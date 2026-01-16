@@ -75,8 +75,8 @@ jdbc-integration)
     mvn -B ${INTEGRATION_TEST_ARGS} \
       -pl "google-cloud-bigquery-jdbc" \
       -ntp \
-      -Dtest=ITBigQueryJDBCTest \
       -Penable-integration-tests \
+      -Dtest=ITBigQueryJDBCTest \
       -DtrimStackTrace=false \
       -Dclirr.skip=true \
       -Denforcer.skip=true \
