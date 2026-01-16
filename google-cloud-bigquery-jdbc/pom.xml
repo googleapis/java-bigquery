@@ -60,10 +60,10 @@
         <artifactId>maven-dependency-plugin</artifactId>
         <configuration>
             <ignoredUsedUndeclaredDependencies>
-                <ignoredUsedUndeclaredDependency>com.google.*</ignoredUsedUndeclaredDependency>
-                <ignoredUsedUndeclaredDependency>org.apache.arrow</ignoredUsedUndeclaredDependency>
-                <ignoredUsedUndeclaredDependency>org.apache.httpcomponents.*</ignoredUsedUndeclaredDependency>
-                <ignoredUsedUndeclaredDependency>io.grpc</ignoredUsedUndeclaredDependency>
+                <ignoredUsedUndeclaredDependency>com.google.*:*</ignoredUsedUndeclaredDependency>
+                <ignoredUsedUndeclaredDependency>org.apache.arrow:*</ignoredUsedUndeclaredDependency>
+                <ignoredUsedUndeclaredDependency>org.apache.httpcomponents.*:*</ignoredUsedUndeclaredDependency>
+                <ignoredUsedUndeclaredDependency>io.grpc:*</ignoredUsedUndeclaredDependency>
             </ignoredUsedUndeclaredDependencies>
         </configuration>
     </plugin>

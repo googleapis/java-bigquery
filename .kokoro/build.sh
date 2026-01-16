@@ -96,7 +96,7 @@ jdbc-nightly-integration)
       -e \
       verify
     RETURN_CODE=$?
-    ;;    
+    ;;
 graalvm)
     # Run Unit and Integration Tests with Native Image
     mvn -B ${INTEGRATION_TEST_ARGS} \
