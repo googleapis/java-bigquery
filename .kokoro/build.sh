@@ -75,7 +75,6 @@ jdbc-integration)
     mvn -B ${INTEGRATION_TEST_ARGS} \
       -pl "google-cloud-bigquery-jdbc" \
       -ntp \
-      -Penable-integration-tests \
       -Dtest=ITBigQueryJDBCTest \
       -DtrimStackTrace=false \
       -Dclirr.skip=true \
@@ -84,6 +83,20 @@ jdbc-integration)
       verify
     RETURN_CODE=$?
     ;;
+jdbc-nightly-integration)
+    mvn -B ${INTEGRATION_TEST_ARGS} \
+      -pl "google-cloud-bigquery-jdbc" \
+      -ntp \
+      -Dtest=ITNightlyBigQueryTest \
+      -DtrimStackTrace=false \
+      -Dclirr.skip=true \
+      -Denforcer.skip=true \
+      -fae \
+      -DargLine="-Xmx32g" \
+      -e \
+      verify
+    RETURN_CODE=$?
+    ;;    
 graalvm)
     # Run Unit and Integration Tests with Native Image
     mvn -B ${INTEGRATION_TEST_ARGS} \
