@@ -2626,12 +2626,12 @@ class ITBigQueryTest {
   @Test
   void testListTablesWithPartitioning() {
     long expirationMs = 86400000L;
-    Type paritionType = Type.DAY;
+    Type partitionType = Type.DAY;
     String tableName = "test_list_tables_partitioning";
     StandardTableDefinition tableDefinition =
         StandardTableDefinition.newBuilder()
             .setSchema(TABLE_SCHEMA)
-            .setTimePartitioning(TimePartitioning.of(paritionType, expirationMs))
+            .setTimePartitioning(TimePartitioning.of(partitionType, expirationMs))
             .build();
     TableInfo tableInfo = TableInfo.of(TableId.of(DATASET, tableName), tableDefinition);
     Table createdPartitioningTable = bigquery.create(tableInfo);
@@ -2654,7 +2654,7 @@ class ITBigQueryTest {
         TimePartitioning timePartitioning = standardTableDefinition.getTimePartitioning();
         assertNotNull(timePartitioning);
         assertNotNull(timePartitioning.getExpirationMs());
-        if (timePartitioning.getType().equals(paritionType)
+        if (timePartitioning.getType().equals(partitionType)
             && timePartitioning.getExpirationMs().equals(expirationMs)) {
           found = true;
           break;
