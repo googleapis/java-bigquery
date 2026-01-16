@@ -61,7 +61,7 @@ javadoc)
     ;;
 integration)
     mvn -B ${INTEGRATION_TEST_ARGS} \
-      -p "!google-cloud-bigquery-jdbc" \
+      -pl "!google-cloud-bigquery-jdbc" \
       -ntp \
       -Penable-integration-tests \
       -DtrimStackTrace=false \
@@ -74,7 +74,7 @@ integration)
 graalvm)
     # Run Unit and Integration Tests with Native Image
     mvn -B ${INTEGRATION_TEST_ARGS} \
-      -p "!google-cloud-bigquery-jdbc" \
+      -pl "!google-cloud-bigquery-jdbc" \
       -ntp \
       -Pnative \
       test
