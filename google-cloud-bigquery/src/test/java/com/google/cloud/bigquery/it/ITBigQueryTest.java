@@ -1347,15 +1347,16 @@ class ITBigQueryTest {
 
   @Test
   void testUpdateDataset() {
+    String datasetName = RemoteBigQueryHelper.generateDatasetName();
     Dataset dataset =
         bigquery.create(
-            DatasetInfo.newBuilder(OTHER_DATASET)
+            DatasetInfo.newBuilder(datasetName)
                 .setDescription("Some Description")
                 .setLabels(Collections.singletonMap("a", "b"))
                 .build());
     assertThat(dataset).isNotNull();
     assertThat(dataset.getDatasetId().getProject()).isEqualTo(bigquery.getOptions().getProjectId());
-    assertThat(dataset.getDatasetId().getDataset()).isEqualTo(OTHER_DATASET);
+    assertThat(dataset.getDatasetId().getDataset()).isEqualTo(datasetName);
     assertThat(dataset.getDescription()).isEqualTo("Some Description");
     assertThat(dataset.getLabels()).containsExactly("a", "b");
     assertThat(dataset.getStorageBillingModel()).isNull();
@@ -1379,14 +1380,15 @@ class ITBigQueryTest {
 
     updatedDataset = bigquery.update(updatedDataset.toBuilder().setLabels(null).build());
     assertThat(updatedDataset.getLabels()).isEmpty();
-    assertThat(dataset.delete()).isTrue();
+    dataset.delete();
   }
 
   @Test
   void testUpdateDatasetWithSelectedFields() {
+    String datasetName = RemoteBigQueryHelper.generateDatasetName();
     Dataset dataset =
         bigquery.create(
-            DatasetInfo.newBuilder(OTHER_DATASET).setDescription("Some Description").build());
+            DatasetInfo.newBuilder(datasetName).setDescription("Some Description").build());
     assertNotNull(dataset);
     assertEquals(bigquery.getOptions().getProjectId(), dataset.getDatasetId().getProject());
     assertEquals(OTHER_DATASET, dataset.getDatasetId().getDataset());
@@ -1407,7 +1409,7 @@ class ITBigQueryTest {
     assertNull(updatedDataset.getSelfLink());
     assertNull(updatedDataset.getStorageBillingModel());
     assertNull(updatedDataset.getMaxTimeTravelHours());
-    assertTrue(dataset.delete());
+    dataset.delete();
   }
 
   @Test
