@@ -223,7 +223,6 @@ class ITBigQueryTest {
   private static final String DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String UK_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String DESCRIPTION = "Test dataset";
-  private static final String OTHER_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String MODEL_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String ROUTINE_DATASET = RemoteBigQueryHelper.generateDatasetName();
   private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
@@ -1190,7 +1189,6 @@ class ITBigQueryTest {
     if (bigquery != null) {
       RemoteBigQueryHelper.forceDelete(bigquery, DATASET);
       RemoteBigQueryHelper.forceDelete(bigquery, UK_DATASET);
-      RemoteBigQueryHelper.forceDelete(bigquery, OTHER_DATASET);
       RemoteBigQueryHelper.forceDelete(bigquery, MODEL_DATASET);
       RemoteBigQueryHelper.forceDelete(bigquery, ROUTINE_DATASET);
     }
@@ -1391,7 +1389,7 @@ class ITBigQueryTest {
             DatasetInfo.newBuilder(datasetName).setDescription("Some Description").build());
     assertNotNull(dataset);
     assertEquals(bigquery.getOptions().getProjectId(), dataset.getDatasetId().getProject());
-    assertEquals(OTHER_DATASET, dataset.getDatasetId().getDataset());
+    assertEquals(datasetName, dataset.getDatasetId().getDataset());
     assertEquals("Some Description", dataset.getDescription());
     Dataset updatedDataset =
         bigquery.update(
