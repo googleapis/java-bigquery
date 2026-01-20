@@ -1352,33 +1352,37 @@ class ITBigQueryTest {
                 .setDescription("Some Description")
                 .setLabels(Collections.singletonMap("a", "b"))
                 .build());
-    assertThat(dataset).isNotNull();
-    assertThat(dataset.getDatasetId().getProject()).isEqualTo(bigquery.getOptions().getProjectId());
-    assertThat(dataset.getDatasetId().getDataset()).isEqualTo(datasetName);
-    assertThat(dataset.getDescription()).isEqualTo("Some Description");
-    assertThat(dataset.getLabels()).containsExactly("a", "b");
-    assertThat(dataset.getStorageBillingModel()).isNull();
-    assertThat(dataset.getMaxTimeTravelHours()).isNull();
+    try {
+      assertThat(dataset).isNotNull();
+      assertThat(dataset.getDatasetId().getProject())
+          .isEqualTo(bigquery.getOptions().getProjectId());
+      assertThat(dataset.getDatasetId().getDataset()).isEqualTo(datasetName);
+      assertThat(dataset.getDescription()).isEqualTo("Some Description");
+      assertThat(dataset.getLabels()).containsExactly("a", "b");
+      assertThat(dataset.getStorageBillingModel()).isNull();
+      assertThat(dataset.getMaxTimeTravelHours()).isNull();
 
-    Map<String, String> updateLabels = new HashMap<>();
-    updateLabels.put("x", "y");
-    updateLabels.put("a", null);
-    Dataset updatedDataset =
-        bigquery.update(
-            dataset.toBuilder()
-                .setDescription("Updated Description")
-                .setLabels(updateLabels)
-                .setStorageBillingModel("LOGICAL")
-                .setMaxTimeTravelHours(MAX_TIME_TRAVEL_HOURS)
-                .build());
-    assertThat(updatedDataset.getDescription()).isEqualTo("Updated Description");
-    assertThat(updatedDataset.getLabels()).containsExactly("x", "y");
-    assertThat(updatedDataset.getStorageBillingModel()).isEqualTo("LOGICAL");
-    assertThat(updatedDataset.getMaxTimeTravelHours()).isEqualTo(MAX_TIME_TRAVEL_HOURS);
+      Map<String, String> updateLabels = new HashMap<>();
+      updateLabels.put("x", "y");
+      updateLabels.put("a", null);
+      Dataset updatedDataset =
+          bigquery.update(
+              dataset.toBuilder()
+                  .setDescription("Updated Description")
+                  .setLabels(updateLabels)
+                  .setStorageBillingModel("LOGICAL")
+                  .setMaxTimeTravelHours(MAX_TIME_TRAVEL_HOURS)
+                  .build());
+      assertThat(updatedDataset.getDescription()).isEqualTo("Updated Description");
+      assertThat(updatedDataset.getLabels()).containsExactly("x", "y");
+      assertThat(updatedDataset.getStorageBillingModel()).isEqualTo("LOGICAL");
+      assertThat(updatedDataset.getMaxTimeTravelHours()).isEqualTo(MAX_TIME_TRAVEL_HOURS);
 
-    updatedDataset = bigquery.update(updatedDataset.toBuilder().setLabels(null).build());
-    assertThat(updatedDataset.getLabels()).isEmpty();
-    dataset.delete();
+      updatedDataset = bigquery.update(updatedDataset.toBuilder().setLabels(null).build());
+      assertThat(updatedDataset.getLabels()).isEmpty();
+    } finally {
+      dataset.delete();
+    }
   }
 
   @Test
@@ -1387,27 +1391,30 @@ class ITBigQueryTest {
     Dataset dataset =
         bigquery.create(
             DatasetInfo.newBuilder(datasetName).setDescription("Some Description").build());
-    assertNotNull(dataset);
-    assertEquals(bigquery.getOptions().getProjectId(), dataset.getDatasetId().getProject());
-    assertEquals(datasetName, dataset.getDatasetId().getDataset());
-    assertEquals("Some Description", dataset.getDescription());
-    Dataset updatedDataset =
-        bigquery.update(
-            dataset.toBuilder().setDescription("Updated Description").build(),
-            DatasetOption.fields(DatasetField.DESCRIPTION));
-    assertEquals("Updated Description", updatedDataset.getDescription());
-    assertNull(updatedDataset.getCreationTime());
-    assertNull(updatedDataset.getDefaultTableLifetime());
-    assertNull(updatedDataset.getAcl());
-    assertNull(updatedDataset.getEtag());
-    assertNull(updatedDataset.getFriendlyName());
-    assertNull(updatedDataset.getGeneratedId());
-    assertNull(updatedDataset.getLastModified());
-    assertNull(updatedDataset.getLocation());
-    assertNull(updatedDataset.getSelfLink());
-    assertNull(updatedDataset.getStorageBillingModel());
-    assertNull(updatedDataset.getMaxTimeTravelHours());
-    dataset.delete();
+    try {
+      assertNotNull(dataset);
+      assertEquals(bigquery.getOptions().getProjectId(), dataset.getDatasetId().getProject());
+      assertEquals(datasetName, dataset.getDatasetId().getDataset());
+      assertEquals("Some Description", dataset.getDescription());
+      Dataset updatedDataset =
+          bigquery.update(
+              dataset.toBuilder().setDescription("Updated Description").build(),
+              DatasetOption.fields(DatasetField.DESCRIPTION));
+      assertEquals("Updated Description", updatedDataset.getDescription());
+      assertNull(updatedDataset.getCreationTime());
+      assertNull(updatedDataset.getDefaultTableLifetime());
+      assertNull(updatedDataset.getAcl());
+      assertNull(updatedDataset.getEtag());
+      assertNull(updatedDataset.getFriendlyName());
+      assertNull(updatedDataset.getGeneratedId());
+      assertNull(updatedDataset.getLastModified());
+      assertNull(updatedDataset.getLocation());
+      assertNull(updatedDataset.getSelfLink());
+      assertNull(updatedDataset.getStorageBillingModel());
+      assertNull(updatedDataset.getMaxTimeTravelHours());
+    } finally {
+      dataset.delete();
+    }
   }
 
   @Test
