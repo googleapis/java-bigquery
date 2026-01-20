@@ -2680,14 +2680,24 @@ class ITBigQueryTest {
     try {
       Page<Table> tables = bigquery.listTables(DATASET);
       boolean found = false;
-      Iterator<Table> tableIterator = tables.getValues().iterator();
-      while (tableIterator.hasNext() && !found) {
-        StandardTableDefinition standardTableDefinition = tableIterator.next().getDefinition();
-        if (standardTableDefinition.getRangePartitioning() != null) {
-          assertEquals(RANGE_PARTITIONING, standardTableDefinition.getRangePartitioning());
-          assertEquals(RANGE, standardTableDefinition.getRangePartitioning().getRange());
-          assertEquals("IntegerField", standardTableDefinition.getRangePartitioning().getField());
+      for (Table table : tables.getValues()) {
+        // Look for the table that matches the newly partitioned table. Other tables in the
+        // dataset may not be partitioned and cannot match to them.
+        if (!table
+            .getTableId()
+            .getTable()
+            .equals(createdRangePartitioningTable.getTableId().getTable())) {
+          continue;
+        }
+
+        StandardTableDefinition standardTableDefinition = table.getDefinition();
+        RangePartitioning rangePartitioning = standardTableDefinition.getRangePartitioning();
+        assertNotNull(rangePartitioning);
+        if (RANGE_PARTITIONING.equals(rangePartitioning)) {
+          assertEquals(RANGE, rangePartitioning.getRange());
+          assertEquals("IntegerField", rangePartitioning.getField());
           found = true;
+          break;
         }
       }
       assertTrue(found);
