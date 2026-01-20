@@ -2679,7 +2679,6 @@ class ITBigQueryTest {
     assertNotNull(createdRangePartitioningTable);
     try {
       Page<Table> tables = bigquery.listTables(DATASET);
-      boolean found = false;
       for (Table table : tables.getValues()) {
         // Look for the table that matches the newly partitioned table. Other tables in the
         // dataset may not be partitioned and cannot match to them.
@@ -2693,14 +2692,10 @@ class ITBigQueryTest {
         StandardTableDefinition standardTableDefinition = table.getDefinition();
         RangePartitioning rangePartitioning = standardTableDefinition.getRangePartitioning();
         assertNotNull(rangePartitioning);
-        if (RANGE_PARTITIONING.equals(rangePartitioning)) {
-          assertEquals(RANGE, rangePartitioning.getRange());
-          assertEquals("IntegerField", rangePartitioning.getField());
-          found = true;
-          break;
-        }
+        assertEquals(RANGE_PARTITIONING, rangePartitioning);
+        assertEquals(RANGE, rangePartitioning.getRange());
+        assertEquals("IntegerField", rangePartitioning.getField());
       }
-      assertTrue(found);
     } finally {
       createdRangePartitioningTable.delete();
     }
