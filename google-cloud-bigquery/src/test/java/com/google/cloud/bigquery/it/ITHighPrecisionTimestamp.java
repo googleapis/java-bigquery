@@ -15,6 +15,7 @@
  */
 package com.google.cloud.bigquery.it;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -139,9 +140,7 @@ class ITHighPrecisionTimestamp {
             .map(x -> (String) x.get(0).getValue())
             .collect(Collectors.toList());
     assertEquals(expected.length, timestamps.size());
-    for (int i = 0; i < timestamps.size(); i++) {
-      assertEquals(expected[i], timestamps.get(i));
-    }
+    assertThat(timestamps).containsAtLeastElementsIn(expected);
   }
 
   @Test
@@ -217,6 +216,7 @@ class ITHighPrecisionTimestamp {
             .setUseLegacySql(false)
             .addNamedParameter(
                 "timestampParam",
+                // For named parameters, java-bigquery does not expect the 'T'
                 QueryParameterValue.timestamp("2000-01-01 12:34:56.123456789123Z"))
             .build();
 
@@ -228,9 +228,7 @@ class ITHighPrecisionTimestamp {
             .map(x -> (String) x.get(0).getValue())
             .collect(Collectors.toList());
     assertEquals(expected.length, timestamps.size());
-    for (int i = 0; i < timestamps.size(); i++) {
-      assertEquals(expected[i], timestamps.get(i));
-    }
+    assertThat(timestamps).containsAtLeastElementsIn(expected);
   }
 
   @Test
@@ -244,7 +242,9 @@ class ITHighPrecisionTimestamp {
         QueryJobConfiguration.newBuilder(query)
             .setDefaultDataset(DATASET)
             .setUseLegacySql(false)
-            .addPositionalParameter(QueryParameterValue.timestamp("2000-01-01 12:34:56.123456789123Z"))
+            .addPositionalParameter(
+                // For named parameters, java-bigquery does not expect the 'T'
+                QueryParameterValue.timestamp("2000-01-01 12:34:56.123456789123Z"))
             .build();
 
     TableResult result = bigquery.query(queryConfig);
@@ -255,9 +255,7 @@ class ITHighPrecisionTimestamp {
             .map(x -> (String) x.get(0).getValue())
             .collect(Collectors.toList());
     assertEquals(expected.length, timestamps.size());
-    for (int i = 0; i < timestamps.size(); i++) {
-      assertEquals(expected[i], timestamps.get(i));
-    }
+    assertThat(timestamps).containsAtLeastElementsIn(expected);
   }
 
   @Test
@@ -288,9 +286,7 @@ class ITHighPrecisionTimestamp {
             .map(x -> (String) x.get(0).getValue())
             .collect(Collectors.toList());
     assertEquals(expected.length, timestamps.size());
-    for (int i = 0; i < timestamps.size(); i++) {
-      assertEquals(expected[i], timestamps.get(i));
-    }
+    assertThat(timestamps).containsAtLeastElementsIn(expected);
   }
 
   @Test
@@ -305,6 +301,7 @@ class ITHighPrecisionTimestamp {
             .setDefaultDataset(DATASET)
             .setUseLegacySql(false)
             .addNamedParameter(
+                // For named parameters, java-bigquery does not expect the 'T'
                 "timestampParam", QueryParameterValue.timestamp("2000-01-01 12:34:56.123456Z"))
             .build();
 
@@ -316,9 +313,7 @@ class ITHighPrecisionTimestamp {
             .collect(Collectors.toList());
     String[] expected = new String[] {TIMESTAMP1, TIMESTAMP3};
     assertEquals(expected.length, timestamps.size());
-    for (int i = 0; i < timestamps.size(); i++) {
-      assertEquals(expected[i], timestamps.get(i));
-    }
+    assertThat(timestamps).containsAtLeastElementsIn(expected);
   }
 
   @Test
@@ -333,6 +328,7 @@ class ITHighPrecisionTimestamp {
             .setDefaultDataset(DATASET)
             .setUseLegacySql(false)
             .addNamedParameter(
+                // For named parameters, java-bigquery does not expect the 'T'
                 "timestampParam", QueryParameterValue.timestamp("2000-01-01 12:34:56.123456789123"))
             .build();
 
