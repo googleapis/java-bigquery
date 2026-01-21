@@ -35,6 +35,11 @@ steps:
   args: ['.kokoro/build.sh']
   env:
   - 'JOB_TYPE=jdbc-nightly-integration'
+- name: 'gcr.io/cloud-devrel-public-resources/java11'
+  id: "Nightly build"
+  timeout: 10000s
+  entrypoint: 'bash'
+  args: ['.kokoro/jdbc-release.sh']
 
 availableSecrets:
   secretManager:
