@@ -243,7 +243,7 @@ class ITHighPrecisionTimestamp {
             .setDefaultDataset(DATASET)
             .setUseLegacySql(false)
             .addPositionalParameter(
-                // For named parameters, java-bigquery does not expect the 'T'
+                // For positional parameters, java-bigquery does not expect the 'T'
                 QueryParameterValue.timestamp("2000-01-01 12:34:56.123456789123Z"))
             .build();
 
