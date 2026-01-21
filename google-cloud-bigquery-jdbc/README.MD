@@ -20,20 +20,20 @@ If you are using Maven, add this to your pom.xml file:
 <dependency>
   <groupId>com.google.cloud</groupId>
   <artifactId>google-cloud-bigquery-jdbc</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.0-SNAPSHOT</version>
 </dependency>
 ```
 
 If you are using Gradle without BOM, add this to your dependencies:
 
 ```Groovy
-implementation 'com.google.cloud:google-cloud-bigquery-jdbc:0.1.0'
+implementation 'com.google.cloud:google-cloud-bigquery-jdbc:0.1.0-SNAPSHOT'
 ```
 
 If you are using SBT, add this to your dependencies:
 
 ```Scala
-libraryDependencies += "com.google.cloud" % "google-cloud-bigquery-jdbc" % "0.1.0"
+libraryDependencies += "com.google.cloud" % "google-cloud-bigquery-jdbc" % "0.1.0-SNAPSHOT"
 ```
 <!-- {x-version-update-end} -->
 
@@ -94,7 +94,7 @@ Run all integration tests (currently takes 15+ minutes, so this is discouraged).
 
 `make integration-test`
 
-Run specific unitintegration test
+Run specific integration test
 
 `make integration-test test=<filter>` 
 
@@ -114,7 +114,7 @@ make docker-unittest
 make docker-integration-test
 ```
 
-Please note that running unit of integration tests within docker doesn't leverage maven cache because it is not persisted. 
+Please note that running unit or integration tests within docker doesn't leverage maven cache because it is not persisted. 
 If you want to run multiple commands, you can start a session and treat this shell session as your local environment. 
 
 ```
@@ -156,7 +156,7 @@ make run QUERY=small
 
 Nightly build is running full set of Integration tests and extended Nightly tests that includes some long-running tests (takes 20+ minutes to complete).
 
-Nightly Integration Tests include a step to build a full and thin jars and upload them to [Google Storage](https://pantheon.corp.google.com/storage/browser/bq_devtools_release_private/drivers/jdbc;tab=objects?inv=1&invt=Ab4E6g&project=bigquery-devtools-drivers&prefix=&forceOnObjectsSortingFiltering=false). 
+Nightly Integration Tests include a step to build a full and thin jars and upload them to Google Storage.
 
 They can be retrieved via following commands:
 
@@ -167,8 +167,7 @@ gsutil cp gs://bq_devtools_release_private/drivers/jdbc/google-cloud-bigquery-jd
 
 #### Performance tests
 
-[Cloud Build Pipeline](https://pantheon.corp.google.com/cloud-build/triggers;region=us-east1/edit/125214da-8603-449d-8336-b6dba7196bb4?project=bigquery-devtools-drivers) 
-is uploading latest full jar to the internal location for perf tests once a week, at the moment scheduled to do this Sunday night.
+Cloud Build Pipeline is uploading latest full jar to the internal location for perf tests once a week, at the moment scheduled to do this Sunday night.
 
 ### Code Coverage
 
@@ -288,8 +287,6 @@ Java is a registered trademark of Oracle and/or its affiliates.
 
 [product-docs]: https://cloud.google.com/bigquery
 [javadocs]: https://cloud.google.com/java/docs/reference/google-cloud-bigquery/latest/history
-[kokoro-badge-image-1]: http://storage.googleapis.com/cloud-devrel-public/java/badges/java-bigquery-jdbc/java7.svg
-[kokoro-badge-link-1]: http://storage.googleapis.com/cloud-devrel-public/java/badges/java-bigquery-jdbc/java7.html
 [kokoro-badge-image-2]: http://storage.googleapis.com/cloud-devrel-public/java/badges/java-bigquery-jdbc/java8.svg
 [kokoro-badge-link-2]: http://storage.googleapis.com/cloud-devrel-public/java/badges/java-bigquery-jdbc/java8.html
 [kokoro-badge-image-3]: http://storage.googleapis.com/cloud-devrel-public/java/badges/java-bigquery-jdbc/java8-osx.svg
@@ -312,10 +309,6 @@ Java is a registered trademark of Oracle and/or its affiliates.
 [contributing]: https://github.com/googleapis/java-bigquery/blob/main/CONTRIBUTING.md
 [code-of-conduct]: https://github.com/googleapis/java-bigquery/blob/main/CODE_OF_CONDUCT.md
 [license]: https://github.com/googleapis/java-bigquery/blob/main/LICENSE
-
-
-[libraries-bom]: https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google-Cloud-Platform-Libraries-BOM
-[shell_img]: https://gstatic.com/cloudssh/images/open-btn.png
 
 [semver]: https://semver.org/
 [cloudlibs]: https://cloud.google.com/apis/docs/client-libraries-explained
