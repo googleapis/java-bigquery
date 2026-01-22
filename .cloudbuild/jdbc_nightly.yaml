@@ -40,6 +40,8 @@ steps:
   timeout: 10000s
   entrypoint: 'bash'
   args: ['.kokoro/jdbc-release.sh']
+  env:
+  - 'NIGHTLY_RELEASE_GCS_BUCKET=$_NIGHTLY_RELEASE_GCS_BUCKET'
 
 availableSecrets:
   secretManager:

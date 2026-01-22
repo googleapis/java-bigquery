@@ -23,7 +23,7 @@ DATE=$(date '+%Y-%m-%d')
 COMMIT=$(git rev-parse --short HEAD)
 PACKAGE="google-cloud-bigquery-jdbc"
 VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-BUCKET=gs://bq_devtools_release_private/drivers/jdbc
+BUCKET=${NIGHTLY_RELEASE_GCS_BUCKET}
 NIGHTLY_BUILD_DESTINATION="${BUCKET}/nightly/${VERSION}/${DATE}"
 
 # All dependencies release
