@@ -18,39 +18,24 @@ set -euo pipefail
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd "${DIR}/../google-cloud-bigquery-jdbc"
 
-FOLDER=release
+FOLDER="$(pwd)/release"
 DATE=$(date '+%Y-%m-%d')
 COMMIT=$(git rev-parse --short HEAD)
+PACKAGE="google-cloud-bigquery-jdbc"
 VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 BUCKET=gs://bq_devtools_release_private/drivers/jdbc
 NIGHTLY_BUILD_DESTINATION="${BUCKET}/nightly/${VERSION}/${DATE}"
 
 # All dependencies release
-mkdir -p "./${FOLDER}"
-make docker-package-all-dependencies PACKAGE_DESTINATION="$(pwd)/${FOLDER}"
-JAR_FILE=$(find . -wholename "./${FOLDER}/*jar" -print -quit)
-JAR_NAME=$(basename "${JAR_FILE}" .jar)-${DATE}-${COMMIT}
+mkdir -p "${FOLDER}"
+make docker-package PACKAGE_DESTINATION="${FOLDER}"
+NAME=${PACKAGE}-${VERSION}-${COMMIT}
 
-gsutil cp "${JAR_FILE}" "${NIGHTLY_BUILD_DESTINATION}/${JAR_NAME}.jar"
+gsutil cp -r "${FOLDER}/${PACKAGE}-${VERSION}.zip" "${NIGHTLY_BUILD_DESTINATION}/${NAME}.zip"
+gsutil cp -r "${FOLDER}/${PACKAGE}-${VERSION}-all.jar" "${NIGHTLY_BUILD_DESTINATION}/${NAME}-all.jar"
+
 rm -rf "${FOLDER}"
 
-# All dependencies release - shaded
-mkdir -p "./${FOLDER}"
-make docker-package-all-dependencies-shaded PACKAGE_DESTINATION="$(pwd)/${FOLDER}"
-JAR_FILE=$(find . -wholename "./${FOLDER}/*jar" -print -quit)
-
-gsutil cp "${JAR_FILE}" "${NIGHTLY_BUILD_DESTINATION}/${JAR_NAME}-shaded.jar"
-rm -rf "${FOLDER}"
-
-# Thin release
-mkdir -p "./${FOLDER}"
-make docker-package PACKAGE_DESTINATION="$(pwd)/${FOLDER}"
-ZIP_FILE=$(find . -wholename "./${FOLDER}/*zip" -print -quit)
-
-gsutil cp "${ZIP_FILE}" "${NIGHTLY_BUILD_DESTINATION}/${JAR_NAME}.zip"
-rm -rf "${FOLDER}"
-
-# Update latest version
-gsutil cp "${NIGHTLY_BUILD_DESTINATION}/${JAR_NAME}.zip" "${BUCKET}/google-cloud-bigquery-jdbc-latest.zip"
-gsutil cp "${NIGHTLY_BUILD_DESTINATION}/${JAR_NAME}.jar" "${BUCKET}/google-cloud-bigquery-jdbc-latest-full.jar"
-gsutil cp "${NIGHTLY_BUILD_DESTINATION}/${JAR_NAME}-shaded.jar" "${BUCKET}/google-cloud-bigquery-jdbc-latest-full-shaded.jar"
+# # Update latest version
+gsutil cp "${NIGHTLY_BUILD_DESTINATION}/${NAME}.zip" "${BUCKET}/${PACKAGE}-latest.zip"
+gsutil cp "${NIGHTLY_BUILD_DESTINATION}/${NAME}-all.jar" "${BUCKET}/${PACKAGE}-latest-all.jar"
