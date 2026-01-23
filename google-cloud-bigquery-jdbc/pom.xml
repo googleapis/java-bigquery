@@ -70,7 +70,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-shade-plugin</artifactId>
-            <version>3.5.2</version> <!-- Use the latest version -->
+            <version>3.6.1</version> <!-- Use the latest version -->
             <executions>
               <execution>
                 <phase>package</phase>
