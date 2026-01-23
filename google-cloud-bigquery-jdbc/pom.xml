@@ -96,21 +96,22 @@
                   <relocations>
                     <relocation>
                       <pattern>com</pattern>
-                      <shadedPattern>shaded.bqjdbc.com</shadedPattern>
+                      <shadedPattern>com.google.bqjdbc.shaded.com</shadedPattern>
                       <excludes>
                         <exclude>com.google.cloud.bigquery.*</exclude>
+                        <exclude>com.google.cloud.bigquery.jdbc.*</exclude>
                       </excludes>
                     </relocation>
                     <relocation>
                       <pattern>org</pattern>
-                      <shadedPattern>shaded.bqjdbc.org</shadedPattern>
+                      <shadedPattern>com.google.bqjdbc.shaded.org</shadedPattern>
                       <excludes>
                         <exclude>org.conscrypt.*</exclude>
                       </excludes>
                     </relocation>
                     <relocation>
                       <pattern>io</pattern>
-                      <shadedPattern>shaded.bqjdbc.io</shadedPattern>
+                      <shadedPattern>com.google.bqjdbc.shaded.io</shadedPattern>
                     </relocation>
                   </relocations>
                   <filters>
