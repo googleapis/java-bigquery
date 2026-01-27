@@ -18,20 +18,20 @@ If you are using Maven, add this to your pom.xml file:
 <dependency>
   <groupId>com.google.cloud</groupId>
   <artifactId>google-cloud-bigquery-jdbc</artifactId>
-  <version><version></version>
+  <version>LATEST_VERSION</version>
 </dependency>
 ```
 
 If you are using Gradle without BOM, add this to your dependencies:
 
 ```Groovy
-implementation 'com.google.cloud:google-cloud-bigquery-jdbc:<version>'
+implementation 'com.google.cloud:google-cloud-bigquery-jdbc:LATEST_VERSION'
 ```
 
 If you are using SBT, add this to your dependencies:
 
 ```Scala
-libraryDependencies += "com.google.cloud" % "google-cloud-bigquery-jdbc" % "<version>"
+libraryDependencies += "com.google.cloud" % "google-cloud-bigquery-jdbc" % "LATEST_VERSION"
 ```
 
 ## Authentication
@@ -73,7 +73,7 @@ Example: `make unittest test=BigQueryArrowStructTest`
 
 IMPORTANT: Running integration tests will skip unit tests by default. To include unit tests, run `make integration-test skipSurefire=false`. Primary focus of this command is to run specific set of tests without a lot of overhead.
 
-Majority of Integration tests rely on certain environment variables:
+Set the following environment variables to run the integration tests:
 
 ```
 # Default gcloud auth setup
@@ -142,6 +142,8 @@ You can also build a shaded jar with all dependencies. This can be done by runni
 
 The nightly build runs the full set of integration tests, including the `ITBigQueryJDBCTest` and `ITNightlyBigQueryTest` test suites. It also includes some long-running tests (takes 20+ minutes to complete).
 
+**Note:** These builds are intended for testing and development purposes only and are not recommended for production use.
+
 Nightly Integration Tests include a step to build a full and thin jars and upload them to Google Storage.
 
 They can be retrieved via following commands:
@@ -153,7 +155,7 @@ gsutil cp gs://bq_devtools_release_private/drivers/jdbc/google-cloud-bigquery-jd
 
 #### Performance tests
 
-Cloud Build Pipeline is uploading latest full jar to the internal location for perf tests once a week, at the moment scheduled to do this Sunday night.
+Cloud Build Pipeline is uploading latest full jar to the internal location for perf tests once a week.
 
 ### Code Coverage
 
@@ -263,27 +265,10 @@ information.
 
 Apache 2.0 - See [LICENSE][license] for more information.
 
-## CI Status
-
-Java Version | Status
------------- | ------
-Java 8 | [![Kokoro CI][kokoro-badge-image-2]][kokoro-badge-link-2]
-Java 8 OSX | [![Kokoro CI][kokoro-badge-image-3]][kokoro-badge-link-3]
-Java 8 Windows | [![Kokoro CI][kokoro-badge-image-4]][kokoro-badge-link-4]
-Java 11 | [![Kokoro CI][kokoro-badge-image-5]][kokoro-badge-link-5]
-
 Java is a registered trademark of Oracle and/or its affiliates.
 
 [product-docs]: https://cloud.google.com/bigquery
 [javadocs]: https://cloud.google.com/java/docs/reference/google-cloud-bigquery/latest/history
-[kokoro-badge-image-2]: http://storage.googleapis.com/cloud-devrel-public/java/badges/java-bigquery-jdbc/java8.svg
-[kokoro-badge-link-2]: http://storage.googleapis.com/cloud-devrel-public/java/badges/java-bigquery-jdbc/java8.html
-[kokoro-badge-image-3]: http://storage.googleapis.com/cloud-devrel-public/java/badges/java-bigquery-jdbc/java8-osx.svg
-[kokoro-badge-link-3]: http://storage.googleapis.com/cloud-devrel-public/java/badges/java-bigquery-jdbc/java8-osx.html
-[kokoro-badge-image-4]: http://storage.googleapis.com/cloud-devrel-public/java/badges/java-bigquery-jdbc/java8-win.svg
-[kokoro-badge-link-4]: http://storage.googleapis.com/cloud-devrel-public/java/badges/java-bigquery-jdbc/java8-win.html
-[kokoro-badge-image-5]: http://storage.googleapis.com/cloud-devrel-public/java/badges/java-bigquery-jdbc/java11.svg
-[kokoro-badge-link-5]: http://storage.googleapis.com/cloud-devrel-public/java/badges/java-bigquery-jdbc/java11.html
 [stability-image]: https://img.shields.io/badge/stability-unknown-red
 [maven-version-image]: https://img.shields.io/maven-central/v/com.google.cloud/google-cloud-bigquery-jdbc.svg
 [maven-version-link]: https://central.sonatype.com/artifact/com.google.cloud/google-cloud-bigquery-jdbc/0.0.0
