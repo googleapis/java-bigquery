@@ -149,7 +149,7 @@ Nightly Integration Tests include a step to build a full and thin jars and uploa
 They can be retrieved via following commands:
 
 ```
-gsutil cp gs://bq_devtools_release_private/drivers/jdbc/google-cloud-bigquery-jdbc-latest-full.jar .
+gsutil cp gs://bq_devtools_release_private/drivers/jdbc/google-cloud-bigquery-jdbc-latest-all.jar .
 gsutil cp gs://bq_devtools_release_private/drivers/jdbc/google-cloud-bigquery-jdbc-latest.zip .
 ```
 
