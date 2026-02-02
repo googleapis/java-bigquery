@@ -277,13 +277,13 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
         BigQueryJdbcUrlUtility.parseIntProperty(
             url,
             BigQueryJdbcUrlUtility.HTTP_CONNECT_TIMEOUT_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_HTTP_CONNECT_TIMEOUT_VALUE,
+            null,
             this.connectionClassName);
     this.httpReadTimeout =
         BigQueryJdbcUrlUtility.parseIntProperty(
             url,
             BigQueryJdbcUrlUtility.HTTP_READ_TIMEOUT_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_HTTP_READ_TIMEOUT_VALUE,
+            null,
             this.connectionClassName);
     this.httpTransportOptions =
         BigQueryJdbcProxyUtility.getHttpTransportOptions(

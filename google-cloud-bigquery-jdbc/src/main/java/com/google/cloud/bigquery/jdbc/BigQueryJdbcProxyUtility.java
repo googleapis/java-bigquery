@@ -123,26 +123,31 @@ final class BigQueryJdbcProxyUtility {
       String callerClassName) {
     LOG.finest("++enter++\t" + callerClassName);
 
-    if (!proxyProperties.containsKey(BigQueryJdbcUrlUtility.PROXY_HOST_PROPERTY_NAME)
-        && sslTrustStorePath == null
-        && connectTimeout == null
-        && readTimeout == null) {
+    boolean hasProxyOrSsl =
+        proxyProperties.containsKey(BigQueryJdbcUrlUtility.PROXY_HOST_PROPERTY_NAME)
+            || sslTrustStorePath != null;
+    boolean hasTimeoutConfig = connectTimeout != null || readTimeout != null;
+
+    if (!hasProxyOrSsl && !hasTimeoutConfig) {
       return null;
     }
 
     HttpTransportOptions.Builder httpTransportOptionsBuilder = HttpTransportOptions.newBuilder();
-    if (proxyProperties.containsKey(BigQueryJdbcUrlUtility.PROXY_HOST_PROPERTY_NAME)
-        || sslTrustStorePath != null) {
+    if (hasProxyOrSsl) {
       httpTransportOptionsBuilder.setHttpTransportFactory(
           getHttpTransportFactory(
               proxyProperties, sslTrustStorePath, sslTrustStorePassword, callerClassName));
     }
 
-    if (connectTimeout != null) {
-      httpTransportOptionsBuilder.setConnectTimeout(connectTimeout);
-    }
-    if (readTimeout != null) {
-      httpTransportOptionsBuilder.setReadTimeout(readTimeout);
+    if (hasTimeoutConfig) {
+      httpTransportOptionsBuilder.setConnectTimeout(
+          connectTimeout != null
+              ? connectTimeout
+              : BigQueryJdbcUrlUtility.DEFAULT_HTTP_CONNECT_TIMEOUT_VALUE);
+      httpTransportOptionsBuilder.setReadTimeout(
+          readTimeout != null
+              ? readTimeout
+              : BigQueryJdbcUrlUtility.DEFAULT_HTTP_READ_TIMEOUT_VALUE);
     }
 
     return httpTransportOptionsBuilder.build();
