@@ -16,7 +16,6 @@
 package com.google.cloud.bigquery.jdbc;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertThrows;
 
 import java.sql.Connection;
 import java.sql.DriverPropertyInfo;
@@ -36,8 +35,8 @@ public class BigQueryDriverTest {
   }
 
   @Test
-  public void testInvalidURLDoesNotConnect() {
-    assertThrows(IllegalArgumentException.class, () -> bigQueryDriver.connect("badURL.com", null));
+  public void testInvalidURLReturnsNull() throws SQLException {
+    assertThat(bigQueryDriver.connect("badURL.com", null)).isNull();
   }
 
   @Test
