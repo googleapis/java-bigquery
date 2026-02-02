@@ -138,7 +138,8 @@ public class BigQueryJdbcProxyUtilityTest {
     Map<String, String> proxyProperties =
         BigQueryJdbcProxyUtility.parseProxyProperties(connection_uri, null);
     HttpTransportOptions result =
-        BigQueryJdbcProxyUtility.getHttpTransportOptions(proxyProperties, null, null, null);
+        BigQueryJdbcProxyUtility.getHttpTransportOptions(
+            proxyProperties, null, null, null, null, "TestClass");
     assertNotNull(result);
   }
 
@@ -154,7 +155,8 @@ public class BigQueryJdbcProxyUtilityTest {
     Map<String, String> proxyProperties =
         BigQueryJdbcProxyUtility.parseProxyProperties(connection_uri, null);
     HttpTransportOptions result =
-        BigQueryJdbcProxyUtility.getHttpTransportOptions(proxyProperties, null, null, null);
+        BigQueryJdbcProxyUtility.getHttpTransportOptions(
+            proxyProperties, null, null, null, null, "TestClass");
     assertNotNull(result);
   }
 
@@ -168,7 +170,8 @@ public class BigQueryJdbcProxyUtilityTest {
     Map<String, String> proxyProperties =
         BigQueryJdbcProxyUtility.parseProxyProperties(connection_uri, null);
     HttpTransportOptions result =
-        BigQueryJdbcProxyUtility.getHttpTransportOptions(proxyProperties, null, null, null);
+        BigQueryJdbcProxyUtility.getHttpTransportOptions(
+            proxyProperties, null, null, null, null, "TestClass");
     assertNull(result);
   }
 
@@ -185,7 +188,7 @@ public class BigQueryJdbcProxyUtilityTest {
     String trustStorePath = getTestResourcePath("test_truststore_nopass.jks");
     HttpTransportOptions options =
         BigQueryJdbcProxyUtility.getHttpTransportOptions(
-            Collections.<String, String>emptyMap(), trustStorePath, null, "TestClass");
+            Collections.<String, String>emptyMap(), trustStorePath, null, null, null, "TestClass");
     assertNotNull(options);
     assertNotNull(options.getHttpTransportFactory());
   }
@@ -195,7 +198,12 @@ public class BigQueryJdbcProxyUtilityTest {
     String trustStorePath = getTestResourcePath("test_truststore_withpass.jks");
     HttpTransportOptions options =
         BigQueryJdbcProxyUtility.getHttpTransportOptions(
-            Collections.<String, String>emptyMap(), trustStorePath, "testpassword", "TestClass");
+            Collections.<String, String>emptyMap(),
+            trustStorePath,
+            "testpassword",
+            null,
+            null,
+            "TestClass");
     assertNotNull(options);
     assertNotNull(options.getHttpTransportFactory());
   }
@@ -212,6 +220,8 @@ public class BigQueryJdbcProxyUtilityTest {
                     Collections.<String, String>emptyMap(),
                     trustStorePath,
                     "wrongpassword",
+                    null,
+                    null,
                     "TestClass"));
     assertThat(exception.getCause()).isInstanceOf(IOException.class);
   }
@@ -224,7 +234,12 @@ public class BigQueryJdbcProxyUtilityTest {
             BigQueryJdbcRuntimeException.class,
             () ->
                 BigQueryJdbcProxyUtility.getHttpTransportOptions(
-                    Collections.<String, String>emptyMap(), invalidPath, null, "TestClass"));
+                    Collections.<String, String>emptyMap(),
+                    invalidPath,
+                    null,
+                    null,
+                    null,
+                    "TestClass"));
 
     assertThat(exception.getCause()).isInstanceOf(FileNotFoundException.class);
   }
@@ -238,7 +253,7 @@ public class BigQueryJdbcProxyUtilityTest {
 
     HttpTransportOptions options =
         BigQueryJdbcProxyUtility.getHttpTransportOptions(
-            proxyProperties, trustStorePath, null, "TestClass");
+            proxyProperties, trustStorePath, null, null, null, "TestClass");
     assertNotNull(options);
     assertNotNull(options.getHttpTransportFactory());
   }
@@ -287,7 +302,26 @@ public class BigQueryJdbcProxyUtilityTest {
   public void testGetHttpTransportOptions_noProxyNoSsl_returnsNull() {
     HttpTransportOptions options =
         BigQueryJdbcProxyUtility.getHttpTransportOptions(
-            Collections.<String, String>emptyMap(), null, null, "TestClass");
+            Collections.<String, String>emptyMap(), null, null, null, null, "TestClass");
     assertNull(options);
+  }
+
+  @Test
+  public void testGetHttpTransportOptions_withTimeouts_returnsOptions() {
+    HttpTransportOptions options =
+        BigQueryJdbcProxyUtility.getHttpTransportOptions(
+            Collections.<String, String>emptyMap(), null, null, 10000, 20000, "TestClass");
+    assertNotNull(options);
+    assertThat(options.getConnectTimeout()).isEqualTo(10000);
+    assertThat(options.getReadTimeout()).isEqualTo(20000);
+  }
+
+  @Test
+  public void testGetHttpTransportOptions_withConnectTimeoutOnly_returnsOptions() {
+    HttpTransportOptions options =
+        BigQueryJdbcProxyUtility.getHttpTransportOptions(
+            Collections.<String, String>emptyMap(), null, null, 10000, null, "TestClass");
+    assertNotNull(options);
+    assertThat(options.getConnectTimeout()).isEqualTo(10000);
   }
 }

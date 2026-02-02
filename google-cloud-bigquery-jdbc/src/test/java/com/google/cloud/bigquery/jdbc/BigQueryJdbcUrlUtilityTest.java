@@ -800,4 +800,63 @@ public class BigQueryJdbcUrlUtilityTest {
     Map<String, String> labels = BigQueryJdbcUrlUtility.parseLabels(connection_uri, null);
     assertNull(labels);
   }
+
+  @Test
+  public void testParseHttpConnectTimeout() {
+    String connection_uri =
+        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;OAuthType=3;ProjectId=testProject;"
+            + "HttpConnectTimeout=10000";
+
+    Integer timeout =
+        BigQueryJdbcUrlUtility.parseIntProperty(
+            connection_uri,
+            BigQueryJdbcUrlUtility.HTTP_CONNECT_TIMEOUT_PROPERTY_NAME,
+            BigQueryJdbcUrlUtility.DEFAULT_HTTP_CONNECT_TIMEOUT_VALUE,
+            null);
+    assertEquals(Integer.valueOf(10000), timeout);
+  }
+
+  @Test
+  public void testParseHttpConnectTimeoutDefault() {
+    String connection_uri =
+        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;OAuthType=3;ProjectId=testProject";
+
+    Integer timeout =
+        BigQueryJdbcUrlUtility.parseIntProperty(
+            connection_uri,
+            BigQueryJdbcUrlUtility.HTTP_CONNECT_TIMEOUT_PROPERTY_NAME,
+            BigQueryJdbcUrlUtility.DEFAULT_HTTP_CONNECT_TIMEOUT_VALUE,
+            null);
+    assertEquals(
+        Integer.valueOf(BigQueryJdbcUrlUtility.DEFAULT_HTTP_CONNECT_TIMEOUT_VALUE), timeout);
+  }
+
+  @Test
+  public void testParseHttpReadTimeout() {
+    String connection_uri =
+        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;OAuthType=3;ProjectId=testProject;"
+            + "HttpReadTimeout=20000";
+
+    Integer timeout =
+        BigQueryJdbcUrlUtility.parseIntProperty(
+            connection_uri,
+            BigQueryJdbcUrlUtility.HTTP_READ_TIMEOUT_PROPERTY_NAME,
+            BigQueryJdbcUrlUtility.DEFAULT_HTTP_READ_TIMEOUT_VALUE,
+            null);
+    assertEquals(Integer.valueOf(20000), timeout);
+  }
+
+  @Test
+  public void testParseHttpReadTimeoutDefault() {
+    String connection_uri =
+        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;OAuthType=3;ProjectId=testProject";
+
+    Integer timeout =
+        BigQueryJdbcUrlUtility.parseIntProperty(
+            connection_uri,
+            BigQueryJdbcUrlUtility.HTTP_READ_TIMEOUT_PROPERTY_NAME,
+            BigQueryJdbcUrlUtility.DEFAULT_HTTP_READ_TIMEOUT_VALUE,
+            null);
+    assertEquals(Integer.valueOf(BigQueryJdbcUrlUtility.DEFAULT_HTTP_READ_TIMEOUT_VALUE), timeout);
+  }
 }
