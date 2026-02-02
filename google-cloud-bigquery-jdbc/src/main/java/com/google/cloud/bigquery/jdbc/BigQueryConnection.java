@@ -130,6 +130,8 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
   String sslTrustStorePassword;
   long maxBytesBilled;
   Map<String, String> labels;
+  Integer httpConnectTimeout;
+  Integer httpReadTimeout;
 
   BigQueryConnection(String url) throws IOException {
     this.connectionUrl = url;
@@ -271,11 +273,25 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
             BigQueryJdbcUrlUtility.SSL_TRUST_STORE_PWD_PROPERTY_NAME,
             null,
             this.connectionClassName);
+    this.httpConnectTimeout =
+        BigQueryJdbcUrlUtility.parseIntProperty(
+            url,
+            BigQueryJdbcUrlUtility.HTTP_CONNECT_TIMEOUT_PROPERTY_NAME,
+            BigQueryJdbcUrlUtility.DEFAULT_HTTP_CONNECT_TIMEOUT_VALUE,
+            this.connectionClassName);
+    this.httpReadTimeout =
+        BigQueryJdbcUrlUtility.parseIntProperty(
+            url,
+            BigQueryJdbcUrlUtility.HTTP_READ_TIMEOUT_PROPERTY_NAME,
+            BigQueryJdbcUrlUtility.DEFAULT_HTTP_READ_TIMEOUT_VALUE,
+            this.connectionClassName);
     this.httpTransportOptions =
         BigQueryJdbcProxyUtility.getHttpTransportOptions(
             proxyProperties,
             this.sslTrustStorePath,
             this.sslTrustStorePassword,
+            this.httpConnectTimeout,
+            this.httpReadTimeout,
             this.connectionClassName);
     this.transportChannelProvider =
         BigQueryJdbcProxyUtility.getTransportChannelProvider(
@@ -721,6 +737,14 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
 
   String getSSLTrustStorePassword() {
     return sslTrustStorePassword;
+  }
+
+  Integer getHttpConnectTimeout() {
+    return httpConnectTimeout;
+  }
+
+  Integer getHttpReadTimeout() {
+    return httpReadTimeout;
   }
 
   @Override
