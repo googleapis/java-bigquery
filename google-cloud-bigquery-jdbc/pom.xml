@@ -98,7 +98,6 @@
                       <pattern>com</pattern>
                       <shadedPattern>com.google.bqjdbc.shaded.com</shadedPattern>
                       <excludes>
-                        <exclude>com.google.cloud.bigquery.*</exclude>
                         <exclude>com.google.cloud.bigquery.jdbc.*</exclude>
                       </excludes>
                     </relocation>
