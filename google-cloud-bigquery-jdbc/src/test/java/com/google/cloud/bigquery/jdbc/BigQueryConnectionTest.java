@@ -27,7 +27,6 @@ import com.google.cloud.bigquery.storage.v1.BigQueryWriteClient;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -360,8 +359,8 @@ public class BigQueryConnectionTest {
       assertTrue(provider instanceof InstantiatingGrpcChannelProvider);
 
       InstantiatingGrpcChannelProvider grpcProvider = (InstantiatingGrpcChannelProvider) provider;
-      assertEquals(Duration.ofSeconds(10).toString(), grpcProvider.getKeepAliveTime().toString());
-      assertEquals(Duration.ofSeconds(5).toString(), grpcProvider.getKeepAliveTimeout().toString());
+      assertEquals(java.time.Duration.ofSeconds(10), grpcProvider.getKeepAliveTimeDuration());
+      assertEquals(java.time.Duration.ofSeconds(5), grpcProvider.getKeepAliveTimeoutDuration());
       assertTrue(grpcProvider.getKeepAliveWithoutCalls());
     }
   }

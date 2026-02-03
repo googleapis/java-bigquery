@@ -1063,8 +1063,8 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
       activeProvider =
           ((InstantiatingGrpcChannelProvider) activeProvider)
               .toBuilder()
-                  .setKeepAliveTime(org.threeten.bp.Duration.ofSeconds(10))
-                  .setKeepAliveTimeout(org.threeten.bp.Duration.ofSeconds(5))
+                  .setKeepAliveTimeDuration(java.time.Duration.ofSeconds(10))
+                  .setKeepAliveTimeoutDuration(java.time.Duration.ofSeconds(5))
                   .setKeepAliveWithoutCalls(true)
                   .build();
     }
