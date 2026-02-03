@@ -18,8 +18,11 @@ package com.google.cloud.bigquery.jdbc;
 
 import static org.junit.Assert.*;
 
+import com.google.api.gax.grpc.InstantiatingGrpcChannelProvider;
 import com.google.api.gax.rpc.HeaderProvider;
+import com.google.api.gax.rpc.TransportChannelProvider;
 import com.google.cloud.bigquery.exception.BigQueryJdbcException;
+import com.google.cloud.bigquery.storage.v1.BigQueryReadClient;
 import com.google.cloud.bigquery.storage.v1.BigQueryWriteClient;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,6 +33,7 @@ import java.util.List;
 import java.util.Properties;
 import org.junit.Before;
 import org.junit.Test;
+import org.threeten.bp.Duration;
 
 public class BigQueryConnectionTest {
 
@@ -338,6 +342,27 @@ public class BigQueryConnectionTest {
           "Should use the custom value when a valid integer is provided",
           16,
           connectionCustom.getMetadataFetchThreadCount());
+    }
+  }
+
+  @Test
+  public void testBigQueryReadClientKeepAliveSettings() throws SQLException, IOException {
+    String url =
+        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+            + "OAuthType=2;ProjectId=MyBigQueryProject;"
+            + "OAuthAccessToken=redactedToken;OAuthClientId=redactedToken;"
+            + "OAuthClientSecret=redactedToken;";
+    try (BigQueryConnection connection = new BigQueryConnection(url)) {
+      BigQueryReadClient readClient = connection.getBigQueryReadClient();
+      assertNotNull(readClient);
+
+      TransportChannelProvider provider = readClient.getSettings().getTransportChannelProvider();
+      assertTrue(provider instanceof InstantiatingGrpcChannelProvider);
+
+      InstantiatingGrpcChannelProvider grpcProvider = (InstantiatingGrpcChannelProvider) provider;
+      assertEquals(Duration.ofSeconds(10), grpcProvider.getKeepAliveTime());
+      assertEquals(Duration.ofSeconds(5), grpcProvider.getKeepAliveTimeout());
+      assertTrue(grpcProvider.getKeepAliveWithoutCalls());
     }
   }
 }
