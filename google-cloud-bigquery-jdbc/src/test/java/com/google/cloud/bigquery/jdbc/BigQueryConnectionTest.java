@@ -27,13 +27,13 @@ import com.google.cloud.bigquery.storage.v1.BigQueryWriteClient;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import org.junit.Before;
 import org.junit.Test;
-import org.threeten.bp.Duration;
 
 public class BigQueryConnectionTest {
 
