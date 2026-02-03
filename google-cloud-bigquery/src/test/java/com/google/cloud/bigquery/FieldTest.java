@@ -16,14 +16,15 @@
 
 package com.google.cloud.bigquery;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class FieldTest {
 
@@ -211,6 +212,20 @@ public class FieldTest {
     ois.close();
 
     Field.of("field", clonedRecord, Field.of("subfield", LegacySQLTypeName.BOOLEAN));
+  }
+
+  @Test
+  public void setTimestampPrecisionValues() {
+    Field.Builder builder = Field.newBuilder(FIELD_NAME1, FIELD_TYPE1);
+
+    // Value values: 6L or 12L
+    builder.setTimestampPrecision(6L);
+    builder.setTimestampPrecision(12L);
+
+    assertThrows(IllegalArgumentException.class, () -> builder.setTimestampPrecision(-1L));
+    assertThrows(IllegalArgumentException.class, () -> builder.setTimestampPrecision(0L));
+    assertThrows(IllegalArgumentException.class, () -> builder.setTimestampPrecision(5L));
+    assertThrows(IllegalArgumentException.class, () -> builder.setTimestampPrecision(13L));
   }
 
   private void compareFieldSchemas(Field expected, Field value) {

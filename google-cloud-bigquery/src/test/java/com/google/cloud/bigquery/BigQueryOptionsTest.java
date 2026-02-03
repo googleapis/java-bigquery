@@ -16,23 +16,80 @@
 
 package com.google.cloud.bigquery;
 
-import com.google.cloud.TransportOptions;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(MockitoJUnitRunner.class)
+import com.google.cloud.TransportOptions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
 public class BigQueryOptionsTest {
 
   @Test
-  public void testInvalidTransport() {
-    try {
-      BigQueryOptions.newBuilder().setTransportOptions(Mockito.mock(TransportOptions.class));
-      Assert.fail();
-    } catch (IllegalArgumentException expected) {
-      Assert.assertNotNull(expected.getMessage());
-    }
+  void testInvalidTransport() {
+    IllegalArgumentException expected =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                BigQueryOptions.newBuilder()
+                    .setTransportOptions(Mockito.mock(TransportOptions.class)));
+    assertNotNull(expected.getMessage());
+  }
+
+  @Test
+  void dataFormatOptions_createdByDefault() {
+    BigQueryOptions options = BigQueryOptions.newBuilder().setProjectId("project-id").build();
+
+    assertNotNull(options.getDataFormatOptions());
+    assertFalse(options.getDataFormatOptions().useInt64Timestamp());
+    assertEquals(
+        DataFormatOptions.TimestampFormatOptions.TIMESTAMP_OUTPUT_FORMAT_UNSPECIFIED,
+        options.getDataFormatOptions().timestampFormatOptions());
+  }
+
+  @Test
+  void nonBuilderSetUseInt64Timestamp_capturedInDataFormatOptions() {
+    BigQueryOptions options =
+        BigQueryOptions.newBuilder()
+            .setDataFormatOptions(DataFormatOptions.newBuilder().useInt64Timestamp(false).build())
+            .setProjectId("project-id")
+            .build();
+    options.setUseInt64Timestamps(true);
+
+    assertTrue(options.getDataFormatOptions().useInt64Timestamp());
+  }
+
+  @Test
+  void nonBuilderSetUseInt64Timestamp_overridesEverything() {
+    BigQueryOptions options = BigQueryOptions.newBuilder().setProjectId("project-id").build();
+    options.setUseInt64Timestamps(true);
+
+    assertTrue(options.getDataFormatOptions().useInt64Timestamp());
+  }
+
+  @Test
+  void noDataFormatOptions_capturesUseInt64TimestampSetInBuilder() {
+    BigQueryOptions options =
+        BigQueryOptions.newBuilder().setUseInt64Timestamps(true).setProjectId("project-id").build();
+
+    assertTrue(options.getDataFormatOptions().useInt64Timestamp());
+  }
+
+  @Test
+  void dataFormatOptionsSetterHasPrecedence() {
+    BigQueryOptions options =
+        BigQueryOptions.newBuilder()
+            .setProjectId("project-id")
+            .setDataFormatOptions(DataFormatOptions.newBuilder().useInt64Timestamp(true).build())
+            .setUseInt64Timestamps(false)
+            .build();
+
+    assertTrue(options.getDataFormatOptions().useInt64Timestamp());
   }
 }

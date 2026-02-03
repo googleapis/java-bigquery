@@ -37,26 +37,25 @@ public class CreateTableIT {
   private final Logger log = Logger.getLogger(this.getClass().getName());
   private String tableName;
   private ByteArrayOutputStream bout;
-  private PrintStream out;
   private PrintStream originalPrintStream;
 
   private static final String BIGQUERY_DATASET_NAME = System.getenv("BIGQUERY_DATASET_NAME");
 
-  private static void requireEnvVar(String varName) {
+  private static void requireEnvVar() {
     assertNotNull(
-        "Environment variable " + varName + " is required to perform these tests.",
-        System.getenv(varName));
+        "Environment variable BIGQUERY_DATASET_NAME is required to perform these tests.",
+        System.getenv("BIGQUERY_DATASET_NAME"));
   }
 
   @BeforeClass
   public static void checkRequirements() {
-    requireEnvVar("BIGQUERY_DATASET_NAME");
+    requireEnvVar();
   }
 
   @Before
   public void setUp() {
     bout = new ByteArrayOutputStream();
-    out = new PrintStream(bout);
+    PrintStream out = new PrintStream(bout);
     originalPrintStream = System.out;
     System.setOut(out);
     tableName = "MY_TABLE_NAME_" + UUID.randomUUID().toString().replace("-", "_");

@@ -16,8 +16,8 @@
 
 package com.google.cloud.bigquery.testing;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQuery.DatasetDeleteOption;
@@ -26,14 +26,13 @@ import com.google.cloud.http.HttpTransportOptions;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.time.Duration;
-import java.util.concurrent.ExecutionException;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
-public class RemoteBigQueryHelperTest {
+@ExtendWith(MockitoExtension.class)
+class RemoteBigQueryHelperTest {
 
   private static final String DATASET_NAME = "dataset-name";
   private static final String PROJECT_ID = "project-id";
@@ -67,7 +66,7 @@ public class RemoteBigQueryHelperTest {
   private static final InputStream JSON_KEY_STREAM = new ByteArrayInputStream(JSON_KEY.getBytes());
 
   @Test
-  public void testForceDelete() throws InterruptedException, ExecutionException {
+  void testForceDelete() {
     BigQuery bigqueryMock = Mockito.mock(BigQuery.class);
     Mockito.when(bigqueryMock.delete(DATASET_NAME, DatasetDeleteOption.deleteContents()))
         .thenReturn(true);
@@ -76,15 +75,15 @@ public class RemoteBigQueryHelperTest {
   }
 
   @Test
-  public void testCreateFromStream() {
+  void testCreateFromStream() {
     RemoteBigQueryHelper helper = RemoteBigQueryHelper.create(PROJECT_ID, JSON_KEY_STREAM);
     BigQueryOptions options = helper.getOptions();
     assertEquals(PROJECT_ID, options.getProjectId());
     assertEquals(60000, ((HttpTransportOptions) options.getTransportOptions()).getConnectTimeout());
     assertEquals(60000, ((HttpTransportOptions) options.getTransportOptions()).getReadTimeout());
     assertEquals(10, options.getRetrySettings().getMaxAttempts());
-    assertEquals(Duration.ofMillis(30000), options.getRetrySettings().getMaxRetryDelayDuration());
-    assertEquals(Duration.ofMillis(120000), options.getRetrySettings().getTotalTimeoutDuration());
-    assertEquals(Duration.ofMillis(250), options.getRetrySettings().getInitialRetryDelayDuration());
+    assertEquals(Duration.ofMillis(1000), options.getRetrySettings().getMaxRetryDelayDuration());
+    assertEquals(Duration.ofMillis(3000), options.getRetrySettings().getTotalTimeoutDuration());
+    assertEquals(Duration.ofMillis(100), options.getRetrySettings().getInitialRetryDelayDuration());
   }
 }
