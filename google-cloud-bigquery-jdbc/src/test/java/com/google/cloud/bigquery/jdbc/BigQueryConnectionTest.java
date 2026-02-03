@@ -360,8 +360,8 @@ public class BigQueryConnectionTest {
       assertTrue(provider instanceof InstantiatingGrpcChannelProvider);
 
       InstantiatingGrpcChannelProvider grpcProvider = (InstantiatingGrpcChannelProvider) provider;
-      assertEquals(Duration.ofSeconds(10), grpcProvider.getKeepAliveTime());
-      assertEquals(Duration.ofSeconds(5), grpcProvider.getKeepAliveTimeout());
+      assertEquals(Duration.ofSeconds(10).toString(), grpcProvider.getKeepAliveTime().toString());
+      assertEquals(Duration.ofSeconds(5).toString(), grpcProvider.getKeepAliveTimeout().toString());
       assertTrue(grpcProvider.getKeepAliveWithoutCalls());
     }
   }
