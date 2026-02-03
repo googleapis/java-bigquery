@@ -165,8 +165,7 @@ public class BigQueryDriver implements Driver {
                 this.toString()));
         return connection;
       } else {
-        throw new IllegalArgumentException(
-            "Invalid URL provided, must start with \"jdbc:bigquery:\"");
+        return null;
       }
     } catch (IOException e) {
       LOG.warning("Getting a warning: " + e.getMessage());
