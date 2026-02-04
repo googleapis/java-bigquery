@@ -18,6 +18,7 @@ package com.google.cloud.bigquery.jdbc;
 
 import com.google.api.gax.core.CredentialsProvider;
 import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.api.gax.grpc.InstantiatingGrpcChannelProvider;
 import com.google.api.gax.retrying.RetrySettings;
 import com.google.api.gax.rpc.FixedHeaderProvider;
 import com.google.api.gax.rpc.HeaderProvider;
@@ -1053,9 +1054,22 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     if (this.universeDomain != null) {
       bigQueryReadSettings.setUniverseDomain(this.universeDomain);
     }
-    if (this.transportChannelProvider != null) {
-      bigQueryReadSettings.setTransportChannelProvider(this.transportChannelProvider);
+    TransportChannelProvider activeProvider = this.transportChannelProvider;
+    if (activeProvider == null) {
+      activeProvider = BigQueryReadSettings.defaultGrpcTransportProviderBuilder().build();
     }
+
+    if (activeProvider instanceof InstantiatingGrpcChannelProvider) {
+      activeProvider =
+          ((InstantiatingGrpcChannelProvider) activeProvider)
+              .toBuilder()
+                  .setKeepAliveTimeDuration(java.time.Duration.ofSeconds(10))
+                  .setKeepAliveTimeoutDuration(java.time.Duration.ofSeconds(5))
+                  .setKeepAliveWithoutCalls(true)
+                  .build();
+    }
+
+    bigQueryReadSettings.setTransportChannelProvider(activeProvider);
 
     return BigQueryReadClient.create(bigQueryReadSettings.build());
   }
