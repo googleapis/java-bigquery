@@ -160,6 +160,7 @@ final class BigQueryJdbcUrlUtility {
           OAUTH2_TOKEN_URI_PROPERTY_NAME,
           HTAPI_ENDPOINT_OVERRIDE_PROPERTY_NAME,
           STS_ENDPOINT_OVERRIDE_PROPERTY_NAME);
+  static final String REQUEST_REASON_PROPERTY_NAME = "RequestReason";
   static final List<String> BYOID_PROPERTIES =
       Arrays.asList(
           BYOID_AUDIENCE_URI_PROPERTY_NAME,
@@ -249,7 +250,8 @@ final class BigQueryJdbcUrlUtility {
                   BigQueryConnectionProperty.newBuilder()
                       .setName(OAUTH_SA_IMPERSONATION_CHAIN_PROPERTY_NAME)
                       .setDescription(
-                          "Comma separated list of service account emails in the impersonation chain.")
+                          "Comma separated list of service account emails in the impersonation"
+                              + " chain.")
                       .build(),
                   BigQueryConnectionProperty.newBuilder()
                       .setName(OAUTH_SA_IMPERSONATION_SCOPES_PROPERTY_NAME)
@@ -569,6 +571,12 @@ final class BigQueryJdbcUrlUtility {
                       .setDescription(
                           "The password for accessing the Java TrustStore that is specified using"
                               + " the property SSLTrustStore.")
+                      .build(),
+                  BigQueryConnectionProperty.newBuilder()
+                      .setName(REQUEST_REASON_PROPERTY_NAME)
+                      .setDescription(
+                          "Reason for the request, which is passed as the x-goog-request-reason"
+                              + " header.")
                       .build())));
 
   private BigQueryJdbcUrlUtility() {}

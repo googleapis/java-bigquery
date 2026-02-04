@@ -20,7 +20,6 @@ import com.google.api.gax.core.CredentialsProvider;
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.gax.grpc.InstantiatingGrpcChannelProvider;
 import com.google.api.gax.retrying.RetrySettings;
-import com.google.api.gax.rpc.FixedHeaderProvider;
 import com.google.api.gax.rpc.HeaderProvider;
 import com.google.api.gax.rpc.TransportChannelProvider;
 import com.google.auth.Credentials;
@@ -131,6 +130,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
   String sslTrustStorePassword;
   long maxBytesBilled;
   Map<String, String> labels;
+  String requestReason;
 
   BigQueryConnection(String url) throws IOException {
     this.connectionUrl = url;
@@ -347,6 +347,12 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
             BigQueryJdbcUrlUtility.METADATA_FETCH_THREAD_COUNT_PROPERTY_NAME,
             BigQueryJdbcUrlUtility.DEFAULT_METADATA_FETCH_THREAD_COUNT_VALUE,
             this.connectionClassName);
+    this.requestReason =
+        BigQueryJdbcUrlUtility.parseStringProperty(
+            url,
+            BigQueryJdbcUrlUtility.REQUEST_REASON_PROPERTY_NAME,
+            null,
+            this.connectionClassName);
 
     HEADER_PROVIDER = createHeaderProvider();
     this.bigQuery = getBigQueryConnection();
@@ -383,7 +389,14 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     String partnerToken = buildPartnerToken(this.connectionUrl);
     String headerToken =
         DEFAULT_JDBC_TOKEN_VALUE + "/" + getLibraryVersion(this.getClass()) + partnerToken;
-    return FixedHeaderProvider.create("user-agent", headerToken);
+    return () -> {
+      Map<String, String> headers = new java.util.HashMap<>();
+      headers.put("user-agent", headerToken);
+      if (this.requestReason != null) {
+        headers.put("x-goog-request-reason", this.requestReason);
+      }
+      return headers;
+    };
   }
 
   protected void addOpenStatements(Statement statement) {
