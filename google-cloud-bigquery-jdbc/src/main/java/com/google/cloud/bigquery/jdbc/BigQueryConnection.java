@@ -20,6 +20,7 @@ import com.google.api.gax.core.CredentialsProvider;
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.gax.grpc.InstantiatingGrpcChannelProvider;
 import com.google.api.gax.retrying.RetrySettings;
+import com.google.api.gax.rpc.FixedHeaderProvider;
 import com.google.api.gax.rpc.HeaderProvider;
 import com.google.api.gax.rpc.TransportChannelProvider;
 import com.google.auth.Credentials;
@@ -389,14 +390,12 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     String partnerToken = buildPartnerToken(this.connectionUrl);
     String headerToken =
         DEFAULT_JDBC_TOKEN_VALUE + "/" + getLibraryVersion(this.getClass()) + partnerToken;
-    return () -> {
-      Map<String, String> headers = new java.util.HashMap<>();
-      headers.put("user-agent", headerToken);
-      if (this.requestReason != null) {
-        headers.put("x-goog-request-reason", this.requestReason);
-      }
-      return java.util.Collections.unmodifiableMap(headers);
-    };
+    Map<String, String> headers = new java.util.HashMap<>();
+    headers.put("user-agent", headerToken);
+    if (this.requestReason != null) {
+      headers.put("x-goog-request-reason", this.requestReason);
+    }
+    return FixedHeaderProvider.create(headers);
   }
 
   protected void addOpenStatements(Statement statement) {
