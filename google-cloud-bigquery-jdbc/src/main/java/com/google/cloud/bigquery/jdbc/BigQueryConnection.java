@@ -395,7 +395,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
       if (this.requestReason != null) {
         headers.put("x-goog-request-reason", this.requestReason);
       }
-      return headers;
+      return java.util.Collections.unmodifiableMap(headers);
     };
   }
 
