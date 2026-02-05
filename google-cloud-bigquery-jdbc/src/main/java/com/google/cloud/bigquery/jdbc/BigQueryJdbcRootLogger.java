@@ -34,16 +34,17 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 /** This class is used to log messages from the BigQuery JDBC Driver. */
-class BigQueryJdbcRootLogger {
+public class BigQueryJdbcRootLogger {
 
   /**
    * Note: Each connection will have its own file handler with the level and logPath specified in
    * the connection properties. But the logs will be driver logs and not connection specific.
    */
-  private static final Logger logger = Logger.getLogger("com.google.cloud.bigquery");
+  private static final Logger logger = Logger.getLogger("com.google.cloud.bigquery.jdbc");
 
   private static final Logger storageLogger = Logger.getLogger("com.google.cloud.bigquery.storage");
 
+  private static Level forcedLevel = Level.OFF;
   private static Handler fileHandler = null;
   private static Path currentLogPath = null;
   private static int fileCounter = 0;
@@ -106,51 +107,25 @@ class BigQueryJdbcRootLogger {
     return logger;
   }
 
-  private static void setHandler() throws IOException {
-    // If Console handler exists, remove it.
-    // If File handler exists, use it. Else create new one.
-    for (Handler h : logger.getHandlers()) {
-      if (h instanceof ConsoleHandler) {
-        h.close();
-        logger.removeHandler(h);
-        break;
-      }
-      if (h instanceof FileHandler) {
-        fileHandler = h;
-        break;
-      }
-    }
+  public static void enableConsoleLogger() {
+    ConsoleHandler consoleHandler = new ConsoleHandler();
+    consoleHandler.setFormatter(getFormatter());
+    logger.addHandler(consoleHandler);
+  }
 
-    if (fileHandler == null) {
-      String fileName = String.format("BigQueryJdbc%d", fileCounter);
-      fileCounter++;
-
-      currentLogPath = Files.createTempFile(fileName, ".log");
-      currentLogPath.toFile().deleteOnExit();
-
-      fileHandler = new FileHandler(currentLogPath.toString(), 0, 1, true);
-      logger.addHandler(fileHandler);
+  public static void setLevel(Level level) throws IOException {
+    if (forcedLevel == Level.OFF) {
+      logger.setLevel(level);
     }
   }
 
-  public static void setLevel(Level level, String logPath) throws IOException {
-    if (level != Level.OFF) {
-      setPath(logPath);
-      if (logger.getHandlers().length == 0) {
-        setHandler();
-        fileHandler.setFormatter(getFormatter());
-        logger.setUseParentHandlers(false);
-      }
-      fileHandler.setLevel(level);
-      logger.setLevel(level);
-    } else {
-      for (Handler h : logger.getHandlers()) {
-        h.close();
-        logger.removeHandler(h);
-      }
-      fileHandler = null;
-      currentLogPath = null;
-    }
+  public static void forceSetLevel(Level level) {
+    forcedLevel = level;
+    logger.setLevel(level);
+  }
+
+  public static void enableFileLogger(String logPath) {
+    setPath(logPath);
   }
 
   static void setPath(String logPath) {
