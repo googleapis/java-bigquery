@@ -59,9 +59,9 @@ class BigQueryParameterHandler {
 
         Object parameterValue = getParameter(i);
         StandardSQLTypeName sqlType = getSqlType(i);
-        LOG.info(
-                "Parameter %s of type %s at index %s added to QueryJobConfiguration",
-                parameterValue, sqlType, i);
+        LOG.finest(
+            "Parameter %s of type %s at index %s added to QueryJobConfiguration",
+            parameterValue, sqlType, i);
         jobConfigurationBuilder.addPositionalParameter(
             QueryParameterValue.of(parameterValue, sqlType));
       }
