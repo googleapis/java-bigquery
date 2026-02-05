@@ -18,8 +18,11 @@ package com.google.cloud.bigquery.jdbc;
 
 import static org.junit.Assert.*;
 
+import com.google.api.gax.grpc.InstantiatingGrpcChannelProvider;
 import com.google.api.gax.rpc.HeaderProvider;
+import com.google.api.gax.rpc.TransportChannelProvider;
 import com.google.cloud.bigquery.exception.BigQueryJdbcException;
+import com.google.cloud.bigquery.storage.v1.BigQueryReadClient;
 import com.google.cloud.bigquery.storage.v1.BigQueryWriteClient;
 import java.io.IOException;
 import java.io.InputStream;
@@ -159,6 +162,23 @@ public class BigQueryConnectionTest {
       assertTrue(agent.startsWith(DEFAULT_JDBC_TOKEN_VALUE + "/" + expectedVersion));
       assertFalse(agent.contains("(MyPartner;"));
       assertFalse(agent.contains("(GPN:"));
+    }
+  }
+
+  @Test
+  public void testHeaderProviderWithRequestReason() throws IOException, SQLException {
+    String requestReason = "Ticket123";
+    String url =
+        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+            + "OAuthType=2;ProjectId=MyBigQueryProject;"
+            + "OAuthAccessToken=redactedToken;OAuthClientId=redactedToken;"
+            + "OAuthClientSecret=redactedToken;RequestReason="
+            + requestReason;
+    try (BigQueryConnection connection = new BigQueryConnection(url)) {
+      HeaderProvider headerProvider = connection.createHeaderProvider();
+      java.util.Map<String, String> headers = headerProvider.getHeaders();
+      assertTrue(headers.containsKey("x-goog-request-reason"));
+      assertEquals(requestReason, headers.get("x-goog-request-reason"));
     }
   }
 
@@ -338,6 +358,27 @@ public class BigQueryConnectionTest {
           "Should use the custom value when a valid integer is provided",
           16,
           connectionCustom.getMetadataFetchThreadCount());
+    }
+  }
+
+  @Test
+  public void testBigQueryReadClientKeepAliveSettings() throws SQLException, IOException {
+    String url =
+        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+            + "OAuthType=2;ProjectId=MyBigQueryProject;"
+            + "OAuthAccessToken=redactedToken;OAuthClientId=redactedToken;"
+            + "OAuthClientSecret=redactedToken;";
+    try (BigQueryConnection connection = new BigQueryConnection(url)) {
+      BigQueryReadClient readClient = connection.getBigQueryReadClient();
+      assertNotNull(readClient);
+
+      TransportChannelProvider provider = readClient.getSettings().getTransportChannelProvider();
+      assertTrue(provider instanceof InstantiatingGrpcChannelProvider);
+
+      InstantiatingGrpcChannelProvider grpcProvider = (InstantiatingGrpcChannelProvider) provider;
+      assertEquals(java.time.Duration.ofSeconds(10), grpcProvider.getKeepAliveTimeDuration());
+      assertEquals(java.time.Duration.ofSeconds(5), grpcProvider.getKeepAliveTimeoutDuration());
+      assertTrue(grpcProvider.getKeepAliveWithoutCalls());
     }
   }
 }

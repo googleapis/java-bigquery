@@ -18,6 +18,7 @@ package com.google.cloud.bigquery.jdbc;
 
 import com.google.api.gax.core.CredentialsProvider;
 import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.api.gax.grpc.InstantiatingGrpcChannelProvider;
 import com.google.api.gax.retrying.RetrySettings;
 import com.google.api.gax.rpc.FixedHeaderProvider;
 import com.google.api.gax.rpc.HeaderProvider;
@@ -130,6 +131,9 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
   String sslTrustStorePassword;
   long maxBytesBilled;
   Map<String, String> labels;
+  Integer httpConnectTimeout;
+  Integer httpReadTimeout;
+  String requestReason;
 
   BigQueryConnection(String url) throws IOException {
     this.connectionUrl = url;
@@ -271,11 +275,25 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
             BigQueryJdbcUrlUtility.SSL_TRUST_STORE_PWD_PROPERTY_NAME,
             null,
             this.connectionClassName);
+    this.httpConnectTimeout =
+        BigQueryJdbcUrlUtility.parseIntProperty(
+            url,
+            BigQueryJdbcUrlUtility.HTTP_CONNECT_TIMEOUT_PROPERTY_NAME,
+            null,
+            this.connectionClassName);
+    this.httpReadTimeout =
+        BigQueryJdbcUrlUtility.parseIntProperty(
+            url,
+            BigQueryJdbcUrlUtility.HTTP_READ_TIMEOUT_PROPERTY_NAME,
+            null,
+            this.connectionClassName);
     this.httpTransportOptions =
         BigQueryJdbcProxyUtility.getHttpTransportOptions(
             proxyProperties,
             this.sslTrustStorePath,
             this.sslTrustStorePassword,
+            this.httpConnectTimeout,
+            this.httpReadTimeout,
             this.connectionClassName);
     this.transportChannelProvider =
         BigQueryJdbcProxyUtility.getTransportChannelProvider(
@@ -346,6 +364,12 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
             BigQueryJdbcUrlUtility.METADATA_FETCH_THREAD_COUNT_PROPERTY_NAME,
             BigQueryJdbcUrlUtility.DEFAULT_METADATA_FETCH_THREAD_COUNT_VALUE,
             this.connectionClassName);
+    this.requestReason =
+        BigQueryJdbcUrlUtility.parseStringProperty(
+            url,
+            BigQueryJdbcUrlUtility.REQUEST_REASON_PROPERTY_NAME,
+            null,
+            this.connectionClassName);
 
     HEADER_PROVIDER = createHeaderProvider();
     this.bigQuery = getBigQueryConnection();
@@ -382,7 +406,12 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     String partnerToken = buildPartnerToken(this.connectionUrl);
     String headerToken =
         DEFAULT_JDBC_TOKEN_VALUE + "/" + getLibraryVersion(this.getClass()) + partnerToken;
-    return FixedHeaderProvider.create("user-agent", headerToken);
+    Map<String, String> headers = new java.util.HashMap<>();
+    headers.put("user-agent", headerToken);
+    if (this.requestReason != null) {
+      headers.put("x-goog-request-reason", this.requestReason);
+    }
+    return FixedHeaderProvider.create(headers);
   }
 
   protected void addOpenStatements(Statement statement) {
@@ -723,6 +752,14 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     return sslTrustStorePassword;
   }
 
+  Integer getHttpConnectTimeout() {
+    return httpConnectTimeout;
+  }
+
+  Integer getHttpReadTimeout() {
+    return httpReadTimeout;
+  }
+
   @Override
   public boolean isValid(int timeout) throws SQLException {
     if (timeout < 0) {
@@ -1053,9 +1090,22 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     if (this.universeDomain != null) {
       bigQueryReadSettings.setUniverseDomain(this.universeDomain);
     }
-    if (this.transportChannelProvider != null) {
-      bigQueryReadSettings.setTransportChannelProvider(this.transportChannelProvider);
+    TransportChannelProvider activeProvider = this.transportChannelProvider;
+    if (activeProvider == null) {
+      activeProvider = BigQueryReadSettings.defaultGrpcTransportProviderBuilder().build();
     }
+
+    if (activeProvider instanceof InstantiatingGrpcChannelProvider) {
+      activeProvider =
+          ((InstantiatingGrpcChannelProvider) activeProvider)
+              .toBuilder()
+                  .setKeepAliveTimeDuration(java.time.Duration.ofSeconds(10))
+                  .setKeepAliveTimeoutDuration(java.time.Duration.ofSeconds(5))
+                  .setKeepAliveWithoutCalls(true)
+                  .build();
+    }
+
+    bigQueryReadSettings.setTransportChannelProvider(activeProvider);
 
     return BigQueryReadClient.create(bigQueryReadSettings.build());
   }
