@@ -783,19 +783,11 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
   @Override
   public ResultSet getProcedures(
       String catalog, String schemaPattern, String procedureNamePattern) {
-    if ((catalog == null || catalog.isEmpty())
-        || (schemaPattern != null && schemaPattern.isEmpty())
-        || (procedureNamePattern != null && procedureNamePattern.isEmpty())) {
-      LOG.warning("Returning empty ResultSet as catalog is null/empty or a pattern is empty.");
-      return new BigQueryJsonResultSet();
-    }
-
     LOG.info(
-        String.format(
-            "getProcedures called for catalog: %s, schemaPattern: %s, procedureNamePattern: %s",
-            catalog, schemaPattern, procedureNamePattern));
-
-    final Pattern schemaRegex = compileSqlLikePattern(schemaPattern);
+        "getProcedures called for catalog: %s, schemaPattern: %s, procedureNamePattern: %s",
+        catalog,
+        schemaPattern,
+        procedureNamePattern);
     final Pattern procedureNameRegex = compileSqlLikePattern(procedureNamePattern);
     final Schema resultSchema = defineGetProceduresSchema();
     final FieldList resultSchemaFields = resultSchema.getFields();
@@ -1036,9 +1028,8 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
 
     } catch (Exception e) {
       LOG.warning(
-          String.format(
               "Error processing procedure info for %s: %s. Skipping this procedure.",
-              routineId, e.getMessage()));
+              routineId, e.getMessage());
     }
   }
 
@@ -1077,10 +1068,12 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
     }
 
     LOG.info(
-        String.format(
-            "getProcedureColumns called for catalog: %s, schemaPattern: %s, procedureNamePattern:"
-                + " %s, columnNamePattern: %s",
-            catalog, schemaPattern, procedureNamePattern, columnNamePattern));
+        "getProcedureColumns called for catalog: %s, schemaPattern: %s, procedureNamePattern:"
+            + " %s, columnNamePattern: %s",
+        catalog,
+        schemaPattern,
+        procedureNamePattern,
+        columnNamePattern);
 
     final Pattern schemaRegex = compileSqlLikePattern(schemaPattern);
     final Pattern procedureNameRegex = compileSqlLikePattern(procedureNamePattern);
@@ -1221,9 +1214,8 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
   private List<Dataset> fetchMatchingDatasetsForProcedureColumns(
       String catalogParam, String schemaPattern, Pattern schemaRegex) throws InterruptedException {
     LOG.fine(
-        String.format(
             "Fetching matching datasets for catalog '%s', schemaPattern '%s'",
-            catalogParam, schemaPattern));
+            catalogParam, schemaPattern);
     List<Dataset> datasetsToScan =
         findMatchingBigQueryObjects(
             "Dataset",
@@ -1235,9 +1227,8 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
             schemaRegex,
             LOG);
     LOG.info(
-        String.format(
             "Found %d datasets to scan for procedures in catalog '%s'.",
-            datasetsToScan.size(), catalogParam));
+            datasetsToScan.size(), catalogParam);
     return datasetsToScan;
   }
 
@@ -1495,10 +1486,9 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
       arguments = routine.getArguments();
     } catch (Exception e) {
       LOG.warning(
-          String.format(
               "Could not retrieve arguments list for procedure %s: %s. No arguments will be"
                   + " processed.",
-              routineId, e.getMessage()));
+              routineId, e.getMessage());
       return;
     }
 
@@ -1527,10 +1517,9 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
         argName = arg.getName();
       } catch (Exception listAccessException) {
         LOG.warning(
-            String.format(
                 "Exception during arguments.get(%d) for Proc: %s. Ordinal: %d. Message: %s."
                     + " Generating fallback row.",
-                i, routineId, ordinalPosition, listAccessException.getMessage()));
+                i, routineId, ordinalPosition, listAccessException.getMessage());
         argName = "arg_retrieval_err_" + ordinalPosition;
         arg = null;
       }
@@ -1568,20 +1557,18 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
 
     if (argument == null) {
       LOG.warning(
-          String.format(
               "Proc: %s, Arg: %s (Pos %d) - RoutineArgument object is null. Defaulting type to"
                   + " VARCHAR.",
-              procedureName, columnName, ordinalPosition));
+              procedureName, columnName, ordinalPosition);
       typeInfo = new ColumnTypeInfo(Types.VARCHAR, "VARCHAR", null, null, null);
     } else {
       try {
         StandardSQLDataType argumentDataType = argument.getDataType();
         if (argumentDataType == null) {
           LOG.warning(
-              String.format(
                   "Proc: %s, Arg: %s (Pos %d) - argument.getDataType() returned null. Defaulting"
                       + " type to VARCHAR.",
-                  procedureName, columnName, ordinalPosition));
+                  procedureName, columnName, ordinalPosition);
           typeInfo = new ColumnTypeInfo(Types.VARCHAR, "VARCHAR", null, null, null);
         } else {
           typeInfo =
@@ -1590,10 +1577,9 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
         }
       } catch (Exception e) {
         LOG.warning(
-            String.format(
                 "Proc: %s, Arg: %s (Pos %d) - Unexpected Exception during type processing."
                     + " Defaulting type to VARCHAR. Error: %s",
-                procedureName, columnName, ordinalPosition, e.getMessage()));
+                procedureName, columnName, ordinalPosition, e.getMessage());
         typeInfo = new ColumnTypeInfo(Types.VARCHAR, "VARCHAR", null, null, null);
       }
     }
@@ -1604,9 +1590,8 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
         argumentModeStr = argument.getMode();
       } catch (Exception e) {
         LOG.warning(
-            String.format(
                 "Proc: %s, Arg: %s (Pos %d) - Could not get argument mode. Error: %s",
-                procedureName, columnName, ordinalPosition, e.getMessage()));
+                procedureName, columnName, ordinalPosition, e.getMessage());
       }
     }
 
@@ -1672,10 +1657,9 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
       }
     } catch (Exception e) {
       LOG.warning(
-          String.format(
               "Proc: %s, Arg: %s (Pos %d) - Caught an unexpected Exception during type"
                   + " determination. Defaulting type to VARCHAR. Error: %s",
-              procedureName, columnName, ordinalPosition, e.getMessage()));
+              procedureName, columnName, ordinalPosition, e.getMessage());
     }
     return defaultVarcharTypeInfo;
   }
@@ -1733,9 +1717,11 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
     }
 
     LOG.info(
-        String.format(
-            "getTables called for catalog: %s, schemaPattern: %s, tableNamePattern: %s, types: %s",
-            effectiveCatalog, effectiveSchemaPattern, tableNamePattern, Arrays.toString(types)));
+        "getTables called for catalog: %s, schemaPattern: %s, tableNamePattern: %s, types: %s",
+        effectiveCatalog,
+        effectiveSchemaPattern,
+        tableNamePattern,
+        Arrays.toString(types));
 
     final Pattern schemaRegex = compileSqlLikePattern(effectiveSchemaPattern);
     final Pattern tableNameRegex = compileSqlLikePattern(tableNamePattern);
@@ -1959,9 +1945,8 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
 
       if (requestedTypes != null && !requestedTypes.contains(bqTableType)) {
         LOG.finer(
-            String.format(
                 "Skipping table %s as its type '%s' is not in the requested types %s",
-                tableId, bqTableType, requestedTypes));
+                tableId, bqTableType, requestedTypes);
         return;
       }
 
@@ -1983,9 +1968,8 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
       LOG.fine("Processed and added table info row for: " + tableId);
     } catch (Exception e) {
       LOG.warning(
-          String.format(
               "Error processing table info for %s: %s. Skipping this table.",
-              tableId, e.getMessage()));
+              tableId, e.getMessage());
     }
   }
 
@@ -2105,10 +2089,12 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
     }
 
     LOG.info(
-        String.format(
-            "getColumns called for catalog: %s, schemaPattern: %s, tableNamePattern: %s,"
-                + " columnNamePattern: %s",
-            effectiveCatalog, effectiveSchemaPattern, tableNamePattern, columnNamePattern));
+        "getColumns called for catalog: %s, schemaPattern: %s, tableNamePattern: %s,"
+            + " columnNamePattern: %s",
+        effectiveCatalog,
+        effectiveSchemaPattern,
+        tableNamePattern,
+        columnNamePattern);
 
     Pattern schemaRegex = compileSqlLikePattern(effectiveSchemaPattern);
     Pattern tableNameRegex = compileSqlLikePattern(tableNamePattern);
@@ -2257,9 +2243,8 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
           || tableSchema.getFields() == null
           || tableSchema.getFields().isEmpty()) {
         LOG.warning(
-            String.format(
                 "Schema not found or fields are null for table %s (Type: %s). Skipping columns.",
-                tableId, definition.getType()));
+                tableId, definition.getType());
         return;
       }
 
@@ -2284,12 +2269,10 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
       LOG.fine("Finished processing columns for table: " + tableId);
     } catch (BigQueryException e) {
       LOG.warning(
-          String.format(
               "BigQueryException processing table %s: %s (Code: %d)",
-              tableId, e.getMessage(), e.getCode()));
+              tableId, e.getMessage(), e.getCode());
     } catch (Exception e) {
-      LOG.severe(
-          String.format("Unexpected error processing table %s: %s", tableId, e.getMessage()));
+      LOG.severe("Unexpected error processing table %s: %s", tableId, e.getMessage());
     }
   }
 
@@ -2511,10 +2494,12 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
   public ResultSet getColumnPrivileges(
       String catalog, String schema, String table, String columnNamePattern) {
     LOG.info(
-        String.format(
-            "getColumnPrivileges called for catalog: %s, schema: %s, table: %s, columnNamePattern:"
-                + " %s. BigQuery IAM model differs from SQL privileges; returning empty ResultSet.",
-            catalog, schema, table, columnNamePattern));
+        "getColumnPrivileges called for catalog: %s, schema: %s, table: %s, columnNamePattern:"
+            + " %s. BigQuery IAM model differs from SQL privileges; returning empty ResultSet.",
+        catalog,
+        schema,
+        table,
+        columnNamePattern);
 
     final Schema resultSchema = defineGetColumnPrivilegesSchema();
     final FieldList resultSchemaFields = resultSchema.getFields();
@@ -2540,10 +2525,11 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
   public ResultSet getTablePrivileges(
       String catalog, String schemaPattern, String tableNamePattern) {
     LOG.info(
-        String.format(
-            "getTablePrivileges called for catalog: %s, schemaPattern: %s, tableNamePattern: %s. "
-                + "BigQuery IAM model differs from SQL privileges; returning empty ResultSet.",
-            catalog, schemaPattern, tableNamePattern));
+        "getTablePrivileges called for catalog: %s, schemaPattern: %s, tableNamePattern: %s. "
+            + "BigQuery IAM model differs from SQL privileges; returning empty ResultSet.",
+        catalog,
+        schemaPattern,
+        tableNamePattern);
 
     final Schema resultSchema = defineGetTablePrivilegesSchema();
     final FieldList resultSchemaFields = resultSchema.getFields();
@@ -2562,11 +2548,14 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
   public ResultSet getBestRowIdentifier(
       String catalog, String schema, String table, int scope, boolean nullable) {
     LOG.info(
-        String.format(
-            "getBestRowIdentifier called for catalog: %s, schema: %s, table: %s, scope: %d,"
-                + " nullable: %s. BigQuery does not support best row identifiers; returning empty"
-                + " ResultSet.",
-            catalog, schema, table, scope, nullable));
+        "getBestRowIdentifier called for catalog: %s, schema: %s, table: %s, scope: %d,"
+            + " nullable: %s. BigQuery does not support best row identifiers; returning empty"
+            + " ResultSet.",
+        catalog,
+        schema,
+        table,
+        scope,
+        nullable);
 
     final Schema resultSchema = defineGetBestRowIdentifierSchema();
     final FieldList resultSchemaFields = resultSchema.getFields();
@@ -2614,10 +2603,11 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
   @Override
   public ResultSet getVersionColumns(String catalog, String schema, String table) {
     LOG.info(
-        String.format(
-            "getVersionColumns called for catalog: %s, schema: %s, table: %s. "
-                + "Automatic version columns not supported by BigQuery; returning empty ResultSet.",
-            catalog, schema, table));
+        "getVersionColumns called for catalog: %s, schema: %s, table: %s. "
+            + "Automatic version columns not supported by BigQuery; returning empty ResultSet.",
+        catalog,
+        schema,
+        table);
 
     final Schema resultSchema = defineGetVersionColumnsSchema();
     final FieldList resultSchemaFields = resultSchema.getFields();
@@ -3324,13 +3314,12 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
   public ResultSet getUDTs(
       String catalog, String schemaPattern, String typeNamePattern, int[] types) {
     LOG.info(
-        String.format(
-            "getUDTs called for catalog: %s, schemaPattern: %s, typeNamePattern: %s, types: %s. "
-                + "Feature not supported by BigQuery; returning empty ResultSet.",
-            catalog,
-            schemaPattern,
-            typeNamePattern,
-            (types == null ? "null" : Arrays.toString(types))));
+        "getUDTs called for catalog: %s, schemaPattern: %s, typeNamePattern: %s, types: %s. "
+            + "Feature not supported by BigQuery; returning empty ResultSet.",
+        catalog,
+        schemaPattern,
+        typeNamePattern,
+        (types == null ? "null" : Arrays.toString(types)));
 
     final Schema resultSchema = defineGetUDTsSchema();
     final FieldList resultSchemaFields = resultSchema.getFields();
@@ -3401,10 +3390,11 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
   @Override
   public ResultSet getSuperTables(String catalog, String schemaPattern, String tableNamePattern) {
     LOG.info(
-        String.format(
-            "getSuperTables called for catalog: %s, schemaPattern: %s, tableNamePattern: %s. "
-                + "BigQuery does not support super tables; returning empty ResultSet.",
-            catalog, schemaPattern, tableNamePattern));
+        "getSuperTables called for catalog: %s, schemaPattern: %s, tableNamePattern: %s. "
+            + "BigQuery does not support super tables; returning empty ResultSet.",
+        catalog,
+        schemaPattern,
+        tableNamePattern);
 
     final Schema resultSchema = defineGetSuperTablesSchema();
     final FieldList resultSchemaFields = resultSchema.getFields();
@@ -3439,10 +3429,11 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
   @Override
   public ResultSet getSuperTypes(String catalog, String schemaPattern, String typeNamePattern) {
     LOG.info(
-        String.format(
-            "getSuperTypes called for catalog: %s, schemaPattern: %s, typeNamePattern: %s. BigQuery"
-                + " does not support user-defined type hierarchies; returning empty ResultSet.",
-            catalog, schemaPattern, typeNamePattern));
+        "getSuperTypes called for catalog: %s, schemaPattern: %s, typeNamePattern: %s. BigQuery"
+            + " does not support user-defined type hierarchies; returning empty ResultSet.",
+        catalog,
+        schemaPattern,
+        typeNamePattern);
 
     final Schema resultSchema = defineGetSuperTypesSchema();
     final FieldList resultSchemaFields = resultSchema.getFields();
@@ -3486,11 +3477,13 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
   public ResultSet getAttributes(
       String catalog, String schemaPattern, String typeNamePattern, String attributeNamePattern) {
     LOG.info(
-        String.format(
-            "getAttributes called for catalog: %s, schemaPattern: %s, typeNamePattern: %s,"
-                + " attributeNamePattern: %s. Feature not supported by BigQuery; returning empty"
-                + " ResultSet.",
-            catalog, schemaPattern, typeNamePattern, attributeNamePattern));
+        "getAttributes called for catalog: %s, schemaPattern: %s, typeNamePattern: %s,"
+            + " attributeNamePattern: %s. Feature not supported by BigQuery; returning empty"
+            + " ResultSet.",
+        catalog,
+        schemaPattern,
+        typeNamePattern,
+        attributeNamePattern);
 
     final Schema resultSchema = defineGetAttributesSchema();
     final FieldList resultSchemaFields = resultSchema.getFields();
@@ -3652,9 +3645,7 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
       return new BigQueryJsonResultSet();
     }
 
-    LOG.info(
-        String.format(
-            "getSchemas called for catalog: %s, schemaPattern: %s", catalog, schemaPattern));
+    LOG.info("getSchemas called for catalog: %s, schemaPattern: %s", catalog, schemaPattern);
 
     final Pattern schemaRegex = compileSqlLikePattern(schemaPattern);
     final Schema resultSchema = defineGetSchemasSchema();
@@ -3780,9 +3771,8 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
       LOG.finer("Processed and added schema info row for: " + datasetId);
     } catch (Exception e) {
       LOG.warning(
-          String.format(
               "Error processing schema info for dataset %s: %s. Skipping this schema.",
-              datasetId, e.getMessage()));
+              datasetId, e.getMessage());
     }
   }
 
@@ -3901,9 +3891,10 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
     }
 
     LOG.info(
-        String.format(
-            "getFunctions called for catalog: %s, schemaPattern: %s, functionNamePattern: %s",
-            catalog, schemaPattern, functionNamePattern));
+        "getFunctions called for catalog: %s, schemaPattern: %s, functionNamePattern: %s",
+        catalog,
+        schemaPattern,
+        functionNamePattern);
 
     final Pattern schemaRegex = compileSqlLikePattern(schemaPattern);
     final Pattern functionNameRegex = compileSqlLikePattern(functionNamePattern);
@@ -3954,9 +3945,8 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
               Callable<List<Routine>> apiCallable =
                   () -> {
                     LOG.fine(
-                        String.format(
                             "Fetching all routines for dataset: %s, pattern: %s",
-                            currentDatasetId.getDataset(), functionNamePattern));
+                            currentDatasetId.getDataset(), functionNamePattern);
                     return findMatchingBigQueryObjects(
                         "Routine",
                         () ->
@@ -4113,9 +4103,8 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
 
     } catch (Exception e) {
       LOG.warning(
-          String.format(
               "Error processing function info for %s: %s. Skipping this function.",
-              routineId, e.getMessage()));
+              routineId, e.getMessage());
     }
   }
 
@@ -4154,10 +4143,12 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
     }
 
     LOG.info(
-        String.format(
-            "getFunctionColumns called for catalog: %s, schemaPattern: %s, functionNamePattern: %s,"
-                + " columnNamePattern: %s",
-            catalog, schemaPattern, functionNamePattern, columnNamePattern));
+        "getFunctionColumns called for catalog: %s, schemaPattern: %s, functionNamePattern: %s,"
+            + " columnNamePattern: %s",
+        catalog,
+        schemaPattern,
+        functionNamePattern,
+        columnNamePattern);
 
     final Pattern schemaRegex = compileSqlLikePattern(schemaPattern);
     final Pattern functionNameRegex = compileSqlLikePattern(functionNamePattern);
@@ -4701,11 +4692,13 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
   public ResultSet getPseudoColumns(
       String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern) {
     LOG.info(
-        String.format(
-            "getPseudoColumns called for catalog: %s, schemaPattern: %s, tableNamePattern: %s,"
-                + " columnNamePattern: %s. Pseudo columns not supported by BigQuery; returning"
-                + " empty ResultSet.",
-            catalog, schemaPattern, tableNamePattern, columnNamePattern));
+        "getPseudoColumns called for catalog: %s, schemaPattern: %s, tableNamePattern: %s,"
+            + " columnNamePattern: %s. Pseudo columns not supported by BigQuery; returning"
+            + " empty ResultSet.",
+        catalog,
+        schemaPattern,
+        tableNamePattern,
+        columnNamePattern);
 
     final Schema resultSchema = defineGetPseudoColumnsSchema();
     final FieldList resultSchemaFields = resultSchema.getFields();
@@ -4824,34 +4817,30 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
         effectiveCatalog = defaultProjectFromConnection;
         effectiveSchemaPattern = defaultSchemaFromConnection;
         LOG.info(
-            String.format(
-                logPrefix + "Using default catalog '%s' and default dataset '%s'.",
-                effectiveCatalog,
-                effectiveSchemaPattern));
+            logPrefix + "Using default catalog '%s' and default dataset '%s'.",
+            effectiveCatalog,
+            effectiveSchemaPattern);
       } else if (catalogIsNullOrEmptyOrWildcard) {
         effectiveCatalog = defaultProjectFromConnection;
         LOG.info(
-            String.format(
-                logPrefix
-                    + "Using default catalog '%s' with user dataset '%s'. Default dataset '%s' ignored.",
-                effectiveCatalog,
-                effectiveSchemaPattern,
-                defaultSchemaFromConnection));
+            logPrefix
+                + "Using default catalog '%s' with user dataset '%s'. Default dataset '%s' ignored.",
+            effectiveCatalog,
+            effectiveSchemaPattern,
+            defaultSchemaFromConnection);
       } else if (schemaPatternIsNullOrEmptyOrWildcard) {
         effectiveSchemaPattern = defaultSchemaFromConnection;
         LOG.info(
-            String.format(
-                logPrefix + "Using user catalog '%s' and default dataset '%s'.",
-                effectiveCatalog,
-                effectiveSchemaPattern));
+            logPrefix + "Using user catalog '%s' and default dataset '%s'.",
+            effectiveCatalog,
+            effectiveSchemaPattern);
       } else {
         LOG.info(
-            String.format(
-                logPrefix
-                    + "Using user catalog '%s' and schema '%s'. Default dataset '%s' ignored.",
-                effectiveCatalog,
-                effectiveSchemaPattern,
-                defaultSchemaFromConnection));
+            logPrefix
+                + "Using user catalog '%s' and schema '%s'. Default dataset '%s' ignored.",
+            effectiveCatalog,
+            effectiveSchemaPattern,
+            defaultSchemaFromConnection);
       }
     }
     return Tuple.of(effectiveCatalog, effectiveSchemaPattern);
@@ -4914,9 +4903,9 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
       Iterable<T> objects;
       if (needsList) {
         logger.info(
-            String.format(
-                "Listing all %ss (pattern: %s)...",
-                objectTypeName, pattern == null ? "<all>" : pattern));
+            "Listing all %ss (pattern: %s)...",
+            objectTypeName,
+            pattern == null ? "<all>" : pattern);
         Page<T> firstPage = listAllOperation.get();
         objects = firstPage.iterateAll();
         logger.fine(
@@ -4924,14 +4913,14 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
                 "Retrieved initial %s list, iterating & filtering if needed...", objectTypeName));
 
       } else {
-        logger.info(String.format("Getting specific %s: '%s'", objectTypeName, pattern));
+        logger.info("Getting specific %s: '%s'", objectTypeName, pattern);
         T specificObject = getSpecificOperation.apply(pattern);
         objects =
             (specificObject == null)
                 ? Collections.<T>emptyList()
                 : Collections.singletonList(specificObject);
         if (specificObject == null) {
-          logger.info(String.format("Specific %s not found: '%s'", objectTypeName, pattern));
+          logger.info("Specific %s not found: '%s'", objectTypeName, pattern);
         }
       }
 
@@ -4956,7 +4945,7 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
 
     } catch (BigQueryException e) {
       if (!needsList && e.getCode() == 404) {
-        logger.info(String.format("%s '%s' not found (API error 404).", objectTypeName, pattern));
+        logger.info("%s '%s' not found (API error 404).", objectTypeName, pattern);
       } else {
         logger.warning(
             String.format(
@@ -5036,20 +5025,18 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
       BigQueryJdbcCustomLogger logger) {
 
     if (collectedResults == null || collectedResults.isEmpty()) {
-      logger.info(String.format("No results collected for %s, skipping sort.", operationName));
+      logger.info("No results collected for %s, skipping sort.", operationName);
       return;
     }
     if (comparator == null) {
-      logger.info(String.format("No comparator provided for %s, skipping sort.", operationName));
+      logger.info("No comparator provided for %s, skipping sort.", operationName);
       return;
     }
 
-    logger.info(
-        String.format(
-            "Sorting %d collected %s results...", collectedResults.size(), operationName));
+    logger.info("Sorting %d collected %s results...", collectedResults.size(), operationName);
     try {
       collectedResults.sort(comparator);
-      logger.info(String.format("%s result sorting completed.", operationName));
+      logger.info("%s result sorting completed.", operationName);
     } catch (Exception e) {
       logger.severe(
           String.format("Error during sorting %s results: %s", operationName, e.getMessage()));
@@ -5174,7 +5161,7 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
   }
 
   private void waitForTasksCompletion(List<Future<?>> taskFutures) {
-    LOG.info(String.format("Waiting for %d submitted tasks to complete...", taskFutures.size()));
+    LOG.info("Waiting for %d submitted tasks to complete...", taskFutures.size());
     for (Future<?> future : taskFutures) {
       try {
         if (!future.isCancelled()) {
@@ -5184,9 +5171,8 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
         LOG.warning("A table processing task was cancelled.");
       } catch (ExecutionException e) {
         LOG.severe(
-            String.format(
                 "Error executing table processing task: %s",
-                (e.getCause() != null ? e.getCause().getMessage() : e.getMessage())));
+                (e.getCause() != null ? e.getCause().getMessage() : e.getMessage()));
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
         LOG.warning(
@@ -5203,7 +5189,7 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
       List<FieldValueList> collectedResults,
       BlockingQueue<BigQueryFieldValueListWrapper> queue,
       FieldList resultSchemaFields) {
-    LOG.info(String.format("Populating queue with %d results...", collectedResults.size()));
+    LOG.info("Populating queue with %d results...", collectedResults.size());
     try {
       for (FieldValueList sortedRow : collectedResults) {
         if (Thread.currentThread().isInterrupted()) {

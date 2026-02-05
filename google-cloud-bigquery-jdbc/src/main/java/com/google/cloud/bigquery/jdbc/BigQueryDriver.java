@@ -144,11 +144,13 @@ public class BigQueryDriver implements Driver {
           logPath = BigQueryJdbcUrlUtility.DEFAULT_LOG_PATH;
         }
 
-        BigQueryJdbcRootLogger.setLevel(logLevel, logPath);
+        BigQueryJdbcRootLogger.setLevel(logLevel);
+        BigQueryJdbcRootLogger.enableFileLogger(logPath
+          
+        );
         // Logging starts from here.
         BigQueryConnection connection = new BigQueryConnection(connectionUri);
         LOG.info(
-            String.format(
                 "Driver info : { {Database Product Name : %s}, "
                     + "{Database Product Version : %s}, "
                     + "{Driver Name : %s}, "
@@ -162,7 +164,7 @@ public class BigQueryDriver implements Driver {
                 connection.getMetaData().getDriverVersion(),
                 logLevel,
                 logPath,
-                this.toString()));
+                this.toString());
         return connection;
       } else {
         return null;

@@ -60,9 +60,8 @@ class BigQueryParameterHandler {
         Object parameterValue = getParameter(i);
         StandardSQLTypeName sqlType = getSqlType(i);
         LOG.info(
-            String.format(
                 "Parameter %s of type %s at index %s added to QueryJobConfiguration",
-                parameterValue, sqlType, i));
+                parameterValue, sqlType, i);
         jobConfigurationBuilder.addPositionalParameter(
             QueryParameterValue.of(parameterValue, sqlType));
       }
@@ -77,7 +76,7 @@ class BigQueryParameterHandler {
   void setParameter(int parameterIndex, Object value, Class type)
       throws BigQueryJdbcSqlFeatureNotSupportedException {
     LOG.finest("++enter++");
-    LOG.finest(String.format("setParameter called by : %s", type.getName()));
+    LOG.finest("setParameter called by : %s", type.getName());
     checkValidIndex(parameterIndex);
 
     int arrayIndex = parameterIndex - 1;
@@ -99,7 +98,7 @@ class BigQueryParameterHandler {
     parameter.setParamType(BigQueryStatementParameterType.UNSPECIFIED);
     parameter.setScale(-1);
 
-    LOG.finest(String.format("Parameter set { %s }", parameter.toString()));
+    LOG.finest("Parameter set { %s }", parameter.toString());
   }
 
   private void checkValidIndex(int parameterIndex) {
@@ -150,7 +149,7 @@ class BigQueryParameterHandler {
       int scale)
       throws BigQueryJdbcSqlFeatureNotSupportedException {
     LOG.finest("++enter++");
-    LOG.finest(String.format("setParameter called by : %s", type.getName()));
+    LOG.finest("setParameter called by : %s", type.getName());
     if (paramName == null || paramName.isEmpty()) {
       throw new IllegalArgumentException("paramName cannot be null or empty");
     }
@@ -175,7 +174,7 @@ class BigQueryParameterHandler {
     if (parameter.getIndex() == -1) {
       parametersList.add(parameter);
     }
-    LOG.finest(String.format("Parameter set { %s }", parameter.toString()));
+    LOG.finest("Parameter set { %s }", parameter.toString());
   }
 
   // set parameter by index and type
@@ -187,7 +186,7 @@ class BigQueryParameterHandler {
       int scale)
       throws BigQueryJdbcSqlFeatureNotSupportedException {
     LOG.finest("++enter++");
-    LOG.finest(String.format("setParameter called by : %s", type.getName()));
+    LOG.finest("setParameter called by : %s", type.getName());
     checkValidIndex(parameterIndex);
     int arrayIndex = parameterIndex - 1;
     if (parameterIndex >= this.highestIndex || this.parametersList.get(arrayIndex) == null) {
@@ -208,7 +207,7 @@ class BigQueryParameterHandler {
     parameter.setParamType(paramType);
     parameter.setScale(scale);
 
-    LOG.finest(String.format("Parameter set { %s }", parameter.toString()));
+    LOG.finest("Parameter set { %s }", parameter.toString());
   }
 
   // Get Parameter by name

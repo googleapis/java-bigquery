@@ -507,9 +507,8 @@ final class BigQueryJdbcOAuthUtility {
       return getCredentialsFromCode(userAuthorizer, code, callerClassName);
     } catch (IOException | URISyntaxException ex) {
       LOG.severe(
-          String.format(
               "Failed to establish connection using User Account authentication: %s",
-              ex.getMessage()));
+              ex.getMessage());
       throw new BigQueryJdbcRuntimeException(ex);
     }
   }
@@ -594,9 +593,8 @@ final class BigQueryJdbcOAuthUtility {
         principal = "external account";
       }
       LOG.info(
-          String.format(
               "Connection established. Auth Method: Application Default Credentials, Principal: %s.",
-              principal));
+              principal);
       return credentials;
     } catch (IOException exception) {
       // TODO throw exception

@@ -263,7 +263,7 @@ class BigQueryJsonResultSet extends BigQueryBaseResultSet {
 
   @Override
   public void close() {
-    LOG.fine(String.format("Closing BigqueryJsonResultSet %s.", this));
+    LOG.fine("Closing BigqueryJsonResultSet %s.", this);
     this.isClosed = true;
     if (ownedThreads != null) {
       for (Thread ownedThread : ownedThreads) {

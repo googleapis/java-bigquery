@@ -404,9 +404,8 @@ class BigQueryPreparedStatement extends BigQueryStatement implements PreparedSta
     this.insertTableName =
         TableName.of(tableID.getProject(), tableID.getDataset(), tableID.getTable());
     LOG.finest(
-        String.format(
             "this.insertTableName : %s, this.insertSchema : %s",
-            this.insertTableName, this.insertSchema.toString()));
+            this.insertTableName, this.insertSchema.toString());
   }
 
   QueryJobConfiguration getWriteBatchJobConfiguration(
@@ -433,9 +432,8 @@ class BigQueryPreparedStatement extends BigQueryStatement implements PreparedSta
         Object parameterValue = parameter.getValue();
         StandardSQLTypeName sqlType = parameter.getSqlType();
         LOG.finest(
-            String.format(
                 "Parameter %s of type %s at index %s added to QueryJobConfiguration",
-                parameterValue, sqlType, index++));
+                parameterValue, sqlType, index++);
         jobConfiguration.addPositionalParameter(QueryParameterValue.of(parameterValue, sqlType));
       }
     }

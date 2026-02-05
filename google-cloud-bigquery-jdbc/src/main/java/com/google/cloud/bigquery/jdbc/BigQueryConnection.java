@@ -386,7 +386,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
   }
 
   protected void addOpenStatements(Statement statement) {
-    LOG.finest(String.format("Statement %s added to Connection %s.", statement, this));
+    LOG.finest("Statement %s added to Connection %s.", statement, this);
     this.openStatements.add(statement);
   }
 
@@ -430,7 +430,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
   public Statement createStatement() throws SQLException {
     checkClosed();
     BigQueryStatement currentStatement = new BigQueryStatement(this);
-    LOG.fine(String.format("Statement %s created.", currentStatement));
+    LOG.fine("Statement %s created.", currentStatement);
     addOpenStatements(currentStatement);
     return currentStatement;
   }
@@ -489,7 +489,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
   public PreparedStatement prepareStatement(String sql) throws SQLException {
     checkClosed();
     PreparedStatement currentStatement = new BigQueryPreparedStatement(this, sql);
-    LOG.fine(String.format("Prepared Statement %s created.", currentStatement));
+    LOG.fine("Prepared Statement %s created.", currentStatement);
     addOpenStatements(currentStatement);
     return currentStatement;
   }
@@ -1125,7 +1125,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
   public CallableStatement prepareCall(String sql) throws SQLException {
     checkClosed();
     CallableStatement currentStatement = new BigQueryCallableStatement(this, sql);
-    LOG.fine(String.format("Callable Statement %s created.", currentStatement));
+    LOG.fine("Callable Statement %s created.", currentStatement);
     addOpenStatements(currentStatement);
     return currentStatement;
   }
