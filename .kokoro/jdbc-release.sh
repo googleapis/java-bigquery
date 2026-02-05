@@ -31,11 +31,11 @@ mkdir -p "${FOLDER}"
 make docker-package PACKAGE_DESTINATION="${FOLDER}"
 NAME=${PACKAGE}-${VERSION}-${COMMIT}
 
-gsutil cp -r "${FOLDER}/${PACKAGE}-${VERSION}.zip" "${NIGHTLY_BUILD_DESTINATION}/${NAME}.zip"
-gsutil cp -r "${FOLDER}/${PACKAGE}-${VERSION}-all.jar" "${NIGHTLY_BUILD_DESTINATION}/${NAME}-all.jar"
+gcloud storage cp --recursive "${FOLDER}/${PACKAGE}-${VERSION}.zip" "${NIGHTLY_BUILD_DESTINATION}/${NAME}.zip"
+gcloud storage cp --recursive "${FOLDER}/${PACKAGE}-${VERSION}-all.jar" "${NIGHTLY_BUILD_DESTINATION}/${NAME}-all.jar"
 
 rm -rf "${FOLDER}"
 
 # # Update latest version
-gsutil cp "${NIGHTLY_BUILD_DESTINATION}/${NAME}.zip" "${BUCKET}/${PACKAGE}-latest.zip"
-gsutil cp "${NIGHTLY_BUILD_DESTINATION}/${NAME}-all.jar" "${BUCKET}/${PACKAGE}-latest-all.jar"
+gcloud storage cp "${NIGHTLY_BUILD_DESTINATION}/${NAME}.zip" "${BUCKET}/${PACKAGE}-latest.zip"
+gcloud storage cp "${NIGHTLY_BUILD_DESTINATION}/${NAME}-all.jar" "${BUCKET}/${PACKAGE}-latest-all.jar"
