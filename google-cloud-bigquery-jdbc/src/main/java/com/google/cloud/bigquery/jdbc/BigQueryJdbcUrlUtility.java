@@ -162,6 +162,7 @@ final class BigQueryJdbcUrlUtility {
           OAUTH2_TOKEN_URI_PROPERTY_NAME,
           HTAPI_ENDPOINT_OVERRIDE_PROPERTY_NAME,
           STS_ENDPOINT_OVERRIDE_PROPERTY_NAME);
+  static final String REQUEST_REASON_PROPERTY_NAME = "RequestReason";
   static final List<String> BYOID_PROPERTIES =
       Arrays.asList(
           BYOID_AUDIENCE_URI_PROPERTY_NAME,
@@ -582,6 +583,12 @@ final class BigQueryJdbcUrlUtility {
                   BigQueryConnectionProperty.newBuilder()
                       .setName(HTTP_READ_TIMEOUT_PROPERTY_NAME)
                       .setDescription("The timeout (in milliseconds) when reading from the server.")
+                      .build(),
+                  BigQueryConnectionProperty.newBuilder()
+                      .setName(REQUEST_REASON_PROPERTY_NAME)
+                      .setDescription(
+                          "Reason for the request, which is passed as the x-goog-request-reason"
+                              + " header.")
                       .build())));
 
   private BigQueryJdbcUrlUtility() {}

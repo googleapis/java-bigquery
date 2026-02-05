@@ -845,5 +845,16 @@ public class BigQueryJdbcUrlUtilityTest {
         BigQueryJdbcUrlUtility.parseIntProperty(
             connection_uri, BigQueryJdbcUrlUtility.HTTP_READ_TIMEOUT_PROPERTY_NAME, null, null);
     assertNull(timeout);
+  public void testParseRequestReason() {
+    String url =
+        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+            + "OAuthType=3;ProjectId=testProject;RequestReason=testingRequestReason;";
+    String requestReason =
+        BigQueryJdbcUrlUtility.parseStringProperty(
+            url,
+            BigQueryJdbcUrlUtility.REQUEST_REASON_PROPERTY_NAME,
+            null,
+            "testParseRequestReason");
+    assertEquals("testingRequestReason", requestReason);
   }
 }
