@@ -144,7 +144,9 @@ public class BigQueryDriver implements Driver {
           logPath = BigQueryJdbcUrlUtility.DEFAULT_LOG_PATH;
         }
 
-        BigQueryJdbcRootLogger.setLevel(logLevel, logPath);
+        BigQueryJdbcRootLogger.setLevel(logLevel);
+        BigQueryJdbcRootLogger.enableFileLogger(logPath);
+        
 
         // Logging starts from here.
         BigQueryConnection connection = new BigQueryConnection(connectionUri);

@@ -17,5 +17,15 @@
 package com.google.cloud.bigquery.jdbc.it;
 
 import com.google.cloud.bigquery.jdbc.BigQueryJdbcBaseTest;
+import com.google.cloud.bigquery.jdbc.BigQueryJdbcRootLogger;
+import java.util.logging.Level;
+import org.junit.BeforeClass;
 
-public class ITBase extends BigQueryJdbcBaseTest {}
+public class ITBase extends BigQueryJdbcBaseTest {
+
+  @BeforeClass
+  public static void setupLogger() throws Exception {
+    BigQueryJdbcRootLogger.forceSetLevel(Level.SEVERE);
+    BigQueryJdbcRootLogger.enableConsoleLogger();
+  }
+}
