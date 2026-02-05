@@ -800,4 +800,18 @@ public class BigQueryJdbcUrlUtilityTest {
     Map<String, String> labels = BigQueryJdbcUrlUtility.parseLabels(connection_uri, null);
     assertNull(labels);
   }
+
+  @Test
+  public void testParseRequestReason() {
+    String url =
+        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+            + "OAuthType=3;ProjectId=testProject;RequestReason=testingRequestReason;";
+    String requestReason =
+        BigQueryJdbcUrlUtility.parseStringProperty(
+            url,
+            BigQueryJdbcUrlUtility.REQUEST_REASON_PROPERTY_NAME,
+            null,
+            "testParseRequestReason");
+    assertEquals("testingRequestReason", requestReason);
+  }
 }

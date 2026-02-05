@@ -131,6 +131,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
   String sslTrustStorePassword;
   long maxBytesBilled;
   Map<String, String> labels;
+  String requestReason;
 
   BigQueryConnection(String url) throws IOException {
     this.connectionUrl = url;
@@ -347,6 +348,12 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
             BigQueryJdbcUrlUtility.METADATA_FETCH_THREAD_COUNT_PROPERTY_NAME,
             BigQueryJdbcUrlUtility.DEFAULT_METADATA_FETCH_THREAD_COUNT_VALUE,
             this.connectionClassName);
+    this.requestReason =
+        BigQueryJdbcUrlUtility.parseStringProperty(
+            url,
+            BigQueryJdbcUrlUtility.REQUEST_REASON_PROPERTY_NAME,
+            null,
+            this.connectionClassName);
 
     HEADER_PROVIDER = createHeaderProvider();
     this.bigQuery = getBigQueryConnection();
@@ -383,7 +390,12 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     String partnerToken = buildPartnerToken(this.connectionUrl);
     String headerToken =
         DEFAULT_JDBC_TOKEN_VALUE + "/" + getLibraryVersion(this.getClass()) + partnerToken;
-    return FixedHeaderProvider.create("user-agent", headerToken);
+    Map<String, String> headers = new java.util.HashMap<>();
+    headers.put("user-agent", headerToken);
+    if (this.requestReason != null) {
+      headers.put("x-goog-request-reason", this.requestReason);
+    }
+    return FixedHeaderProvider.create(headers);
   }
 
   protected void addOpenStatements(Statement statement) {
