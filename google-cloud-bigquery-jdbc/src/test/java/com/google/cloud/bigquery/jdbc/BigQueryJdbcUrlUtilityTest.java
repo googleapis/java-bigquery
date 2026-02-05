@@ -845,6 +845,9 @@ public class BigQueryJdbcUrlUtilityTest {
         BigQueryJdbcUrlUtility.parseIntProperty(
             connection_uri, BigQueryJdbcUrlUtility.HTTP_READ_TIMEOUT_PROPERTY_NAME, null, null);
     assertNull(timeout);
+  }
+
+  @Test
   public void testParseRequestReason() {
     String url =
         "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
