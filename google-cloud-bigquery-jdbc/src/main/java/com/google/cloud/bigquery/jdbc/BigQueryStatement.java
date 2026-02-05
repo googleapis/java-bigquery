@@ -325,8 +325,8 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
 
     SqlType sqlType = BigQuerySqlTypeConverter.getSqlTypeFromStatementType(statementType);
     LOG.fine(
-            "Query: %s, Statement Type: %s, SQL Type: %s",
-            jobConfiguration.getQuery(), statementType, sqlType);
+        "Query: %s, Statement Type: %s, SQL Type: %s",
+        jobConfiguration.getQuery(), statementType, sqlType);
     return sqlType;
   }
 
@@ -854,8 +854,8 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
   /** Executes SQL query using either fast query path or read API */
   void processQueryResponse(String query, TableResult results) throws SQLException {
     LOG.finest(
-            "API call completed{Query=%s, Parent Job ID=%s, Total rows=%s} ",
-            query, results.getJobId(), results.getTotalRows());
+        "API call completed{Query=%s, Parent Job ID=%s, Total rows=%s} ",
+        query, results.getJobId(), results.getTotalRows());
     JobId currentJobId = results.getJobId();
     if (currentJobId == null) {
       LOG.fine("Standard API with Stateless query used.");
@@ -1022,9 +1022,9 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
               // thread
               rpcResponseQueue.put(Tuple.of(results, true));
               LOG.fine(
-                      "Fetched %d results from the server in %d ms.",
-                      querySettings.getMaxResultPerPage(),
-                      (int) ((System.nanoTime() - startTime) / 1000000));
+                  "Fetched %d results from the server in %d ms.",
+                  querySettings.getMaxResultPerPage(),
+                  (int) ((System.nanoTime() - startTime) / 1000000));
             }
             // this will stop the parseDataTask as well when the pagination
             // completes
@@ -1097,8 +1097,8 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
               }
             }
             LOG.fine(
-                    "Processed %d results in %d ms.",
-                    results, (int) ((System.nanoTime() - startTime) / 1000000));
+                "Processed %d results in %d ms.",
+                results, (int) ((System.nanoTime() - startTime) / 1000000));
           }
           try {
             // All the pages has been processed, put this marker
