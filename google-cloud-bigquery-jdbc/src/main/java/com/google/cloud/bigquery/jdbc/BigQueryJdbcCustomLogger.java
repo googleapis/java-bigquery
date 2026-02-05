@@ -30,31 +30,31 @@ class BigQueryJdbcCustomLogger extends Logger {
     this.setParent(BigQueryJdbcRootLogger.getRootLogger());
   }
 
-  void finest(String format, Object... args) {
+  void finest(String format, Object... args){
     this.finest(() -> String.format(format, args));
   }
 
-  void finer(String format, Object... args) {
+  void finer(String format, Object... args){
     this.finer(() -> String.format(format, args));
   }
 
-  void fine(String format, Object... args) {
+  void fine(String format, Object... args){
     this.fine(() -> String.format(format, args));
   }
 
-  void config(String format, Object... args) {
+  void config(String format, Object... args){
     this.config(() -> String.format(format, args));
   }
 
-  void info(String format, Object... args) {
+  void info(String format, Object... args){
     this.info(() -> String.format(format, args));
   }
 
-  void warning(String format, Object... args) {
+  void warning(String format, Object... args){
     this.warning(() -> String.format(format, args));
   }
 
-  void severe(String format, Object... args) {
+  void severe(String format, Object... args){
     this.severe(() -> String.format(format, args));
   }
 }

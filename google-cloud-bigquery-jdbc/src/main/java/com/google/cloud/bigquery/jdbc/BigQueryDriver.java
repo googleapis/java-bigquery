@@ -144,25 +144,27 @@ public class BigQueryDriver implements Driver {
           logPath = BigQueryJdbcUrlUtility.DEFAULT_LOG_PATH;
         }
 
-        BigQueryJdbcRootLogger.setLevel(logLevel, logPath);
-
+        BigQueryJdbcRootLogger.setLevel(logLevel);
+        BigQueryJdbcRootLogger.enableFileLogger(logPath
+          
+        );
         // Logging starts from here.
         BigQueryConnection connection = new BigQueryConnection(connectionUri);
         LOG.info(
-            "Driver info : { {Database Product Name : %s}, "
-                + "{Database Product Version : %s}, "
-                + "{Driver Name : %s}, "
-                + "{Driver Version : %s}, "
-                + "{LogLevel : %s}, "
-                + "{LogPath : %s}, "
-                + "{Driver Instance : %s} }",
-            connection.getMetaData().getDatabaseProductName(),
-            connection.getMetaData().getDatabaseProductVersion(),
-            connection.getMetaData().getDriverName(),
-            connection.getMetaData().getDriverVersion(),
-            logLevel,
-            logPath,
-            this.toString());
+                "Driver info : { {Database Product Name : %s}, "
+                    + "{Database Product Version : %s}, "
+                    + "{Driver Name : %s}, "
+                    + "{Driver Version : %s}, "
+                    + "{LogLevel : %s}, "
+                    + "{LogPath : %s}, "
+                    + "{Driver Instance : %s} }",
+                connection.getMetaData().getDatabaseProductName(),
+                connection.getMetaData().getDatabaseProductVersion(),
+                connection.getMetaData().getDriverName(),
+                connection.getMetaData().getDriverVersion(),
+                logLevel,
+                logPath,
+                this.toString());
         return connection;
       } else {
         return null;

@@ -965,7 +965,8 @@ class BigQueryCallableStatement extends BigQueryPreparedStatement implements Cal
   public void registerOutParameter(int paramIndex, int sqlType, int scale) throws SQLException {
     LOG.finest("++enter++");
     LOG.finest(
-        "registerOutParameter: paramIndex %s, sqlType %s, scale %s", paramIndex, sqlType, scale);
+            "registerOutParameter: paramIndex %s, sqlType %s, scale %s",
+            paramIndex, sqlType, scale);
     checkClosed();
     if (sqlType != Types.NUMERIC && sqlType != Types.DECIMAL) {
       throw new IllegalArgumentException(
@@ -988,8 +989,8 @@ class BigQueryCallableStatement extends BigQueryPreparedStatement implements Cal
       throws SQLException {
     LOG.finest("++enter++");
     LOG.finest(
-        "registerOutParameter: paramIndex %s, sqlType %s, typeName %s",
-        paramIndex, sqlType, typeName);
+            "registerOutParameter: paramIndex %s, sqlType %s, typeName %s",
+            paramIndex, sqlType, typeName);
     // fully qualified sql typeName is not supported by the driver and hence ignored.
     registerOutParameter(paramIndex, sqlType);
   }
@@ -998,7 +999,8 @@ class BigQueryCallableStatement extends BigQueryPreparedStatement implements Cal
   public void registerOutParameter(String paramName, int sqlType, int scale) throws SQLException {
     LOG.finest("++enter++");
     LOG.finest(
-        "registerOutParameter: paramIndex %s, sqlType %s, scale %s", paramName, sqlType, scale);
+            "registerOutParameter: paramIndex %s, sqlType %s, scale %s",
+            paramName, sqlType, scale);
     checkClosed();
     if (sqlType != Types.NUMERIC && sqlType != Types.DECIMAL) {
       throw new IllegalArgumentException(
@@ -1021,8 +1023,8 @@ class BigQueryCallableStatement extends BigQueryPreparedStatement implements Cal
       throws SQLException {
     LOG.finest("++enter++");
     LOG.finest(
-        "registerOutParameter: paramIndex %s, sqlType %s, typeName %s",
-        paramName, sqlType, typeName);
+            "registerOutParameter: paramIndex %s, sqlType %s, typeName %s",
+            paramName, sqlType, typeName);
     // fully qualified sql typeName is not supported by the driver and hence ignored.
     registerOutParameter(paramName, sqlType);
   }

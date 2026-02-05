@@ -118,7 +118,7 @@ public class PooledConnectionListener implements ConnectionEventListener {
         (event.getSQLException() != null)
             ? event.getSQLException().getMessage()
             : "Connection error occured";
-    LOG.finest("Removed pooled connection from connection pool. Error: %s", errorMessage);
+    LOG.finest("Removed pooled connection from connection pool dor: %s", errorMessage);
   }
 
   @Override
