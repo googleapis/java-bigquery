@@ -98,6 +98,8 @@ final class BigQueryJdbcUrlUtility {
   static final String PROXY_PORT_PROPERTY_NAME = "ProxyPort";
   static final String PROXY_USER_ID_PROPERTY_NAME = "ProxyUid";
   static final String PROXY_PASSWORD_PROPERTY_NAME = "ProxyPwd";
+  static final String HTTP_CONNECT_TIMEOUT_PROPERTY_NAME = "HttpConnectTimeout";
+  static final String HTTP_READ_TIMEOUT_PROPERTY_NAME = "HttpReadTimeout";
   static final boolean DEFAULT_ENABLE_HTAPI_VALUE = false;
   static final boolean DEFAULT_ENABLE_SESSION_VALUE = false;
   static final int DEFAULT_LOG_LEVEL = 0;
@@ -571,6 +573,16 @@ final class BigQueryJdbcUrlUtility {
                       .setDescription(
                           "The password for accessing the Java TrustStore that is specified using"
                               + " the property SSLTrustStore.")
+                      .build(),
+                  BigQueryConnectionProperty.newBuilder()
+                      .setName(HTTP_CONNECT_TIMEOUT_PROPERTY_NAME)
+                      .setDescription(
+                          "The timeout (in milliseconds) for establishing a connection to the"
+                              + " server.")
+                      .build(),
+                  BigQueryConnectionProperty.newBuilder()
+                      .setName(HTTP_READ_TIMEOUT_PROPERTY_NAME)
+                      .setDescription("The timeout (in milliseconds) when reading from the server.")
                       .build(),
                   BigQueryConnectionProperty.newBuilder()
                       .setName(REQUEST_REASON_PROPERTY_NAME)
