@@ -809,10 +809,7 @@ public class BigQueryJdbcUrlUtilityTest {
 
     Integer timeout =
         BigQueryJdbcUrlUtility.parseIntProperty(
-            connection_uri,
-            BigQueryJdbcUrlUtility.HTTP_CONNECT_TIMEOUT_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_HTTP_CONNECT_TIMEOUT_VALUE,
-            null);
+            connection_uri, BigQueryJdbcUrlUtility.HTTP_CONNECT_TIMEOUT_PROPERTY_NAME, null, null);
     assertEquals(Integer.valueOf(10000), timeout);
   }
 
@@ -823,12 +820,8 @@ public class BigQueryJdbcUrlUtilityTest {
 
     Integer timeout =
         BigQueryJdbcUrlUtility.parseIntProperty(
-            connection_uri,
-            BigQueryJdbcUrlUtility.HTTP_CONNECT_TIMEOUT_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_HTTP_CONNECT_TIMEOUT_VALUE,
-            null);
-    assertEquals(
-        Integer.valueOf(BigQueryJdbcUrlUtility.DEFAULT_HTTP_CONNECT_TIMEOUT_VALUE), timeout);
+            connection_uri, BigQueryJdbcUrlUtility.HTTP_CONNECT_TIMEOUT_PROPERTY_NAME, null, null);
+    assertNull(timeout);
   }
 
   @Test
@@ -839,10 +832,7 @@ public class BigQueryJdbcUrlUtilityTest {
 
     Integer timeout =
         BigQueryJdbcUrlUtility.parseIntProperty(
-            connection_uri,
-            BigQueryJdbcUrlUtility.HTTP_READ_TIMEOUT_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_HTTP_READ_TIMEOUT_VALUE,
-            null);
+            connection_uri, BigQueryJdbcUrlUtility.HTTP_READ_TIMEOUT_PROPERTY_NAME, null, null);
     assertEquals(Integer.valueOf(20000), timeout);
   }
 
@@ -853,10 +843,7 @@ public class BigQueryJdbcUrlUtilityTest {
 
     Integer timeout =
         BigQueryJdbcUrlUtility.parseIntProperty(
-            connection_uri,
-            BigQueryJdbcUrlUtility.HTTP_READ_TIMEOUT_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_HTTP_READ_TIMEOUT_VALUE,
-            null);
-    assertEquals(Integer.valueOf(BigQueryJdbcUrlUtility.DEFAULT_HTTP_READ_TIMEOUT_VALUE), timeout);
+            connection_uri, BigQueryJdbcUrlUtility.HTTP_READ_TIMEOUT_PROPERTY_NAME, null, null);
+    assertNull(timeout);
   }
 }

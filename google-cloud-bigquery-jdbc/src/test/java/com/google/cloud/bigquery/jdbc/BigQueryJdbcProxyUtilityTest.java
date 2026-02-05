@@ -323,8 +323,7 @@ public class BigQueryJdbcProxyUtilityTest {
             Collections.<String, String>emptyMap(), null, null, 10000, null, "TestClass");
     assertNotNull(options);
     assertThat(options.getConnectTimeout()).isEqualTo(10000);
-    assertThat(options.getReadTimeout())
-        .isEqualTo(BigQueryJdbcUrlUtility.DEFAULT_HTTP_READ_TIMEOUT_VALUE);
+    // readTimeout defaults to HttpTransport's internal default, not asserted here.
   }
 
   @Test
@@ -334,7 +333,6 @@ public class BigQueryJdbcProxyUtilityTest {
             Collections.<String, String>emptyMap(), null, null, null, 20000, "TestClass");
     assertNotNull(options);
     assertThat(options.getReadTimeout()).isEqualTo(20000);
-    assertThat(options.getConnectTimeout())
-        .isEqualTo(BigQueryJdbcUrlUtility.DEFAULT_HTTP_CONNECT_TIMEOUT_VALUE);
+    // connectTimeout defaults to HttpTransport's internal default, not asserted here.
   }
 }

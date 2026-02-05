@@ -139,15 +139,11 @@ final class BigQueryJdbcProxyUtility {
               proxyProperties, sslTrustStorePath, sslTrustStorePassword, callerClassName));
     }
 
-    if (hasTimeoutConfig) {
-      httpTransportOptionsBuilder.setConnectTimeout(
-          connectTimeout != null
-              ? connectTimeout
-              : BigQueryJdbcUrlUtility.DEFAULT_HTTP_CONNECT_TIMEOUT_VALUE);
-      httpTransportOptionsBuilder.setReadTimeout(
-          readTimeout != null
-              ? readTimeout
-              : BigQueryJdbcUrlUtility.DEFAULT_HTTP_READ_TIMEOUT_VALUE);
+    if (connectTimeout != null) {
+      httpTransportOptionsBuilder.setConnectTimeout(connectTimeout);
+    }
+    if (readTimeout != null) {
+      httpTransportOptionsBuilder.setReadTimeout(readTimeout);
     }
 
     return httpTransportOptionsBuilder.build();
