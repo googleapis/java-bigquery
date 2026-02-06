@@ -166,6 +166,23 @@ public class BigQueryConnectionTest {
   }
 
   @Test
+  public void testHeaderProviderWithRequestReason() throws IOException, SQLException {
+    String requestReason = "Ticket123";
+    String url =
+        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+            + "OAuthType=2;ProjectId=MyBigQueryProject;"
+            + "OAuthAccessToken=redactedToken;OAuthClientId=redactedToken;"
+            + "OAuthClientSecret=redactedToken;RequestReason="
+            + requestReason;
+    try (BigQueryConnection connection = new BigQueryConnection(url)) {
+      HeaderProvider headerProvider = connection.createHeaderProvider();
+      java.util.Map<String, String> headers = headerProvider.getHeaders();
+      assertTrue(headers.containsKey("x-goog-request-reason"));
+      assertEquals(requestReason, headers.get("x-goog-request-reason"));
+    }
+  }
+
+  @Test
   public void testWriteAPIConnectionProperties() throws SQLException {
     // Test without connection properties. Defaults to default values.
     String connectionUriDefault =
