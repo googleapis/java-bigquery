@@ -134,8 +134,7 @@ class BigQueryPooledConnection implements PooledConnection {
     for (ConnectionEventListener listener : listeners) {
       listener.connectionErrorOccurred(event);
     }
-    LOG.finest(
-        String.format("Connection handle removed from the pool due to error: %s", e.getMessage()));
+    LOG.finest("Connection handle removed from the pool due to error: %s", e.getMessage());
     // Listners no longer need to listen for this connection since it has been removed from the
     // pool.
     for (ConnectionEventListener listener : listeners) {

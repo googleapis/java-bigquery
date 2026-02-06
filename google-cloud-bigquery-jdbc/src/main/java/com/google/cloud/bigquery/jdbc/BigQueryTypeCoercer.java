@@ -104,7 +104,7 @@ class BigQueryTypeCoercer {
       return targetClass.cast(value);
     }
     BigQueryCoercion<Object, T> coercion = findCoercion(sourceClass, targetClass);
-    LOG.finest(() -> String.format("%s coercion for %s", coercion, value));
+    LOG.finest("%s coercion for %s", coercion, value);
     // Value is null case & no explicit coercion
     if (sourceClass == Void.class && coercion == null) {
       return null;

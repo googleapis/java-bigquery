@@ -441,7 +441,7 @@ class BigQueryArrowResultSet extends BigQueryBaseResultSet {
 
   @Override
   public void close() {
-    LOG.fine(String.format("Closing BigqueryArrowResultSet %s.", this));
+    LOG.fine("Closing BigqueryArrowResultSet %s.", this);
     this.isClosed = true;
     if (ownedThread != null && !ownedThread.isInterrupted()) {
       // interrupt the producer thread when result set is closed
