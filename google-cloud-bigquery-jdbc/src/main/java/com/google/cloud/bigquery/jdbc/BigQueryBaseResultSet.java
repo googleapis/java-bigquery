@@ -103,8 +103,7 @@ public abstract class BigQueryBaseResultSet extends BigQueryNoOpsResultSet
         statement.close();
       }
     } catch (SQLException ex) {
-      LOG.warning(
-          String.format("Exception during ResultState.close() operation: %s", ex.getMessage()));
+      LOG.warning("Exception during ResultState.close() operation: %s", ex.getMessage());
     }
   }
 

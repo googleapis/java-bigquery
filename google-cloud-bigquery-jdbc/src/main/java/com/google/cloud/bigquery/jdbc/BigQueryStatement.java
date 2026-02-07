@@ -325,9 +325,8 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
 
     SqlType sqlType = BigQuerySqlTypeConverter.getSqlTypeFromStatementType(statementType);
     LOG.fine(
-        String.format(
-            "Query: %s, Statement Type: %s, SQL Type: %s",
-            jobConfiguration.getQuery(), statementType, sqlType));
+        "Query: %s, Statement Type: %s, SQL Type: %s",
+        jobConfiguration.getQuery(), statementType, sqlType);
     return sqlType;
   }
 
@@ -359,7 +358,7 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
    */
   @Override
   public void close() throws SQLException {
-    LOG.fine(String.format("Closing Statement %s.", this));
+    LOG.fine("Closing Statement %s.", this);
     if (isClosed()) {
       return;
     }
@@ -369,7 +368,7 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
       cancel(); // This attempts to cancel jobs and calls closeStatementResources()
       cancelSucceeded = true;
     } catch (SQLException e) {
-      LOG.warning(String.format("Failed to cancel statement during close().", e));
+      LOG.warning("Failed to cancel statement during close().", e);
     } finally {
       if (!cancelSucceeded) {
         closeStatementResources();
@@ -425,7 +424,7 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
    */
   @Override
   public void cancel() throws SQLException {
-    LOG.finest(String.format("Statement %s cancelled", this));
+    LOG.finest("Statement %s cancelled", this);
     synchronized (cancelLock) {
       this.isCanceled = true;
       for (JobId jobId : this.jobIds) {
@@ -855,9 +854,8 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
   /** Executes SQL query using either fast query path or read API */
   void processQueryResponse(String query, TableResult results) throws SQLException {
     LOG.finest(
-        String.format(
-            "API call completed{Query=%s, Parent Job ID=%s, Total rows=%s} ",
-            query, results.getJobId(), results.getTotalRows()));
+        "API call completed{Query=%s, Parent Job ID=%s, Total rows=%s} ",
+        query, results.getJobId(), results.getTotalRows());
     JobId currentJobId = results.getJobId();
     if (currentJobId == null) {
       LOG.fine("Standard API with Stateless query used.");
@@ -905,7 +903,7 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
   BigQueryJsonResultSet processJsonResultSet(TableResult results) {
     String jobIdOrQueryId =
         results.getJobId() == null ? results.getQueryId() : results.getJobId().getJob();
-    LOG.info(String.format("BigQuery Job %s completed. Fetching results.", jobIdOrQueryId));
+    LOG.info("BigQuery Job %s completed. Fetching results.", jobIdOrQueryId);
     List<Thread> threadList = new ArrayList<Thread>();
 
     Schema schema = results.getSchema();
@@ -1024,10 +1022,9 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
               // thread
               rpcResponseQueue.put(Tuple.of(results, true));
               LOG.fine(
-                  String.format(
-                      "Fetched %d results from the server in %d ms.",
-                      querySettings.getMaxResultPerPage(),
-                      (int) ((System.nanoTime() - startTime) / 1000000)));
+                  "Fetched %d results from the server in %d ms.",
+                  querySettings.getMaxResultPerPage(),
+                  (int) ((System.nanoTime() - startTime) / 1000000));
             }
             // this will stop the parseDataTask as well when the pagination
             // completes
@@ -1100,9 +1097,8 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
               }
             }
             LOG.fine(
-                String.format(
-                    "Processed %d results in %d ms.",
-                    results, (int) ((System.nanoTime() - startTime) / 1000000)));
+                "Processed %d results in %d ms.",
+                results, (int) ((System.nanoTime() - startTime) / 1000000));
           }
           try {
             // All the pages has been processed, put this marker
@@ -1177,7 +1173,7 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
   /** Returns the destinationTable from jobId by calling `jobs.get` API */
   TableId getDestinationTable(JobId jobId) {
     Job job = this.bigQuery.getJob(jobId);
-    LOG.finest(String.format("Destination Table retrieved from %s", job.getJobId()));
+    LOG.finest("Destination Table retrieved from %s", job.getJobId());
     return ((QueryJobConfiguration) job.getConfiguration()).getDestinationTable();
   }
 
@@ -1230,7 +1226,7 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
   private void checkIfDatasetExistElseCreate(String datasetName) {
     Dataset dataset = bigQuery.getDataset(DatasetId.of(datasetName));
     if (dataset == null) {
-      LOG.info(String.format("Creating a hidden dataset: %s ", datasetName));
+      LOG.info("Creating a hidden dataset: %s ", datasetName);
       DatasetInfo datasetInfo =
           DatasetInfo.newBuilder(datasetName)
               .setDefaultTableLifetime(this.querySettings.getDestinationDatasetExpirationTime())
