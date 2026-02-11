@@ -75,6 +75,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadFactory;
+import java.util.logging.Level;
 
 /**
  * An implementation of {@link java.sql.Statement} for executing BigQuery SQL statement and
@@ -826,6 +827,7 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                         .setOffset(rowsRead)
                         .build();
 
+                // Process each block of rows as they arrive and decode using our simple row reader.
                 com.google.api.gax.rpc.ServerStream<ReadRowsResponse> stream =
                     bqReadClient.readRowsCallable().call(readRowsRequest);
                 for (ReadRowsResponse response : stream) {
@@ -848,47 +850,47 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                 }
                 long elapsedSecs = (System.currentTimeMillis() - startTime) / 1000;
                 if (elapsedSecs >= retryTimeoutInSecs) {
-                  LOG.warning(
+                  LOG.log(
+                      Level.WARNING,
                       "\n"
                           + Thread.currentThread().getName()
-                          + " Interrupted @ arrowStreamProcessor, timeout exceeded: %s",
-                      e.getMessage());
+                          + " Interrupted @ arrowStreamProcessor, timeout exceeded",
+                      e);
                   break;
                 }
                 retryCount++;
                 LOG.info(
-                    "Connection interrupted during arrow stream read, retrying. attempt: "
-                        + retryCount);
+                    "Connection interrupted during arrow stream read, retrying. attempt: %d",
+                    retryCount);
                 try {
                   Thread.sleep(this.connection.getRetryInitialDelayInSeconds() * 1000);
                 } catch (InterruptedException ie) {
-                  LOG.warning(
+                  LOG.log(
+                      Level.WARNING,
                       "\n"
                           + Thread.currentThread().getName()
-                          + " Interrupted @ arrowStreamProcessor waiting for retry"
-                          + ": %s",
-                      ie.getMessage());
+                          + " Interrupted @ arrowStreamProcessor waiting for retry",
+                      ie);
                   break;
                 }
               }
             }
 
           } catch (InterruptedException e) {
-            LOG.warning(
-                "\n"
-                    + Thread.currentThread().getName()
-                    + " Interrupted @ arrowStreamProcessor"
-                    + ": %s",
-                e.getMessage());
+            LOG.log(
+                Level.WARNING,
+                "\n" + Thread.currentThread().getName() + " Interrupted @ arrowStreamProcessor",
+                e);
           } finally { // logic needed for graceful shutdown
             // marking end of stream
             try {
               arrowBatchWrapperBlockingQueue.put(
                   BigQueryArrowBatchWrapper.of(null, true)); // mark the end of the stream
             } catch (InterruptedException e) {
-              LOG.warning(
-                  "\n" + Thread.currentThread().getName() + " Interrupted @ markLast" + ": %s",
-                  e.getMessage());
+              LOG.log(
+                  Level.WARNING,
+                  "\n" + Thread.currentThread().getName() + " Interrupted @ markLast",
+                  e);
             }
           }
         };
@@ -971,10 +973,8 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
         rpcResponseQueue.put(Tuple.of(null, false));
       } catch (InterruptedException e) {
         LOG.warning(
-            "\n"
-                + Thread.currentThread().getName()
-                + " Interrupted @ processJsonQueryResponseResults: %s",
-            e.getMessage());
+            "\n%s Interrupted @ processJsonQueryResponseResults: %s",
+            Thread.currentThread().getName(), e.getMessage());
       }
     }
 
@@ -1011,7 +1011,9 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
       // this is the first page which we have received.
       rpcResponseQueue.put(Tuple.of(result, true));
     } catch (InterruptedException e) {
-      LOG.warning("\n" + Thread.currentThread().getName() + " Interrupted @ populateFirstPage");
+      LOG.warning(
+          "\n%s Interrupted @ populateFirstPage: %s",
+          Thread.currentThread().getName(), e.getMessage());
     }
   }
 
@@ -1052,9 +1054,7 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
               // do not process further pages and shutdown
               if (Thread.currentThread().isInterrupted() || queryTaskExecutor.isShutdown()) {
                 LOG.warning(
-                    "\n"
-                        + Thread.currentThread().getName()
-                        + " Interrupted @ runNextPageTaskAsync");
+                    "\n%s Interrupted @ runNextPageTaskAsync", Thread.currentThread().getName());
                 break;
               }
 
@@ -1081,13 +1081,15 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                   throw ex;
                 }
                 long elapsedSecs = (System.currentTimeMillis() - startTimeLoop) / 1000;
-                if (elapsedSecs >= retryTimeoutInSecs || ex instanceof InterruptedException) {
+                if (elapsedSecs >= retryTimeoutInSecs
+                    || ex instanceof InterruptedException
+                    || ex.getCause() instanceof InterruptedException) {
                   throw ex;
                 }
                 retryCount++;
                 LOG.info(
-                    "Connection interrupted during json stream read, retrying. attempt: "
-                        + retryCount);
+                    "Connection interrupted during json stream read, retrying. attempt: %d",
+                    retryCount);
                 try {
                   Thread.sleep(this.connection.getRetryInitialDelayInSeconds() * 1000);
                 } catch (InterruptedException ie) {
@@ -1144,9 +1146,7 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
               hasRows = nextPageTuple.y();
 
             } catch (InterruptedException e) {
-              LOG.warning(
-                  "\n" + Thread.currentThread().getName() + " Interrupted" + ": %s",
-                  e.getMessage());
+              LOG.log(Level.WARNING, "\n" + Thread.currentThread().getName() + " Interrupted", e);
               // Thread might get interrupted while calling the Cancel method, which is
               // expected, so logging this instead of throwing the exception back
               break;
@@ -1183,12 +1183,10 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
             bigQueryFieldValueListWrapperBlockingQueue.put(
                 BigQueryFieldValueListWrapper.of(null, null, true));
           } catch (InterruptedException e) {
-            LOG.warning(
-                "\n"
-                    + Thread.currentThread().getName()
-                    + " Interrupted @ populateBufferAsync"
-                    + ": %s",
-                e.getMessage());
+            LOG.log(
+                Level.WARNING,
+                "\n" + Thread.currentThread().getName() + " Interrupted @ populateBufferAsync",
+                e);
           }
         };
 
