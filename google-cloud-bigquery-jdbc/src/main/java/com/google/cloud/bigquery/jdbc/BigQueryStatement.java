@@ -1102,12 +1102,6 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
             // completes
             rpcResponseQueue.put(Tuple.of(null, false));
           } catch (Exception ex) {
-            LOG.warning(
-                "\n"
-                    + Thread.currentThread().getName()
-                    + " Interrupted @ runNextPageTaskAsync"
-                    + ": %s",
-                ex.getMessage());
             throw new BigQueryJdbcRuntimeException(ex);
           }
           // We cannot do queryTaskExecutor.shutdownNow() here as populate buffer method may not
