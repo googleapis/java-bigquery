@@ -841,10 +841,9 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                   startTime = System.currentTimeMillis();
                 }
                 break;
-              } catch (RuntimeException e) {
-                if (e instanceof com.google.api.gax.rpc.ApiException
-                    && ((com.google.api.gax.rpc.ApiException) e).getStatusCode().getCode()
-                        == com.google.api.gax.rpc.StatusCode.Code.NOT_FOUND) {
+              } catch (com.google.api.gax.rpc.ApiException e) {
+                if (e.getStatusCode().getCode()
+                    == com.google.api.gax.rpc.StatusCode.Code.NOT_FOUND) {
                   LOG.warning("Read session expired or not found" + ": %s", e.getMessage());
                   break;
                 }
@@ -1075,15 +1074,12 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                     "Fetched %d results from the server in %d ms.",
                     querySettings.getMaxResultPerPage(),
                     (int) ((System.nanoTime() - startTime) / 1000000));
-              } catch (Exception ex) {
-                if (ex instanceof com.google.cloud.BaseServiceException
-                    && ((com.google.cloud.BaseServiceException) ex).getCode() == 404) {
+              } catch (com.google.cloud.bigquery.BigQueryException ex) {
+                if (ex.getCode() == 404) {
                   throw ex;
                 }
                 long elapsedSecs = (System.currentTimeMillis() - startTimeLoop) / 1000;
-                if (elapsedSecs >= retryTimeoutInSecs
-                    || ex instanceof InterruptedException
-                    || ex.getCause() instanceof InterruptedException) {
+                if (elapsedSecs >= retryTimeoutInSecs) {
                   throw ex;
                 }
                 retryCount++;
@@ -1096,6 +1092,9 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                   Thread.currentThread().interrupt();
                   throw new BigQueryJdbcRuntimeException(ie);
                 }
+              } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                throw new BigQueryJdbcRuntimeException(ie);
               }
             }
             // this will stop the parseDataTask as well when the pagination
