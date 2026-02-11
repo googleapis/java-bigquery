@@ -844,7 +844,7 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
               } catch (com.google.api.gax.rpc.ApiException e) {
                 if (e.getStatusCode().getCode()
                     == com.google.api.gax.rpc.StatusCode.Code.NOT_FOUND) {
-                  LOG.warning("Read session expired or not found" + ": %s", e.getMessage());
+                  LOG.warning("Read session expired or not found: %s", e.getMessage());
                   break;
                 }
                 long elapsedSecs = (System.currentTimeMillis() - startTime) / 1000;
@@ -864,13 +864,8 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                 try {
                   Thread.sleep(this.connection.getRetryInitialDelayInSeconds() * 1000);
                 } catch (InterruptedException ie) {
-                  LOG.log(
-                      Level.WARNING,
-                      "\n"
-                          + Thread.currentThread().getName()
-                          + " Interrupted @ arrowStreamProcessor waiting for retry",
-                      ie);
-                  break;
+                  Thread.currentThread().interrupt();
+                  throw new BigQueryJdbcRuntimeException(ie);
                 }
               }
             }
