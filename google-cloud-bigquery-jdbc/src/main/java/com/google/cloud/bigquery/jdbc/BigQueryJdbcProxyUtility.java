@@ -97,7 +97,8 @@ final class BigQueryJdbcProxyUtility {
         (proxyHost == null && proxyPort != null) || (proxyHost != null && proxyPort == null);
     if (isMissingProxyHostOrPortWhenProxySet) {
       throw new IllegalArgumentException(
-          "Both ProxyHost and ProxyPort parameters need to be specified. No defaulting behavior occurs.");
+          "Both ProxyHost and ProxyPort parameters need to be specified. No defaulting behavior"
+              + " occurs.");
     }
     boolean isMissingProxyUidOrPwdWhenAuthSet =
         (proxyUid == null && proxyPwd != null) || (proxyUid != null && proxyPwd == null);
@@ -117,18 +118,35 @@ final class BigQueryJdbcProxyUtility {
       Map<String, String> proxyProperties,
       String sslTrustStorePath,
       String sslTrustStorePassword,
+      Integer connectTimeout,
+      Integer readTimeout,
       String callerClassName) {
     LOG.finest("++enter++\t" + callerClassName);
 
-    if (!proxyProperties.containsKey(BigQueryJdbcUrlUtility.PROXY_HOST_PROPERTY_NAME)
-        && sslTrustStorePath == null) {
+    boolean hasProxyOrSsl =
+        proxyProperties.containsKey(BigQueryJdbcUrlUtility.PROXY_HOST_PROPERTY_NAME)
+            || sslTrustStorePath != null;
+    boolean hasTimeoutConfig = connectTimeout != null || readTimeout != null;
+
+    if (!hasProxyOrSsl && !hasTimeoutConfig) {
       return null;
     }
-    return HttpTransportOptions.newBuilder()
-        .setHttpTransportFactory(
-            getHttpTransportFactory(
-                proxyProperties, sslTrustStorePath, sslTrustStorePassword, callerClassName))
-        .build();
+
+    HttpTransportOptions.Builder httpTransportOptionsBuilder = HttpTransportOptions.newBuilder();
+    if (hasProxyOrSsl) {
+      httpTransportOptionsBuilder.setHttpTransportFactory(
+          getHttpTransportFactory(
+              proxyProperties, sslTrustStorePath, sslTrustStorePassword, callerClassName));
+    }
+
+    if (connectTimeout != null) {
+      httpTransportOptionsBuilder.setConnectTimeout(connectTimeout);
+    }
+    if (readTimeout != null) {
+      httpTransportOptionsBuilder.setReadTimeout(readTimeout);
+    }
+
+    return httpTransportOptionsBuilder.build();
   }
 
   private static HttpTransportFactory getHttpTransportFactory(

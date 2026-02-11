@@ -800,4 +800,64 @@ public class BigQueryJdbcUrlUtilityTest {
     Map<String, String> labels = BigQueryJdbcUrlUtility.parseLabels(connection_uri, null);
     assertNull(labels);
   }
+
+  @Test
+  public void testParseHttpConnectTimeout() {
+    String connection_uri =
+        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;OAuthType=3;ProjectId=testProject;"
+            + "HttpConnectTimeout=10000";
+
+    Integer timeout =
+        BigQueryJdbcUrlUtility.parseIntProperty(
+            connection_uri, BigQueryJdbcUrlUtility.HTTP_CONNECT_TIMEOUT_PROPERTY_NAME, null, null);
+    assertEquals(Integer.valueOf(10000), timeout);
+  }
+
+  @Test
+  public void testParseHttpConnectTimeoutDefault() {
+    String connection_uri =
+        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;OAuthType=3;ProjectId=testProject";
+
+    Integer timeout =
+        BigQueryJdbcUrlUtility.parseIntProperty(
+            connection_uri, BigQueryJdbcUrlUtility.HTTP_CONNECT_TIMEOUT_PROPERTY_NAME, null, null);
+    assertNull(timeout);
+  }
+
+  @Test
+  public void testParseHttpReadTimeout() {
+    String connection_uri =
+        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;OAuthType=3;ProjectId=testProject;"
+            + "HttpReadTimeout=20000";
+
+    Integer timeout =
+        BigQueryJdbcUrlUtility.parseIntProperty(
+            connection_uri, BigQueryJdbcUrlUtility.HTTP_READ_TIMEOUT_PROPERTY_NAME, null, null);
+    assertEquals(Integer.valueOf(20000), timeout);
+  }
+
+  @Test
+  public void testParseHttpReadTimeoutDefault() {
+    String connection_uri =
+        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;OAuthType=3;ProjectId=testProject";
+
+    Integer timeout =
+        BigQueryJdbcUrlUtility.parseIntProperty(
+            connection_uri, BigQueryJdbcUrlUtility.HTTP_READ_TIMEOUT_PROPERTY_NAME, null, null);
+    assertNull(timeout);
+  }
+
+  @Test
+  public void testParseRequestReason() {
+    String url =
+        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+            + "OAuthType=3;ProjectId=testProject;RequestReason=testingRequestReason;";
+    String requestReason =
+        BigQueryJdbcUrlUtility.parseStringProperty(
+            url,
+            BigQueryJdbcUrlUtility.REQUEST_REASON_PROPERTY_NAME,
+            null,
+            "testParseRequestReason");
+    assertEquals("testingRequestReason", requestReason);
+  }
 }

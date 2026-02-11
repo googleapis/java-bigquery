@@ -131,6 +131,9 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
   String sslTrustStorePassword;
   long maxBytesBilled;
   Map<String, String> labels;
+  Integer httpConnectTimeout;
+  Integer httpReadTimeout;
+  String requestReason;
 
   BigQueryConnection(String url) throws IOException {
     this.connectionUrl = url;
@@ -272,11 +275,25 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
             BigQueryJdbcUrlUtility.SSL_TRUST_STORE_PWD_PROPERTY_NAME,
             null,
             this.connectionClassName);
+    this.httpConnectTimeout =
+        BigQueryJdbcUrlUtility.parseIntProperty(
+            url,
+            BigQueryJdbcUrlUtility.HTTP_CONNECT_TIMEOUT_PROPERTY_NAME,
+            null,
+            this.connectionClassName);
+    this.httpReadTimeout =
+        BigQueryJdbcUrlUtility.parseIntProperty(
+            url,
+            BigQueryJdbcUrlUtility.HTTP_READ_TIMEOUT_PROPERTY_NAME,
+            null,
+            this.connectionClassName);
     this.httpTransportOptions =
         BigQueryJdbcProxyUtility.getHttpTransportOptions(
             proxyProperties,
             this.sslTrustStorePath,
             this.sslTrustStorePassword,
+            this.httpConnectTimeout,
+            this.httpReadTimeout,
             this.connectionClassName);
     this.transportChannelProvider =
         BigQueryJdbcProxyUtility.getTransportChannelProvider(
@@ -347,6 +364,12 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
             BigQueryJdbcUrlUtility.METADATA_FETCH_THREAD_COUNT_PROPERTY_NAME,
             BigQueryJdbcUrlUtility.DEFAULT_METADATA_FETCH_THREAD_COUNT_VALUE,
             this.connectionClassName);
+    this.requestReason =
+        BigQueryJdbcUrlUtility.parseStringProperty(
+            url,
+            BigQueryJdbcUrlUtility.REQUEST_REASON_PROPERTY_NAME,
+            null,
+            this.connectionClassName);
 
     HEADER_PROVIDER = createHeaderProvider();
     this.bigQuery = getBigQueryConnection();
@@ -383,11 +406,16 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     String partnerToken = buildPartnerToken(this.connectionUrl);
     String headerToken =
         DEFAULT_JDBC_TOKEN_VALUE + "/" + getLibraryVersion(this.getClass()) + partnerToken;
-    return FixedHeaderProvider.create("user-agent", headerToken);
+    Map<String, String> headers = new java.util.HashMap<>();
+    headers.put("user-agent", headerToken);
+    if (this.requestReason != null) {
+      headers.put("x-goog-request-reason", this.requestReason);
+    }
+    return FixedHeaderProvider.create(headers);
   }
 
   protected void addOpenStatements(Statement statement) {
-    LOG.finest(String.format("Statement %s added to Connection %s.", statement, this));
+    LOG.finest("Statement %s added to Connection %s.", statement, this);
     this.openStatements.add(statement);
   }
 
@@ -431,7 +459,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
   public Statement createStatement() throws SQLException {
     checkClosed();
     BigQueryStatement currentStatement = new BigQueryStatement(this);
-    LOG.fine(String.format("Statement %s created.", currentStatement));
+    LOG.fine("Statement %s created.", currentStatement);
     addOpenStatements(currentStatement);
     return currentStatement;
   }
@@ -490,7 +518,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
   public PreparedStatement prepareStatement(String sql) throws SQLException {
     checkClosed();
     PreparedStatement currentStatement = new BigQueryPreparedStatement(this, sql);
-    LOG.fine(String.format("Prepared Statement %s created.", currentStatement));
+    LOG.fine("Prepared Statement %s created.", currentStatement);
     addOpenStatements(currentStatement);
     return currentStatement;
   }
@@ -722,6 +750,14 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
 
   String getSSLTrustStorePassword() {
     return sslTrustStorePassword;
+  }
+
+  Integer getHttpConnectTimeout() {
+    return httpConnectTimeout;
+  }
+
+  Integer getHttpReadTimeout() {
+    return httpReadTimeout;
   }
 
   @Override
@@ -1139,7 +1175,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
   public CallableStatement prepareCall(String sql) throws SQLException {
     checkClosed();
     CallableStatement currentStatement = new BigQueryCallableStatement(this, sql);
-    LOG.fine(String.format("Callable Statement %s created.", currentStatement));
+    LOG.fine("Callable Statement %s created.", currentStatement);
     addOpenStatements(currentStatement);
     return currentStatement;
   }
