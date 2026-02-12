@@ -811,7 +811,7 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
           long rowsRead = 0;
           int retryCount = 0;
           final long retryTimeoutInSecs = this.connection.getRetryTimeoutInSeconds();
-          long startTime = System.currentTimeMillis();
+          long startTime = System.nanoTime();
           try {
             // Use the first stream to perform reading.
             if (readSession.getStreamsCount() == 0) {
@@ -838,7 +838,7 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                   ArrowRecordBatch currentBatch = response.getArrowRecordBatch();
                   arrowBatchWrapperBlockingQueue.put(BigQueryArrowBatchWrapper.of(currentBatch));
                   rowsRead += response.getRowCount();
-                  startTime = System.currentTimeMillis();
+                  startTime = System.nanoTime();
                 }
                 break;
               } catch (com.google.api.gax.rpc.ApiException e) {
@@ -847,7 +847,7 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                   LOG.warning("Read session expired or not found: %s", e.getMessage());
                   break;
                 }
-                long elapsedSecs = (System.currentTimeMillis() - startTime) / 1000;
+                long elapsedSecs = (System.nanoTime() - startTime) / 1_000_000_000L;
                 if (elapsedSecs >= retryTimeoutInSecs) {
                   LOG.log(
                       Level.WARNING,
@@ -861,12 +861,7 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                 LOG.info(
                     "Connection interrupted during arrow stream read, retrying. attempt: %d",
                     retryCount);
-                try {
-                  Thread.sleep(this.connection.getRetryInitialDelayInSeconds() * 1000);
-                } catch (InterruptedException ie) {
-                  Thread.currentThread().interrupt();
-                  throw new BigQueryJdbcRuntimeException(ie);
-                }
+                Thread.sleep(this.connection.getRetryInitialDelayInSeconds() * 1000);
               }
             }
 
@@ -875,6 +870,8 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                 Level.WARNING,
                 "\n" + Thread.currentThread().getName() + " Interrupted @ arrowStreamProcessor",
                 e);
+            Thread.currentThread().interrupt();
+            throw new BigQueryJdbcRuntimeException(e);
           } finally { // logic needed for graceful shutdown
             // marking end of stream
             try {
@@ -1033,7 +1030,7 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
     // This thread makes the RPC calls and paginates
     Runnable nextPageTask =
         () -> {
-          long startTimeLoop = System.currentTimeMillis();
+          long startTimeLoop = System.nanoTime();
           final long retryTimeoutInSecs = this.connection.getRetryTimeoutInSeconds();
           int retryCount = 0;
           String currentPageToken = firstPageToken;
@@ -1064,7 +1061,7 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                 // this will be parsed asynchronously without blocking the current
                 // thread
                 rpcResponseQueue.put(Tuple.of(currentResults, true));
-                startTimeLoop = System.currentTimeMillis();
+                startTimeLoop = System.nanoTime();
                 LOG.fine(
                     "Fetched %d results from the server in %d ms.",
                     querySettings.getMaxResultPerPage(),
@@ -1073,7 +1070,7 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                 if (ex.getCode() == 404) {
                   throw ex;
                 }
-                long elapsedSecs = (System.currentTimeMillis() - startTimeLoop) / 1000;
+                long elapsedSecs = (System.nanoTime() - startTimeLoop) / 1_000_000_000L;
                 if (elapsedSecs >= retryTimeoutInSecs) {
                   throw ex;
                 }
@@ -1081,22 +1078,25 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                 LOG.info(
                     "Connection interrupted during json stream read, retrying. attempt: %d",
                     retryCount);
-                try {
-                  Thread.sleep(this.connection.getRetryInitialDelayInSeconds() * 1000);
-                } catch (InterruptedException ie) {
-                  Thread.currentThread().interrupt();
-                  throw new BigQueryJdbcRuntimeException(ie);
-                }
+                Thread.sleep(this.connection.getRetryInitialDelayInSeconds() * 1000);
               } catch (InterruptedException ie) {
                 Thread.currentThread().interrupt();
                 throw new BigQueryJdbcRuntimeException(ie);
               }
             }
-            // this will stop the parseDataTask as well when the pagination
-            // completes
-            rpcResponseQueue.put(Tuple.of(null, false));
           } catch (Exception ex) {
             throw new BigQueryJdbcRuntimeException(ex);
+          } finally {
+            try {
+              // this will stop the parseDataTask as well when the pagination
+              // completes
+              rpcResponseQueue.put(Tuple.of(null, false));
+            } catch (InterruptedException ie) {
+              LOG.warning(
+                  "\n%s Interrupted sending end-of-stream sentinel @ runNextPageTaskAsync",
+                  Thread.currentThread().getName());
+              Thread.currentThread().interrupt();
+            }
           }
           // We cannot do queryTaskExecutor.shutdownNow() here as populate buffer method may not
           // have finished processing the records and even that will be interrupted
