@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.59.0](https://github.com/googleapis/java-bigquery/compare/v2.58.0...v2.59.0) (2026-02-12)
+
+
+### Features
+
+* **jdbc:** Add `HttpTransportOptions` timeout configuration ([#4089](https://github.com/googleapis/java-bigquery/issues/4089)) ([77e0c35](https://github.com/googleapis/java-bigquery/commit/77e0c350e7d8fb5d6491e5ed6f1edfd9fecc59c8))
+* **jdbc:** Add `RequestReason` connection property ([#4094](https://github.com/googleapis/java-bigquery/issues/4094)) ([6feeb50](https://github.com/googleapis/java-bigquery/commit/6feeb50bc1f071b01c4fcfc943db7a9439b44e1f))
+* **jdbc:** Enable gRPC Keep-Alive for Storage Read API ([#4093](https://github.com/googleapis/java-bigquery/issues/4093)) ([1239a68](https://github.com/googleapis/java-bigquery/commit/1239a68d5b07bfa1fe2bbb678540896623bd6049))
+
+
+### Bug Fixes
+
+* **jdbc:** Avoid String.format in log calls ([#4096](https://github.com/googleapis/java-bigquery/issues/4096)) ([ad438dc](https://github.com/googleapis/java-bigquery/commit/ad438dc626b69f3bddda47ccf6b7a97d9053c047))
+* **jdbc:** Return null for invalid URLs in `connect()` to comply with JDBC spec ([#4086](https://github.com/googleapis/java-bigquery/issues/4086)) ([0c030d0](https://github.com/googleapis/java-bigquery/commit/0c030d06fe43ee07d510c8f2532ecde7e9de3cde))
+
 ## [2.58.0](https://github.com/googleapis/java-bigquery/compare/v2.57.2...v2.58.0) (2026-01-26)
 
 
