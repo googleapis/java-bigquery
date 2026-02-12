@@ -28,10 +28,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * This class implements all the methods that parse Connection property values from the Connection
@@ -601,10 +601,19 @@ final class BigQueryJdbcUrlUtility {
    * @return The String value of the property, or the default value if the property is not found.
    */
   static String parseUriProperty(String uri, String property) {
-    Pattern pattern = Pattern.compile(String.format("(?is)(?:;|\\?)%s=(.*?)(?:;|$)", property));
-    Matcher matcher = pattern.matcher(uri);
-    if (matcher.find() && matcher.groupCount() == 1) {
-      return CharEscapers.decodeUriPath(matcher.group(1));
+    try {
+      Map<String, String> props = parseUrlProperties(uri);
+
+      for (Map.Entry<String, String> entry : props.entrySet()) {
+        if (entry.getKey().equalsIgnoreCase(property)) {
+          return entry.getValue();
+        }
+      }
+    } catch (Exception e) {
+      if (e instanceof RuntimeException) {
+        throw (RuntimeException) e;
+      }
+      throw new BigQueryJdbcRuntimeException(e.getMessage());
     }
     return null;
   }
@@ -626,71 +635,6 @@ final class BigQueryJdbcUrlUtility {
       }
     }
     return urlBuilder.toString();
-  }
-
-  static boolean convertIntToBoolean(String value, String propertyName) {
-    int integerValue;
-
-    try {
-      if (value.equalsIgnoreCase("true")) {
-        integerValue = 1;
-      } else if (value.equalsIgnoreCase("false")) {
-        integerValue = 0;
-      } else {
-        integerValue = Integer.parseInt(value);
-      }
-
-    } catch (NumberFormatException ex) {
-      throw new IllegalArgumentException(
-          String.format(
-              "Invalid value for %s. For Boolean connection properties, use 0 for false and 1 for"
-                  + " true.",
-              propertyName),
-          ex);
-    }
-    if (integerValue == 1) {
-      return true;
-    } else if (integerValue == 0) {
-      return false;
-    } else {
-      throw new IllegalArgumentException(
-          String.format(
-              "Invalid value for %s. For Boolean connection properties, use 0 for false and 1 for"
-                  + " true.",
-              propertyName));
-    }
-  }
-
-  // todo just make it a map
-  static Map<String, String> parseQueryProperties(String url, String callerClassName) {
-    return parsePropertiesMap(url, QUERY_PROPERTIES_NAME, callerClassName);
-  }
-
-  static Map<String, String> parseLabels(String url, String callerClassName) {
-    return parsePropertiesMap(url, LABELS_PROPERTY_NAME, callerClassName);
-  }
-
-  static String parseStringProperty(
-      String url, String propertyName, String defaultValue, String callerClassName) {
-    LOG.finest("++enter++\t" + callerClassName);
-    String parsedValue = BigQueryJdbcUrlUtility.parseUriProperty(url, propertyName);
-    if (parsedValue != null) {
-      return parsedValue;
-    }
-    return defaultValue;
-  }
-
-  static List<String> parseStringListProperty(
-      String url, String propertyName, String callerClassName) {
-    LOG.finest("++enter++\t" + callerClassName);
-    String rawValue = parseStringProperty(url, propertyName, null, callerClassName);
-    if (rawValue == null || rawValue.trim().isEmpty()) {
-      return Collections.emptyList();
-    }
-    return Arrays.stream(rawValue.split(","))
-        .map(String::trim)
-        .filter(s -> !s.isEmpty())
-        .collect(Collectors.toList());
   }
 
   public static String parsePartnerTokenProperty(String url, String callerClassName) {
@@ -715,45 +659,6 @@ final class BigQueryJdbcUrlUtility {
       return partnerToken.toString();
     }
     return null;
-  }
-
-  static Integer parseIntProperty(
-      String url, String propertyName, Integer defaultValue, String callerClassName) {
-    LOG.finest("++enter++\t" + callerClassName);
-    String parsedValue = BigQueryJdbcUrlUtility.parseUriProperty(url, propertyName);
-    if (parsedValue != null) {
-      try {
-        return Integer.parseInt(parsedValue);
-      } catch (NumberFormatException e) {
-        LOG.severe(
-            "Invalid integer value '%s' for property '%s'. Please provide a valid integer.",
-            parsedValue, propertyName);
-        throw new IllegalArgumentException(
-            String.format("Invalid integer value for property '%s': %s", propertyName, parsedValue),
-            e);
-      }
-    }
-    return defaultValue;
-  }
-
-  static Long parseLongProperty(
-      String url, String propertyName, Long defaultValue, String callerClassName) {
-    LOG.finest("++enter++\t" + callerClassName);
-    String parsedValue = BigQueryJdbcUrlUtility.parseUriProperty(url, propertyName);
-    if (parsedValue != null) {
-      return Long.parseLong(parsedValue);
-    }
-    return defaultValue;
-  }
-
-  static Boolean parseBooleanProperty(
-      String url, String propertyName, Boolean defaultValue, String callerClassName) {
-    LOG.finest("++enter++\t" + callerClassName);
-    String parsedValue = BigQueryJdbcUrlUtility.parseUriProperty(url, propertyName);
-    if (parsedValue != null) {
-      return convertIntToBoolean(parsedValue, propertyName);
-    }
-    return defaultValue;
   }
 
   public static Level parseLogLevel(String logLevelString) {
@@ -782,21 +687,8 @@ final class BigQueryJdbcUrlUtility {
     }
   }
 
-  static Map<String, String> parseOverrideProperties(String url, String callerClassName) {
-    LOG.finest("++enter++\t" + callerClassName);
+  static Map<String, String> parseOverridePropertiesString(String overridePropertiesString) {
     Map<String, String> overrideProps = new HashMap<>();
-    Pattern pattern =
-        Pattern.compile(
-            String.format(
-                "(?is)(%s|%s)=([^;]+)",
-                ENDPOINT_OVERRIDES_PROPERTY_NAME, PRIVATE_SERVICE_CONNECT_PROPERTY_NAME));
-    Matcher matcher = pattern.matcher(url);
-    String overridePropertiesString;
-    if (matcher.find() && matcher.groupCount() >= 1) {
-      overridePropertiesString = matcher.group(2);
-    } else {
-      return overrideProps;
-    }
     for (String property : OVERRIDE_PROPERTIES) {
       Pattern propertyPattern = Pattern.compile(String.format("(?i)%s=(.*?)(?:[,;]|$)", property));
       Matcher propertyMatcher = propertyPattern.matcher(overridePropertiesString);
@@ -807,128 +699,175 @@ final class BigQueryJdbcUrlUtility {
     return overrideProps;
   }
 
-  public static boolean parseJobCreationMode(String url, String callerClassName) {
-    LOG.finest("++enter++\t" + callerClassName);
-
-    String jobCreationMode =
-        BigQueryJdbcUrlUtility.parseUriProperty(url, JOB_CREATION_MODE_PROPERTY_NAME);
-
-    if (jobCreationMode == null) {
-      LOG.fine(
-          "%s value not provided, defaulting to %s. Caller: %s",
-          JOB_CREATION_MODE_PROPERTY_NAME, DEFAULT_JOB_CREATION_MODE, callerClassName);
-      // Default Job creation mode is JOB_CREATION_OPTIONAL(2)
-      // which translates to options.setQueryPreviewEnabled(true)
-      return true;
-    }
-    if (jobCreationMode.equalsIgnoreCase("1")) {
-      return false;
-    } else if (jobCreationMode.equalsIgnoreCase("2")) {
-      return true;
-    } else {
-      throw new NumberFormatException(
-          String.format(
-              "Invalid value for %s. Use 1 for JOB_CREATION_REQUIRED and 2 for"
-                  + " JOB_CREATION_OPTIONAL.",
-              JOB_CREATION_MODE_PROPERTY_NAME));
-    }
+  private static boolean convertStrToIntBoolean(String value) {
+    if ("1".equals(value)) return true;
+    if ("0".equals(value)) return false;
+    return Boolean.parseBoolean(value);
   }
 
-  public static String parseBYOIDProperty(String url, String property, String callerClassName) {
-    LOG.finest("++enter++\t" + callerClassName);
-
-    String value = BigQueryJdbcUrlUtility.parseUriProperty(url, property);
-    String defaultValue = BigQueryJdbcUrlUtility.getConnectionPropertyDefaultValue(property);
-    if (value != null) {
-      return value;
-    } else if (defaultValue != null) {
-      return defaultValue;
+  public static Map<String, String> parseUrlProperties(String url) throws IllegalArgumentException {
+    Map<String, String> properties = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    if (url == null || url.isEmpty()) {
+      return properties;
     }
-    return null;
-  }
 
-  public static String getConnectionPropertyDefaultValue(String propertyName) {
-    // TODO: change how we store properties because this method has to go through all of them
-    for (BigQueryConnectionProperty property : VALID_PROPERTIES) {
-      if (property.getName().equals(propertyName)) {
-        return property.getDefaultValue();
+    int sep = url.indexOf(';');
+    if (sep == -1) {
+      return properties;
+    }
+
+    String[] parts = url.substring(sep + 1).split(";");
+    for (String part : parts) {
+      if (part.trim().isEmpty()) {
+        continue;
+      }
+      int eqIdx = part.indexOf('=');
+      if (eqIdx != -1) {
+        String key = part.substring(0, eqIdx).trim();
+        String val = part.substring(eqIdx + 1).trim();
+        properties.put(key, CharEscapers.decodeUriPath(val));
       }
     }
-    return null;
+    return properties;
   }
 
-  public static long parseRetryTimeoutInSecs(String url, String callerClassName) {
-    return BigQueryJdbcUrlUtility.parseLongProperty(
-        url,
-        RETRY_TIMEOUT_IN_SECS_PROPERTY_NAME,
-        DEFAULT_RETRY_TIMEOUT_IN_SECS_VALUE,
-        callerClassName);
+  private static final java.util.Map<String, java.util.function.BiConsumer<DataSource, String>>
+      PROPERTY_SETTERS = new java.util.HashMap<>();
+
+  static {
+    PROPERTY_SETTERS.put("projectid", (ds, val) -> ds.setProjectId(val));
+    PROPERTY_SETTERS.put("defaultdataset", (ds, val) -> ds.setDefaultDataset(val));
+    PROPERTY_SETTERS.put("oauthtype", (ds, val) -> ds.setOAuthType(Integer.parseInt(val)));
+    PROPERTY_SETTERS.put(
+        "enablehighthroughputapi",
+        (ds, val) -> ds.setEnableHighThroughputAPI(convertStrToIntBoolean(val)));
+    PROPERTY_SETTERS.put(
+        "highthroughputmintablesize",
+        (ds, val) -> ds.setHighThroughputMinTableSize(Integer.parseInt(val)));
+    PROPERTY_SETTERS.put(
+        "highthroughputactivationratio",
+        (ds, val) -> ds.setHighThroughputActivationRatio(Integer.parseInt(val)));
+    PROPERTY_SETTERS.put(
+        "unsupportedhtapifallback",
+        (ds, val) -> ds.setUnsupportedHTAPIFallback(convertStrToIntBoolean(val)));
+    PROPERTY_SETTERS.put("kmskeyname", (ds, val) -> ds.setKmsKeyName(val));
+    PROPERTY_SETTERS.put(
+        "queryproperties",
+        (ds, val) -> {
+          Map<String, String> querypropertiesMap = new java.util.HashMap<>();
+          for (String kv : val.split(",")) {
+            String[] kvParts = kv.split("=");
+            if (kvParts.length == 2) {
+              querypropertiesMap.put(kvParts[0].trim(), kvParts[1].trim());
+            }
+          }
+          ds.setQueryProperties(querypropertiesMap);
+        });
+    PROPERTY_SETTERS.put("loglevel", (ds, val) -> ds.setLogLevel(val));
+    PROPERTY_SETTERS.put(
+        "enablesession", (ds, val) -> ds.setEnableSession(convertStrToIntBoolean(val)));
+    PROPERTY_SETTERS.put("logpath", (ds, val) -> ds.setLogPath(val));
+    PROPERTY_SETTERS.put("oauthserviceacctemail", (ds, val) -> ds.setOAuthServiceAcctEmail(val));
+    PROPERTY_SETTERS.put("oauthpvtkeypath", (ds, val) -> ds.setOAuthPvtKeyPath(val));
+    PROPERTY_SETTERS.put("oauthpvtkey", (ds, val) -> ds.setOAuthPvtKey(val));
+    PROPERTY_SETTERS.put("oauthaccesstoken", (ds, val) -> ds.setOAuthAccessToken(val));
+    PROPERTY_SETTERS.put("oauthrefreshtoken", (ds, val) -> ds.setOAuthRefreshToken(val));
+    PROPERTY_SETTERS.put(
+        "usequerycache", (ds, val) -> ds.setUseQueryCache(convertStrToIntBoolean(val)));
+    PROPERTY_SETTERS.put("querydialect", (ds, val) -> ds.setQueryDialect(val));
+    PROPERTY_SETTERS.put(
+        "allowlargeresults", (ds, val) -> ds.setAllowLargeResults(convertStrToIntBoolean(val)));
+    PROPERTY_SETTERS.put("largeresulttable", (ds, val) -> ds.setDestinationTable(val));
+    PROPERTY_SETTERS.put("largeresultdataset", (ds, val) -> ds.setDestinationDataset(val));
+    PROPERTY_SETTERS.put(
+        "largeresultsdatasetexpirationtime",
+        (ds, val) -> ds.setDestinationDatasetExpirationTime(Long.parseLong(val)));
+    PROPERTY_SETTERS.put("universedomain", (ds, val) -> ds.setUniverseDomain(val));
+    PROPERTY_SETTERS.put("proxyhost", (ds, val) -> ds.setProxyHost(val));
+    PROPERTY_SETTERS.put("proxyport", (ds, val) -> ds.setProxyPort(val));
+    PROPERTY_SETTERS.put("proxyuid", (ds, val) -> ds.setProxyUid(val));
+    PROPERTY_SETTERS.put("proxypwd", (ds, val) -> ds.setProxyPwd(val));
+    PROPERTY_SETTERS.put("oauthclientid", (ds, val) -> ds.setOAuthClientId(val));
+    PROPERTY_SETTERS.put("oauthclientsecret", (ds, val) -> ds.setOAuthClientSecret(val));
+    PROPERTY_SETTERS.put(
+        "jobcreationmode", (ds, val) -> ds.setJobCreationMode(Integer.parseInt(val)));
+    PROPERTY_SETTERS.put("maxresults", (ds, val) -> ds.setMaxResults(Long.parseLong(val)));
+    PROPERTY_SETTERS.put("partnertoken", (ds, val) -> ds.setPartnerToken(val));
+    PROPERTY_SETTERS.put(
+        "enablewriteapi", (ds, val) -> ds.setEnableWriteAPI(convertStrToIntBoolean(val)));
+    PROPERTY_SETTERS.put("additionalprojects", (ds, val) -> ds.setAdditionalProjects(val));
+    PROPERTY_SETTERS.put(
+        "filtertablesondefaultdataset",
+        (ds, val) -> ds.setFilterTablesOnDefaultDataset(convertStrToIntBoolean(val)));
+    PROPERTY_SETTERS.put(
+        "requestgoogledrivescope",
+        (ds, val) -> ds.setRequestGoogleDriveScope(Integer.parseInt(val)));
+    PROPERTY_SETTERS.put(
+        "metadatafetchthreadcount",
+        (ds, val) -> ds.setMetadataFetchThreadCount(Integer.parseInt(val)));
+    PROPERTY_SETTERS.put("ssltruststore", (ds, val) -> ds.setSSLTrustStorePath(val));
+    PROPERTY_SETTERS.put("ssltruststorepwd", (ds, val) -> ds.setSSLTrustStorePassword(val));
+    PROPERTY_SETTERS.put(
+        "labels",
+        (ds, val) -> {
+          Map<String, String> labelsMap = new java.util.HashMap<>();
+          for (String kv : val.split(",")) {
+            String[] kvParts = kv.split("=");
+            if (kvParts.length == 2) {
+              labelsMap.put(kvParts[0].trim(), kvParts[1].trim());
+            }
+          }
+          ds.setLabels(labelsMap);
+        });
+    PROPERTY_SETTERS.put("requestreason", (ds, val) -> ds.setRequestReason(val));
+    PROPERTY_SETTERS.put(
+        "maximumbytesbilled", (ds, val) -> ds.setMaximumBytesBilled(Long.parseLong(val)));
+    PROPERTY_SETTERS.put("timeout", (ds, val) -> ds.setRetryTimeoutInSecs(Long.parseLong(val)));
+    PROPERTY_SETTERS.put("jobtimeout", (ds, val) -> ds.setJobTimeout(Long.parseLong(val)));
+    PROPERTY_SETTERS.put(
+        "retryinitialdelay", (ds, val) -> ds.setRetryInitialDelayInSecs(Long.parseLong(val)));
+    PROPERTY_SETTERS.put(
+        "retrymaxdelay", (ds, val) -> ds.setRetryMaxDelayInSecs(Long.parseLong(val)));
+    PROPERTY_SETTERS.put(
+        "httpconnecttimeout", (ds, val) -> ds.setHttpConnectTimeout(Integer.parseInt(val)));
+    PROPERTY_SETTERS.put(
+        "httpreadtimeout", (ds, val) -> ds.setHttpReadTimeout(Integer.parseInt(val)));
+    PROPERTY_SETTERS.put(
+        "swa_appendrowcount", (ds, val) -> ds.setSwaAppendRowCount(Integer.parseInt(val)));
+    PROPERTY_SETTERS.put(
+        "swa_activationrowcount", (ds, val) -> ds.setSwaActivationRowCount(Integer.parseInt(val)));
+    PROPERTY_SETTERS.put(
+        "connectionpoolsize", (ds, val) -> ds.setConnectionPoolSize(Long.parseLong(val)));
+    PROPERTY_SETTERS.put(
+        "listenerpoolsize", (ds, val) -> ds.setListenerPoolSize(Long.parseLong(val)));
+    PROPERTY_SETTERS.put("location", (ds, val) -> ds.setLocation(val));
   }
 
-  public static long parseJobTimeout(String url, String callerClassName) {
-    return parseLongProperty(
-        url, JOB_TIMEOUT_PROPERTY_NAME, DEFAULT_JOB_TIMEOUT_VALUE, callerClassName);
-  }
-
-  public static long parseRetryInitialDelayInSecs(String url, String callerClassName) {
-    return BigQueryJdbcUrlUtility.parseLongProperty(
-        url, RETRY_INITIAL_DELAY_PROPERTY_NAME, DEFAULT_RETRY_INITIAL_DELAY_VALUE, callerClassName);
-  }
-
-  public static long parseRetryMaxDelayInSecs(String url, String callerClassName) {
-    return BigQueryJdbcUrlUtility.parseLongProperty(
-        url, RETRY_MAX_DELAY_PROPERTY_NAME, DEFAULT_RETRY_MAX_DELAY_VALUE, callerClassName);
-  }
-
-  // Convenience Helper Methods
-  public static long parseConnectionPoolSize(String url, String callerClassName) {
-    if (url == null || url.isEmpty()) {
-      throw new BigQueryJdbcRuntimeException("Connection url is empty");
-    }
-    return parseLongProperty(
-        url,
-        CONNECTION_POOL_SIZE_PROPERTY_NAME,
-        DEFAULT_CONNECTION_POOL_SIZE_VALUE,
-        callerClassName);
-  }
-
-  public static long parseListenerPoolSize(String url, String callerClassName) {
-    if (url == null || url.isEmpty()) {
-      throw new BigQueryJdbcRuntimeException("Connection url is empty");
-    }
-    return parseLongProperty(
-        url, LISTENER_POOL_SIZE_PROPERTY_NAME, DEFAULT_LISTENER_POOL_SIZE_VALUE, callerClassName);
-  }
-
-  public static long parseMaximumBytesBilled(String url, String callerClassName) {
-    if (url == null || url.isEmpty()) {
-      throw new BigQueryJdbcRuntimeException("Connection url is empty");
-    }
-    return parseLongProperty(
-        url, MAX_BYTES_BILLED_PROPERTY_NAME, DEFAULT_MAX_BYTES_BILLED_VALUE, callerClassName);
-  }
-
-  private static Map<String, String> parsePropertiesMap(
-      String url, String propertyName, String callerClassName) {
-    LOG.finest("++enter++\t" + callerClassName);
-    String propertiesString = BigQueryJdbcUrlUtility.parseUriProperty(url, propertyName);
-    if (propertiesString == null || propertiesString.isEmpty()) {
-      LOG.fine("Unable to parse property name: %s from url: %s", propertyName, url);
-      return null;
-    }
-    Map<String, String> propertiesMap = new HashMap<>();
-    String[] keyValuePairs = propertiesString.split(",");
-
-    for (String keyValuePair : keyValuePairs) {
-      String[] parts = keyValuePair.split("=");
-      if (parts.length == 2) {
-        propertiesMap.put(parts[0], parts[1]);
+  public static void setDataSourceProperties(DataSource ds, Map<String, String> urlProps)
+      throws IllegalArgumentException {
+    for (Map.Entry<String, String> entry : urlProps.entrySet()) {
+      String key = entry.getKey();
+      String val = entry.getValue();
+      java.util.function.BiConsumer<DataSource, String> setter =
+          PROPERTY_SETTERS.get(key.toLowerCase());
+      if (setter != null) {
+        setter.accept(ds, val);
       } else {
-        LOG.warning(
-            "Invalid KeyValue pair: %s found in url: %s for property name: %s",
-            keyValuePair, url, propertyName);
+        boolean found =
+            BYOID_PROPERTIES.stream().anyMatch(key::equalsIgnoreCase)
+                || OVERRIDE_PROPERTIES.stream().anyMatch(key::equalsIgnoreCase);
+        if (!found
+            && !key.equalsIgnoreCase("Location")
+            && !key.equalsIgnoreCase("OAuthType")
+            && !key.equalsIgnoreCase("ProjectId")
+            && !key.equalsIgnoreCase("ServiceAccountImpersonationEmail")
+            && !key.equalsIgnoreCase("ServiceAccountImpersonationScopes")
+            && !key.equalsIgnoreCase("EndpointOverrides")
+            && !key.equalsIgnoreCase("ServiceAccountImpersonationTokenLifetime")
+            && !key.equalsIgnoreCase("universeDomain")) {
+          throw new IllegalArgumentException("Unknown connection property: " + key);
+        }
       }
     }
-    return propertiesMap;
   }
 }
