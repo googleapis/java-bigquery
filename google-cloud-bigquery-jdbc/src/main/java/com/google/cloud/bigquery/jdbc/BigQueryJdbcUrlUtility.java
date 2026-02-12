@@ -621,8 +621,7 @@ final class BigQueryJdbcUrlUtility {
     StringBuilder urlBuilder = new StringBuilder(url);
     for (Entry<Object, Object> entry : properties.entrySet()) {
       if (entry.getValue() != null && !"".equals(entry.getValue())) {
-        LOG.info(
-            String.format("Appending %s with value %s to URL", entry.getKey(), entry.getValue()));
+        LOG.finest("Appending %s with value %s to URL", entry.getKey(), entry.getValue());
         urlBuilder.append(";").append(entry.getKey()).append("=").append(entry.getValue());
       }
     }
@@ -727,9 +726,8 @@ final class BigQueryJdbcUrlUtility {
         return Integer.parseInt(parsedValue);
       } catch (NumberFormatException e) {
         LOG.severe(
-            String.format(
-                "Invalid integer value '%s' for property '%s'. Please provide a valid integer.",
-                parsedValue, propertyName));
+            "Invalid integer value '%s' for property '%s'. Please provide a valid integer.",
+            parsedValue, propertyName);
         throw new IllegalArgumentException(
             String.format("Invalid integer value for property '%s': %s", propertyName, parsedValue),
             e);
@@ -779,9 +777,7 @@ final class BigQueryJdbcUrlUtility {
         return Level.SEVERE;
       case 0:
       default:
-        LOG.info(
-            String.format(
-                "%s value not provided, defaulting to %s.", LOG_LEVEL_PROPERTY_NAME, Level.OFF));
+        LOG.info("%s value not provided, defaulting to %s.", LOG_LEVEL_PROPERTY_NAME, Level.OFF);
         return Level.OFF;
     }
   }
@@ -819,9 +815,8 @@ final class BigQueryJdbcUrlUtility {
 
     if (jobCreationMode == null) {
       LOG.fine(
-          String.format(
-              "%s value not provided, defaulting to %s. Caller: %s",
-              JOB_CREATION_MODE_PROPERTY_NAME, DEFAULT_JOB_CREATION_MODE, callerClassName));
+          "%s value not provided, defaulting to %s. Caller: %s",
+          JOB_CREATION_MODE_PROPERTY_NAME, DEFAULT_JOB_CREATION_MODE, callerClassName);
       // Default Job creation mode is JOB_CREATION_OPTIONAL(2)
       // which translates to options.setQueryPreviewEnabled(true)
       return true;
@@ -918,7 +913,7 @@ final class BigQueryJdbcUrlUtility {
     LOG.finest("++enter++\t" + callerClassName);
     String propertiesString = BigQueryJdbcUrlUtility.parseUriProperty(url, propertyName);
     if (propertiesString == null || propertiesString.isEmpty()) {
-      LOG.fine(String.format("Unable to parse property name: %s from url: %s", propertyName, url));
+      LOG.fine("Unable to parse property name: %s from url: %s", propertyName, url);
       return null;
     }
     Map<String, String> propertiesMap = new HashMap<>();
@@ -930,9 +925,8 @@ final class BigQueryJdbcUrlUtility {
         propertiesMap.put(parts[0], parts[1]);
       } else {
         LOG.warning(
-            String.format(
-                "Invalid KeyValue pair: %s found in url: %s for property name: %s",
-                keyValuePair, url, propertyName));
+            "Invalid KeyValue pair: %s found in url: %s for property name: %s",
+            keyValuePair, url, propertyName);
       }
     }
     return propertiesMap;
