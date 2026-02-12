@@ -78,6 +78,19 @@ public class DataSource implements javax.sql.DataSource {
   private Integer metadataFetchThreadCount;
   private String sslTrustStorePath;
   private String sslTrustStorePassword;
+  private Map<String, String> labels;
+  private String requestReason;
+  private Long maximumBytesBilled;
+  private Long retryTimeoutInSecs;
+  private Long retryInitialDelayInSecs;
+  private Long retryMaxDelayInSecs;
+  private Long jobTimeout;
+  private Integer httpConnectTimeout;
+  private Integer httpReadTimeout;
+  private Integer swaAppendRowCount;
+  private Integer swaActivationRowCount;
+  private Long connectionPoolSize;
+  private Long listenerPoolSize;
 
   // Make sure the JDBC driver class is loaded.
   static {
@@ -283,6 +296,68 @@ public class DataSource implements javax.sql.DataSource {
           BigQueryJdbcUrlUtility.SSL_TRUST_STORE_PWD_PROPERTY_NAME,
           String.valueOf(this.sslTrustStorePassword));
     }
+    if (this.labels != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.LABELS_PROPERTY_NAME, this.labels.toString());
+    }
+    if (this.requestReason != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.REQUEST_REASON_PROPERTY_NAME, this.requestReason);
+    }
+    if (this.maximumBytesBilled != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.MAX_BYTES_BILLED_PROPERTY_NAME,
+          String.valueOf(this.maximumBytesBilled));
+    }
+    if (this.retryTimeoutInSecs != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.RETRY_TIMEOUT_IN_SECS_PROPERTY_NAME,
+          String.valueOf(this.retryTimeoutInSecs));
+    }
+    if (this.retryInitialDelayInSecs != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.RETRY_INITIAL_DELAY_PROPERTY_NAME,
+          String.valueOf(this.retryInitialDelayInSecs));
+    }
+    if (this.retryMaxDelayInSecs != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.RETRY_MAX_DELAY_PROPERTY_NAME,
+          String.valueOf(this.retryMaxDelayInSecs));
+    }
+    if (this.jobTimeout != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.JOB_TIMEOUT_PROPERTY_NAME, String.valueOf(this.jobTimeout));
+    }
+    if (this.httpConnectTimeout != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.HTTP_CONNECT_TIMEOUT_PROPERTY_NAME,
+          String.valueOf(this.httpConnectTimeout));
+    }
+    if (this.httpReadTimeout != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.HTTP_READ_TIMEOUT_PROPERTY_NAME,
+          String.valueOf(this.httpReadTimeout));
+    }
+    if (this.swaAppendRowCount != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.SWA_APPEND_ROW_COUNT_PROPERTY_NAME,
+          String.valueOf(this.swaAppendRowCount));
+    }
+    if (this.swaActivationRowCount != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.SWA_ACTIVATION_ROW_COUNT_PROPERTY_NAME,
+          String.valueOf(this.swaActivationRowCount));
+    }
+    if (this.connectionPoolSize != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.CONNECTION_POOL_SIZE_PROPERTY_NAME,
+          String.valueOf(this.connectionPoolSize));
+    }
+    if (this.listenerPoolSize != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.LISTENER_POOL_SIZE_PROPERTY_NAME,
+          String.valueOf(this.listenerPoolSize));
+    }
     return connectionProperties;
   }
 
@@ -343,7 +418,7 @@ public class DataSource implements javax.sql.DataSource {
     this.partnerToken = partnerToken;
   }
 
-  public boolean getEnableHighThroughputAPI() {
+  public Boolean getEnableHighThroughputAPI() {
     return enableHighThroughputAPI;
   }
 
@@ -351,11 +426,11 @@ public class DataSource implements javax.sql.DataSource {
     this.enableHighThroughputAPI = enableHighThroughputAPI;
   }
 
-  public int getHighThroughputMinTableSize() {
+  public Integer getHighThroughputMinTableSize() {
     return highThroughputMinTableSize;
   }
 
-  public int getHighThroughputActivationRatio() {
+  public Integer getHighThroughputActivationRatio() {
     return highThroughputActivationRatio;
   }
 
@@ -387,11 +462,11 @@ public class DataSource implements javax.sql.DataSource {
     this.unsupportedHTAPIFallback = unsupportedHTAPIFallback;
   }
 
-  public boolean getUnsupportedHTAPIFallback() {
+  public Boolean getUnsupportedHTAPIFallback() {
     return this.unsupportedHTAPIFallback;
   }
 
-  public boolean getEnableSession() {
+  public Boolean getEnableSession() {
     return enableSession;
   }
 
@@ -575,6 +650,14 @@ public class DataSource implements javax.sql.DataSource {
     this.jobCreationMode = jobCreationMode;
   }
 
+  public Long getMaxResults() {
+    return maxResults;
+  }
+
+  public void setMaxResults(Long maxResults) {
+    this.maxResults = maxResults;
+  }
+
   public Boolean getEnableWriteAPI() {
     return enableWriteAPI;
   }
@@ -629,6 +712,110 @@ public class DataSource implements javax.sql.DataSource {
 
   public void setSSLTrustStorePassword(String sslTrustStorePassword) {
     this.sslTrustStorePassword = sslTrustStorePassword;
+  }
+
+  public Map<String, String> getLabels() {
+    return labels;
+  }
+
+  public void setLabels(Map<String, String> labels) {
+    this.labels = labels;
+  }
+
+  public String getRequestReason() {
+    return requestReason;
+  }
+
+  public void setRequestReason(String requestReason) {
+    this.requestReason = requestReason;
+  }
+
+  public Long getMaximumBytesBilled() {
+    return maximumBytesBilled;
+  }
+
+  public void setMaximumBytesBilled(Long maximumBytesBilled) {
+    this.maximumBytesBilled = maximumBytesBilled;
+  }
+
+  public Long getRetryTimeoutInSecs() {
+    return retryTimeoutInSecs;
+  }
+
+  public void setRetryTimeoutInSecs(Long retryTimeoutInSecs) {
+    this.retryTimeoutInSecs = retryTimeoutInSecs;
+  }
+
+  public Long getRetryInitialDelayInSecs() {
+    return retryInitialDelayInSecs;
+  }
+
+  public void setRetryInitialDelayInSecs(Long retryInitialDelayInSecs) {
+    this.retryInitialDelayInSecs = retryInitialDelayInSecs;
+  }
+
+  public Long getRetryMaxDelayInSecs() {
+    return retryMaxDelayInSecs;
+  }
+
+  public void setRetryMaxDelayInSecs(Long retryMaxDelayInSecs) {
+    this.retryMaxDelayInSecs = retryMaxDelayInSecs;
+  }
+
+  public Long getJobTimeout() {
+    return jobTimeout;
+  }
+
+  public void setJobTimeout(Long jobTimeout) {
+    this.jobTimeout = jobTimeout;
+  }
+
+  public Integer getHttpConnectTimeout() {
+    return httpConnectTimeout;
+  }
+
+  public void setHttpConnectTimeout(Integer httpConnectTimeout) {
+    this.httpConnectTimeout = httpConnectTimeout;
+  }
+
+  public Integer getHttpReadTimeout() {
+    return httpReadTimeout;
+  }
+
+  public void setHttpReadTimeout(Integer httpReadTimeout) {
+    this.httpReadTimeout = httpReadTimeout;
+  }
+
+  public Integer getSwaAppendRowCount() {
+    return swaAppendRowCount;
+  }
+
+  public void setSwaAppendRowCount(Integer swaAppendRowCount) {
+    this.swaAppendRowCount = swaAppendRowCount;
+  }
+
+  public Integer getSwaActivationRowCount() {
+    return swaActivationRowCount;
+  }
+
+  public void setSwaActivationRowCount(Integer swaActivationRowCount) {
+    this.swaActivationRowCount = swaActivationRowCount;
+  }
+
+  public Long getConnectionPoolSize() {
+    return connectionPoolSize;
+  }
+
+  public void setConnectionPoolSize(Long connectionPoolSize) {
+    this.connectionPoolSize = connectionPoolSize;
+  }
+
+  public Long getListenerPoolSize() {
+    return listenerPoolSize;
+  }
+
+  public void setListenerPoolSize(Long listenerPoolSize) {
+    this.listenerPoolSize = listenerPoolSize;
   }
 
   @Override
