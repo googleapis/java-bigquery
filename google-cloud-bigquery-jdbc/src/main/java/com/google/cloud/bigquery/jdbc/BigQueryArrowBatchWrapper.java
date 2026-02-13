@@ -31,24 +31,35 @@ class BigQueryArrowBatchWrapper {
   // Marks the end of the stream for the ResultSet
   private final boolean isLast;
 
+  private final Exception exception;
+
   private BigQueryArrowBatchWrapper(
-      ArrowRecordBatch currentArrowBatch, JsonStringArrayList nestedRecords, boolean isLast) {
+      ArrowRecordBatch currentArrowBatch,
+      JsonStringArrayList nestedRecords,
+      boolean isLast,
+      Exception exception) {
     this.currentArrowBatch = currentArrowBatch;
     this.nestedRecords = nestedRecords;
     this.isLast = isLast;
+    this.exception = exception;
   }
 
   static BigQueryArrowBatchWrapper of(ArrowRecordBatch currentArrowBatch, boolean... isLast) {
     LOG.finest("++enter++");
     boolean isLastFlag = isLast != null && isLast.length == 1 && isLast[0];
-    return new BigQueryArrowBatchWrapper(currentArrowBatch, null, isLastFlag);
+    return new BigQueryArrowBatchWrapper(currentArrowBatch, null, isLastFlag, null);
   }
 
   static BigQueryArrowBatchWrapper getNestedFieldValueListWrapper(
       JsonStringArrayList nestedRecords, boolean... isLast) {
     LOG.finest("++enter++");
     boolean isLastFlag = isLast != null && isLast.length == 1 && isLast[0];
-    return new BigQueryArrowBatchWrapper(null, nestedRecords, isLastFlag);
+    return new BigQueryArrowBatchWrapper(null, nestedRecords, isLastFlag, null);
+  }
+
+  static BigQueryArrowBatchWrapper ofError(Exception exception) {
+    LOG.finest("++enter++");
+    return new BigQueryArrowBatchWrapper(null, null, true, exception);
   }
 
   ArrowRecordBatch getCurrentArrowBatch() {
@@ -64,5 +75,9 @@ class BigQueryArrowBatchWrapper {
   boolean isLast() {
     LOG.finest("++enter++");
     return this.isLast;
+  }
+
+  Exception getException() {
+    return this.exception;
   }
 }
