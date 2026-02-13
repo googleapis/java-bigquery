@@ -94,6 +94,8 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
   private static final String DEFAULT_DATASET_NAME = "_google_jdbc";
   private static final String DEFAULT_TABLE_NAME = "temp_table_";
   private static final String JDBC_JOB_PREFIX = "google-jdbc-";
+  private static final int MAX_RETRY_COUNT = 5;
+  private static final long RETRY_DELAY_MS = 2000L;
   protected ResultSet currentResultSet;
   protected long currentUpdateCount = -1;
   protected List<JobId> jobIds = new ArrayList<>();
@@ -810,8 +812,6 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
         () -> {
           long rowsRead = 0;
           int retryCount = 0;
-          final long retryTimeoutInSecs = this.connection.getRetryTimeoutInSeconds();
-          long startTime = System.nanoTime();
           try {
             // Use the first stream to perform reading.
             if (readSession.getStreamsCount() == 0) {
@@ -838,7 +838,6 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                   ArrowRecordBatch currentBatch = response.getArrowRecordBatch();
                   arrowBatchWrapperBlockingQueue.put(BigQueryArrowBatchWrapper.of(currentBatch));
                   rowsRead += response.getRowCount();
-                  startTime = System.nanoTime();
                 }
                 break;
               } catch (com.google.api.gax.rpc.ApiException e) {
@@ -847,21 +846,26 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                   LOG.warning("Read session expired or not found: %s", e.getMessage());
                   break;
                 }
-                long elapsedSecs = (System.nanoTime() - startTime) / 1_000_000_000L;
-                if (elapsedSecs >= retryTimeoutInSecs) {
+                if (retryCount >= MAX_RETRY_COUNT) {
                   LOG.log(
                       Level.WARNING,
                       "\n"
                           + Thread.currentThread().getName()
-                          + " Interrupted @ arrowStreamProcessor, timeout exceeded",
+                          + " Interrupted @ arrowStreamProcessor, max retries exceeded",
                       e);
+                  try {
+                    arrowBatchWrapperBlockingQueue.put(
+                        BigQueryArrowBatchWrapper.ofError(new BigQueryJdbcRuntimeException(e)));
+                  } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                  }
                   break;
                 }
                 retryCount++;
                 LOG.info(
                     "Connection interrupted during arrow stream read, retrying. attempt: %d",
                     retryCount);
-                Thread.sleep(this.connection.getRetryInitialDelayInSeconds() * 1000);
+                Thread.sleep(RETRY_DELAY_MS);
               }
             }
 
@@ -870,6 +874,12 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                 Level.WARNING,
                 "\n" + Thread.currentThread().getName() + " Interrupted @ arrowStreamProcessor",
                 e);
+            try {
+              arrowBatchWrapperBlockingQueue.put(
+                  BigQueryArrowBatchWrapper.ofError(new BigQueryJdbcRuntimeException(e)));
+            } catch (InterruptedException ie) {
+              Thread.currentThread().interrupt();
+            }
             Thread.currentThread().interrupt();
             throw new BigQueryJdbcRuntimeException(e);
           } finally { // logic needed for graceful shutdown
@@ -956,7 +966,12 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
     if (jobId != null) {
       // Thread to make rpc calls to fetch data from the server
       Thread nextPageWorker =
-          runNextPageTaskAsync(results, results.getNextPageToken(), jobId, rpcResponseQueue);
+          runNextPageTaskAsync(
+              results,
+              results.getNextPageToken(),
+              jobId,
+              rpcResponseQueue,
+              this.bigQueryFieldValueListWrapperBlockingQueue);
       threadList.add(nextPageWorker);
     } else {
       try {
@@ -1021,7 +1036,8 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
       TableResult result,
       String firstPageToken,
       JobId jobId,
-      BlockingQueue<Tuple<TableResult, Boolean>> rpcResponseQueue) {
+      BlockingQueue<Tuple<TableResult, Boolean>> rpcResponseQueue,
+      BlockingQueue<BigQueryFieldValueListWrapper> bigQueryFieldValueListWrapperBlockingQueue) {
     LOG.finest("++enter++");
     // parse and put the first page in the pageCache before the other pages are parsed from the RPC
     // calls
@@ -1030,8 +1046,6 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
     // This thread makes the RPC calls and paginates
     Runnable nextPageTask =
         () -> {
-          long startTimeLoop = System.nanoTime();
-          final long retryTimeoutInSecs = this.connection.getRetryTimeoutInSeconds();
           int retryCount = 0;
           String currentPageToken = firstPageToken;
           TableResult currentResults = result;
@@ -1061,7 +1075,6 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                 // this will be parsed asynchronously without blocking the current
                 // thread
                 rpcResponseQueue.put(Tuple.of(currentResults, true));
-                startTimeLoop = System.nanoTime();
                 LOG.fine(
                     "Fetched %d results from the server in %d ms.",
                     querySettings.getMaxResultPerPage(),
@@ -1070,21 +1083,28 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                 if (ex.getCode() == 404) {
                   throw ex;
                 }
-                long elapsedSecs = (System.nanoTime() - startTimeLoop) / 1_000_000_000L;
-                if (elapsedSecs >= retryTimeoutInSecs) {
-                  throw ex;
+                if (retryCount >= MAX_RETRY_COUNT) {
+                  throw new BigQueryJdbcRuntimeException(ex); // Re-throw max retries exceeded
                 }
                 retryCount++;
                 LOG.info(
                     "Connection interrupted during json stream read, retrying. attempt: %d",
                     retryCount);
-                Thread.sleep(this.connection.getRetryInitialDelayInSeconds() * 1000);
-              } catch (InterruptedException ie) {
+                Thread.sleep(RETRY_DELAY_MS);
+              } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
-                throw new BigQueryJdbcRuntimeException(ie);
+                throw new BigQueryJdbcRuntimeException(ex);
+              } catch (Exception ex) {
+                throw new BigQueryJdbcRuntimeException(ex);
               }
             }
           } catch (Exception ex) {
+            try {
+              bigQueryFieldValueListWrapperBlockingQueue.put(
+                  BigQueryFieldValueListWrapper.ofError(new BigQueryJdbcRuntimeException(ex)));
+            } catch (InterruptedException ie) {
+              Thread.currentThread().interrupt();
+            }
             throw new BigQueryJdbcRuntimeException(ex);
           } finally {
             try {
@@ -1120,61 +1140,75 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
 
     Runnable populateBufferRunnable =
         () -> { // producer thread populating the buffer
-          Iterable<FieldValueList> fieldValueLists;
-          // as we have to process the first page
-          boolean hasRows = true;
-          while (hasRows) {
-            try {
-              Tuple<TableResult, Boolean> nextPageTuple = rpcResponseQueue.take();
-              if (nextPageTuple.x() != null) {
-                fieldValueLists = nextPageTuple.x().getValues();
-              } else {
-                fieldValueLists = null;
-              }
-              hasRows = nextPageTuple.y();
-
-            } catch (InterruptedException e) {
-              LOG.log(Level.WARNING, "\n" + Thread.currentThread().getName() + " Interrupted", e);
-              // Thread might get interrupted while calling the Cancel method, which is
-              // expected, so logging this instead of throwing the exception back
-              break;
-            }
-
-            if (Thread.currentThread().isInterrupted()
-                || queryTaskExecutor.isShutdown()
-                || fieldValueLists == null) {
-              // do not process further pages and shutdown (outerloop)
-              break;
-            }
-
-            long startTime = System.nanoTime();
-            long results = 0;
-            for (FieldValueList fieldValueList : fieldValueLists) {
-              try {
-                if (Thread.currentThread().isInterrupted() || queryTaskExecutor.isShutdown()) {
-                  // do not process further pages and shutdown (inner loop)
-                  break;
-                }
-                bigQueryFieldValueListWrapperBlockingQueue.put(
-                    BigQueryFieldValueListWrapper.of(schema.getFields(), fieldValueList));
-                results += 1;
-              } catch (InterruptedException ex) {
-                throw new BigQueryJdbcRuntimeException(ex);
-              }
-            }
-            LOG.fine(
-                "Processed %d results in %d ms.",
-                results, (int) ((System.nanoTime() - startTime) / 1000000));
-          }
           try {
-            // All the pages has been processed, put this marker
-            bigQueryFieldValueListWrapperBlockingQueue.put(
-                BigQueryFieldValueListWrapper.of(null, null, true));
-          } catch (InterruptedException e) {
+            Iterable<FieldValueList> fieldValueLists;
+            // as we have to process the first page
+            boolean hasRows = true;
+            while (hasRows) {
+              try {
+                Tuple<TableResult, Boolean> nextPageTuple = rpcResponseQueue.take();
+                if (nextPageTuple.x() != null) {
+                  fieldValueLists = nextPageTuple.x().getValues();
+                } else {
+                  fieldValueLists = null;
+                }
+                hasRows = nextPageTuple.y();
+
+              } catch (InterruptedException e) {
+                LOG.log(Level.WARNING, "\n" + Thread.currentThread().getName() + " Interrupted", e);
+                // Thread might get interrupted while calling the Cancel method, which is
+                // expected, so logging this instead of throwing the exception back
+                break;
+              }
+
+              if (Thread.currentThread().isInterrupted()
+                  || queryTaskExecutor.isShutdown()
+                  || fieldValueLists == null) {
+                // do not process further pages and shutdown (outerloop)
+                break;
+              }
+
+              long startTime = System.nanoTime();
+              long results = 0;
+              for (FieldValueList fieldValueList : fieldValueLists) {
+                try {
+                  if (Thread.currentThread().isInterrupted() || queryTaskExecutor.isShutdown()) {
+                    // do not process further pages and shutdown (inner loop)
+                    break;
+                  }
+                  bigQueryFieldValueListWrapperBlockingQueue.put(
+                      BigQueryFieldValueListWrapper.of(schema.getFields(), fieldValueList));
+                  results += 1;
+                } catch (InterruptedException ex) {
+                  throw new BigQueryJdbcRuntimeException(ex);
+                }
+              }
+              LOG.fine(
+                  "Processed %d results in %d ms.",
+                  results, (int) ((System.nanoTime() - startTime) / 1000000));
+            }
+          } catch (Exception ex) {
             LOG.log(
                 Level.WARNING,
-                "\n" + Thread.currentThread().getName() + " Interrupted @ populateBufferAsync",
-                e);
+                "\n" + Thread.currentThread().getName() + " Error @ populateBufferAsync",
+                ex);
+            try {
+              bigQueryFieldValueListWrapperBlockingQueue.put(
+                  BigQueryFieldValueListWrapper.ofError(new BigQueryJdbcRuntimeException(ex)));
+            } catch (InterruptedException ie) {
+              Thread.currentThread().interrupt();
+            }
+          } finally {
+            try {
+              // All the pages has been processed, put this marker
+              bigQueryFieldValueListWrapperBlockingQueue.put(
+                  BigQueryFieldValueListWrapper.of(null, null, true));
+            } catch (InterruptedException e) {
+              LOG.log(
+                  Level.WARNING,
+                  "\n" + Thread.currentThread().getName() + " Interrupted @ populateBufferAsync",
+                  e);
+            }
           }
         };
 
