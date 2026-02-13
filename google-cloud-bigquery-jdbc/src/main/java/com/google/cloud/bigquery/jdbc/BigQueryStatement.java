@@ -881,7 +881,6 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
               Thread.currentThread().interrupt();
             }
             Thread.currentThread().interrupt();
-            throw new BigQueryJdbcRuntimeException(e);
           } finally { // logic needed for graceful shutdown
             // marking end of stream
             try {
@@ -1105,7 +1104,6 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
             } catch (InterruptedException ie) {
               Thread.currentThread().interrupt();
             }
-            throw new BigQueryJdbcRuntimeException(ex);
           } finally {
             try {
               // this will stop the parseDataTask as well when the pagination
