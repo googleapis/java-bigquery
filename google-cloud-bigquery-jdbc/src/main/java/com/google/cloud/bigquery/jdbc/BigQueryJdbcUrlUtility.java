@@ -123,10 +123,7 @@ final class BigQueryJdbcUrlUtility {
   static final String BYOID_TOKEN_URI_PROPERTY_NAME = "BYOID_TokenUri";
   static final String PARTNER_TOKEN_PROPERTY_NAME = "PartnerToken";
   private static final Pattern PARTNER_TOKEN_PATTERN =
-      Pattern.compile(
-          "(?i)"
-              + PARTNER_TOKEN_PROPERTY_NAME
-              + "=\\s*\\(\\s*(GPN:[^;]*?)\\s*(?:;\\s*([^)]*?))?\\s*\\)");
+      Pattern.compile("(?i)" + PARTNER_TOKEN_PROPERTY_NAME + "=\\s*\\(([^)]*)\\)");
   static final String METADATA_FETCH_THREAD_COUNT_PROPERTY_NAME = "MetaDataFetchThreadCount";
   static final int DEFAULT_METADATA_FETCH_THREAD_COUNT_VALUE = 32;
   static final String RETRY_TIMEOUT_IN_SECS_PROPERTY_NAME = "Timeout";
@@ -616,6 +613,8 @@ final class BigQueryJdbcUrlUtility {
       map.put(p.toUpperCase(), p);
     }
     map.put(PARTNER_TOKEN_PROPERTY_NAME.toUpperCase(), PARTNER_TOKEN_PROPERTY_NAME);
+    map.put(ENDPOINT_OVERRIDES_PROPERTY_NAME.toUpperCase(), ENDPOINT_OVERRIDES_PROPERTY_NAME);
+    map.put(PRIVATE_SERVICE_CONNECT_PROPERTY_NAME.toUpperCase(), PRIVATE_SERVICE_CONNECT_PROPERTY_NAME);
     PROPERTY_NAME_MAP = Collections.unmodifiableMap(map);
   }
 
@@ -659,9 +658,9 @@ final class BigQueryJdbcUrlUtility {
     // Parse PartnerToken separately as it contains ';'
     StringBuilder urlBuilder = new StringBuilder(urlToParse);
     String partnerToken = parseAndRemovePartnerTokenProperty(urlBuilder, "parseUrl");
+    urlToParse = urlBuilder.toString();
     if (partnerToken != null) {
       map.put(PARTNER_TOKEN_PROPERTY_NAME, partnerToken);
-      urlToParse = urlBuilder.toString();
     }
 
     String[] parts = urlToParse.split(";");
@@ -785,17 +784,14 @@ final class BigQueryJdbcUrlUtility {
     Matcher matcher = PARTNER_TOKEN_PATTERN.matcher(urlBuilder);
 
     if (matcher.find()) {
-      String gpnPart = matcher.group(1);
-      String environmentPart = matcher.group(2);
-      StringBuilder partnerToken = new StringBuilder(" (");
-      partnerToken.append(gpnPart);
-      if (environmentPart != null && !environmentPart.trim().isEmpty()) {
-        partnerToken.append("; ");
-        partnerToken.append(environmentPart);
+      String content = matcher.group(1).trim();
+      if (content.toUpperCase().startsWith("GPN:")) {
+        urlBuilder.delete(matcher.start(), matcher.end());
+        return " (" + content + ")";
+      } else {
+        urlBuilder.delete(matcher.start(), matcher.end());
+        return null;
       }
-      partnerToken.append(")");
-      urlBuilder.delete(matcher.start(), matcher.end());
-      return partnerToken.toString();
     }
     return null;
   }

@@ -460,7 +460,7 @@ public class BigQueryJdbcUrlUtilityTest {
     url =
         "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
             + "PartnerToken= ( GPN: partner_name ; test_env ) ;";
-    expected = " (GPN: partner_name; test_env)";
+    expected = " (GPN: partner_name ; test_env)";
     result = BigQueryJdbcUrlUtility.parsePartnerTokenProperty(url, "testParsePartnerTokenProperty");
     assertThat(result).isEqualTo(expected);
   }
