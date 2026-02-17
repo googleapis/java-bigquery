@@ -78,6 +78,17 @@ public class DataSource implements javax.sql.DataSource {
   private Integer metadataFetchThreadCount;
   private String sslTrustStorePath;
   private String sslTrustStorePassword;
+  private String labels;
+  private String requestReason;
+  private Integer timeout;
+  private Integer jobTimeout;
+  private Integer retryInitialDelay;
+  private Integer retryMaxDelay;
+  private Integer httpConnectTimeout;
+  private Integer httpReadTimeout;
+  private Long maximumBytesBilled;
+  private Integer swaActivationRowCount;
+  private Integer swaAppendRowCount;
 
   // Make sure the JDBC driver class is loaded.
   static {
@@ -282,6 +293,55 @@ public class DataSource implements javax.sql.DataSource {
       connectionProperties.setProperty(
           BigQueryJdbcUrlUtility.SSL_TRUST_STORE_PWD_PROPERTY_NAME,
           String.valueOf(this.sslTrustStorePassword));
+    }
+    if (this.labels != null) {
+      connectionProperties.setProperty(BigQueryJdbcUrlUtility.LABELS_PROPERTY_NAME, this.labels);
+    }
+    if (this.requestReason != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.REQUEST_REASON_PROPERTY_NAME, this.requestReason);
+    }
+    if (this.timeout != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.RETRY_TIMEOUT_IN_SECS_PROPERTY_NAME, String.valueOf(this.timeout));
+    }
+    if (this.jobTimeout != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.JOB_TIMEOUT_PROPERTY_NAME, String.valueOf(this.jobTimeout));
+    }
+    if (this.retryInitialDelay != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.RETRY_INITIAL_DELAY_PROPERTY_NAME,
+          String.valueOf(this.retryInitialDelay));
+    }
+    if (this.retryMaxDelay != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.RETRY_MAX_DELAY_PROPERTY_NAME, String.valueOf(this.retryMaxDelay));
+    }
+    if (this.httpConnectTimeout != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.HTTP_CONNECT_TIMEOUT_PROPERTY_NAME,
+          String.valueOf(this.httpConnectTimeout));
+    }
+    if (this.httpReadTimeout != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.HTTP_READ_TIMEOUT_PROPERTY_NAME,
+          String.valueOf(this.httpReadTimeout));
+    }
+    if (this.maximumBytesBilled != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.MAX_BYTES_BILLED_PROPERTY_NAME,
+          String.valueOf(this.maximumBytesBilled));
+    }
+    if (this.swaActivationRowCount != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.SWA_ACTIVATION_ROW_COUNT_PROPERTY_NAME,
+          String.valueOf(this.swaActivationRowCount));
+    }
+    if (this.swaAppendRowCount != null) {
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.SWA_APPEND_ROW_COUNT_PROPERTY_NAME,
+          String.valueOf(this.swaAppendRowCount));
     }
     return connectionProperties;
   }
@@ -629,6 +689,94 @@ public class DataSource implements javax.sql.DataSource {
 
   public void setSSLTrustStorePassword(String sslTrustStorePassword) {
     this.sslTrustStorePassword = sslTrustStorePassword;
+  }
+
+  public String getLabels() {
+    return labels;
+  }
+
+  public void setLabels(String labels) {
+    this.labels = labels;
+  }
+
+  public String getRequestReason() {
+    return requestReason;
+  }
+
+  public void setRequestReason(String requestReason) {
+    this.requestReason = requestReason;
+  }
+
+  public Integer getTimeout() {
+    return timeout;
+  }
+
+  public void setTimeout(Integer timeout) {
+    this.timeout = timeout;
+  }
+
+  public Integer getJobTimeout() {
+    return jobTimeout;
+  }
+
+  public void setJobTimeout(Integer jobTimeout) {
+    this.jobTimeout = jobTimeout;
+  }
+
+  public Integer getRetryInitialDelay() {
+    return retryInitialDelay;
+  }
+
+  public void setRetryInitialDelay(Integer retryInitialDelay) {
+    this.retryInitialDelay = retryInitialDelay;
+  }
+
+  public Integer getRetryMaxDelay() {
+    return retryMaxDelay;
+  }
+
+  public void setRetryMaxDelay(Integer retryMaxDelay) {
+    this.retryMaxDelay = retryMaxDelay;
+  }
+
+  public Integer getHttpConnectTimeout() {
+    return httpConnectTimeout;
+  }
+
+  public void setHttpConnectTimeout(Integer httpConnectTimeout) {
+    this.httpConnectTimeout = httpConnectTimeout;
+  }
+
+  public Integer getHttpReadTimeout() {
+    return httpReadTimeout;
+  }
+
+  public void setHttpReadTimeout(Integer httpReadTimeout) {
+    this.httpReadTimeout = httpReadTimeout;
+  }
+
+  public Long getMaximumBytesBilled() {
+    return maximumBytesBilled;
+  }
+
+  public void setMaximumBytesBilled(Long maximumBytesBilled) {
+    this.maximumBytesBilled = maximumBytesBilled;
+  }
+
+  public Integer getSwaActivationRowCount() {
+    return swaActivationRowCount;
+  }
+
+  public void setSwaActivationRowCount(Integer swaActivationRowCount) {
+    this.swaActivationRowCount = swaActivationRowCount;
+  }
+
+  public Integer getSwaAppendRowCount() {
+    return swaAppendRowCount;
+  }
+
+  public void setSwaAppendRowCount(Integer swaAppendRowCount) {
+    this.swaAppendRowCount = swaAppendRowCount;
   }
 
   @Override
