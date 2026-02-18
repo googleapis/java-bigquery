@@ -146,6 +146,21 @@ public class BigQueryJdbcUrlUtilityTest {
   }
 
   @Test
+  public void testParseUrl_longUnknownProperty_sanitized() {
+    String longKey = String.join("", Collections.nCopies(50, "a"));
+    String url = "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;" + longKey + "=value";
+
+    BigQueryJdbcRuntimeException e =
+        assertThrows(
+            BigQueryJdbcRuntimeException.class, () -> BigQueryJdbcUrlUtility.parseUrl(url));
+
+    assertThat(e.getMessage()).contains("Unknown property:");
+    assertThat(e.getMessage()).contains("...");
+    assertThat(e.getMessage()).doesNotContain(longKey);
+    assertThat(e.getMessage().length()).isLessThan(100);
+  }
+
+  @Test
   public void testOverridePropertiesFromURICompatibility() {
     String connection_uri =
         "bigquery://https://www.googleapis.com/bigquery/v2:443;PROJECTID=testProject;PrivateServiceConnectUris="

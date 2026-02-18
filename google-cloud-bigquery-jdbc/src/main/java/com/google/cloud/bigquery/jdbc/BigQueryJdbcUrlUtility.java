@@ -677,14 +677,16 @@ final class BigQueryJdbcUrlUtility {
       String key = kv[0].trim();
       if (kv.length == 1) {
         if (!key.isEmpty()) {
-          throw new BigQueryJdbcRuntimeException("Property '" + key + "' has no value.");
+          String safeKey = key.length() > 32 ? key.substring(0, 32) + "..." : key;
+          throw new BigQueryJdbcRuntimeException("Property '" + safeKey + "' has no value.");
         }
       } else {
         String value = kv[1]; // Value might be empty string if "Key="
         if (!key.isEmpty()) {
           String upperCaseKey = key.toUpperCase();
           if (!PROPERTY_NAME_MAP.containsKey(upperCaseKey)) {
-            throw new BigQueryJdbcRuntimeException("Unknown property: " + key);
+            String safeKey = key.length() > 32 ? key.substring(0, 32) + "..." : key;
+            throw new BigQueryJdbcRuntimeException("Unknown property: " + safeKey);
           }
           map.put(PROPERTY_NAME_MAP.get(upperCaseKey), CharEscapers.decodeUriPath(value));
         }
