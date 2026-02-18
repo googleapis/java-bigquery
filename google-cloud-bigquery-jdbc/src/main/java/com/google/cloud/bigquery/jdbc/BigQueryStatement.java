@@ -844,6 +844,12 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                 if (e.getStatusCode().getCode()
                     == com.google.api.gax.rpc.StatusCode.Code.NOT_FOUND) {
                   LOG.warning("Read session expired or not found: %s", e.getMessage());
+                  try {
+                    arrowBatchWrapperBlockingQueue.put(
+                        BigQueryArrowBatchWrapper.ofError(new BigQueryJdbcRuntimeException(e)));
+                  } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                  }
                   break;
                 }
                 if (retryCount >= MAX_RETRY_COUNT) {
@@ -881,6 +887,17 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
               Thread.currentThread().interrupt();
             }
             Thread.currentThread().interrupt();
+          } catch (Exception e) {
+            LOG.log(
+                Level.WARNING,
+                "\n" + Thread.currentThread().getName() + " Error @ arrowStreamProcessor",
+                e);
+            try {
+              arrowBatchWrapperBlockingQueue.put(
+                  BigQueryArrowBatchWrapper.ofError(new BigQueryJdbcRuntimeException(e)));
+            } catch (InterruptedException ie) {
+              Thread.currentThread().interrupt();
+            }
           } finally { // logic needed for graceful shutdown
             // marking end of stream
             try {
