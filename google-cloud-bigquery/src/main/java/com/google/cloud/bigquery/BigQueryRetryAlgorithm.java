@@ -18,6 +18,7 @@ package com.google.cloud.bigquery;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.api.client.json.GenericJson;
 import com.google.api.gax.retrying.ResultRetryAlgorithm;
 import com.google.api.gax.retrying.ResultRetryAlgorithmWithContext;
 import com.google.api.gax.retrying.RetryAlgorithm;
@@ -223,6 +224,16 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
     known case where a response with status code 200 may contain an error message
      */
     try {
+      if (previousResponse instanceof GenericJson) {
+        if (((GenericJson)previousResponse).containsKey("status")){
+          Object o1 = ((GenericJson)previousResponse).get("status");
+          if (o1 instanceof GenericJson && ((GenericJson)o1).containsKey("errorResult")){
+            Object o2 = ((GenericJson)o1).get("errorStatus");
+            return ((GenericJson)o2).get("message").toString();
+          }
+        }
+        return null;
+      }
       JsonObject responseJson =
           JsonParser.parseString(previousResponse.toString()).getAsJsonObject();
       if (responseJson.has("status") && responseJson.getAsJsonObject("status").has("errorResult")) {
