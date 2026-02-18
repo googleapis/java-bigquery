@@ -848,7 +848,7 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                 }
                 if (retryCount >= MAX_RETRY_COUNT) {
                   LOG.log(
-                      Level.WARNING,
+                      Level.SEVERE,
                       "\n"
                           + Thread.currentThread().getName()
                           + " Interrupted @ arrowStreamProcessor, max retries exceeded",
@@ -862,7 +862,7 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                   break;
                 }
                 retryCount++;
-                LOG.info(
+                LOG.warning(
                     "Connection interrupted during arrow stream read, retrying. attempt: %d",
                     retryCount);
                 Thread.sleep(RETRY_DELAY_MS);
