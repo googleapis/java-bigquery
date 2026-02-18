@@ -797,12 +797,9 @@ final class BigQueryJdbcUrlUtility {
 
     if (matcher.find()) {
       String content = matcher.group(1).trim();
+      urlBuilder.delete(matcher.start(), matcher.end());
       if (content.toUpperCase().startsWith("GPN:")) {
-        urlBuilder.delete(matcher.start(), matcher.end());
         return " (" + content + ")";
-      } else {
-        urlBuilder.delete(matcher.start(), matcher.end());
-        return null;
       }
     }
     return null;
