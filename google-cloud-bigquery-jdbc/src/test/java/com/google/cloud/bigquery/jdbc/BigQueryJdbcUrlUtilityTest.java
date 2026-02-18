@@ -891,4 +891,38 @@ public class BigQueryJdbcUrlUtilityTest {
             "testParseRequestReason");
     assertEquals("testingRequestReason", requestReason);
   }
+
+  @Test
+  public void testAppendPropertiesToURL_propertyWithSemicolon_isEscaped() throws Exception {
+    String url = "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;";
+    Properties properties = new Properties();
+    String complexValue = "value;ExtraProperty=injection";
+    properties.setProperty("ProjectId", complexValue);
+
+    String updatedUrl = BigQueryJdbcUrlUtility.appendPropertiesToURL(url, null, properties);
+
+    Map<String, String> parsedProperties = BigQueryJdbcUrlUtility.parseUrl(updatedUrl);
+
+    assertThat(parsedProperties.get("ProjectId")).isEqualTo(complexValue);
+    assertFalse(parsedProperties.containsKey("ExtraProperty"));
+  }
+
+  @Test
+  public void testEndpointOverrides_viaProperties() throws Exception {
+    String url = "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443";
+    Properties props = new Properties();
+
+    String overrides = "OAUTH2=http://localhost:1234,BIGQUERY=http://localhost:9090";
+    props.setProperty("EndpointOverrides", overrides);
+
+    String updatedUrl = BigQueryJdbcUrlUtility.appendPropertiesToURL(url, null, props);
+
+    Map<String, String> parsedOverrides =
+        BigQueryJdbcUrlUtility.parseOverrideProperties(updatedUrl, null);
+
+    assertThat(parsedOverrides).containsKey("OAUTH2");
+    assertThat(parsedOverrides.get("OAUTH2")).isEqualTo("http://localhost:1234");
+    assertThat(parsedOverrides).containsKey("BIGQUERY");
+    assertThat(parsedOverrides.get("BIGQUERY")).isEqualTo("http://localhost:9090");
+  }
 }

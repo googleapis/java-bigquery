@@ -19,6 +19,10 @@ package com.google.cloud.bigquery.jdbc;
 import com.google.api.client.util.escape.CharEscapers;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.exception.BigQueryJdbcRuntimeException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -614,7 +618,8 @@ final class BigQueryJdbcUrlUtility {
     }
     map.put(PARTNER_TOKEN_PROPERTY_NAME.toUpperCase(), PARTNER_TOKEN_PROPERTY_NAME);
     map.put(ENDPOINT_OVERRIDES_PROPERTY_NAME.toUpperCase(), ENDPOINT_OVERRIDES_PROPERTY_NAME);
-    map.put(PRIVATE_SERVICE_CONNECT_PROPERTY_NAME.toUpperCase(), PRIVATE_SERVICE_CONNECT_PROPERTY_NAME);
+    map.put(
+        PRIVATE_SERVICE_CONNECT_PROPERTY_NAME.toUpperCase(), PRIVATE_SERVICE_CONNECT_PROPERTY_NAME);
     PROPERTY_NAME_MAP = Collections.unmodifiableMap(map);
   }
 
@@ -701,7 +706,14 @@ final class BigQueryJdbcUrlUtility {
     for (Entry<Object, Object> entry : properties.entrySet()) {
       if (entry.getValue() != null && !"".equals(entry.getValue())) {
         LOG.finest("Appending %s with value %s to URL", entry.getKey(), entry.getValue());
-        urlBuilder.append(";").append(entry.getKey()).append("=").append(entry.getValue());
+        try {
+          String encodedValue =
+              URLEncoder.encode((String) entry.getValue(), StandardCharsets.UTF_8.name())
+                  .replace("+", "%20");
+          urlBuilder.append(";").append(entry.getKey()).append("=").append(encodedValue);
+        } catch (UnsupportedEncodingException e) {
+          throw new BigQueryJdbcRuntimeException(e);
+        }
       }
     }
     return urlBuilder.toString();
@@ -872,7 +884,12 @@ final class BigQueryJdbcUrlUtility {
     Matcher matcher = pattern.matcher(url);
     String overridePropertiesString;
     if (matcher.find() && matcher.groupCount() >= 1) {
-      overridePropertiesString = matcher.group(2);
+      try {
+        overridePropertiesString =
+            URLDecoder.decode(matcher.group(2), StandardCharsets.UTF_8.name());
+      } catch (UnsupportedEncodingException e) {
+        throw new BigQueryJdbcRuntimeException(e);
+      }
     } else {
       return overrideProps;
     }
