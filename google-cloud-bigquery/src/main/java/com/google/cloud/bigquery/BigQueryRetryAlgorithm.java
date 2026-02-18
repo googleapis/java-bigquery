@@ -18,7 +18,8 @@ package com.google.cloud.bigquery;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.api.client.json.GenericJson;
+import com.google.api.services.bigquery.model.ErrorProto;
+import com.google.api.services.bigquery.model.Job;
 import com.google.api.gax.retrying.ResultRetryAlgorithm;
 import com.google.api.gax.retrying.ResultRetryAlgorithmWithContext;
 import com.google.api.gax.retrying.RetryAlgorithm;
@@ -223,31 +224,11 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
     following logic based on response body of jobs.insert method, so far the only
     known case where a response with status code 200 may contain an error message
      */
-    try {
-      if (previousResponse instanceof GenericJson) {
-        if (((GenericJson)previousResponse).containsKey("status")){
-          Object o1 = ((GenericJson)previousResponse).get("status");
-          if (o1 instanceof GenericJson && ((GenericJson)o1).containsKey("errorResult")){
-            Object o2 = ((GenericJson)o1).get("errorStatus");
-            return ((GenericJson)o2).get("message").toString();
-          }
-        }
-        return null;
-      }
-      JsonObject responseJson =
-          JsonParser.parseString(previousResponse.toString()).getAsJsonObject();
-      if (responseJson.has("status") && responseJson.getAsJsonObject("status").has("errorResult")) {
-        return responseJson
-            .getAsJsonObject("status")
-            .getAsJsonObject("errorResult")
-            .get("message")
-            .toString();
-      } else {
-        return null;
-      }
-    } catch (Exception e) {
-      // exceptions here implies no error message present in response, returning null
-      return null;
+    if (previousResponse instanceof Job) {
+      Job job = (Job)previousResponse;
+      ErrorProto error = job.getStatus() != null ? job.getStatus().getErrorResult() : null;
+      return error != null ? error.getMessage() : null;
     }
+    return null;
   }
 }
