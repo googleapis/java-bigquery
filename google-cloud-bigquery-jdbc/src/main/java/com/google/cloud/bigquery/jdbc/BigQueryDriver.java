@@ -127,7 +127,7 @@ public class BigQueryDriver implements Driver {
         try {
           BigQueryJdbcUrlUtility.parseUrl(connectionUri);
         } catch (BigQueryJdbcRuntimeException e) {
-          throw new BigQueryJdbcException(e.getMessage());
+          throw new BigQueryJdbcException(e.getMessage(), e);
         }
 
         // LogLevel
