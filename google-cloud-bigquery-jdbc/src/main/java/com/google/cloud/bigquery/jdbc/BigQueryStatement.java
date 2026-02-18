@@ -1045,7 +1045,6 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
     // This thread makes the RPC calls and paginates
     Runnable nextPageTask =
         () -> {
-          int retryCount = 0;
           String currentPageToken = firstPageToken;
           TableResult currentResults = result;
           TableId destinationTable = null;
@@ -1062,40 +1061,21 @@ public class BigQueryStatement extends BigQueryNoOpsStatement {
                 break;
               }
 
-              try {
-                long startTime = System.nanoTime();
-                currentResults =
-                    this.bigQuery.listTableData(
-                        destinationTable,
-                        TableDataListOption.pageSize(querySettings.getMaxResultPerPage()),
-                        TableDataListOption.pageToken(currentPageToken));
+              long startTime = System.nanoTime();
+              currentResults =
+                  this.bigQuery.listTableData(
+                      destinationTable,
+                      TableDataListOption.pageSize(querySettings.getMaxResultPerPage()),
+                      TableDataListOption.pageToken(currentPageToken));
 
-                currentPageToken = currentResults.getNextPageToken();
-                // this will be parsed asynchronously without blocking the current
-                // thread
-                rpcResponseQueue.put(Tuple.of(currentResults, true));
-                LOG.fine(
-                    "Fetched %d results from the server in %d ms.",
-                    querySettings.getMaxResultPerPage(),
-                    (int) ((System.nanoTime() - startTime) / 1000000));
-              } catch (com.google.cloud.bigquery.BigQueryException ex) {
-                if (ex.getCode() == 404) {
-                  throw ex;
-                }
-                if (retryCount >= MAX_RETRY_COUNT) {
-                  throw new BigQueryJdbcRuntimeException(ex); // Re-throw max retries exceeded
-                }
-                retryCount++;
-                LOG.info(
-                    "Connection interrupted during json stream read, retrying. attempt: %d",
-                    retryCount);
-                Thread.sleep(RETRY_DELAY_MS);
-              } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-                throw new BigQueryJdbcRuntimeException(ex);
-              } catch (Exception ex) {
-                throw new BigQueryJdbcRuntimeException(ex);
-              }
+              currentPageToken = currentResults.getNextPageToken();
+              // this will be parsed asynchronously without blocking the current
+              // thread
+              rpcResponseQueue.put(Tuple.of(currentResults, true));
+              LOG.fine(
+                  "Fetched %d results from the server in %d ms.",
+                  querySettings.getMaxResultPerPage(),
+                  (int) ((System.nanoTime() - startTime) / 1000000));
             }
           } catch (Exception ex) {
             try {
