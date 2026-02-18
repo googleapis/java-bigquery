@@ -18,8 +18,6 @@ package com.google.cloud.bigquery;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.api.services.bigquery.model.ErrorProto;
-import com.google.api.services.bigquery.model.Job;
 import com.google.api.gax.retrying.ResultRetryAlgorithm;
 import com.google.api.gax.retrying.ResultRetryAlgorithmWithContext;
 import com.google.api.gax.retrying.RetryAlgorithm;
@@ -27,8 +25,8 @@ import com.google.api.gax.retrying.RetryingContext;
 import com.google.api.gax.retrying.TimedAttemptSettings;
 import com.google.api.gax.retrying.TimedRetryAlgorithm;
 import com.google.api.gax.retrying.TimedRetryAlgorithmWithContext;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.api.services.bigquery.model.ErrorProto;
+import com.google.api.services.bigquery.model.Job;
 import java.time.Duration;
 import java.util.Iterator;
 import java.util.UUID;
@@ -225,7 +223,7 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
     known case where a response with status code 200 may contain an error message
      */
     if (previousResponse instanceof Job) {
-      Job job = (Job)previousResponse;
+      Job job = (Job) previousResponse;
       ErrorProto error = job.getStatus() != null ? job.getStatus().getErrorResult() : null;
       return error != null ? error.getMessage() : null;
     }
