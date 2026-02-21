@@ -154,7 +154,7 @@ public class BigQueryJdbcUrlUtilityTest {
         assertThrows(
             BigQueryJdbcRuntimeException.class, () -> BigQueryJdbcUrlUtility.parseUrl(url));
 
-    assertThat(e.getMessage()).contains("Unknown property:");
+    assertThat(e.getMessage()).contains("Wrong value or unknown setting: ");
     assertThat(e.getMessage()).contains("...");
     assertThat(e.getMessage()).doesNotContain(longKey);
     assertThat(e.getMessage().length()).isLessThan(100);

@@ -78,7 +78,7 @@ public class DataSource implements javax.sql.DataSource {
   private Integer metadataFetchThreadCount;
   private String sslTrustStorePath;
   private String sslTrustStorePassword;
-  private String labels;
+  private Map<String, String> labels;
   private String requestReason;
   private Integer timeout;
   private Integer jobTimeout;
@@ -156,7 +156,7 @@ public class DataSource implements javax.sql.DataSource {
     }
     if (this.queryProperties != null) {
       connectionProperties.setProperty(
-          BigQueryJdbcUrlUtility.QUERY_PROPERTIES_NAME, this.queryProperties.toString());
+          BigQueryJdbcUrlUtility.QUERY_PROPERTIES_NAME, serializeMap(this.queryProperties));
     }
     if (this.enableSession != null) {
       connectionProperties.setProperty(
@@ -295,7 +295,8 @@ public class DataSource implements javax.sql.DataSource {
           String.valueOf(this.sslTrustStorePassword));
     }
     if (this.labels != null) {
-      connectionProperties.setProperty(BigQueryJdbcUrlUtility.LABELS_PROPERTY_NAME, this.labels);
+      connectionProperties.setProperty(
+          BigQueryJdbcUrlUtility.LABELS_PROPERTY_NAME, serializeMap(this.labels));
     }
     if (this.requestReason != null) {
       connectionProperties.setProperty(
@@ -344,6 +345,20 @@ public class DataSource implements javax.sql.DataSource {
           String.valueOf(this.swaAppendRowCount));
     }
     return connectionProperties;
+  }
+
+  private String serializeMap(Map<String, String> map) {
+    if (map == null || map.isEmpty()) {
+      return "";
+    }
+    StringBuilder sb = new StringBuilder();
+    for (Map.Entry<String, String> entry : map.entrySet()) {
+      if (sb.length() > 0) {
+        sb.append(",");
+      }
+      sb.append(entry.getKey()).append("=").append(entry.getValue());
+    }
+    return sb.toString();
   }
 
   @Override
@@ -691,11 +706,11 @@ public class DataSource implements javax.sql.DataSource {
     this.sslTrustStorePassword = sslTrustStorePassword;
   }
 
-  public String getLabels() {
+  public Map<String, String> getLabels() {
     return labels;
   }
 
-  public void setLabels(String labels) {
+  public void setLabels(Map<String, String> labels) {
     this.labels = labels;
   }
 

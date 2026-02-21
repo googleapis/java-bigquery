@@ -19,14 +19,16 @@ package com.google.cloud.bigquery.jdbc;
 import com.google.api.client.util.escape.CharEscapers;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.exception.BigQueryJdbcRuntimeException;
+import com.google.common.collect.ImmutableList;
+import com.google.common.net.UrlEscapers;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -42,6 +44,14 @@ import java.util.stream.Collectors;
  * String.
  */
 final class BigQueryJdbcUrlUtility {
+
+  private static final Map<String, Map<String, String>> PARSE_CACHE =
+      Collections.synchronizedMap(
+          new LinkedHashMap<String, Map<String, String>>(50, 0.75f, true) {
+            protected boolean removeEldestEntry(Map.Entry<String, Map<String, String>> eldest) {
+              return size() > 50; // bound cache size
+            }
+          });
 
   // TODO: Add all Connection options
   static final String ALLOW_LARGE_RESULTS_PROPERTY_NAME = "AllowLargeResults";
@@ -127,7 +137,10 @@ final class BigQueryJdbcUrlUtility {
   static final String BYOID_TOKEN_URI_PROPERTY_NAME = "BYOID_TokenUri";
   static final String PARTNER_TOKEN_PROPERTY_NAME = "PartnerToken";
   private static final Pattern PARTNER_TOKEN_PATTERN =
-      Pattern.compile("(?i)" + PARTNER_TOKEN_PROPERTY_NAME + "=\\s*\\(([^)]*)\\)");
+      Pattern.compile(
+          "(?i)(?:^|(?<=;))\\s*"
+              + PARTNER_TOKEN_PROPERTY_NAME
+              + "\\s*=\\s*\\(([^)]*)\\)\\s*(?=;|$)");
   static final String METADATA_FETCH_THREAD_COUNT_PROPERTY_NAME = "MetaDataFetchThreadCount";
   static final int DEFAULT_METADATA_FETCH_THREAD_COUNT_VALUE = 32;
   static final String RETRY_TIMEOUT_IN_SECS_PROPERTY_NAME = "Timeout";
@@ -597,6 +610,12 @@ final class BigQueryJdbcUrlUtility {
                               + " header.")
                       .build())));
 
+  private static final List<String> NETWORK_PROPERTIES =
+      ImmutableList.of(
+          PARTNER_TOKEN_PROPERTY_NAME,
+          ENDPOINT_OVERRIDES_PROPERTY_NAME,
+          PRIVATE_SERVICE_CONNECT_PROPERTY_NAME);
+
   private static final Map<String, String> PROPERTY_NAME_MAP;
 
   static {
@@ -616,10 +635,9 @@ final class BigQueryJdbcUrlUtility {
     for (String p : BYOID_PROPERTIES) {
       map.put(p.toUpperCase(), p);
     }
-    map.put(PARTNER_TOKEN_PROPERTY_NAME.toUpperCase(), PARTNER_TOKEN_PROPERTY_NAME);
-    map.put(ENDPOINT_OVERRIDES_PROPERTY_NAME.toUpperCase(), ENDPOINT_OVERRIDES_PROPERTY_NAME);
-    map.put(
-        PRIVATE_SERVICE_CONNECT_PROPERTY_NAME.toUpperCase(), PRIVATE_SERVICE_CONNECT_PROPERTY_NAME);
+    for (String p : NETWORK_PROPERTIES) {
+      map.put(p.toUpperCase(), p);
+    }
     PROPERTY_NAME_MAP = Collections.unmodifiableMap(map);
   }
 
@@ -648,24 +666,33 @@ final class BigQueryJdbcUrlUtility {
    * @throws BigQueryJdbcRuntimeException if an unknown property is found or the URL is malformed.
    */
   static Map<String, String> parseUrl(String url) {
+    if (url == null) {
+      return Collections.emptyMap();
+    }
+    return PARSE_CACHE.computeIfAbsent(url, BigQueryJdbcUrlUtility::parseUrlInternal);
+  }
+
+  private static Map<String, String> parseUrlInternal(String url) {
     Map<String, String> map = new HashMap<>();
     if (url == null) {
       return map;
     }
 
-    int start = url.indexOf(';');
-    if (start == -1) {
+    String[] urlParts = url.split(";", 2);
+    if (urlParts.length < 2) {
       return map;
     }
 
-    String urlToParse = url.substring(start + 1);
+    String urlToParse = urlParts[1];
 
     // Parse PartnerToken separately as it contains ';'
-    StringBuilder urlBuilder = new StringBuilder(urlToParse);
-    String partnerToken = parseAndRemovePartnerTokenProperty(urlBuilder, "parseUrl");
-    urlToParse = urlBuilder.toString();
-    if (partnerToken != null) {
-      map.put(PARTNER_TOKEN_PROPERTY_NAME, partnerToken);
+    Matcher matcher = PARTNER_TOKEN_PATTERN.matcher(urlToParse);
+    if (matcher.find()) {
+      String partnerToken = matcher.group(1).trim();
+      if (partnerToken.toUpperCase().startsWith("GPN:")) {
+        map.put(PARTNER_TOKEN_PROPERTY_NAME, " (" + partnerToken + ")");
+        urlToParse = matcher.replaceFirst("");
+      }
     }
 
     String[] parts = urlToParse.split(";");
@@ -674,25 +701,17 @@ final class BigQueryJdbcUrlUtility {
         continue;
       }
       String[] kv = part.split("=", 2);
-      String key = kv[0].trim();
-      if (kv.length == 1) {
-        if (!key.isEmpty()) {
-          String safeKey = key.length() > 32 ? key.substring(0, 32) + "..." : key;
-          throw new BigQueryJdbcRuntimeException("Property '" + safeKey + "' has no value.");
-        }
-      } else {
-        String value = kv[1]; // Value might be empty string if "Key="
-        if (!key.isEmpty()) {
-          String upperCaseKey = key.toUpperCase();
-          if (!PROPERTY_NAME_MAP.containsKey(upperCaseKey)) {
-            String safeKey = key.length() > 32 ? key.substring(0, 32) + "..." : key;
-            throw new BigQueryJdbcRuntimeException("Unknown property: " + safeKey);
-          }
-          map.put(PROPERTY_NAME_MAP.get(upperCaseKey), CharEscapers.decodeUriPath(value));
-        }
+      String key = kv[0].trim().toUpperCase();
+      if (kv.length != 2 || !PROPERTY_NAME_MAP.containsKey(key)) {
+        String ref = (kv.length == 2) ? key : part;
+        String safeRef = ref.length() > 32 ? ref.substring(0, 32) + "..." : ref;
+        throw new BigQueryJdbcRuntimeException(
+            String.format("Wrong value or unknown setting: %s", safeRef));
       }
+
+      map.put(PROPERTY_NAME_MAP.get(key), CharEscapers.decodeUriPath(kv[1]));
     }
-    return map;
+    return Collections.unmodifiableMap(map);
   }
 
   /**
@@ -708,14 +727,11 @@ final class BigQueryJdbcUrlUtility {
     for (Entry<Object, Object> entry : properties.entrySet()) {
       if (entry.getValue() != null && !"".equals(entry.getValue())) {
         LOG.finest("Appending %s with value %s to URL", entry.getKey(), entry.getValue());
-        try {
-          String encodedValue =
-              URLEncoder.encode((String) entry.getValue(), StandardCharsets.UTF_8.name())
-                  .replace("+", "%20");
-          urlBuilder.append(";").append(entry.getKey()).append("=").append(encodedValue);
-        } catch (UnsupportedEncodingException e) {
-          throw new BigQueryJdbcRuntimeException(e);
-        }
+        String encodedValue =
+            UrlEscapers.urlFormParameterEscaper()
+                .escape((String) entry.getValue())
+                .replace("+", "%20");
+        urlBuilder.append(";").append(entry.getKey()).append("=").append(encodedValue);
       }
     }
     return urlBuilder.toString();
@@ -790,18 +806,11 @@ final class BigQueryJdbcUrlUtility {
     LOG.finest("++enter++\t" + callerClassName);
     // This property is expected to be set by partners only. For more details on exact format
     // supported, refer b/396086960
-    return parseAndRemovePartnerTokenProperty(new StringBuilder(url), callerClassName);
-  }
-
-  private static String parseAndRemovePartnerTokenProperty(
-      StringBuilder urlBuilder, String callerClassName) {
-    Matcher matcher = PARTNER_TOKEN_PATTERN.matcher(urlBuilder);
-
+    Matcher matcher = PARTNER_TOKEN_PATTERN.matcher(url);
     if (matcher.find()) {
-      String content = matcher.group(1).trim();
-      urlBuilder.delete(matcher.start(), matcher.end());
-      if (content.toUpperCase().startsWith("GPN:")) {
-        return " (" + content + ")";
+      String partnerToken = matcher.group(1).trim();
+      if (partnerToken.toUpperCase().startsWith("GPN:")) {
+        return " (" + partnerToken + ")";
       }
     }
     return null;
