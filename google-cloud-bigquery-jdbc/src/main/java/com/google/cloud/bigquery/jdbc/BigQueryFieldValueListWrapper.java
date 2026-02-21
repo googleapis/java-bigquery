@@ -39,28 +39,36 @@ class BigQueryFieldValueListWrapper {
 
   // This flag marks the end of the stream for the ResultSet
   private boolean isLast = false;
+  private final Exception exception;
 
   static BigQueryFieldValueListWrapper of(
       FieldList fieldList, FieldValueList fieldValueList, boolean... isLast) {
     boolean isLastFlag = isLast != null && isLast.length == 1 && isLast[0];
-    return new BigQueryFieldValueListWrapper(fieldList, fieldValueList, null, isLastFlag);
+    return new BigQueryFieldValueListWrapper(fieldList, fieldValueList, null, isLastFlag, null);
   }
 
   static BigQueryFieldValueListWrapper getNestedFieldValueListWrapper(
       FieldList fieldList, List<FieldValue> arrayFieldValueList, boolean... isLast) {
     boolean isLastFlag = isLast != null && isLast.length == 1 && isLast[0];
-    return new BigQueryFieldValueListWrapper(fieldList, null, arrayFieldValueList, isLastFlag);
+    return new BigQueryFieldValueListWrapper(
+        fieldList, null, arrayFieldValueList, isLastFlag, null);
+  }
+
+  static BigQueryFieldValueListWrapper ofError(Exception exception) {
+    return new BigQueryFieldValueListWrapper(null, null, null, true, exception);
   }
 
   private BigQueryFieldValueListWrapper(
       FieldList fieldList,
       FieldValueList fieldValueList,
       List<FieldValue> arrayFieldValueList,
-      boolean isLast) {
+      boolean isLast,
+      Exception exception) {
     this.fieldList = fieldList;
     this.fieldValueList = fieldValueList;
     this.arrayFieldValueList = arrayFieldValueList;
     this.isLast = isLast;
+    this.exception = exception;
   }
 
   public FieldList getFieldList() {
@@ -77,5 +85,9 @@ class BigQueryFieldValueListWrapper {
 
   public boolean isLast() {
     return this.isLast;
+  }
+
+  public Exception getException() {
+    return this.exception;
   }
 }
