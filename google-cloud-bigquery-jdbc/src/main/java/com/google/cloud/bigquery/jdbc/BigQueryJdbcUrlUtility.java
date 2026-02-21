@@ -138,9 +138,8 @@ final class BigQueryJdbcUrlUtility {
   static final String PARTNER_TOKEN_PROPERTY_NAME = "PartnerToken";
   private static final Pattern PARTNER_TOKEN_PATTERN =
       Pattern.compile(
-          "(?i)(?:^|(?<=;))\\s*"
-              + PARTNER_TOKEN_PROPERTY_NAME
-              + "\\s*=\\s*\\(([^)]*)\\)\\s*(?=;|$)");
+          "(?:^|(?<=;))" + PARTNER_TOKEN_PROPERTY_NAME + "=\\s*((?:\\([^)]*\\)|[^;])*?)(?=(?:;|$))",
+          Pattern.CASE_INSENSITIVE);
   static final String METADATA_FETCH_THREAD_COUNT_PROPERTY_NAME = "MetaDataFetchThreadCount";
   static final int DEFAULT_METADATA_FETCH_THREAD_COUNT_VALUE = 32;
   static final String RETRY_TIMEOUT_IN_SECS_PROPERTY_NAME = "Timeout";
@@ -688,11 +687,16 @@ final class BigQueryJdbcUrlUtility {
     // Parse PartnerToken separately as it contains ';'
     Matcher matcher = PARTNER_TOKEN_PATTERN.matcher(urlToParse);
     if (matcher.find()) {
-      String partnerToken = matcher.group(1).trim();
-      if (partnerToken.toUpperCase().startsWith("GPN:")) {
-        map.put(PARTNER_TOKEN_PROPERTY_NAME, " (" + partnerToken + ")");
-        urlToParse = matcher.replaceFirst("");
+      String rawToken = matcher.group(1).trim();
+      String token =
+          (rawToken.startsWith("(") && rawToken.endsWith(")"))
+              ? rawToken.substring(1, rawToken.length() - 1).trim()
+              : rawToken;
+
+      if (token.toUpperCase().startsWith("GPN:")) {
+        map.put(PARTNER_TOKEN_PROPERTY_NAME, " (" + token + ")");
       }
+      urlToParse = matcher.replaceFirst("");
     }
 
     String[] parts = urlToParse.split(";");
@@ -808,9 +812,14 @@ final class BigQueryJdbcUrlUtility {
     // supported, refer b/396086960
     Matcher matcher = PARTNER_TOKEN_PATTERN.matcher(url);
     if (matcher.find()) {
-      String partnerToken = matcher.group(1).trim();
-      if (partnerToken.toUpperCase().startsWith("GPN:")) {
-        return " (" + partnerToken + ")";
+      String rawToken = matcher.group(1).trim();
+      String token =
+          (rawToken.startsWith("(") && rawToken.endsWith(")"))
+              ? rawToken.substring(1, rawToken.length() - 1).trim()
+              : rawToken;
+
+      if (token.toUpperCase().startsWith("GPN:")) {
+        return " (" + token + ")";
       }
     }
     return null;
