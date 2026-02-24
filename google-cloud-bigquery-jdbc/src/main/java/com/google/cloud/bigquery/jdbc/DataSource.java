@@ -17,6 +17,8 @@
 package com.google.cloud.bigquery.jdbc;
 
 import com.google.cloud.bigquery.exception.BigQueryJdbcException;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -351,14 +353,7 @@ public class DataSource implements javax.sql.DataSource {
     if (map == null || map.isEmpty()) {
       return "";
     }
-    StringBuilder sb = new StringBuilder();
-    for (Map.Entry<String, String> entry : map.entrySet()) {
-      if (sb.length() > 0) {
-        sb.append(",");
-      }
-      sb.append(entry.getKey()).append("=").append(entry.getValue());
-    }
-    return sb.toString();
+    return Joiner.on(",").withKeyValueSeparator("=").join(map);
   }
 
   @Override
@@ -451,7 +446,7 @@ public class DataSource implements javax.sql.DataSource {
   }
 
   public void setQueryProperties(Map<String, String> queryProperties) {
-    this.queryProperties = queryProperties;
+    this.queryProperties = queryProperties == null ? null : ImmutableMap.copyOf(queryProperties);
   }
 
   public Map<String, String> getQueryProperties() {
@@ -711,7 +706,7 @@ public class DataSource implements javax.sql.DataSource {
   }
 
   public void setLabels(Map<String, String> labels) {
-    this.labels = labels;
+    this.labels = labels == null ? null : ImmutableMap.copyOf(labels);
   }
 
   public String getRequestReason() {

@@ -665,9 +665,6 @@ final class BigQueryJdbcUrlUtility {
    * @throws BigQueryJdbcRuntimeException if an unknown property is found or the URL is malformed.
    */
   static Map<String, String> parseUrl(String url) {
-    if (url == null) {
-      return Collections.emptyMap();
-    }
     return PARSE_CACHE.computeIfAbsent(url, BigQueryJdbcUrlUtility::parseUrlInternal);
   }
 
