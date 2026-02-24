@@ -14,4 +14,4 @@ samples/**/*.java       @googleapis/cloud-sdk-java-team @googleapis/java-samples
 samples/snippets/generated/      @googleapis/cloud-sdk-java-team
 
 # JDBC Driver
-google-cloud-bigquery-jdbc/**    @googleapis/bq-developer-tools @googleapis/cloud-sdk-java-team
+google-cloud-bigquery-jdbc/**    @googleapis/bigquery-developer-tools-team @googleapis/cloud-sdk-java-team
