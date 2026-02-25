@@ -48,6 +48,30 @@ public class BigQueryJdbcUrlUtilityTest {
   }
 
   @Test
+  public void testParseUrlWithUnknownProperty_throwsException() {
+    String url =
+        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+            + "ProjectId=MyBigQueryProject;"
+            + "UnknownProperty=SomeValue";
+
+    assertThrows(
+        BigQueryJdbcRuntimeException.class,
+        () -> BigQueryJdbcUrlUtility.parseUriProperty(url, "ProjectId"));
+  }
+
+  @Test
+  public void testParseUrlWithTypo_throwsException() {
+    String url =
+        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+            + "ProjectId=MyBigQueryProject;"
+            + "ProjeectId=TypoValue";
+
+    assertThrows(
+        BigQueryJdbcRuntimeException.class,
+        () -> BigQueryJdbcUrlUtility.parseUriProperty(url, "ProjectId"));
+  }
+
+  @Test
   public void testParsePropertyWithDefault() {
     String url =
         "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
@@ -106,19 +130,34 @@ public class BigQueryJdbcUrlUtilityTest {
   @Test
   public void testConnectionPropertiesFromURIMultiline() {
     String connection_uri =
-        "bigquery://https://www.googleapis.com/bigquery/v2:443;Multiline=value1\nvalue2\n;";
+        "bigquery://https://www.googleapis.com/bigquery/v2:443;OAuthPvtKey=value1\nvalue2\n;";
 
-    assertThat(BigQueryJdbcUrlUtility.parseUriProperty(connection_uri, "Multiline"))
+    assertThat(BigQueryJdbcUrlUtility.parseUriProperty(connection_uri, "OAuthPvtKey"))
         .isEqualTo("value1\nvalue2\n");
   }
 
   @Test
   public void testConnectionPropertiesFromURIMultilineNoSemicolon() {
     String connection_uri =
-        "bigquery://https://www.googleapis.com/bigquery/v2:443;Multiline=value1\nvalue2";
+        "bigquery://https://www.googleapis.com/bigquery/v2:443;OAuthPvtKey=value1\nvalue2";
 
-    assertThat(BigQueryJdbcUrlUtility.parseUriProperty(connection_uri, "Multiline"))
+    assertThat(BigQueryJdbcUrlUtility.parseUriProperty(connection_uri, "OAuthPvtKey"))
         .isEqualTo("value1\nvalue2");
+  }
+
+  @Test
+  public void testParseUrl_longUnknownProperty_sanitized() {
+    String longKey = String.join("", Collections.nCopies(50, "a"));
+    String url = "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;" + longKey + "=value";
+
+    BigQueryJdbcRuntimeException e =
+        assertThrows(
+            BigQueryJdbcRuntimeException.class, () -> BigQueryJdbcUrlUtility.parseUrl(url));
+
+    assertThat(e.getMessage()).contains("Wrong value or unknown setting: ");
+    assertThat(e.getMessage()).contains("...");
+    assertThat(e.getMessage()).doesNotContain(longKey);
+    assertThat(e.getMessage().length()).isLessThan(100);
   }
 
   @Test
@@ -436,7 +475,7 @@ public class BigQueryJdbcUrlUtilityTest {
     url =
         "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
             + "PartnerToken= ( GPN: partner_name ; test_env ) ;";
-    expected = " (GPN: partner_name; test_env)";
+    expected = " (GPN: partner_name ; test_env)";
     result = BigQueryJdbcUrlUtility.parsePartnerTokenProperty(url, "testParsePartnerTokenProperty");
     assertThat(result).isEqualTo(expected);
   }
@@ -641,19 +680,22 @@ public class BigQueryJdbcUrlUtilityTest {
   public void testParseStringListProperty_NullOrEmpty() {
     String url =
         "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-            + "OAuthType=2;ProjectId=MyBigQueryProject;SomeProp=";
+            + "OAuthType=2;ProjectId=MyBigQueryProject;ServiceAccountImpersonationScopes=";
     List<String> result =
         BigQueryJdbcUrlUtility.parseStringListProperty(url, "NonExistentProp", "TestClass");
     assertEquals(Collections.emptyList(), result);
 
-    result = BigQueryJdbcUrlUtility.parseStringListProperty(url, "SomeProp", "TestClass");
+    result =
+        BigQueryJdbcUrlUtility.parseStringListProperty(
+            url, "ServiceAccountImpersonationScopes", "TestClass");
     assertEquals(Collections.emptyList(), result);
 
     String urlWithEmptyList =
         "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-            + "OAuthType=2;ProjectId=MyBigQueryProject;ListProp=,,";
+            + "OAuthType=2;ProjectId=MyBigQueryProject;ServiceAccountImpersonationScopes=,,";
     result =
-        BigQueryJdbcUrlUtility.parseStringListProperty(urlWithEmptyList, "ListProp", "TestClass");
+        BigQueryJdbcUrlUtility.parseStringListProperty(
+            urlWithEmptyList, "ServiceAccountImpersonationScopes", "TestClass");
     assertEquals(Collections.emptyList(), result);
   }
 
@@ -661,9 +703,10 @@ public class BigQueryJdbcUrlUtilityTest {
   public void testParseStringListProperty_SingleValue() {
     String url =
         "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-            + "OAuthType=2;ProjectId=MyBigQueryProject;ListProp=project1";
+            + "OAuthType=2;ProjectId=MyBigQueryProject;ServiceAccountImpersonationScopes=project1";
     List<String> result =
-        BigQueryJdbcUrlUtility.parseStringListProperty(url, "ListProp", "TestClass");
+        BigQueryJdbcUrlUtility.parseStringListProperty(
+            url, "ServiceAccountImpersonationScopes", "TestClass");
     assertEquals(Collections.singletonList("project1"), result);
   }
 
@@ -671,9 +714,10 @@ public class BigQueryJdbcUrlUtilityTest {
   public void testParseStringListProperty_MultipleValues() {
     String url =
         "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-            + "OAuthType=2;ProjectId=MyBigQueryProject;ListProp=project1,project2,project3";
+            + "OAuthType=2;ProjectId=MyBigQueryProject;ServiceAccountImpersonationScopes=project1,project2,project3";
     List<String> result =
-        BigQueryJdbcUrlUtility.parseStringListProperty(url, "ListProp", "TestClass");
+        BigQueryJdbcUrlUtility.parseStringListProperty(
+            url, "ServiceAccountImpersonationScopes", "TestClass");
     assertEquals(Arrays.asList("project1", "project2", "project3"), result);
   }
 
@@ -681,10 +725,11 @@ public class BigQueryJdbcUrlUtilityTest {
   public void testParseIntProperty_ValidInteger() {
     String url =
         "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-            + "OAuthType=2;ProjectId=MyBigQueryProject;SomeIntProp=123";
+            + "OAuthType=2;ProjectId=MyBigQueryProject;HttpConnectTimeout=123";
     Integer defaultValue = 0;
     Integer result =
-        BigQueryJdbcUrlUtility.parseIntProperty(url, "SomeIntProp", defaultValue, "TestClass");
+        BigQueryJdbcUrlUtility.parseIntProperty(
+            url, "HttpConnectTimeout", defaultValue, "TestClass");
     assertEquals(Integer.valueOf(123), result);
   }
 
@@ -692,10 +737,11 @@ public class BigQueryJdbcUrlUtilityTest {
   public void testParseIntProperty_PropertyNotPresent() {
     String url =
         "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-            + "OAuthType=2;ProjectId=MyBigQueryProject;SomeIntProp=123";
+            + "OAuthType=2;ProjectId=MyBigQueryProject;";
     Integer defaultValue = 42;
     Integer result =
-        BigQueryJdbcUrlUtility.parseIntProperty(url, "MissingIntProp", defaultValue, "TestClass");
+        BigQueryJdbcUrlUtility.parseIntProperty(
+            url, "HttpConnectTimeout", defaultValue, "TestClass");
     assertEquals(defaultValue, result);
   }
 
@@ -703,26 +749,26 @@ public class BigQueryJdbcUrlUtilityTest {
   public void testParseIntProperty_InvalidIntegerValue() {
     String url =
         "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-            + "OAuthType=2;ProjectId=MyBigQueryProject;InvalidIntProp=abc";
+            + "OAuthType=2;ProjectId=MyBigQueryProject;HttpConnectTimeout=abc";
     Integer defaultValue = 77;
     assertThrows(
         IllegalArgumentException.class,
         () ->
             BigQueryJdbcUrlUtility.parseIntProperty(
-                url, "InvalidIntProp", defaultValue, "TestClass"));
+                url, "HttpConnectTimeout", defaultValue, "TestClass"));
   }
 
   @Test
   public void testParseIntProperty_EmptyStringValue() {
     String url =
         "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-            + "OAuthType=2;ProjectId=MyBigQueryProject;EmptyIntProp=";
+            + "OAuthType=2;ProjectId=MyBigQueryProject;HttpConnectTimeout=";
     Integer defaultValue = 88;
     assertThrows(
         IllegalArgumentException.class,
         () ->
             BigQueryJdbcUrlUtility.parseIntProperty(
-                url, "EmptyIntProp", defaultValue, "TestClass"));
+                url, "HttpConnectTimeout", defaultValue, "TestClass"));
   }
 
   @Test
@@ -859,5 +905,39 @@ public class BigQueryJdbcUrlUtilityTest {
             null,
             "testParseRequestReason");
     assertEquals("testingRequestReason", requestReason);
+  }
+
+  @Test
+  public void testAppendPropertiesToURL_propertyWithSemicolon_isEscaped() throws Exception {
+    String url = "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;";
+    Properties properties = new Properties();
+    String complexValue = "value;ExtraProperty=injection";
+    properties.setProperty("ProjectId", complexValue);
+
+    String updatedUrl = BigQueryJdbcUrlUtility.appendPropertiesToURL(url, null, properties);
+
+    Map<String, String> parsedProperties = BigQueryJdbcUrlUtility.parseUrl(updatedUrl);
+
+    assertThat(parsedProperties.get("ProjectId")).isEqualTo(complexValue);
+    assertFalse(parsedProperties.containsKey("ExtraProperty"));
+  }
+
+  @Test
+  public void testEndpointOverrides_viaProperties() throws Exception {
+    String url = "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443";
+    Properties props = new Properties();
+
+    String overrides = "OAUTH2=http://localhost:1234,BIGQUERY=http://localhost:9090";
+    props.setProperty("EndpointOverrides", overrides);
+
+    String updatedUrl = BigQueryJdbcUrlUtility.appendPropertiesToURL(url, null, props);
+
+    Map<String, String> parsedOverrides =
+        BigQueryJdbcUrlUtility.parseOverrideProperties(updatedUrl, null);
+
+    assertThat(parsedOverrides).containsKey("OAUTH2");
+    assertThat(parsedOverrides.get("OAUTH2")).isEqualTo("http://localhost:1234");
+    assertThat(parsedOverrides).containsKey("BIGQUERY");
+    assertThat(parsedOverrides.get("BIGQUERY")).isEqualTo("http://localhost:9090");
   }
 }
