@@ -19,11 +19,9 @@ package com.google.cloud.bigquery.jdbc;
 import com.google.api.client.util.escape.CharEscapers;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.exception.BigQueryJdbcRuntimeException;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.UrlEscapers;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,7 +35,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * This class implements all the methods that parse Connection property values from the Connection
@@ -771,94 +768,8 @@ final class BigQueryJdbcUrlUtility {
     }
   }
 
-  // todo just make it a map
-  static Map<String, String> parseQueryProperties(String url, String callerClassName) {
-    return parsePropertiesMap(url, QUERY_PROPERTIES_NAME, callerClassName);
-  }
-
-  static Map<String, String> parseLabels(String url, String callerClassName) {
-    return parsePropertiesMap(url, LABELS_PROPERTY_NAME, callerClassName);
-  }
-
-  static String parseStringProperty(
-      String url, String propertyName, String defaultValue, String callerClassName) {
-    LOG.finest("++enter++\t" + callerClassName);
-    String parsedValue = BigQueryJdbcUrlUtility.parseUriProperty(url, propertyName);
-    if (parsedValue != null) {
-      return parsedValue;
-    }
-    return defaultValue;
-  }
-
-  static List<String> parseStringListProperty(
-      String url, String propertyName, String callerClassName) {
-    LOG.finest("++enter++\t" + callerClassName);
-    String rawValue = parseStringProperty(url, propertyName, null, callerClassName);
-    if (rawValue == null || rawValue.trim().isEmpty()) {
-      return Collections.emptyList();
-    }
-    return Arrays.stream(rawValue.split(","))
-        .map(String::trim)
-        .filter(s -> !s.isEmpty())
-        .collect(Collectors.toList());
-  }
-
-  public static String parsePartnerTokenProperty(String url, String callerClassName) {
-    LOG.finest("++enter++\t" + callerClassName);
-    // This property is expected to be set by partners only. For more details on exact format
-    // supported, refer b/396086960
-    Matcher matcher = PARTNER_TOKEN_PATTERN.matcher(url);
-    if (matcher.find()) {
-      String rawToken = matcher.group(1).trim();
-      String token =
-          (rawToken.startsWith("(") && rawToken.endsWith(")"))
-              ? rawToken.substring(1, rawToken.length() - 1).trim()
-              : rawToken;
-
-      if (token.toUpperCase().startsWith("GPN:")) {
-        return " (" + token + ")";
-      }
-    }
-    return null;
-  }
-
-  static Integer parseIntProperty(
-      String url, String propertyName, Integer defaultValue, String callerClassName) {
-    LOG.finest("++enter++\t" + callerClassName);
-    String parsedValue = BigQueryJdbcUrlUtility.parseUriProperty(url, propertyName);
-    if (parsedValue != null) {
-      try {
-        return Integer.parseInt(parsedValue);
-      } catch (NumberFormatException e) {
-        LOG.severe(
-            "Invalid integer value '%s' for property '%s'. Please provide a valid integer.",
-            parsedValue, propertyName);
-        throw new IllegalArgumentException(
-            String.format("Invalid integer value for property '%s': %s", propertyName, parsedValue),
-            e);
-      }
-    }
-    return defaultValue;
-  }
-
-  static Long parseLongProperty(
-      String url, String propertyName, Long defaultValue, String callerClassName) {
-    LOG.finest("++enter++\t" + callerClassName);
-    String parsedValue = BigQueryJdbcUrlUtility.parseUriProperty(url, propertyName);
-    if (parsedValue != null) {
-      return Long.parseLong(parsedValue);
-    }
-    return defaultValue;
-  }
-
-  static Boolean parseBooleanProperty(
-      String url, String propertyName, Boolean defaultValue, String callerClassName) {
-    LOG.finest("++enter++\t" + callerClassName);
-    String parsedValue = BigQueryJdbcUrlUtility.parseUriProperty(url, propertyName);
-    if (parsedValue != null) {
-      return convertIntToBoolean(parsedValue, propertyName);
-    }
-    return defaultValue;
+  static String parsePartnerTokenProperty(String url, String callerClassName) {
+    return parseUriProperty(url, PARTNER_TOKEN_PROPERTY_NAME);
   }
 
   public static Level parseLogLevel(String logLevelString) {
@@ -887,156 +798,21 @@ final class BigQueryJdbcUrlUtility {
     }
   }
 
-  static Map<String, String> parseOverrideProperties(String url, String callerClassName) {
-    LOG.finest("++enter++\t" + callerClassName);
-    Map<String, String> overrideProps = new HashMap<>();
-    Pattern pattern =
-        Pattern.compile(
-            String.format(
-                "(?is)(%s|%s)=([^;]+)",
-                ENDPOINT_OVERRIDES_PROPERTY_NAME, PRIVATE_SERVICE_CONNECT_PROPERTY_NAME));
-    Matcher matcher = pattern.matcher(url);
-    String overridePropertiesString;
-    if (matcher.find() && matcher.groupCount() >= 1) {
-      try {
-        overridePropertiesString =
-            URLDecoder.decode(matcher.group(2), StandardCharsets.UTF_8.name());
-      } catch (UnsupportedEncodingException e) {
-        throw new BigQueryJdbcRuntimeException(e);
-      }
-    } else {
-      return overrideProps;
-    }
-    for (String property : OVERRIDE_PROPERTIES) {
-      Pattern propertyPattern = Pattern.compile(String.format("(?i)%s=(.*?)(?:[,;]|$)", property));
-      Matcher propertyMatcher = propertyPattern.matcher(overridePropertiesString);
-      if (propertyMatcher.find() && propertyMatcher.groupCount() >= 1) {
-        overrideProps.put(property, propertyMatcher.group(1));
-      }
-    }
-    return overrideProps;
-  }
-
-  public static boolean parseJobCreationMode(String url, String callerClassName) {
-    LOG.finest("++enter++\t" + callerClassName);
-
-    String jobCreationMode =
-        BigQueryJdbcUrlUtility.parseUriProperty(url, JOB_CREATION_MODE_PROPERTY_NAME);
-
-    if (jobCreationMode == null) {
-      LOG.fine(
-          "%s value not provided, defaulting to %s. Caller: %s",
-          JOB_CREATION_MODE_PROPERTY_NAME, DEFAULT_JOB_CREATION_MODE, callerClassName);
-      // Default Job creation mode is JOB_CREATION_OPTIONAL(2)
-      // which translates to options.setQueryPreviewEnabled(true)
-      return true;
-    }
-    if (jobCreationMode.equalsIgnoreCase("1")) {
-      return false;
-    } else if (jobCreationMode.equalsIgnoreCase("2")) {
-      return true;
-    } else {
-      throw new NumberFormatException(
-          String.format(
-              "Invalid value for %s. Use 1 for JOB_CREATION_REQUIRED and 2 for"
-                  + " JOB_CREATION_OPTIONAL.",
-              JOB_CREATION_MODE_PROPERTY_NAME));
-    }
-  }
-
-  public static String parseBYOIDProperty(String url, String property, String callerClassName) {
-    LOG.finest("++enter++\t" + callerClassName);
-
-    String value = BigQueryJdbcUrlUtility.parseUriProperty(url, property);
-    String defaultValue = BigQueryJdbcUrlUtility.getConnectionPropertyDefaultValue(property);
-    if (value != null) {
-      return value;
-    } else if (defaultValue != null) {
-      return defaultValue;
-    }
-    return null;
-  }
-
-  public static String getConnectionPropertyDefaultValue(String propertyName) {
-    // TODO: change how we store properties because this method has to go through all of them
-    for (BigQueryConnectionProperty property : VALID_PROPERTIES) {
-      if (property.getName().equals(propertyName)) {
-        return property.getDefaultValue();
-      }
-    }
-    return null;
-  }
-
-  public static long parseRetryTimeoutInSecs(String url, String callerClassName) {
-    return BigQueryJdbcUrlUtility.parseLongProperty(
-        url,
-        RETRY_TIMEOUT_IN_SECS_PROPERTY_NAME,
-        DEFAULT_RETRY_TIMEOUT_IN_SECS_VALUE,
-        callerClassName);
-  }
-
-  public static long parseJobTimeout(String url, String callerClassName) {
-    return parseLongProperty(
-        url, JOB_TIMEOUT_PROPERTY_NAME, DEFAULT_JOB_TIMEOUT_VALUE, callerClassName);
-  }
-
-  public static long parseRetryInitialDelayInSecs(String url, String callerClassName) {
-    return BigQueryJdbcUrlUtility.parseLongProperty(
-        url, RETRY_INITIAL_DELAY_PROPERTY_NAME, DEFAULT_RETRY_INITIAL_DELAY_VALUE, callerClassName);
-  }
-
-  public static long parseRetryMaxDelayInSecs(String url, String callerClassName) {
-    return BigQueryJdbcUrlUtility.parseLongProperty(
-        url, RETRY_MAX_DELAY_PROPERTY_NAME, DEFAULT_RETRY_MAX_DELAY_VALUE, callerClassName);
-  }
-
-  // Convenience Helper Methods
-  public static long parseConnectionPoolSize(String url, String callerClassName) {
-    if (url == null || url.isEmpty()) {
-      throw new BigQueryJdbcRuntimeException("Connection url is empty");
-    }
-    return parseLongProperty(
-        url,
-        CONNECTION_POOL_SIZE_PROPERTY_NAME,
-        DEFAULT_CONNECTION_POOL_SIZE_VALUE,
-        callerClassName);
-  }
-
-  public static long parseListenerPoolSize(String url, String callerClassName) {
-    if (url == null || url.isEmpty()) {
-      throw new BigQueryJdbcRuntimeException("Connection url is empty");
-    }
-    return parseLongProperty(
-        url, LISTENER_POOL_SIZE_PROPERTY_NAME, DEFAULT_LISTENER_POOL_SIZE_VALUE, callerClassName);
-  }
-
-  public static long parseMaximumBytesBilled(String url, String callerClassName) {
-    if (url == null || url.isEmpty()) {
-      throw new BigQueryJdbcRuntimeException("Connection url is empty");
-    }
-    return parseLongProperty(
-        url, MAX_BYTES_BILLED_PROPERTY_NAME, DEFAULT_MAX_BYTES_BILLED_VALUE, callerClassName);
-  }
-
-  private static Map<String, String> parsePropertiesMap(
-      String url, String propertyName, String callerClassName) {
-    LOG.finest("++enter++\t" + callerClassName);
-    String propertiesString = BigQueryJdbcUrlUtility.parseUriProperty(url, propertyName);
+  static Map<String, String> parsePropertiesMapFromValue(
+      String propertiesString, String propertyName, String context) {
     if (propertiesString == null || propertiesString.isEmpty()) {
-      LOG.fine("Unable to parse property name: %s from url: %s", propertyName, url);
+      LOG.fine("Unable to parse property name: %s from context: %s", propertyName, context);
       return null;
     }
     Map<String, String> propertiesMap = new HashMap<>();
-    String[] keyValuePairs = propertiesString.split(",");
-
-    for (String keyValuePair : keyValuePairs) {
-      String[] parts = keyValuePair.split("=");
-      if (parts.length == 2) {
-        propertiesMap.put(parts[0], parts[1]);
+    for (String keyValuePair : Splitter.on(",").split(propertiesString)) {
+      List<String> parts = Splitter.on("=").splitToList(keyValuePair);
+      if (parts.size() == 2) {
+        propertiesMap.put(parts.get(0), parts.get(1));
       } else {
         LOG.warning(
-            "Invalid KeyValue pair: %s found in url: %s for property name: %s",
-            keyValuePair, url, propertyName);
+            "Invalid KeyValue pair: %s found in context: %s for property name: %s",
+            keyValuePair, context, propertyName);
       }
     }
     return propertiesMap;

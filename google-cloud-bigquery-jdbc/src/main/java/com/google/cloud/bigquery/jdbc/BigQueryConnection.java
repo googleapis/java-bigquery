@@ -134,6 +134,8 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
   Integer httpConnectTimeout;
   Integer httpReadTimeout;
   String requestReason;
+  Long connectionPoolSize;
+  Long listenerPoolSize;
 
   BigQueryConnection(String url) throws IOException {
     this.connectionUrl = url;
@@ -142,49 +144,48 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     this.sqlWarnings = new ArrayList<>();
     this.transactionStarted = false;
     this.isClosed = false;
-    this.labels = BigQueryJdbcUrlUtility.parseLabels(url, connectionClassName);
+    DataSource ds = DataSource.fromUrl(url);
+
+    this.labels = ds.getLabels() != null ? ds.getLabels() : new java.util.HashMap<>();
     this.maxBytesBilled =
-        BigQueryJdbcUrlUtility.parseMaximumBytesBilled(url, this.connectionClassName);
-    this.retryTimeoutInSeconds =
-        BigQueryJdbcUrlUtility.parseRetryTimeoutInSecs(url, this.connectionClassName);
+        ds.getMaximumBytesBilled() != null
+            ? ds.getMaximumBytesBilled()
+            : BigQueryJdbcUrlUtility.DEFAULT_MAX_BYTES_BILLED_VALUE;
+    this.retryTimeoutInSeconds = ds.getTimeout();
     this.retryTimeoutDuration = Duration.ofMillis(retryTimeoutInSeconds * 1000L);
-    this.retryInitialDelayInSeconds =
-        BigQueryJdbcUrlUtility.parseRetryInitialDelayInSecs(url, this.connectionClassName);
+    this.retryInitialDelayInSeconds = ds.getRetryInitialDelay();
     this.retryInitialDelayDuration = Duration.ofMillis(retryInitialDelayInSeconds * 1000L);
-    this.retryMaxDelayInSeconds =
-        BigQueryJdbcUrlUtility.parseRetryMaxDelayInSecs(url, this.connectionClassName);
+    this.retryMaxDelayInSeconds = ds.getRetryMaxDelay();
     this.retryMaxDelayDuration = Duration.ofMillis(retryMaxDelayInSeconds * 1000L);
-    this.jobTimeoutInSeconds =
-        BigQueryJdbcUrlUtility.parseJobTimeout(url, this.connectionClassName);
+    this.jobTimeoutInSeconds = ds.getJobTimeout();
     this.authProperties =
-        BigQueryJdbcOAuthUtility.parseOAuthProperties(url, this.connectionClassName);
+        BigQueryJdbcOAuthUtility.parseOAuthProperties(ds, this.connectionClassName);
     this.catalog =
-        BigQueryJdbcUrlUtility.parseStringProperty(
-            url,
-            BigQueryJdbcUrlUtility.PROJECT_ID_PROPERTY_NAME,
-            BigQueryOptions.getDefaultProjectId(),
-            this.connectionClassName);
-    this.universeDomain =
-        BigQueryJdbcUrlUtility.parseStringProperty(
-            url,
-            BigQueryJdbcUrlUtility.UNIVERSE_DOMAIN_OVERRIDE_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_UNIVERSE_DOMAIN_VALUE,
-            this.connectionClassName);
-    this.overrideProperties =
-        BigQueryJdbcUrlUtility.parseOverrideProperties(url, this.connectionClassName);
-    if (universeDomain != null) {
+        ds.getProjectId() != null ? ds.getProjectId() : BigQueryOptions.getDefaultProjectId();
+    this.universeDomain = ds.getUniverseDomain();
+
+    this.overrideProperties = new java.util.HashMap<>();
+    if (ds.getOAuth2TokenUri() != null) {
       this.overrideProperties.put(
-          BigQueryJdbcUrlUtility.UNIVERSE_DOMAIN_OVERRIDE_PROPERTY_NAME, universeDomain);
+          BigQueryJdbcUrlUtility.OAUTH2_TOKEN_URI_PROPERTY_NAME, ds.getOAuth2TokenUri());
+    }
+    if (ds.getEndpointOverrides() != null) {
+      this.overrideProperties.put(
+          BigQueryJdbcUrlUtility.ENDPOINT_OVERRIDES_PROPERTY_NAME, ds.getEndpointOverrides());
+    }
+    if (ds.getPrivateServiceConnect() != null) {
+      this.overrideProperties.put(
+          BigQueryJdbcUrlUtility.PRIVATE_SERVICE_CONNECT_PROPERTY_NAME,
+          ds.getPrivateServiceConnect());
+    }
+    if (this.universeDomain != null) {
+      this.overrideProperties.put(
+          BigQueryJdbcUrlUtility.UNIVERSE_DOMAIN_OVERRIDE_PROPERTY_NAME, this.universeDomain);
     }
     this.credentials =
         BigQueryJdbcOAuthUtility.getCredentials(
             authProperties, overrideProperties, this.connectionClassName);
-    String defaultDatasetString =
-        BigQueryJdbcUrlUtility.parseStringProperty(
-            url,
-            BigQueryJdbcUrlUtility.DEFAULT_DATASET_PROPERTY_NAME,
-            null,
-            this.connectionClassName);
+    String defaultDatasetString = ds.getDefaultDataset();
     if (defaultDatasetString == null || defaultDatasetString.trim().isEmpty()) {
       this.defaultDataset = null;
     } else {
@@ -199,94 +200,77 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
                 + " projectId.datasetId");
       }
     }
-    this.location =
-        BigQueryJdbcUrlUtility.parseStringProperty(
-            url, BigQueryJdbcUrlUtility.LOCATION_PROPERTY_NAME, null, this.connectionClassName);
-    this.enableHighThroughputAPI =
-        BigQueryJdbcUrlUtility.parseBooleanProperty(
-            url,
-            BigQueryJdbcUrlUtility.ENABLE_HTAPI_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_ENABLE_HTAPI_VALUE,
-            this.connectionClassName);
-    this.highThroughputMinTableSize =
-        BigQueryJdbcUrlUtility.parseIntProperty(
-            url,
-            BigQueryJdbcUrlUtility.HTAPI_MIN_TABLE_SIZE_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_HTAPI_MIN_TABLE_SIZE_VALUE,
-            this.connectionClassName);
-    this.highThroughputActivationRatio =
-        BigQueryJdbcUrlUtility.parseIntProperty(
-            url,
-            BigQueryJdbcUrlUtility.HTAPI_ACTIVATION_RATIO_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_HTAPI_ACTIVATION_RATIO_VALUE,
-            this.connectionClassName);
-    this.useQueryCache =
-        BigQueryJdbcUrlUtility.parseBooleanProperty(
-            url,
-            BigQueryJdbcUrlUtility.USE_QUERY_CACHE_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_USE_QUERY_CACHE,
-            this.connectionClassName);
-    this.useStatelessQueryMode =
-        BigQueryJdbcUrlUtility.parseJobCreationMode(url, this.connectionClassName);
-    this.queryDialect =
-        BigQueryJdbcUrlUtility.parseStringProperty(
-            url,
-            BigQueryJdbcUrlUtility.QUERY_DIALECT_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_QUERY_DIALECT_VALUE,
-            this.connectionClassName);
-    this.allowLargeResults =
-        BigQueryJdbcUrlUtility.parseBooleanProperty(
-            url,
-            BigQueryJdbcUrlUtility.ALLOW_LARGE_RESULTS_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_ALLOW_LARGE_RESULTS,
-            this.connectionClassName);
-    this.destinationTable =
-        BigQueryJdbcUrlUtility.parseStringProperty(
-            url,
-            BigQueryJdbcUrlUtility.LARGE_RESULTS_TABLE_PROPERTY_NAME,
-            null,
-            this.connectionClassName);
-    this.destinationDataset =
-        BigQueryJdbcUrlUtility.parseStringProperty(
-            url,
-            BigQueryJdbcUrlUtility.LARGE_RESULTS_DATASET_PROPERTY_NAME,
-            null,
-            this.connectionClassName);
-    this.destinationDatasetExpirationTime =
-        BigQueryJdbcUrlUtility.parseLongProperty(
-            url,
-            BigQueryJdbcUrlUtility.DESTINATION_DATASET_EXPIRATION_TIME_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_DESTINATION_DATASET_EXPIRATION_TIME_VALUE,
-            this.connectionClassName);
-    this.kmsKeyName =
-        BigQueryJdbcUrlUtility.parseStringProperty(
-            url, BigQueryJdbcUrlUtility.KMS_KEY_NAME_PROPERTY_NAME, null, this.connectionClassName);
-    Map<String, String> proxyProperties =
-        BigQueryJdbcProxyUtility.parseProxyProperties(url, this.connectionClassName);
-    this.sslTrustStorePath =
-        BigQueryJdbcUrlUtility.parseStringProperty(
-            url,
-            BigQueryJdbcUrlUtility.SSL_TRUST_STORE_PROPERTY_NAME,
-            null,
-            this.connectionClassName);
-    this.sslTrustStorePassword =
-        BigQueryJdbcUrlUtility.parseStringProperty(
-            url,
-            BigQueryJdbcUrlUtility.SSL_TRUST_STORE_PWD_PROPERTY_NAME,
-            null,
-            this.connectionClassName);
-    this.httpConnectTimeout =
-        BigQueryJdbcUrlUtility.parseIntProperty(
-            url,
-            BigQueryJdbcUrlUtility.HTTP_CONNECT_TIMEOUT_PROPERTY_NAME,
-            null,
-            this.connectionClassName);
-    this.httpReadTimeout =
-        BigQueryJdbcUrlUtility.parseIntProperty(
-            url,
-            BigQueryJdbcUrlUtility.HTTP_READ_TIMEOUT_PROPERTY_NAME,
-            null,
-            this.connectionClassName);
+    this.location = ds.getLocation();
+    this.enableHighThroughputAPI = ds.getEnableHighThroughputAPI();
+    this.highThroughputMinTableSize = ds.getHighThroughputMinTableSize();
+    this.highThroughputActivationRatio = ds.getHighThroughputActivationRatio();
+    this.useQueryCache = ds.getUseQueryCache();
+    Integer jobCreationMode = ds.getJobCreationMode();
+    if (jobCreationMode == null || jobCreationMode == 2) {
+      this.useStatelessQueryMode = true;
+    } else if (jobCreationMode == 1) {
+      this.useStatelessQueryMode = false;
+    } else {
+      throw new NumberFormatException(
+          String.format(
+              "Invalid value for %s. Use 1 for JOB_CREATION_REQUIRED and 2 for"
+                  + " JOB_CREATION_OPTIONAL.",
+              BigQueryJdbcUrlUtility.JOB_CREATION_MODE_PROPERTY_NAME));
+    }
+
+    this.queryDialect = ds.getQueryDialect();
+    this.allowLargeResults = ds.getAllowLargeResults();
+    this.destinationTable = ds.getDestinationTable();
+    this.destinationDataset = ds.getDestinationDataset();
+    this.destinationDatasetExpirationTime = ds.getDestinationDatasetExpirationTime();
+    this.kmsKeyName = ds.getKmsKeyName();
+    Map<String, String> proxyProperties = new java.util.HashMap<>();
+    if (ds.getProxyHost() != null)
+      proxyProperties.put(BigQueryJdbcUrlUtility.PROXY_HOST_PROPERTY_NAME, ds.getProxyHost());
+    if (ds.getProxyPort() != null)
+      proxyProperties.put(BigQueryJdbcUrlUtility.PROXY_PORT_PROPERTY_NAME, ds.getProxyPort());
+    if (ds.getProxyUid() != null)
+      proxyProperties.put(BigQueryJdbcUrlUtility.PROXY_USER_ID_PROPERTY_NAME, ds.getProxyUid());
+    if (ds.getProxyPwd() != null)
+      proxyProperties.put(BigQueryJdbcUrlUtility.PROXY_PASSWORD_PROPERTY_NAME, ds.getProxyPwd());
+    String proxyHost = ds.getProxyHost();
+    String proxyPort = ds.getProxyPort();
+    String proxyUid = ds.getProxyUid();
+    String proxyPwd = ds.getProxyPwd();
+
+    if (proxyPort != null
+        && !java.util.regex.Pattern.compile(
+                "^([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$")
+            .matcher(proxyPort)
+            .find()) {
+      throw new IllegalArgumentException(
+          "Illegal port number provided %s. Please provide a valid port number.");
+    }
+
+    boolean isMissingProxyHostOrPortWhenProxySet =
+        (proxyHost == null && proxyPort != null) || (proxyHost != null && proxyPort == null);
+    if (isMissingProxyHostOrPortWhenProxySet) {
+      throw new IllegalArgumentException(
+          "Both ProxyHost and ProxyPort parameters need to be specified. No defaulting behavior"
+              + " occurs.");
+    }
+    boolean isMissingProxyUidOrPwdWhenAuthSet =
+        (proxyUid == null && proxyPwd != null) || (proxyUid != null && proxyPwd == null);
+    if (isMissingProxyUidOrPwdWhenAuthSet) {
+      throw new IllegalArgumentException(
+          "Both ProxyUid and ProxyPwd parameters need to be specified for authentication.");
+    }
+    boolean isProxyAuthSetWithoutProxySettings = proxyUid != null && proxyHost == null;
+    if (isProxyAuthSetWithoutProxySettings) {
+      throw new IllegalArgumentException(
+          "Proxy authentication provided via connection string with no proxy host or port set.");
+    }
+
+    this.sslTrustStorePath = ds.getSSLTrustStorePath();
+    this.sslTrustStorePassword = ds.getSSLTrustStorePassword();
+    this.httpConnectTimeout = ds.getHttpConnectTimeout();
+    this.httpReadTimeout = ds.getHttpReadTimeout();
+
     this.httpTransportOptions =
         BigQueryJdbcProxyUtility.getHttpTransportOptions(
             proxyProperties,
@@ -301,75 +285,46 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
             this.sslTrustStorePath,
             this.sslTrustStorePassword,
             this.connectionClassName);
-    this.enableSession =
-        BigQueryJdbcUrlUtility.parseBooleanProperty(
-            url,
-            BigQueryJdbcUrlUtility.ENABLE_SESSION_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_ENABLE_SESSION_VALUE,
-            this.connectionClassName);
-    this.unsupportedHTAPIFallback =
-        BigQueryJdbcUrlUtility.parseBooleanProperty(
-            url,
-            BigQueryJdbcUrlUtility.UNSUPPORTED_HTAPI_FALLBACK_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_UNSUPPORTED_HTAPI_FALLBACK_VALUE,
-            this.connectionClassName);
-    this.maxResults =
-        BigQueryJdbcUrlUtility.parseLongProperty(
-            url,
-            BigQueryJdbcUrlUtility.MAX_RESULTS_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_MAX_RESULTS_VALUE,
-            this.connectionClassName);
-    Map<String, String> queryPropertiesMap =
-        BigQueryJdbcUrlUtility.parseQueryProperties(url, this.connectionClassName);
+    this.enableSession = ds.getEnableSession();
+    this.unsupportedHTAPIFallback = ds.getUnsupportedHTAPIFallback();
+    this.maxResults = ds.getMaxResults();
+    Map<String, String> queryPropertiesMap = ds.getQueryProperties();
     this.sessionInfoConnectionProperty = getSessionPropertyFromQueryProperties(queryPropertiesMap);
     this.queryProperties = convertMapToConnectionPropertiesList(queryPropertiesMap);
     this.enableWriteAPI =
-        BigQueryJdbcUrlUtility.parseBooleanProperty(
-            url,
-            BigQueryJdbcUrlUtility.ENABLE_WRITE_API_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_ENABLE_WRITE_API_VALUE,
-            this.connectionClassName);
+        ds.getEnableWriteAPI() != null
+            ? ds.getEnableWriteAPI()
+            : BigQueryJdbcUrlUtility.DEFAULT_ENABLE_WRITE_API_VALUE;
     this.writeAPIActivationRowCount =
-        BigQueryJdbcUrlUtility.parseIntProperty(
-            url,
-            BigQueryJdbcUrlUtility.SWA_ACTIVATION_ROW_COUNT_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_SWA_ACTIVATION_ROW_COUNT_VALUE,
-            this.connectionClassName);
+        ds.getSwaActivationRowCount() != null
+            ? ds.getSwaActivationRowCount()
+            : BigQueryJdbcUrlUtility.DEFAULT_SWA_ACTIVATION_ROW_COUNT_VALUE;
     this.writeAPIAppendRowCount =
-        BigQueryJdbcUrlUtility.parseIntProperty(
-            url,
-            BigQueryJdbcUrlUtility.SWA_APPEND_ROW_COUNT_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_SWA_APPEND_ROW_COUNT_VALUE,
-            this.connectionClassName);
+        ds.getSwaAppendRowCount() != null
+            ? ds.getSwaAppendRowCount()
+            : BigQueryJdbcUrlUtility.DEFAULT_SWA_APPEND_ROW_COUNT_VALUE;
+
+    String additionalProjectsStr = ds.getAdditionalProjects();
     this.additionalProjects =
-        BigQueryJdbcUrlUtility.parseStringListProperty(
-            url,
-            BigQueryJdbcUrlUtility.ADDITIONAL_PROJECTS_PROPERTY_NAME,
-            this.connectionClassName);
+        (additionalProjectsStr == null || additionalProjectsStr.isEmpty())
+            ? java.util.Collections.emptyList()
+            : java.util.Arrays.asList(additionalProjectsStr.split(","));
+
     this.filterTablesOnDefaultDataset =
-        BigQueryJdbcUrlUtility.parseBooleanProperty(
-            url,
-            BigQueryJdbcUrlUtility.FILTER_TABLES_ON_DEFAULT_DATASET_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_FILTER_TABLES_ON_DEFAULT_DATASET_VALUE,
-            this.connectionClassName);
+        ds.getFilterTablesOnDefaultDataset() != null
+            ? ds.getFilterTablesOnDefaultDataset()
+            : BigQueryJdbcUrlUtility.DEFAULT_FILTER_TABLES_ON_DEFAULT_DATASET_VALUE;
     this.requestGoogleDriveScope =
-        BigQueryJdbcUrlUtility.parseIntProperty(
-            url,
-            BigQueryJdbcUrlUtility.REQUEST_GOOGLE_DRIVE_SCOPE_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_REQUEST_GOOGLE_DRIVE_SCOPE_VALUE,
-            this.connectionClassName);
+        ds.getRequestGoogleDriveScope() != null
+            ? ds.getRequestGoogleDriveScope()
+            : BigQueryJdbcUrlUtility.DEFAULT_REQUEST_GOOGLE_DRIVE_SCOPE_VALUE;
     this.metadataFetchThreadCount =
-        BigQueryJdbcUrlUtility.parseIntProperty(
-            url,
-            BigQueryJdbcUrlUtility.METADATA_FETCH_THREAD_COUNT_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.DEFAULT_METADATA_FETCH_THREAD_COUNT_VALUE,
-            this.connectionClassName);
-    this.requestReason =
-        BigQueryJdbcUrlUtility.parseStringProperty(
-            url,
-            BigQueryJdbcUrlUtility.REQUEST_REASON_PROPERTY_NAME,
-            null,
-            this.connectionClassName);
+        ds.getMetadataFetchThreadCount() != null
+            ? ds.getMetadataFetchThreadCount()
+            : BigQueryJdbcUrlUtility.DEFAULT_METADATA_FETCH_THREAD_COUNT_VALUE;
+    this.requestReason = ds.getRequestReason();
+    this.connectionPoolSize = ds.getConnectionPoolSize();
+    this.listenerPoolSize = ds.getListenerPoolSize();
 
     HEADER_PROVIDER = createHeaderProvider();
     this.bigQuery = getBigQueryConnection();
@@ -758,6 +713,14 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
 
   Integer getHttpReadTimeout() {
     return httpReadTimeout;
+  }
+
+  Long getConnectionPoolSize() {
+    return connectionPoolSize;
+  }
+
+  Long getListenerPoolSize() {
+    return listenerPoolSize;
   }
 
   @Override
