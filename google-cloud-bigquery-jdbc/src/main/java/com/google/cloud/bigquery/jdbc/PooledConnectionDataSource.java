@@ -40,9 +40,7 @@ public class PooledConnectionDataSource extends DataSource implements Connection
       throw new BigQueryJdbcRuntimeException(
           "Cannot get pooled connection: unable to get underlying physical connection");
     }
-    String connectionURl = ((BigQueryConnection) bqConnection).getConnectionUrl();
-    Long connectionPoolSize =
-        BigQueryJdbcUrlUtility.parseConnectionPoolSize(connectionURl, this.toString());
+    Long connectionPoolSize = this.getConnectionPoolSize();
     if (connectionPoolManager == null) {
       connectionPoolManager = new PooledConnectionListener(connectionPoolSize);
     }

@@ -39,10 +39,8 @@ class BigQueryPooledConnection implements PooledConnection {
   BigQueryPooledConnection(Connection bqConnection) {
     this.bqConnection = bqConnection;
     this.id = UUID.randomUUID().toString();
-    String connectionUrl = ((BigQueryConnection) bqConnection).getConnectionUrl();
-    if (connectionUrl != null && !connectionUrl.isEmpty()) {
-      this.listenerPoolSize =
-          BigQueryJdbcUrlUtility.parseListenerPoolSize(connectionUrl, this.toString());
+    if (bqConnection instanceof BigQueryConnection) {
+      this.listenerPoolSize = ((BigQueryConnection) bqConnection).getListenerPoolSize();
     }
     if (getListenerPoolSize() > 0L) {
       listeners = new LinkedBlockingDeque<>(getListenerPoolSize().intValue());

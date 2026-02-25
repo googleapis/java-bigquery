@@ -90,8 +90,8 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
             + "EndpointOverrides=OAuth2=brokenuri{};";
     Map<String, String> oauthProperties =
         BigQueryJdbcOAuthUtility.parseOAuthProperties(connectionString, null);
-    Map<String, String> overrideProperties =
-        BigQueryJdbcUrlUtility.parseOverrideProperties(connectionString, null);
+    Map<String, String> overrideProperties = new HashMap<>();
+    overrideProperties.put(BigQueryJdbcUrlUtility.OAUTH2_TOKEN_URI_PROPERTY_NAME, "brokenuri{}");
 
     try {
       BigQueryJdbcOAuthUtility.getCredentials(oauthProperties, overrideProperties, null);
@@ -234,8 +234,9 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
               + ";";
       Map<String, String> authProperties =
           BigQueryJdbcOAuthUtility.parseOAuthProperties(connectionString, null);
-      Map<String, String> overrideProperties =
-          BigQueryJdbcUrlUtility.parseOverrideProperties(connectionString, null);
+      Map<String, String> overrideProperties = new HashMap<>();
+      overrideProperties.put(
+          BigQueryJdbcUrlUtility.OAUTH2_TOKEN_URI_PROPERTY_NAME, overrideTokenSeverURI.toString());
 
       UserAuthorizer userAuthorizer =
           BigQueryJdbcOAuthUtility.getUserAuthorizer(
@@ -274,8 +275,10 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
 
       Map<String, String> authProperties =
           BigQueryJdbcOAuthUtility.parseOAuthProperties(connectionString, null);
-      Map<String, String> overrideProperties =
-          BigQueryJdbcUrlUtility.parseOverrideProperties(connectionString, null);
+      Map<String, String> overrideProperties = new HashMap<>();
+      overrideProperties.put(
+          BigQueryJdbcUrlUtility.OAUTH2_TOKEN_URI_PROPERTY_NAME,
+          "https://oauth2-private.p.googleapis.com/token");
 
       UserCredentials userCredentials =
           BigQueryJdbcOAuthUtility.getPreGeneratedRefreshTokenCredentials(
@@ -296,9 +299,8 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
             "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:433;OAuthType=4;"
                 + "ProjectId=MyBigQueryProject;"
                 + "BYOID_AudienceUri=//iam.googleapis.com/locations/global/workforcePools/pool-id/providers/provider-id;"
-                + "BYOID_PoolUserProject=workforceProjectNumber;"
-                + "BYOID_CredentialSource={\"file\": \"C:\\\\Token.txt\"};"
-                + "BYOID_SA_Impersonation_Uri=testSA;"
+                + "BYOID_PoolUserProject=workforceProjectNumber;BYOID_CredentialSource={\"file\":"
+                + " \"C:\\\\Token.txt\"};BYOID_SA_Impersonation_Uri=testSA;"
                 + "BYOID_SubjectTokenType=urn:ietf:params:oauth:tokentype:jwt;"
                 + "BYOID_TokenUri=https://testuri.com/v1/token",
             null);
