@@ -67,6 +67,7 @@ integration)
       -DtrimStackTrace=false \
       -Dclirr.skip=true \
       -Denforcer.skip=true \
+      -Dprotobuf.version=4.31.0-RC1 \
       -fae \
       verify
     RETURN_CODE=$?
