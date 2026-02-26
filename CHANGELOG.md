@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.60.0](https://github.com/googleapis/java-bigquery/compare/v2.59.0...v2.60.0) (2026-02-26)
+
+
+### Features
+
+* **jdbc:** Add retry mechanism for storage api ([#4100](https://github.com/googleapis/java-bigquery/issues/4100)) ([776caa1](https://github.com/googleapis/java-bigquery/commit/776caa19d5a4f54f35984a7d39375dd751d272cf))
+* **jdbc:** Enforce strict JDBC URL parsing and sync `DataSource` properties ([#4107](https://github.com/googleapis/java-bigquery/issues/4107)) ([0b0c1ce](https://github.com/googleapis/java-bigquery/commit/0b0c1ceb309a19d51f385264f2d4722b8b6339d7))
+
+
+### Bug Fixes
+
+* Improve getErrorDescFromResponse() performance ([#4110](https://github.com/googleapis/java-bigquery/issues/4110)) ([4e0b409](https://github.com/googleapis/java-bigquery/commit/4e0b4099f6b690ac89f041eb0ff6e18439647e27))
+
 ## [2.59.0](https://github.com/googleapis/java-bigquery/compare/v2.58.0...v2.59.0) (2026-02-12)
 
 
