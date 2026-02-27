@@ -147,10 +147,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     DataSource ds = DataSource.fromUrl(url);
 
     this.labels = ds.getLabels() != null ? ds.getLabels() : new java.util.HashMap<>();
-    this.maxBytesBilled =
-        ds.getMaximumBytesBilled() != null
-            ? ds.getMaximumBytesBilled()
-            : BigQueryJdbcUrlUtility.DEFAULT_MAX_BYTES_BILLED_VALUE;
+    this.maxBytesBilled = ds.getMaximumBytesBilled();
     this.retryTimeoutInSeconds = ds.getTimeout();
     this.retryTimeoutDuration = Duration.ofMillis(retryTimeoutInSeconds * 1000L);
     this.retryInitialDelayInSeconds = ds.getRetryInitialDelay();
@@ -160,24 +157,12 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     this.jobTimeoutInSeconds = ds.getJobTimeout();
     this.authProperties =
         BigQueryJdbcOAuthUtility.parseOAuthProperties(ds, this.connectionClassName);
-    this.catalog =
-        ds.getProjectId() != null ? ds.getProjectId() : BigQueryOptions.getDefaultProjectId();
+    this.catalog = ds.getProjectId();
     this.universeDomain = ds.getUniverseDomain();
 
-    this.overrideProperties = new java.util.HashMap<>();
-    if (ds.getOAuth2TokenUri() != null) {
-      this.overrideProperties.put(
-          BigQueryJdbcUrlUtility.OAUTH2_TOKEN_URI_PROPERTY_NAME, ds.getOAuth2TokenUri());
-    }
-    if (ds.getEndpointOverrides() != null) {
-      this.overrideProperties.put(
-          BigQueryJdbcUrlUtility.ENDPOINT_OVERRIDES_PROPERTY_NAME, ds.getEndpointOverrides());
-    }
-    if (ds.getPrivateServiceConnect() != null) {
-      this.overrideProperties.put(
-          BigQueryJdbcUrlUtility.PRIVATE_SERVICE_CONNECT_PROPERTY_NAME,
-          ds.getPrivateServiceConnect());
-    }
+    this.overrideProperties =
+        BigQueryJdbcUrlUtility.parseOverrideProperties(
+            this.connectionUrl, this.connectionClassName);
     if (this.universeDomain != null) {
       this.overrideProperties.put(
           BigQueryJdbcUrlUtility.UNIVERSE_DOMAIN_OVERRIDE_PROPERTY_NAME, this.universeDomain);
@@ -206,7 +191,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     this.highThroughputActivationRatio = ds.getHighThroughputActivationRatio();
     this.useQueryCache = ds.getUseQueryCache();
     Integer jobCreationMode = ds.getJobCreationMode();
-    if (jobCreationMode == null || jobCreationMode == 2) {
+    if (jobCreationMode == 2) {
       this.useStatelessQueryMode = true;
     } else if (jobCreationMode == 1) {
       this.useStatelessQueryMode = false;
@@ -224,47 +209,8 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     this.destinationDataset = ds.getDestinationDataset();
     this.destinationDatasetExpirationTime = ds.getDestinationDatasetExpirationTime();
     this.kmsKeyName = ds.getKmsKeyName();
-    Map<String, String> proxyProperties = new java.util.HashMap<>();
-    if (ds.getProxyHost() != null)
-      proxyProperties.put(BigQueryJdbcUrlUtility.PROXY_HOST_PROPERTY_NAME, ds.getProxyHost());
-    if (ds.getProxyPort() != null)
-      proxyProperties.put(BigQueryJdbcUrlUtility.PROXY_PORT_PROPERTY_NAME, ds.getProxyPort());
-    if (ds.getProxyUid() != null)
-      proxyProperties.put(BigQueryJdbcUrlUtility.PROXY_USER_ID_PROPERTY_NAME, ds.getProxyUid());
-    if (ds.getProxyPwd() != null)
-      proxyProperties.put(BigQueryJdbcUrlUtility.PROXY_PASSWORD_PROPERTY_NAME, ds.getProxyPwd());
-    String proxyHost = ds.getProxyHost();
-    String proxyPort = ds.getProxyPort();
-    String proxyUid = ds.getProxyUid();
-    String proxyPwd = ds.getProxyPwd();
-
-    if (proxyPort != null
-        && !java.util.regex.Pattern.compile(
-                "^([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$")
-            .matcher(proxyPort)
-            .find()) {
-      throw new IllegalArgumentException(
-          "Illegal port number provided %s. Please provide a valid port number.");
-    }
-
-    boolean isMissingProxyHostOrPortWhenProxySet =
-        (proxyHost == null && proxyPort != null) || (proxyHost != null && proxyPort == null);
-    if (isMissingProxyHostOrPortWhenProxySet) {
-      throw new IllegalArgumentException(
-          "Both ProxyHost and ProxyPort parameters need to be specified. No defaulting behavior"
-              + " occurs.");
-    }
-    boolean isMissingProxyUidOrPwdWhenAuthSet =
-        (proxyUid == null && proxyPwd != null) || (proxyUid != null && proxyPwd == null);
-    if (isMissingProxyUidOrPwdWhenAuthSet) {
-      throw new IllegalArgumentException(
-          "Both ProxyUid and ProxyPwd parameters need to be specified for authentication.");
-    }
-    boolean isProxyAuthSetWithoutProxySettings = proxyUid != null && proxyHost == null;
-    if (isProxyAuthSetWithoutProxySettings) {
-      throw new IllegalArgumentException(
-          "Proxy authentication provided via connection string with no proxy host or port set.");
-    }
+    Map<String, String> proxyProperties =
+        BigQueryJdbcProxyUtility.parseProxyProperties(ds, this.connectionClassName);
 
     this.sslTrustStorePath = ds.getSSLTrustStorePath();
     this.sslTrustStorePassword = ds.getSSLTrustStorePassword();
@@ -291,18 +237,9 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     Map<String, String> queryPropertiesMap = ds.getQueryProperties();
     this.sessionInfoConnectionProperty = getSessionPropertyFromQueryProperties(queryPropertiesMap);
     this.queryProperties = convertMapToConnectionPropertiesList(queryPropertiesMap);
-    this.enableWriteAPI =
-        ds.getEnableWriteAPI() != null
-            ? ds.getEnableWriteAPI()
-            : BigQueryJdbcUrlUtility.DEFAULT_ENABLE_WRITE_API_VALUE;
-    this.writeAPIActivationRowCount =
-        ds.getSwaActivationRowCount() != null
-            ? ds.getSwaActivationRowCount()
-            : BigQueryJdbcUrlUtility.DEFAULT_SWA_ACTIVATION_ROW_COUNT_VALUE;
-    this.writeAPIAppendRowCount =
-        ds.getSwaAppendRowCount() != null
-            ? ds.getSwaAppendRowCount()
-            : BigQueryJdbcUrlUtility.DEFAULT_SWA_APPEND_ROW_COUNT_VALUE;
+    this.enableWriteAPI = ds.getEnableWriteAPI();
+    this.writeAPIActivationRowCount = ds.getSwaActivationRowCount();
+    this.writeAPIAppendRowCount = ds.getSwaAppendRowCount();
 
     String additionalProjectsStr = ds.getAdditionalProjects();
     this.additionalProjects =
@@ -310,18 +247,9 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
             ? java.util.Collections.emptyList()
             : java.util.Arrays.asList(additionalProjectsStr.split(","));
 
-    this.filterTablesOnDefaultDataset =
-        ds.getFilterTablesOnDefaultDataset() != null
-            ? ds.getFilterTablesOnDefaultDataset()
-            : BigQueryJdbcUrlUtility.DEFAULT_FILTER_TABLES_ON_DEFAULT_DATASET_VALUE;
-    this.requestGoogleDriveScope =
-        ds.getRequestGoogleDriveScope() != null
-            ? ds.getRequestGoogleDriveScope()
-            : BigQueryJdbcUrlUtility.DEFAULT_REQUEST_GOOGLE_DRIVE_SCOPE_VALUE;
-    this.metadataFetchThreadCount =
-        ds.getMetadataFetchThreadCount() != null
-            ? ds.getMetadataFetchThreadCount()
-            : BigQueryJdbcUrlUtility.DEFAULT_METADATA_FETCH_THREAD_COUNT_VALUE;
+    this.filterTablesOnDefaultDataset = ds.getFilterTablesOnDefaultDataset();
+    this.requestGoogleDriveScope = ds.getRequestGoogleDriveScope();
+    this.metadataFetchThreadCount = ds.getMetadataFetchThreadCount();
     this.requestReason = ds.getRequestReason();
     this.connectionPoolSize = ds.getConnectionPoolSize();
     this.listenerPoolSize = ds.getListenerPoolSize();

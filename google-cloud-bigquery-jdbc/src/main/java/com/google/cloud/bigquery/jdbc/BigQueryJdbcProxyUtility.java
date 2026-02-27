@@ -61,6 +61,52 @@ final class BigQueryJdbcProxyUtility {
 
   private BigQueryJdbcProxyUtility() {}
 
+  static Map<String, String> parseProxyProperties(DataSource ds, String callerClassName) {
+    LOG.finest("++enter++\t" + callerClassName);
+    Map<String, String> proxyProperties = new HashMap<>();
+    String proxyHost = ds.getProxyHost();
+    if (proxyHost != null) {
+      proxyProperties.put(BigQueryJdbcUrlUtility.PROXY_HOST_PROPERTY_NAME, proxyHost);
+    }
+    String proxyPort = ds.getProxyPort();
+    if (proxyPort != null) {
+      if (!Pattern.compile(validPortRegex).matcher(proxyPort).find()) {
+        throw new IllegalArgumentException(
+            String.format(
+                "Illegal port number provided %s. Please provide a valid port number.", proxyPort));
+      }
+      proxyProperties.put(BigQueryJdbcUrlUtility.PROXY_PORT_PROPERTY_NAME, proxyPort);
+    }
+    String proxyUid = ds.getProxyUid();
+    if (proxyUid != null) {
+      proxyProperties.put(BigQueryJdbcUrlUtility.PROXY_USER_ID_PROPERTY_NAME, proxyUid);
+    }
+    String proxyPwd = ds.getProxyPwd();
+    if (proxyPwd != null) {
+      proxyProperties.put(BigQueryJdbcUrlUtility.PROXY_PASSWORD_PROPERTY_NAME, proxyPwd);
+    }
+
+    boolean isMissingProxyHostOrPortWhenProxySet =
+        (proxyHost == null && proxyPort != null) || (proxyHost != null && proxyPort == null);
+    if (isMissingProxyHostOrPortWhenProxySet) {
+      throw new IllegalArgumentException(
+          "Both ProxyHost and ProxyPort parameters need to be specified. No defaulting behavior"
+              + " occurs.");
+    }
+    boolean isMissingProxyUidOrPwdWhenAuthSet =
+        (proxyUid == null && proxyPwd != null) || (proxyUid != null && proxyPwd == null);
+    if (isMissingProxyUidOrPwdWhenAuthSet) {
+      throw new IllegalArgumentException(
+          "Both ProxyUid and ProxyPwd parameters need to be specified for authentication.");
+    }
+    boolean isProxyAuthSetWithoutProxySettings = proxyUid != null && proxyHost == null;
+    if (isProxyAuthSetWithoutProxySettings) {
+      throw new IllegalArgumentException(
+          "Proxy authentication provided via connection string with no proxy host or port set.");
+    }
+    return proxyProperties;
+  }
+
   static Map<String, String> parseProxyProperties(String URL, String callerClassName) {
     LOG.finest("++enter++\t" + callerClassName);
     Map<String, String> proxyProperties = new HashMap<>();

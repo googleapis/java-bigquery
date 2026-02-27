@@ -614,7 +614,9 @@ public class DataSource implements javax.sql.DataSource {
   }
 
   public String getProjectId() {
-    return projectId;
+    return projectId != null
+        ? projectId
+        : com.google.cloud.bigquery.BigQueryOptions.getDefaultProjectId();
   }
 
   public void setProjectId(String projectId) {
@@ -809,8 +811,8 @@ public class DataSource implements javax.sql.DataSource {
     this.proxyPwd = proxyPwd;
   }
 
-  public int getOAuthType() {
-    return oAuthType;
+  public Integer getOAuthType() {
+    return oAuthType != null ? oAuthType : BigQueryJdbcUrlUtility.DEFAULT_OAUTH_TYPE_VALUE;
   }
 
   public void setOAuthType(Integer oAuthType) {
@@ -936,7 +938,9 @@ public class DataSource implements javax.sql.DataSource {
   }
 
   public Boolean getEnableWriteAPI() {
-    return enableWriteAPI;
+    return enableWriteAPI != null
+        ? enableWriteAPI
+        : BigQueryJdbcUrlUtility.DEFAULT_ENABLE_WRITE_API_VALUE;
   }
 
   public void setEnableWriteAPI(Boolean enableWriteAPI) {
@@ -952,7 +956,9 @@ public class DataSource implements javax.sql.DataSource {
   }
 
   public Boolean getFilterTablesOnDefaultDataset() {
-    return filterTablesOnDefaultDataset;
+    return filterTablesOnDefaultDataset != null
+        ? filterTablesOnDefaultDataset
+        : BigQueryJdbcUrlUtility.DEFAULT_FILTER_TABLES_ON_DEFAULT_DATASET_VALUE;
   }
 
   public void setFilterTablesOnDefaultDataset(Boolean filterTablesOnDefaultDataset) {
@@ -960,7 +966,9 @@ public class DataSource implements javax.sql.DataSource {
   }
 
   public Integer getRequestGoogleDriveScope() {
-    return requestGoogleDriveScope;
+    return requestGoogleDriveScope != null
+        ? requestGoogleDriveScope
+        : BigQueryJdbcUrlUtility.DEFAULT_REQUEST_GOOGLE_DRIVE_SCOPE_VALUE;
   }
 
   public void setRequestGoogleDriveScope(Integer requestGoogleDriveScope) {
@@ -968,7 +976,9 @@ public class DataSource implements javax.sql.DataSource {
   }
 
   public Integer getMetadataFetchThreadCount() {
-    return metadataFetchThreadCount;
+    return metadataFetchThreadCount != null
+        ? metadataFetchThreadCount
+        : BigQueryJdbcUrlUtility.DEFAULT_METADATA_FETCH_THREAD_COUNT_VALUE;
   }
 
   public void setMetadataFetchThreadCount(Integer metadataFetchThreadCount) {
@@ -1062,7 +1072,9 @@ public class DataSource implements javax.sql.DataSource {
   }
 
   public Long getMaximumBytesBilled() {
-    return maximumBytesBilled;
+    return maximumBytesBilled != null
+        ? maximumBytesBilled
+        : BigQueryJdbcUrlUtility.DEFAULT_MAX_BYTES_BILLED_VALUE;
   }
 
   public void setMaximumBytesBilled(Long maximumBytesBilled) {
@@ -1070,7 +1082,9 @@ public class DataSource implements javax.sql.DataSource {
   }
 
   public Integer getSwaActivationRowCount() {
-    return swaActivationRowCount;
+    return swaActivationRowCount != null
+        ? swaActivationRowCount
+        : BigQueryJdbcUrlUtility.DEFAULT_SWA_ACTIVATION_ROW_COUNT_VALUE;
   }
 
   public void setSwaActivationRowCount(Integer swaActivationRowCount) {
@@ -1078,7 +1092,9 @@ public class DataSource implements javax.sql.DataSource {
   }
 
   public Integer getSwaAppendRowCount() {
-    return swaAppendRowCount;
+    return swaAppendRowCount != null
+        ? swaAppendRowCount
+        : BigQueryJdbcUrlUtility.DEFAULT_SWA_APPEND_ROW_COUNT_VALUE;
   }
 
   public void setSwaAppendRowCount(Integer swaAppendRowCount) {

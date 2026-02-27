@@ -22,6 +22,9 @@ import com.google.cloud.bigquery.exception.BigQueryJdbcRuntimeException;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.UrlEscapers;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -770,6 +773,36 @@ final class BigQueryJdbcUrlUtility {
 
   static String parsePartnerTokenProperty(String url, String callerClassName) {
     return parseUriProperty(url, PARTNER_TOKEN_PROPERTY_NAME);
+  }
+
+  static Map<String, String> parseOverrideProperties(String url, String callerClassName) {
+    LOG.finest("++enter++\t" + callerClassName);
+    Map<String, String> overrideProps = new HashMap<>();
+    Pattern pattern =
+        Pattern.compile(
+            String.format(
+                "(?is)(%s|%s)=([^;]+)",
+                ENDPOINT_OVERRIDES_PROPERTY_NAME, PRIVATE_SERVICE_CONNECT_PROPERTY_NAME));
+    Matcher matcher = pattern.matcher(url);
+    String overridePropertiesString;
+    if (matcher.find() && matcher.groupCount() >= 1) {
+      try {
+        overridePropertiesString =
+            URLDecoder.decode(matcher.group(2), StandardCharsets.UTF_8.name());
+      } catch (UnsupportedEncodingException e) {
+        throw new BigQueryJdbcRuntimeException(e);
+      }
+    } else {
+      return overrideProps;
+    }
+    for (String property : OVERRIDE_PROPERTIES) {
+      Pattern propertyPattern = Pattern.compile(String.format("(?i)%s=(.*?)(?:[,;]|$)", property));
+      Matcher propertyMatcher = propertyPattern.matcher(overridePropertiesString);
+      if (propertyMatcher.find() && propertyMatcher.groupCount() >= 1) {
+        overrideProps.put(property, propertyMatcher.group(1));
+      }
+    }
+    return overrideProps;
   }
 
   public static Level parseLogLevel(String logLevelString) {

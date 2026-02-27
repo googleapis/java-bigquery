@@ -90,8 +90,8 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
             + "EndpointOverrides=OAuth2=brokenuri{};";
     Map<String, String> oauthProperties =
         BigQueryJdbcOAuthUtility.parseOAuthProperties(connectionString, null);
-    Map<String, String> overrideProperties = new HashMap<>();
-    overrideProperties.put(BigQueryJdbcUrlUtility.OAUTH2_TOKEN_URI_PROPERTY_NAME, "brokenuri{}");
+    Map<String, String> overrideProperties =
+        BigQueryJdbcUrlUtility.parseOverrideProperties(connectionString, null);
 
     try {
       BigQueryJdbcOAuthUtility.getCredentials(oauthProperties, overrideProperties, null);
@@ -234,9 +234,8 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
               + ";";
       Map<String, String> authProperties =
           BigQueryJdbcOAuthUtility.parseOAuthProperties(connectionString, null);
-      Map<String, String> overrideProperties = new HashMap<>();
-      overrideProperties.put(
-          BigQueryJdbcUrlUtility.OAUTH2_TOKEN_URI_PROPERTY_NAME, overrideTokenSeverURI.toString());
+      Map<String, String> overrideProperties =
+          BigQueryJdbcUrlUtility.parseOverrideProperties(connectionString, null);
 
       UserAuthorizer userAuthorizer =
           BigQueryJdbcOAuthUtility.getUserAuthorizer(
@@ -275,10 +274,8 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
 
       Map<String, String> authProperties =
           BigQueryJdbcOAuthUtility.parseOAuthProperties(connectionString, null);
-      Map<String, String> overrideProperties = new HashMap<>();
-      overrideProperties.put(
-          BigQueryJdbcUrlUtility.OAUTH2_TOKEN_URI_PROPERTY_NAME,
-          "https://oauth2-private.p.googleapis.com/token");
+      Map<String, String> overrideProperties =
+          BigQueryJdbcUrlUtility.parseOverrideProperties(connectionString, null);
 
       UserCredentials userCredentials =
           BigQueryJdbcOAuthUtility.getPreGeneratedRefreshTokenCredentials(
