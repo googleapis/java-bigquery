@@ -124,6 +124,7 @@ samples)
         pushd ${SAMPLES_DIR}
         mvn -B \
           -ntp \
+          -Dprotobuf.version=4.29.4 \
           -DtrimStackTrace=false \
           -Dclirr.skip=true \
           -Denforcer.skip=true \
