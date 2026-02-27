@@ -160,8 +160,7 @@ public class BigQueryJdbcUrlUtilityTest {
         "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
             + "PartnerToken=(GPN:partner_company; dev);ProjectId=MyBigQueryProject;";
     String expected = " (GPN:partner_company; dev)";
-    String result =
-        BigQueryJdbcUrlUtility.parsePartnerTokenProperty(url, "testParsePartnerTokenProperty");
+    String result = BigQueryJdbcUrlUtility.parseUriProperty(url, "PartnerToken");
     assertThat(result).isEqualTo(expected);
 
     // Case with only partner name
@@ -169,24 +168,24 @@ public class BigQueryJdbcUrlUtilityTest {
         "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
             + "PartnerToken=(GPN:another_partner);ProjectId=MyBigQueryProject;";
     expected = " (GPN:another_partner)";
-    result = BigQueryJdbcUrlUtility.parsePartnerTokenProperty(url, "testParsePartnerTokenProperty");
+    result = BigQueryJdbcUrlUtility.parseUriProperty(url, "PartnerToken");
     assertThat(result).isEqualTo(expected);
 
     // Case when PartnerToken property is not present
     url =
         "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
             + "ProjectId=MyBigQueryProject;";
-    result = BigQueryJdbcUrlUtility.parsePartnerTokenProperty(url, "testParsePartnerTokenProperty");
+    result = BigQueryJdbcUrlUtility.parseUriProperty(url, "PartnerToken");
     assertNull(result);
 
     // Case when PartnerToken property is present but empty
     url = "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;PartnerToken=();";
-    result = BigQueryJdbcUrlUtility.parsePartnerTokenProperty(url, "testParsePartnerTokenProperty");
+    result = BigQueryJdbcUrlUtility.parseUriProperty(url, "PartnerToken");
     assertNull(result);
 
     // Case when PartnerToken property is present but without partner name
     url = "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;PartnerToken=(env);";
-    result = BigQueryJdbcUrlUtility.parsePartnerTokenProperty(url, "testParsePartnerTokenProperty");
+    result = BigQueryJdbcUrlUtility.parseUriProperty(url, "PartnerToken");
     assertNull(result);
 
     // Case with extra spaces around the values
@@ -194,7 +193,7 @@ public class BigQueryJdbcUrlUtilityTest {
         "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
             + "PartnerToken= ( GPN: partner_name ; test_env ) ;";
     expected = " (GPN: partner_name ; test_env)";
-    result = BigQueryJdbcUrlUtility.parsePartnerTokenProperty(url, "testParsePartnerTokenProperty");
+    result = BigQueryJdbcUrlUtility.parseUriProperty(url, "PartnerToken");
     assertThat(result).isEqualTo(expected);
   }
 

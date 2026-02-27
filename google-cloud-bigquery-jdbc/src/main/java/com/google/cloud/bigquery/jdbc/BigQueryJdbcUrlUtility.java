@@ -771,10 +771,6 @@ final class BigQueryJdbcUrlUtility {
     }
   }
 
-  static String parsePartnerTokenProperty(String url, String callerClassName) {
-    return parseUriProperty(url, PARTNER_TOKEN_PROPERTY_NAME);
-  }
-
   public static Level parseLogLevel(String logLevelString) {
     int logLevel = logLevelString != null ? Integer.parseInt(logLevelString) : DEFAULT_LOG_LEVEL;
     switch (logLevel) {

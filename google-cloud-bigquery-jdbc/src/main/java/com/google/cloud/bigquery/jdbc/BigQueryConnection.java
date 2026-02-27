@@ -73,7 +73,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
   String connectionClassName = this.toString();
   private static final String DEFAULT_JDBC_TOKEN_VALUE = "Google-BigQuery-JDBC-Driver";
   private static final String DEFAULT_VERSION = "0.0.0";
-  private static HeaderProvider HEADER_PROVIDER;
+  private HeaderProvider headerProvider;
   BigQueryReadClient bigQueryReadClient = null;
   BigQueryWriteClient bigQueryWriteClient = null;
   BigQuery bigQuery;
@@ -136,6 +136,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
   String requestReason;
   Long connectionPoolSize;
   Long listenerPoolSize;
+  String partnerToken;
 
   BigQueryConnection(String url) throws IOException {
     this.connectionUrl = url;
@@ -236,8 +237,9 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     this.requestReason = ds.getRequestReason();
     this.connectionPoolSize = ds.getConnectionPoolSize();
     this.listenerPoolSize = ds.getListenerPoolSize();
+    this.partnerToken = ds.getPartnerToken();
 
-    HEADER_PROVIDER = createHeaderProvider();
+    this.headerProvider = createHeaderProvider();
     this.bigQuery = getBigQueryConnection();
   }
 
@@ -259,19 +261,11 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     return version != null ? version : DEFAULT_VERSION;
   }
 
-  private String buildPartnerToken(String url) {
-    String partnerTokenString =
-        BigQueryJdbcUrlUtility.parsePartnerTokenProperty(url, this.connectionClassName);
-    if (partnerTokenString == null || partnerTokenString.isEmpty()) {
-      return "";
-    }
-    return partnerTokenString;
-  }
-
   HeaderProvider createHeaderProvider() {
-    String partnerToken = buildPartnerToken(this.connectionUrl);
-    String headerToken =
-        DEFAULT_JDBC_TOKEN_VALUE + "/" + getLibraryVersion(this.getClass()) + partnerToken;
+    String headerToken = DEFAULT_JDBC_TOKEN_VALUE + "/" + getLibraryVersion(this.getClass());
+    if (this.partnerToken != null && !this.partnerToken.isEmpty()) {
+      headerToken += this.partnerToken;
+    }
     Map<String, String> headers = new java.util.HashMap<>();
     headers.put("user-agent", headerToken);
     if (this.requestReason != null) {
@@ -937,14 +931,14 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
       bigQueryOptions.setTransportOptions(this.httpTransportOptions);
     }
 
-    BigQueryOptions options = bigQueryOptions.setHeaderProvider(HEADER_PROVIDER).build();
+    BigQueryOptions options = bigQueryOptions.setHeaderProvider(this.headerProvider).build();
     options.setQueryPreviewEnabled(String.valueOf(this.useStatelessQueryMode));
     return options.getService();
   }
 
   private BigQueryReadClient getBigQueryReadClientConnection() throws IOException {
     BigQueryReadSettings.Builder bigQueryReadSettings =
-        BigQueryReadSettings.newBuilder().setHeaderProvider(HEADER_PROVIDER);
+        BigQueryReadSettings.newBuilder().setHeaderProvider(this.headerProvider);
     if (getRetrySettings() != null) {
       bigQueryReadSettings.createReadSessionSettings().setRetrySettings(getRetrySettings());
     }
@@ -986,7 +980,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
 
   private BigQueryWriteClient getBigQueryWriteClientConnection() throws IOException {
     BigQueryWriteSettings.Builder bigQueryWriteSettings =
-        BigQueryWriteSettings.newBuilder().setHeaderProvider(HEADER_PROVIDER);
+        BigQueryWriteSettings.newBuilder().setHeaderProvider(this.headerProvider);
     if (getRetrySettings() != null) {
       bigQueryWriteSettings.createWriteStreamSettings().setRetrySettings(getRetrySettings());
     }
