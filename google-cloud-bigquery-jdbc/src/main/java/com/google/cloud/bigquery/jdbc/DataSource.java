@@ -1102,7 +1102,9 @@ public class DataSource implements javax.sql.DataSource {
   }
 
   public String getOAuthP12Password() {
-    return oAuthP12Password;
+    return oAuthP12Password != null
+        ? oAuthP12Password
+        : BigQueryJdbcUrlUtility.DEFAULT_OAUTH_P12_PASSWORD_VALUE;
   }
 
   public void setOAuthP12Password(String oAuthP12Password) {

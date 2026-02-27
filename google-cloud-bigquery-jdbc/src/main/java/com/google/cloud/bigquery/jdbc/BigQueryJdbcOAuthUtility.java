@@ -129,10 +129,7 @@ final class BigQueryJdbcOAuthUtility {
         String serviceAccountEmail = ds.getOAuthServiceAcctEmail();
         String serviceAccountPK = ds.getOAuthPvtKey();
         String serviceAccountPrivateKeyPath = ds.getOAuthPvtKeyPath();
-        String p12Password =
-            ds.getOAuthP12Password() != null
-                ? ds.getOAuthP12Password()
-                : BigQueryJdbcUrlUtility.DEFAULT_OAUTH_P12_PASSWORD_VALUE;
+        String p12Password = ds.getOAuthP12Password();
 
         oauthProperties.put(
             BigQueryJdbcUrlUtility.OAUTH_SA_EMAIL_PROPERTY_NAME, serviceAccountEmail);
@@ -150,10 +147,7 @@ final class BigQueryJdbcOAuthUtility {
             BigQueryJdbcUrlUtility.OAUTH_CLIENT_ID_PROPERTY_NAME, ds.getOAuthClientId());
         oauthProperties.put(
             BigQueryJdbcUrlUtility.OAUTH_CLIENT_SECRET_PROPERTY_NAME, ds.getOAuthClientSecret());
-        int reqGoogleDriveScope =
-            ds.getRequestGoogleDriveScope() != null
-                ? ds.getRequestGoogleDriveScope()
-                : BigQueryJdbcUrlUtility.DEFAULT_REQUEST_GOOGLE_DRIVE_SCOPE_VALUE;
+        int reqGoogleDriveScope = ds.getRequestGoogleDriveScope();
         oauthProperties.put(
             BigQueryJdbcUrlUtility.REQUEST_GOOGLE_DRIVE_SCOPE_PROPERTY_NAME,
             String.valueOf(reqGoogleDriveScope));
@@ -234,14 +228,10 @@ final class BigQueryJdbcOAuthUtility {
         || authType == AuthType.PRE_GENERATED_TOKEN) {
       oauthProperties.put(
           BigQueryJdbcUrlUtility.OAUTH_SA_IMPERSONATION_EMAIL_PROPERTY_NAME,
-          ds.getOAuthSAImpersonationEmail() != null
-              ? ds.getOAuthSAImpersonationEmail()
-              : BigQueryJdbcUrlUtility.DEFAULT_OAUTH_SA_IMPERSONATION_EMAIL_VALUE);
+          ds.getOAuthSAImpersonationEmail());
       oauthProperties.put(
           BigQueryJdbcUrlUtility.OAUTH_SA_IMPERSONATION_CHAIN_PROPERTY_NAME,
-          ds.getOAuthSAImpersonationChain() != null
-              ? ds.getOAuthSAImpersonationChain()
-              : BigQueryJdbcUrlUtility.DEFAULT_OAUTH_SA_IMPERSONATION_CHAIN_VALUE);
+          ds.getOAuthSAImpersonationChain());
       oauthProperties.put(
           BigQueryJdbcUrlUtility.OAUTH_SA_IMPERSONATION_SCOPES_PROPERTY_NAME,
           ds.getOAuthSAImpersonationScopes() != null
