@@ -27,9 +27,6 @@ import com.google.cloud.bigquery.storage.v1.BigQueryWriteClient;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.Properties;
 import org.junit.Before;
 import org.junit.Test;
@@ -243,9 +240,9 @@ public class BigQueryConnectionTest {
             + "OAuthClientSecret=redactedToken;"
             + "AdditionalProjects=projA,projB";
     try (BigQueryConnection conn1 = new BigQueryConnection(url1)) {
-      List<String> additionalProjects1 = conn1.getAdditionalProjects();
+      String additionalProjects1 = conn1.getAdditionalProjects();
       assertNotNull(additionalProjects1);
-      assertEquals(Arrays.asList("projA", "projB"), additionalProjects1);
+      assertEquals("projA,projB", additionalProjects1);
     } catch (SQLException | IOException e) {
       throw new BigQueryJdbcException(e);
     }
@@ -256,9 +253,9 @@ public class BigQueryConnectionTest {
             + "OAuthClientSecret=redactedToken;"
             + "AdditionalProjects=projX";
     try (BigQueryConnection conn2 = new BigQueryConnection(url2)) {
-      List<String> additionalProjects2 = conn2.getAdditionalProjects();
+      String additionalProjects2 = conn2.getAdditionalProjects();
       assertNotNull(additionalProjects2);
-      assertEquals(Collections.singletonList("projX"), additionalProjects2);
+      assertEquals("projX", additionalProjects2);
     } catch (SQLException | IOException e) {
       throw new BigQueryJdbcException(e);
     }

@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.function.BiConsumer;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * BigQuery JDBC implementation of {@link javax.sql.DataSource}
@@ -332,6 +334,29 @@ public class DataSource implements javax.sql.DataSource {
       }
     }
     return dataSource;
+  }
+
+  public Map<String, String> getOverrideProperties() {
+    String overridePropertiesString = null;
+    if (endpointOverrides != null && !endpointOverrides.isEmpty()) {
+      overridePropertiesString = endpointOverrides;
+    } else if (privateServiceConnect != null && !privateServiceConnect.isEmpty()) {
+      overridePropertiesString = privateServiceConnect;
+    }
+
+    Map<String, String> overrideProps = new java.util.HashMap<>();
+    if (overridePropertiesString == null || overridePropertiesString.isEmpty()) {
+      return overrideProps;
+    }
+
+    for (String property : BigQueryJdbcUrlUtility.OVERRIDE_PROPERTIES) {
+      Pattern propertyPattern = Pattern.compile(String.format("(?i)%s=(.*?)(?:[,;]|$)", property));
+      Matcher propertyMatcher = propertyPattern.matcher(overridePropertiesString);
+      if (propertyMatcher.find() && propertyMatcher.groupCount() >= 1) {
+        overrideProps.put(property, propertyMatcher.group(1));
+      }
+    }
+    return overrideProps;
   }
 
   /** An implementation of DataSource must include a public no-arg constructor. */
@@ -931,6 +956,21 @@ public class DataSource implements javax.sql.DataSource {
     return jobCreationMode != null
         ? jobCreationMode
         : (Integer) BigQueryJdbcUrlUtility.DEFAULT_JOB_CREATION_MODE;
+  }
+
+  public Boolean getUseStatelessQueryMode() {
+    Integer jobCreationModeVal = getJobCreationMode();
+    if (jobCreationModeVal == 2) {
+      return true;
+    } else if (jobCreationModeVal == 1) {
+      return false;
+    } else {
+      throw new IllegalArgumentException(
+          String.format(
+              "Invalid value for %s. Use 1 for JOB_CREATION_REQUIRED and 2 for"
+                  + " JOB_CREATION_OPTIONAL.",
+              BigQueryJdbcUrlUtility.JOB_CREATION_MODE_PROPERTY_NAME));
+    }
   }
 
   public void setJobCreationMode(Integer jobCreationMode) {

@@ -91,7 +91,7 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
     Map<String, String> oauthProperties =
         BigQueryJdbcOAuthUtility.parseOAuthProperties(connectionString, null);
     Map<String, String> overrideProperties =
-        BigQueryJdbcUrlUtility.parseOverrideProperties(connectionString, null);
+        DataSource.fromUrl(connectionString).getOverrideProperties();
 
     try {
       BigQueryJdbcOAuthUtility.getCredentials(oauthProperties, overrideProperties, null);
@@ -235,7 +235,7 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
       Map<String, String> authProperties =
           BigQueryJdbcOAuthUtility.parseOAuthProperties(connectionString, null);
       Map<String, String> overrideProperties =
-          BigQueryJdbcUrlUtility.parseOverrideProperties(connectionString, null);
+          DataSource.fromUrl(connectionString).getOverrideProperties();
 
       UserAuthorizer userAuthorizer =
           BigQueryJdbcOAuthUtility.getUserAuthorizer(
@@ -275,7 +275,7 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
       Map<String, String> authProperties =
           BigQueryJdbcOAuthUtility.parseOAuthProperties(connectionString, null);
       Map<String, String> overrideProperties =
-          BigQueryJdbcUrlUtility.parseOverrideProperties(connectionString, null);
+          DataSource.fromUrl(connectionString).getOverrideProperties();
 
       UserCredentials userCredentials =
           BigQueryJdbcOAuthUtility.getPreGeneratedRefreshTokenCredentials(

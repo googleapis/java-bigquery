@@ -40,7 +40,6 @@ import com.google.cloud.bigquery.storage.v1.BigQueryReadSettings;
 import com.google.cloud.bigquery.storage.v1.BigQueryWriteClient;
 import com.google.cloud.bigquery.storage.v1.BigQueryWriteSettings;
 import com.google.cloud.http.HttpTransportOptions;
-import com.google.common.base.Splitter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.CallableStatement;
@@ -53,7 +52,6 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Map;
@@ -127,7 +125,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
   int writeAPIActivationRowCount;
   int writeAPIAppendRowCount;
   int requestGoogleDriveScope;
-  List<String> additionalProjects;
+  String additionalProjects;
   boolean filterTablesOnDefaultDataset;
   String sslTrustStorePath;
   String sslTrustStorePassword;
@@ -162,9 +160,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     this.catalog = ds.getProjectId();
     this.universeDomain = ds.getUniverseDomain();
 
-    this.overrideProperties =
-        BigQueryJdbcUrlUtility.parseOverrideProperties(
-            this.connectionUrl, this.connectionClassName);
+    this.overrideProperties = ds.getOverrideProperties();
     if (this.universeDomain != null) {
       this.overrideProperties.put(
           BigQueryJdbcUrlUtility.UNIVERSE_DOMAIN_OVERRIDE_PROPERTY_NAME, this.universeDomain);
@@ -192,18 +188,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     this.highThroughputMinTableSize = ds.getHighThroughputMinTableSize();
     this.highThroughputActivationRatio = ds.getHighThroughputActivationRatio();
     this.useQueryCache = ds.getUseQueryCache();
-    Integer jobCreationMode = ds.getJobCreationMode();
-    if (jobCreationMode == 2) {
-      this.useStatelessQueryMode = true;
-    } else if (jobCreationMode == 1) {
-      this.useStatelessQueryMode = false;
-    } else {
-      throw new NumberFormatException(
-          String.format(
-              "Invalid value for %s. Use 1 for JOB_CREATION_REQUIRED and 2 for"
-                  + " JOB_CREATION_OPTIONAL.",
-              BigQueryJdbcUrlUtility.JOB_CREATION_MODE_PROPERTY_NAME));
-    }
+    this.useStatelessQueryMode = ds.getUseStatelessQueryMode();
 
     this.queryDialect = ds.getQueryDialect();
     this.allowLargeResults = ds.getAllowLargeResults();
@@ -243,11 +228,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     this.writeAPIActivationRowCount = ds.getSwaActivationRowCount();
     this.writeAPIAppendRowCount = ds.getSwaAppendRowCount();
 
-    String additionalProjectsStr = ds.getAdditionalProjects();
-    this.additionalProjects =
-        (additionalProjectsStr == null || additionalProjectsStr.isEmpty())
-            ? Collections.emptyList()
-            : Splitter.on(',').trimResults().omitEmptyStrings().splitToList(additionalProjectsStr);
+    this.additionalProjects = ds.getAdditionalProjects();
 
     this.filterTablesOnDefaultDataset = ds.getFilterTablesOnDefaultDataset();
     this.requestGoogleDriveScope = ds.getRequestGoogleDriveScope();
@@ -597,7 +578,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     return highThroughputMinTableSize;
   }
 
-  List<String> getAdditionalProjects() {
+  String getAdditionalProjects() {
     return this.additionalProjects;
   }
 

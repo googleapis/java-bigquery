@@ -108,56 +108,7 @@ final class BigQueryJdbcProxyUtility {
   }
 
   static Map<String, String> parseProxyProperties(String URL, String callerClassName) {
-    LOG.finest("++enter++\t" + callerClassName);
-    Map<String, String> proxyProperties = new HashMap<>();
-    String proxyHost =
-        BigQueryJdbcUrlUtility.parseUriProperty(
-            URL, BigQueryJdbcUrlUtility.PROXY_HOST_PROPERTY_NAME);
-    if (proxyHost != null) {
-      proxyProperties.put(BigQueryJdbcUrlUtility.PROXY_HOST_PROPERTY_NAME, proxyHost);
-    }
-    String proxyPort =
-        BigQueryJdbcUrlUtility.parseUriProperty(
-            URL, BigQueryJdbcUrlUtility.PROXY_PORT_PROPERTY_NAME);
-    if (proxyPort != null) {
-      if (!Pattern.compile(validPortRegex).matcher(proxyPort).find()) {
-        throw new IllegalArgumentException(
-            "Illegal port number provided %s. Please provide a valid port number.");
-      }
-      proxyProperties.put(BigQueryJdbcUrlUtility.PROXY_PORT_PROPERTY_NAME, proxyPort);
-    }
-    String proxyUid =
-        BigQueryJdbcUrlUtility.parseUriProperty(
-            URL, BigQueryJdbcUrlUtility.PROXY_USER_ID_PROPERTY_NAME);
-    if (proxyUid != null) {
-      proxyProperties.put(BigQueryJdbcUrlUtility.PROXY_USER_ID_PROPERTY_NAME, proxyUid);
-    }
-    String proxyPwd =
-        BigQueryJdbcUrlUtility.parseUriProperty(
-            URL, BigQueryJdbcUrlUtility.PROXY_PASSWORD_PROPERTY_NAME);
-    if (proxyPwd != null) {
-      proxyProperties.put(BigQueryJdbcUrlUtility.PROXY_PASSWORD_PROPERTY_NAME, proxyPwd);
-    }
-
-    boolean isMissingProxyHostOrPortWhenProxySet =
-        (proxyHost == null && proxyPort != null) || (proxyHost != null && proxyPort == null);
-    if (isMissingProxyHostOrPortWhenProxySet) {
-      throw new IllegalArgumentException(
-          "Both ProxyHost and ProxyPort parameters need to be specified. No defaulting behavior"
-              + " occurs.");
-    }
-    boolean isMissingProxyUidOrPwdWhenAuthSet =
-        (proxyUid == null && proxyPwd != null) || (proxyUid != null && proxyPwd == null);
-    if (isMissingProxyUidOrPwdWhenAuthSet) {
-      throw new IllegalArgumentException(
-          "Both ProxyUid and ProxyPwd parameters need to be specified for authentication.");
-    }
-    boolean isProxyAuthSetWithoutProxySettings = proxyUid != null && proxyHost == null;
-    if (isProxyAuthSetWithoutProxySettings) {
-      throw new IllegalArgumentException(
-          "Proxy authentication provided via connection string with no proxy host or port set.");
-    }
-    return proxyProperties;
+    return parseProxyProperties(DataSource.fromUrl(URL), callerClassName);
   }
 
   static HttpTransportOptions getHttpTransportOptions(
