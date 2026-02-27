@@ -40,6 +40,7 @@ public class PooledConnectionDataSourceTest {
     BigQueryConnection bqConnection = mock(BigQueryConnection.class);
     doReturn(connectionUrl).when(bqConnection).getConnectionUrl();
     doReturn(LISTENER_POOL_SIZE).when(bqConnection).getListenerPoolSize();
+    doReturn(CONNECTION_POOL_SIZE).when(bqConnection).getConnectionPoolSize();
 
     PooledConnectionDataSource pooledDataSource = new PooledConnectionDataSource();
     pooledDataSource.setConnection(bqConnection);
