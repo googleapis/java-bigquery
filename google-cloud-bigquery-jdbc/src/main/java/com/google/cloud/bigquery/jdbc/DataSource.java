@@ -1182,7 +1182,9 @@ public class DataSource implements javax.sql.DataSource {
   }
 
   public String getByoidSubjectTokenType() {
-    return byoidSubjectTokenType;
+    return byoidSubjectTokenType != null
+        ? byoidSubjectTokenType
+        : BigQueryJdbcUrlUtility.DEFAULT_BYOID_SUBJECT_TOKEN_TYPE_VALUE;
   }
 
   public void setByoidSubjectTokenType(String byoidSubjectTokenType) {
@@ -1190,7 +1192,9 @@ public class DataSource implements javax.sql.DataSource {
   }
 
   public String getByoidTokenUri() {
-    return byoidTokenUri;
+    return byoidTokenUri != null
+        ? byoidTokenUri
+        : BigQueryJdbcUrlUtility.DEFAULT_BYOID_TOKEN_URI_VALUE;
   }
 
   public void setByoidTokenUri(String byoidTokenUri) {

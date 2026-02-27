@@ -40,6 +40,7 @@ import com.google.cloud.bigquery.storage.v1.BigQueryReadSettings;
 import com.google.cloud.bigquery.storage.v1.BigQueryWriteClient;
 import com.google.cloud.bigquery.storage.v1.BigQueryWriteSettings;
 import com.google.cloud.http.HttpTransportOptions;
+import com.google.common.base.Splitter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.CallableStatement;
@@ -52,6 +53,7 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Map;
@@ -244,8 +246,8 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     String additionalProjectsStr = ds.getAdditionalProjects();
     this.additionalProjects =
         (additionalProjectsStr == null || additionalProjectsStr.isEmpty())
-            ? java.util.Collections.emptyList()
-            : java.util.Arrays.asList(additionalProjectsStr.split(","));
+            ? Collections.emptyList()
+            : Splitter.on(',').trimResults().omitEmptyStrings().splitToList(additionalProjectsStr);
 
     this.filterTablesOnDefaultDataset = ds.getFilterTablesOnDefaultDataset();
     this.requestGoogleDriveScope = ds.getRequestGoogleDriveScope();

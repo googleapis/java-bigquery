@@ -134,7 +134,10 @@ final class BigQueryJdbcUrlUtility {
   static final String BYOID_POOL_USER_PROJECT_PROPERTY_NAME = "BYOID_PoolUserProject";
   static final String BYOID_SA_IMPERSONATION_URI_PROPERTY_NAME = "BYOID_SA_Impersonation_Uri";
   static final String BYOID_SUBJECT_TOKEN_TYPE_PROPERTY_NAME = "BYOID_SubjectTokenType";
+  static final String DEFAULT_BYOID_SUBJECT_TOKEN_TYPE_VALUE =
+      "urn:ietf:params:oauth:tokentype:id_token";
   static final String BYOID_TOKEN_URI_PROPERTY_NAME = "BYOID_TokenUri";
+  static final String DEFAULT_BYOID_TOKEN_URI_VALUE = "https://sts.googleapis.com/v1/token";
   static final String PARTNER_TOKEN_PROPERTY_NAME = "PartnerToken";
   private static final Pattern PARTNER_TOKEN_PATTERN =
       Pattern.compile(
@@ -513,7 +516,7 @@ final class BigQueryJdbcUrlUtility {
                               + " Corresponds\n"
                               + " to the subject_token_type property in the external account"
                               + " configuration file.")
-                      .setDefaultValue("urn:ietf:params:oauth:tokentype:id_token")
+                      .setDefaultValue(DEFAULT_BYOID_SUBJECT_TOKEN_TYPE_VALUE)
                       .build(),
                   BigQueryConnectionProperty.newBuilder()
                       .setName(BYOID_TOKEN_URI_PROPERTY_NAME)
@@ -523,7 +526,7 @@ final class BigQueryJdbcUrlUtility {
                               + " tokens. Corresponds to the token_url property in the external"
                               + " account\n"
                               + " configuration file.")
-                      .setDefaultValue("https://sts.googleapis.com/v1/token")
+                      .setDefaultValue(DEFAULT_BYOID_TOKEN_URI_VALUE)
                       .build(),
                   BigQueryConnectionProperty.newBuilder()
                       .setName(PARTNER_TOKEN_PROPERTY_NAME)
@@ -839,7 +842,7 @@ final class BigQueryJdbcUrlUtility {
     }
     Map<String, String> propertiesMap = new HashMap<>();
     for (String keyValuePair : Splitter.on(",").split(propertiesString)) {
-      List<String> parts = Splitter.on("=").splitToList(keyValuePair);
+      List<String> parts = Splitter.on("=").limit(2).splitToList(keyValuePair);
       if (parts.size() == 2) {
         propertiesMap.put(parts.get(0), parts.get(1));
       } else {
