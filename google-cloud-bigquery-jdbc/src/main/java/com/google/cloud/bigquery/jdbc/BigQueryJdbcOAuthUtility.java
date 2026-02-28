@@ -331,11 +331,11 @@ final class BigQueryJdbcOAuthUtility {
     }
   }
 
-  private static boolean isJson(String value) {
+  private static boolean isJson(byte[] value) {
     try {
       // This is done this way to ensure strict Json parsing
       // https://github.com/google/gson/issues/1208#issuecomment-2120764686
-      InputStream stream = new ByteArrayInputStream(value.getBytes());
+      InputStream stream = new ByteArrayInputStream(value);
       InputStreamReader reader = new InputStreamReader(stream);
       JsonReader jsonReader = new JsonReader(reader);
       jsonReader.setStrictness(Strictness.STRICT);
@@ -366,16 +366,18 @@ final class BigQueryJdbcOAuthUtility {
       final String keyPath = pvtKeyPath != null ? pvtKeyPath : pvtKey;
       PrivateKey key = null;
       InputStream stream = null;
-
+      byte[] keyBytes = pvtKey != null ? pvtKey.getBytes() : null;
+      
       if (isFileExists(keyPath)) {
-        key = privateKeyFromP12File(keyPath, p12Password);
-        if (key == null) {
-          stream = Files.newInputStream(Paths.get(keyPath));
-        }
-      } else if (isJson(pvtKey)) {
-        stream = new ByteArrayInputStream(pvtKey.getBytes());
+        keyBytes = Files.readAllBytes(Paths.get(keyPath));
+      }
+
+      if (isJson(keyBytes)) {
+        stream = new ByteArrayInputStream(keyBytes);
       } else if (pvtKey != null) {
         key = privateKeyFromPkcs8(pvtKey);
+      } else {
+        key = privateKeyFromP12Bytes(keyBytes, p12Password);
       }
 
       if (stream != null) {
@@ -703,9 +705,9 @@ final class BigQueryJdbcOAuthUtility {
         impersonationLifetimeInt);
   }
 
-  static PrivateKey privateKeyFromP12File(String privateKeyFile, String password) {
+  static PrivateKey privateKeyFromP12Bytes(byte[] privateKey, String password) {
     try {
-      InputStream stream = Files.newInputStream(Paths.get(privateKeyFile));
+      InputStream stream = new ByteArrayInputStream(privateKey);
       return SecurityUtils.loadPrivateKeyFromKeyStore(
           SecurityUtils.getPkcs12KeyStore(), stream, "notasecret", "privatekey", password);
     } catch (IOException | GeneralSecurityException e) {

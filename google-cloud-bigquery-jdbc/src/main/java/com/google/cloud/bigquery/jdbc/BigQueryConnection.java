@@ -32,6 +32,7 @@ import com.google.cloud.bigquery.DatasetId;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.QueryJobConfiguration.JobCreationMode;
 import com.google.cloud.bigquery.exception.BigQueryJdbcException;
 import com.google.cloud.bigquery.exception.BigQueryJdbcRuntimeException;
 import com.google.cloud.bigquery.exception.BigQueryJdbcSqlFeatureNotSupportedException;
@@ -159,10 +160,10 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     this.authProperties =
         BigQueryJdbcOAuthUtility.parseOAuthProperties(url, this.connectionClassName);
     this.catalog =
-        BigQueryJdbcUrlUtility.parseStringProperty(
+        BigQueryJdbcUrlUtility.parseStringPropertyLazyDefault(
             url,
             BigQueryJdbcUrlUtility.PROJECT_ID_PROPERTY_NAME,
-            BigQueryOptions.getDefaultProjectId(),
+            () -> BigQueryOptions.getDefaultProjectId(),
             this.connectionClassName);
     this.universeDomain =
         BigQueryJdbcUrlUtility.parseStringProperty(
@@ -1064,7 +1065,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     }
 
     BigQueryOptions options = bigQueryOptions.setHeaderProvider(HEADER_PROVIDER).build();
-    options.setQueryPreviewEnabled(String.valueOf(this.useStatelessQueryMode));
+    options.setDefaultJobCreationMode(this.useStatelessQueryMode ? JobCreationMode.JOB_CREATION_OPTIONAL : JobCreationMode.JOB_CREATION_REQUIRED);
     return options.getService();
   }
 

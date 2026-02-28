@@ -32,6 +32,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Supplier;
 import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
@@ -358,7 +359,7 @@ final class BigQueryJdbcUrlUtility {
                   BigQueryConnectionProperty.newBuilder()
                       .setName(PROJECT_ID_PROPERTY_NAME)
                       .setDescription("A globally unique identifier for your project.")
-                      .setDefaultValue(BigQueryOptions.getDefaultProjectId())
+                      .setLazyDefaultValue(() -> BigQueryOptions.getDefaultProjectId())
                       .build(),
                   BigQueryConnectionProperty.newBuilder()
                       .setName(LOG_PATH_PROPERTY_NAME)
@@ -788,6 +789,16 @@ final class BigQueryJdbcUrlUtility {
       return parsedValue;
     }
     return defaultValue;
+  }
+
+  static String parseStringPropertyLazyDefault(
+      String url, String propertyName, Supplier<String> defaultValueSupplier, String callerClassName) {
+    LOG.finest("++enter++\t" + callerClassName);
+    String parsedValue = BigQueryJdbcUrlUtility.parseUriProperty(url, propertyName);
+    if (parsedValue != null) {
+      return parsedValue;
+    }
+    return defaultValueSupplier.get();
   }
 
   static List<String> parseStringListProperty(

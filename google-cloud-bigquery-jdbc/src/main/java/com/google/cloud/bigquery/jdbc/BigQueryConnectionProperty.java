@@ -17,12 +17,14 @@
 package com.google.cloud.bigquery.jdbc;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 class BigQueryConnectionProperty {
 
   private final String name;
   private final String description;
   private final String defaultValue;
+  private final Supplier<String> defaultValueSupplier;
   private final List<String> validValues;
 
   public String getName() {
@@ -34,6 +36,9 @@ class BigQueryConnectionProperty {
   }
 
   public String getDefaultValue() {
+    if (defaultValueSupplier != null){
+      return defaultValueSupplier.get();
+    }
     return defaultValue;
   }
 
@@ -43,6 +48,7 @@ class BigQueryConnectionProperty {
 
   BigQueryConnectionProperty(Builder builder) {
     this.name = builder.name;
+    this.defaultValueSupplier = builder.defaultValueSupplier;
     this.defaultValue = builder.defaultValue;
     this.description = builder.description;
     this.validValues = builder.validValues;
@@ -79,6 +85,7 @@ class BigQueryConnectionProperty {
     private String name;
     private String description;
     private String defaultValue;
+    private Supplier<String> defaultValueSupplier = null;
     private List<String> validValues;
 
     private Builder(BigQueryConnectionProperty bigQueryConnectionProperty) {
@@ -102,6 +109,11 @@ class BigQueryConnectionProperty {
 
     Builder setDefaultValue(String defaultValue) {
       this.defaultValue = defaultValue;
+      return this;
+    }
+
+    Builder setLazyDefaultValue(Supplier<String> defaultValueSupplier) {
+      this.defaultValueSupplier = defaultValueSupplier;
       return this;
     }
 

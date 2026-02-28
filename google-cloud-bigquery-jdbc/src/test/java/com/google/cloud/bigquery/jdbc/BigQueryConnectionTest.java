@@ -21,6 +21,8 @@ import static org.junit.Assert.*;
 import com.google.api.gax.grpc.InstantiatingGrpcChannelProvider;
 import com.google.api.gax.rpc.HeaderProvider;
 import com.google.api.gax.rpc.TransportChannelProvider;
+import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.QueryJobConfiguration.JobCreationMode;
 import com.google.cloud.bigquery.exception.BigQueryJdbcException;
 import com.google.cloud.bigquery.storage.v1.BigQueryReadClient;
 import com.google.cloud.bigquery.storage.v1.BigQueryWriteClient;
@@ -380,5 +382,38 @@ public class BigQueryConnectionTest {
       assertEquals(java.time.Duration.ofSeconds(5), grpcProvider.getKeepAliveTimeoutDuration());
       assertTrue(grpcProvider.getKeepAliveWithoutCalls());
     }
+  }
+
+  @Test
+  public void testBigQueryJobCreationMode_required() throws Exception {
+    String url =
+        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+            + "OAuthType=3;JobCreationMode=1;";
+      try (BigQueryConnection connection = new BigQueryConnection(url)) {
+        BigQuery bq = connection.getBigQuery();
+        assertEquals(bq.getOptions().getDefaultJobCreationMode(), JobCreationMode.JOB_CREATION_REQUIRED);
+      }
+  }
+
+  @Test
+  public void testBigQueryJobCreationMode_optional() throws Exception {
+    String url =
+        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+            + "OAuthType=3;JobCreationMode=2;";
+      try (BigQueryConnection connection = new BigQueryConnection(url)) {
+        BigQuery bq = connection.getBigQuery();
+        assertEquals(bq.getOptions().getDefaultJobCreationMode(), JobCreationMode.JOB_CREATION_OPTIONAL);
+      }
+  }
+
+  @Test
+  public void testBigQueryJobCreationMode_default() throws Exception {
+    String url =
+        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+            + "OAuthType=3;";
+      try (BigQueryConnection connection = new BigQueryConnection(url)) {
+        BigQuery bq = connection.getBigQuery();
+        assertEquals(bq.getOptions().getDefaultJobCreationMode(), JobCreationMode.JOB_CREATION_OPTIONAL);
+      }
   }
 }

@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.PrivateKey;
 import java.util.Collections;
@@ -472,12 +473,12 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
   // keytool -genkey -alias privatekey -keyalg RSA -keysize 2048 -storepass notasecret \
   //   -keypass  notasecret -storetype pkcs12 -keystore ./fake.p12
   @Test
-  public void testPrivateKeyFromP12File() {
+  public void testPrivateKeyFromP12Bytes() {
     URL resource = BigQueryJdbcOAuthUtilityTest.class.getResource("/fake.p12");
     try {
       PrivateKey pk =
-          BigQueryJdbcOAuthUtility.privateKeyFromP12File(
-              Paths.get(resource.toURI()).toAbsolutePath().toString(), "notasecret");
+          BigQueryJdbcOAuthUtility.privateKeyFromP12Bytes(
+              Files.readAllBytes(Paths.get(resource.toURI())), "notasecret");
       assertNotNull(pk);
     } catch (Exception e) {
       assertTrue(false);
@@ -485,18 +486,12 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
   }
 
   @Test
-  public void testPrivateKeyFromP12File_missing_file() {
-    PrivateKey pk = BigQueryJdbcOAuthUtility.privateKeyFromP12File("", "");
-    assertNull(pk);
-  }
-
-  @Test
-  public void testPrivateKeyFromP12File_wrong_password() {
+  public void testPrivateKeyFromP12Bytes_wrong_password() {
     URL resource = BigQueryJdbcOAuthUtilityTest.class.getResource("/fake.p12");
     try {
       PrivateKey pk =
-          BigQueryJdbcOAuthUtility.privateKeyFromP12File(
-              Paths.get(resource.toURI()).toAbsolutePath().toString(), "fake");
+          BigQueryJdbcOAuthUtility.privateKeyFromP12Bytes(
+              Files.readAllBytes(Paths.get(resource.toURI())), "fake");
       assertNull(pk);
     } catch (Exception e) {
       assertTrue(false);
