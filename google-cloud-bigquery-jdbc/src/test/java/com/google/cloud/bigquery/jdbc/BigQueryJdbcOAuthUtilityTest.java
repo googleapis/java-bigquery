@@ -91,7 +91,7 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
     Map<String, String> oauthProperties =
         BigQueryJdbcOAuthUtility.parseOAuthProperties(connectionString, null);
     Map<String, String> overrideProperties =
-        BigQueryJdbcUrlUtility.parseOverrideProperties(connectionString, null);
+        DataSource.fromUrl(connectionString).getOverrideProperties();
 
     try {
       BigQueryJdbcOAuthUtility.getCredentials(oauthProperties, overrideProperties, null);
@@ -235,7 +235,7 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
       Map<String, String> authProperties =
           BigQueryJdbcOAuthUtility.parseOAuthProperties(connectionString, null);
       Map<String, String> overrideProperties =
-          BigQueryJdbcUrlUtility.parseOverrideProperties(connectionString, null);
+          DataSource.fromUrl(connectionString).getOverrideProperties();
 
       UserAuthorizer userAuthorizer =
           BigQueryJdbcOAuthUtility.getUserAuthorizer(
@@ -275,7 +275,7 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
       Map<String, String> authProperties =
           BigQueryJdbcOAuthUtility.parseOAuthProperties(connectionString, null);
       Map<String, String> overrideProperties =
-          BigQueryJdbcUrlUtility.parseOverrideProperties(connectionString, null);
+          DataSource.fromUrl(connectionString).getOverrideProperties();
 
       UserCredentials userCredentials =
           BigQueryJdbcOAuthUtility.getPreGeneratedRefreshTokenCredentials(
@@ -296,9 +296,8 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
             "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:433;OAuthType=4;"
                 + "ProjectId=MyBigQueryProject;"
                 + "BYOID_AudienceUri=//iam.googleapis.com/locations/global/workforcePools/pool-id/providers/provider-id;"
-                + "BYOID_PoolUserProject=workforceProjectNumber;"
-                + "BYOID_CredentialSource={\"file\": \"C:\\\\Token.txt\"};"
-                + "BYOID_SA_Impersonation_Uri=testSA;"
+                + "BYOID_PoolUserProject=workforceProjectNumber;BYOID_CredentialSource={\"file\":"
+                + " \"C:\\\\Token.txt\"};BYOID_SA_Impersonation_Uri=testSA;"
                 + "BYOID_SubjectTokenType=urn:ietf:params:oauth:tokentype:jwt;"
                 + "BYOID_TokenUri=https://testuri.com/v1/token",
             null);

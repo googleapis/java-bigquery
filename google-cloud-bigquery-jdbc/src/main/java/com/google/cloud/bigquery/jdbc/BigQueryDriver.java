@@ -130,19 +130,17 @@ public class BigQueryDriver implements Driver {
           throw new BigQueryJdbcException(e.getMessage(), e);
         }
 
+        DataSource ds = DataSource.fromUrl(connectionUri);
+
         // LogLevel
-        String logLevelStr =
-            BigQueryJdbcUrlUtility.parseUriProperty(
-                connectionUri, BigQueryJdbcUrlUtility.LOG_LEVEL_PROPERTY_NAME);
+        String logLevelStr = ds.getLogLevel();
         if (logLevelStr == null) {
           logLevelStr = System.getenv(BigQueryJdbcUrlUtility.LOG_LEVEL_ENV_VAR);
         }
         Level logLevel = BigQueryJdbcUrlUtility.parseLogLevel(logLevelStr);
 
         // LogPath
-        String logPath =
-            BigQueryJdbcUrlUtility.parseUriProperty(
-                connectionUri, BigQueryJdbcUrlUtility.LOG_PATH_PROPERTY_NAME);
+        String logPath = ds.getLogPath();
         if (logPath == null) {
           logPath = System.getenv(BigQueryJdbcUrlUtility.LOG_PATH_ENV_VAR);
         }
@@ -217,7 +215,7 @@ public class BigQueryDriver implements Driver {
       propertyInfoList.add(driverProperty);
     }
     Map<String, String> oAuthProperties =
-        BigQueryJdbcOAuthUtility.parseOAuthProperties(url, this.toString());
+        BigQueryJdbcOAuthUtility.parseOAuthProperties(DataSource.fromUrl(url), this.toString());
     for (Map.Entry<String, String> authProperty : oAuthProperties.entrySet()) {
       propertyInfoList.add(new DriverPropertyInfo(authProperty.getKey(), authProperty.getValue()));
     }

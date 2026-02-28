@@ -5208,8 +5208,13 @@ class BigQueryDatabaseMetaData implements DatabaseMetaData {
       accessibleCatalogs.add(primaryCatalog);
     }
 
-    List<String> additionalProjects = this.connection.getAdditionalProjects();
-    if (additionalProjects != null) {
+    String additionalProjectsStr = this.connection.getAdditionalProjects();
+    if (additionalProjectsStr != null && !additionalProjectsStr.trim().isEmpty()) {
+      List<String> additionalProjects =
+          com.google.common.base.Splitter.on(',')
+              .trimResults()
+              .omitEmptyStrings()
+              .splitToList(additionalProjectsStr);
       for (String project : additionalProjects) {
         if (project != null && !project.isEmpty()) {
           accessibleCatalogs.add(project);
