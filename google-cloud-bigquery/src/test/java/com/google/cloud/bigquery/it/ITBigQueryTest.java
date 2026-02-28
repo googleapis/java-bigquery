@@ -5988,10 +5988,10 @@ class ITBigQueryTest {
 
   @Test
   void testSnapshotTableCopyJob() throws InterruptedException {
-    String sourceTableName = "test_copy_job_base_table";
+    String sourceTableName = generateTableName("test_copy_job_base_table");
     String ddlTableName = TABLE_ID_SIMPLE.getTable();
     // this creates a snapshot table at specified snapshotTime
-    String snapshotTableName = "test_snapshot_table";
+    String snapshotTableName = generateTableName("test_snapshot_table");
     // Create source table with some data in it
     String ddlQuery =
         String.format(
@@ -6035,7 +6035,7 @@ class ITBigQueryTest {
         ((SnapshotTableDefinition) snapshotTable.getDefinition()).getBaseTableId().getTable());
 
     // Restore base table to a new table
-    String restoredTableName = "test_restore_table";
+    String restoredTableName = generateTableName("test_restore_table");
     TableId restoredTableId = TableId.of(DATASET, restoredTableName);
     CopyJobConfiguration restoreConfiguration =
         CopyJobConfiguration.newBuilder(restoredTableId, snapshotTableId)
@@ -6451,7 +6451,7 @@ class ITBigQueryTest {
 
   @Test
   void testInsertFromFile() throws InterruptedException, IOException, TimeoutException {
-    String destinationTableName = "test_insert_from_file_table";
+    String destinationTableName = generateTableName("test_insert_from_file_table");
     TableId tableId = TableId.of(DATASET, destinationTableName);
     WriteChannelConfiguration configuration =
         WriteChannelConfiguration.newBuilder(tableId)
@@ -6524,7 +6524,7 @@ class ITBigQueryTest {
 
   @Test
   void testInsertFromFileWithLabels() throws InterruptedException, IOException, TimeoutException {
-    String destinationTableName = "test_insert_from_file_table_with_labels";
+    String destinationTableName = generateTableName("test_insert_from_file_table_with_labels");
     TableId tableId = TableId.of(DATASET, destinationTableName);
     WriteChannelConfiguration configuration =
         WriteChannelConfiguration.newBuilder(tableId)
@@ -6555,7 +6555,8 @@ class ITBigQueryTest {
   @Test
   void testInsertWithDecimalTargetTypes()
       throws InterruptedException, IOException, TimeoutException {
-    String destinationTableName = "test_insert_from_file_table_with_decimal_target_type";
+    String destinationTableName =
+        generateTableName("test_insert_from_file_table_with_decimal_target_type");
     TableId tableId = TableId.of(DATASET, destinationTableName);
     WriteChannelConfiguration configuration =
         WriteChannelConfiguration.newBuilder(tableId)
@@ -6688,7 +6689,8 @@ class ITBigQueryTest {
   @Test
   void testWriteChannelPreserveAsciiControlCharacters()
       throws InterruptedException, IOException, TimeoutException {
-    String destinationTableName = "test_write_channel_preserve_ascii_control_characters";
+    String destinationTableName =
+        generateTableName("test_write_channel_preserve_ascii_control_characters");
     TableId tableId = TableId.of(DATASET, destinationTableName);
     WriteChannelConfiguration configuration =
         WriteChannelConfiguration.newBuilder(tableId)
@@ -6736,7 +6738,7 @@ class ITBigQueryTest {
   @Test
   void testReferenceFileSchemaUriForAvro() {
     try {
-      String destinationTableName = "test_reference_file_schema_avro";
+      String destinationTableName = generateTableName("test_reference_file_schema_avro");
       TableId tableId = TableId.of(DATASET, destinationTableName);
       Schema expectedSchema =
           Schema.of(
@@ -6795,7 +6797,7 @@ class ITBigQueryTest {
   @Test
   void testReferenceFileSchemaUriForParquet() {
     try {
-      String destinationTableName = "test_reference_file_schema_parquet";
+      String destinationTableName = generateTableName("test_reference_file_schema_parquet");
       TableId tableId = TableId.of(DATASET, destinationTableName);
       Schema expectedSchema =
           Schema.of(
@@ -6852,7 +6854,8 @@ class ITBigQueryTest {
 
   @Test
   void testCreateExternalTableWithReferenceFileSchemaAvro() {
-    String destinationTableName = "test_create_external_table_reference_file_schema_avro";
+    String destinationTableName =
+        generateTableName("test_create_external_table_reference_file_schema_avro");
     TableId tableId = TableId.of(DATASET, destinationTableName);
     Schema expectedSchema =
         Schema.of(
@@ -6891,7 +6894,8 @@ class ITBigQueryTest {
 
   @Test
   void testCreateExternalTableWithReferenceFileSchemaParquet() {
-    String destinationTableName = "test_create_external_table_reference_file_schema_parquet";
+    String destinationTableName =
+        generateTableName("test_create_external_table_reference_file_schema_parquet");
     TableId tableId = TableId.of(DATASET, destinationTableName);
     Schema expectedSchema =
         Schema.of(
@@ -6932,9 +6936,9 @@ class ITBigQueryTest {
 
   @Test
   void testCloneTableCopyJob() throws InterruptedException {
-    String sourceTableName = "test_copy_job_base_table";
+    String sourceTableName = generateTableName("test_copy_job_base_table");
     String ddlTableName = TABLE_ID_SIMPLE.getTable();
-    String cloneTableName = "test_clone_table";
+    String cloneTableName = generateTableName("test_clone_table");
     // Create source table with some data in it
     String ddlQuery =
         String.format(
@@ -7510,7 +7514,7 @@ class ITBigQueryTest {
 
   @Test
   void testExternalTableMetadataCachingNotEnable() throws InterruptedException {
-    String tableName = "test_metadata_cache_not_enable";
+    String tableName = generateTableName("test_metadata_cache_not_enable");
     TableId tableId = TableId.of(DATASET, tableName);
     ExternalTableDefinition externalTableDefinition =
         ExternalTableDefinition.of(
@@ -7553,7 +7557,7 @@ class ITBigQueryTest {
   void testExternalMetadataCacheModeFailForNonBiglake() {
     // Validate that MetadataCacheMode is passed to the backend.
     // TODO: Enhance this test after BigLake testing infrastructure is inplace.
-    String tableName = "test_metadata_cache_mode_fail_for_non_biglake";
+    String tableName = generateTableName("test_metadata_cache_mode_fail_for_non_biglake");
     TableId tableId = TableId.of(DATASET, tableName);
     ExternalTableDefinition externalTableDefinition =
         ExternalTableDefinition.newBuilder(
@@ -7578,7 +7582,7 @@ class ITBigQueryTest {
 
   @Test
   void testObjectTable() throws InterruptedException {
-    String tableName = "test_object_table";
+    String tableName = generateTableName("test_object_table");
     TableId tableId = TableId.of(DATASET, tableName);
 
     String sourceUri = "gs://" + BUCKET + "/" + JSON_LOAD_FILE;
@@ -7649,7 +7653,7 @@ class ITBigQueryTest {
     // mapping.
 
     // Test v1 mapping.
-    String v1TableName = "flexible_column_name_data_testing_table_v1";
+    String v1TableName = generateTableName("flexible_column_name_data_testing_table_v1");
     TableId v1TableId = TableId.of(DATASET, v1TableName);
     try {
       LoadJobConfiguration loadJobConfigurationV1 =
@@ -7674,7 +7678,7 @@ class ITBigQueryTest {
     }
 
     // Test v2 mapping.
-    String v2TableName = "flexible_column_name_data_testing_table_v2";
+    String v2TableName = generateTableName("flexible_column_name_data_testing_table_v2");
     TableId v2TableId = TableId.of(DATASET, v2TableName);
     try {
       LoadJobConfiguration loadJobConfigurationV2 =
