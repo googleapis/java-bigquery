@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class ITRemoteUDFTest {
@@ -88,6 +89,7 @@ class ITRemoteUDFTest {
     client.close();
   }
 
+  @Disabled("https://github.com/googleapis/java-bigquery/issues/4103")
   @Test
   void testRoutineRemoteUDF() {
     String routineName = RemoteBigQueryHelper.generateRoutineName();
