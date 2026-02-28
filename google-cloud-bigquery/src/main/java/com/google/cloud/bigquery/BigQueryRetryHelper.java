@@ -29,6 +29,8 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -54,6 +56,8 @@ public class BigQueryRetryHelper extends RetryHelper {
               .spanBuilder("com.google.cloud.bigquery.BigQueryRetryHelper.runWithRetries")
               .startSpan();
     }
+    final List<Throwable> attemptFailures = new ArrayList<>();
+
     try (Scope runWithRetriesScope = runWithRetries != null ? runWithRetries.makeCurrent() : null) {
       // Suppressing should be ok as a workaraund. Current and only ResultRetryAlgorithm
       // implementation does not use response at all, so ignoring its type is ok.
@@ -63,14 +67,29 @@ public class BigQueryRetryHelper extends RetryHelper {
           callable,
           new ExponentialRetryAlgorithm(retrySettings, clock),
           algorithm,
-          bigQueryRetryConfig);
+          bigQueryRetryConfig,
+          attemptFailures);
+
     } catch (Exception e) {
-      // Checks for IOException and translate it into BigQueryException. The BigQueryException
-      // constructor parses the IOException and translate it into internal code.
-      if (e.getCause() instanceof IOException) {
-        throw new BigQueryRetryHelperException(new BigQueryException((IOException) e.getCause()));
+      Throwable cause = e.getCause() != null ? e.getCause() : e;
+
+      // Attach previous retry failures (the terminal cause is not added to its own suppressed list).
+      for (Throwable prev : attemptFailures) {
+        if (prev != cause) {
+          cause.addSuppressed(prev);
+        }
       }
-      throw new BigQueryRetryHelperException(e.getCause());
+
+      if (cause instanceof IOException) {
+        BigQueryException bq = new BigQueryException((IOException) cause);
+        // Preserve suppressed info after wrapping.
+        for (Throwable s : cause.getSuppressed()) {
+          bq.addSuppressed(s);
+        }
+        throw new BigQueryRetryHelperException(bq);
+      }
+
+      throw new BigQueryRetryHelperException(cause);
     } finally {
       if (runWithRetries != null) {
         runWithRetries.end();
@@ -82,7 +101,8 @@ public class BigQueryRetryHelper extends RetryHelper {
       Callable<V> callable,
       TimedRetryAlgorithm timedAlgorithm,
       ResultRetryAlgorithm<V> resultAlgorithm,
-      BigQueryRetryConfig bigQueryRetryConfig)
+      BigQueryRetryConfig bigQueryRetryConfig,
+      List<Throwable> attemptFailures)
       throws ExecutionException, InterruptedException {
     RetryAlgorithm<V> retryAlgorithm =
         new BigQueryRetryAlgorithm<>(
@@ -93,7 +113,16 @@ public class BigQueryRetryHelper extends RetryHelper {
     // BigQueryRetryAlgorithm retries considering bigQueryRetryConfig
     RetryingExecutor<V> executor = new DirectRetryingExecutor<>(retryAlgorithm);
 
-    // Log retry info
+    Callable<V> recordingCallable =
+        () -> {
+          try {
+            return callable.call();
+          } catch (Throwable t) {
+            attemptFailures.add(t);
+            throw t;
+          }
+        };
+
     if (LOG.isLoggable(Level.FINEST)) {
       LOG.log(
           Level.FINEST,
@@ -104,7 +133,7 @@ public class BigQueryRetryHelper extends RetryHelper {
           });
     }
 
-    RetryingFuture<V> retryingFuture = executor.createFuture(callable);
+    RetryingFuture<V> retryingFuture = executor.createFuture(recordingCallable);
     executor.submit(retryingFuture);
     return retryingFuture.get();
   }
