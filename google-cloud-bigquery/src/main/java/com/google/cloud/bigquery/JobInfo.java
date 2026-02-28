@@ -156,7 +156,7 @@ public class JobInfo implements Serializable {
       if (jobPb.getStatus() != null) {
         this.status = JobStatus.fromPb(jobPb.getStatus());
       }
-      if (jobPb.getStatistics() != null) {
+      if (jobPb.getStatistics() != null && jobPb.getConfiguration() != null) {
         this.statistics = JobStatistics.fromPb(jobPb);
       }
       this.userEmail = jobPb.getUserEmail();
