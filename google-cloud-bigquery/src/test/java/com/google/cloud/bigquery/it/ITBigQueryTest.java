@@ -2082,8 +2082,12 @@ class ITBigQueryTest {
               .setParent(String.format("projects/%s/locations/%s", PROJECT_ID, "us"))
               .setTaxonomy(
                   Taxonomy.newBuilder()
-                      // DisplayName must be unique across org
-                      .setDisplayName(String.format("testing taxonomy %s", Instant.now().getNano()))
+                      // DisplayName must be unique across org. Use UUID rather than time to ensure
+                      // no collisions
+                      // from parallel test invocations
+                      .setDisplayName(
+                          String.format(
+                              "testing taxonomy %s", UUID.randomUUID().toString().substring(0, 8)))
                       .setDescription("taxonomy created for integration tests")
                       .addActivatedPolicyTypes(PolicyType.FINE_GRAINED_ACCESS_CONTROL)
                       .build())
