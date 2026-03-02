@@ -62,6 +62,12 @@ public class JobCreationReason {
 
   static JobCreationReason fromPb(
       com.google.api.services.bigquery.model.JobCreationReason jobCreationReason) {
+    // JobCreationReason may be null if the JobCreationMode is specified to be Optional
+    // Note: JobCreationMode.Optional may also end up creating a job depending on the
+    // query complexity and other factors.
+    if (jobCreationReason == null) {
+      return null;
+    }
     return new JobCreationReason(Code.fromValue(jobCreationReason.getCode()));
   }
 

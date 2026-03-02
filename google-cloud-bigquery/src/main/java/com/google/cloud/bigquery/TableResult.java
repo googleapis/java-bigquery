@@ -78,6 +78,7 @@ public abstract class TableResult implements Page<FieldValueList>, Serializable 
   @Nullable
   public abstract String getQueryId();
 
+  @Nullable
   public abstract JobCreationReason getJobCreationReason();
 
   @Override
