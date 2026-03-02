@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class ITRemoteUDFTest {
@@ -81,13 +82,19 @@ class ITRemoteUDFTest {
     if (bigquery != null) {
       RemoteBigQueryHelper.forceDelete(bigquery, ROUTINE_DATASET);
     }
-    // delete a connection
-    DeleteConnectionRequest request =
-        DeleteConnectionRequest.newBuilder().setName(connection.getName()).build();
-    client.deleteConnection(request);
-    client.close();
+
+    // In JUnit, @BeforeEach only runs before a test is invoked. If a test never runs,
+    // then the logic inside @BeforeEach doesn't (e.g. connection was never created).
+    // This checks to ensure that connection was created before deleting.
+    if (client != null && connection != null) {
+      DeleteConnectionRequest request =
+          DeleteConnectionRequest.newBuilder().setName(connection.getName()).build();
+      client.deleteConnection(request);
+      client.close();
+    }
   }
 
+  @Disabled("https://github.com/googleapis/java-bigquery/issues/4103")
   @Test
   void testRoutineRemoteUDF() {
     String routineName = RemoteBigQueryHelper.generateRoutineName();
