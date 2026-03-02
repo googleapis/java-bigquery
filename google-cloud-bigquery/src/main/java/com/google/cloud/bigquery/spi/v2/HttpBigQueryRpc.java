@@ -107,6 +107,12 @@ public class HttpBigQueryRpc implements BigQueryRpc {
     HttpTransportOptions transportOptions = (HttpTransportOptions) options.getTransportOptions();
     HttpTransport transport = transportOptions.getHttpTransportFactory().create();
     HttpRequestInitializer initializer = transportOptions.getHttpRequestInitializer(options);
+    
+    // Wrap with tracing initializer if OpenTelemetry is enabled
+    if (options.isOpenTelemetryTracingEnabled() && options.getOpenTelemetryTracer() != null) {
+      initializer = new HttpTracingRequestInitializer(initializer, options.getOpenTelemetryTracer());
+    }
+    
     this.options = options;
     bigquery =
         new Bigquery.Builder(transport, new GsonFactory(), initializer)
