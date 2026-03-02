@@ -31,7 +31,8 @@ public class JobCreationReason {
     REQUESTED("REQUESTED"),
     LONG_RUNNING("LONG_RUNNING"),
     LARGE_RESULTS("LARGE_RESULTS"),
-    OTHER("OTHER");
+    OTHER("OTHER"),
+    UNKNOWN("UNKNOWN");
 
     private final String reason;
 
@@ -39,14 +40,16 @@ public class JobCreationReason {
       this.reason = reason;
     }
 
-    /** Maps the server code to BQ code. Returns {@code null} if the mapping does not exist. */
+    /**
+     * Maps the server code to BQ code. Returns {@link Code#UNKNOWN} if the mapping does not exist.
+     */
     static Code fromValue(String reason) {
       for (JobCreationReason.Code code : Code.values()) {
         if (code.reason.equals(reason)) {
           return code;
         }
       }
-      return null;
+      return UNKNOWN;
     }
   }
 
@@ -62,7 +65,7 @@ public class JobCreationReason {
   }
 
   /**
-   * @return JobCreationReason code or {@code null} if mapping does not exist.
+   * @return JobCreationReason code or {@link Code#UNKNOWN} if mapping does not exist.
    */
   public Code getCode() {
     return code;
