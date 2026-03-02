@@ -15,6 +15,8 @@
  */
 package com.google.cloud.bigquery;
 
+import javax.annotation.Nullable;
+
 /**
  * Enum that maps to <a
  * href="https://docs.cloud.google.com/bigquery/docs/reference/rest/v2/JobCreationReason">JobCreationReason</a>
@@ -23,24 +25,46 @@ package com.google.cloud.bigquery;
  *
  * <p>Indicates the high level reason why a job was created.
  */
-public enum JobCreationReason {
-  REQUESTED("REQUESTED"),
-  LONG_RUNNING("LONG_RUNNING"),
-  LARGE_RESULTS("LARGE_RESULTS"),
-  OTHER("OTHER");
+public class JobCreationReason {
 
-  private final String reason;
+  public enum Code {
+    REQUESTED("REQUESTED"),
+    LONG_RUNNING("LONG_RUNNING"),
+    LARGE_RESULTS("LARGE_RESULTS"),
+    OTHER("OTHER");
 
-  JobCreationReason(String reason) {
-    this.reason = reason;
+    private final String reason;
+
+    Code(String reason) {
+      this.reason = reason;
+    }
+
+    /** Maps the server code to BQ code. Returns {@code null} if the mapping does not exist. */
+    static Code fromValue(String reason) {
+      for (JobCreationReason.Code code : Code.values()) {
+        if (code.reason.equals(reason)) {
+          return code;
+        }
+      }
+      return null;
+    }
   }
 
-  static JobCreationReason fromValue(String reason) {
-    for (JobCreationReason authType : values()) {
-      if (authType.reason.equals(reason)) {
-        return authType;
-      }
-    }
-    throw new IllegalStateException("Invalid JobCreationReason: " + reason);
+  @Nullable private final Code code;
+
+  JobCreationReason(Code code) {
+    this.code = code;
+  }
+
+  static JobCreationReason fromPb(
+      com.google.api.services.bigquery.model.JobCreationReason jobCreationReason) {
+    return new JobCreationReason(Code.fromValue(jobCreationReason.getCode()));
+  }
+
+  /**
+   * @return JobCreationReason code or {@code null} if mapping does not exist.
+   */
+  public Code getCode() {
+    return code;
   }
 }

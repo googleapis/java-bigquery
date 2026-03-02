@@ -7326,7 +7326,7 @@ class ITBigQueryTest {
     if (result.getJobCreationReason() != null) {
       assertNotNull(result.getJobId());
       assertEquals(result.getQueryId(), result.getJobId().getJob());
-      assertEquals(JobCreationReason.OTHER, result.getJobCreationReason());
+      assertEquals(JobCreationReason.Code.OTHER, result.getJobCreationReason().getCode());
     }
 
     // Test scenario 2 by failing stateless check by setting job timeout.
@@ -7430,7 +7430,7 @@ class ITBigQueryTest {
     if (tableResult.getJobCreationReason() != null) {
       assertNotNull(tableResult.getJobId());
       assertEquals(tableResult.getQueryId(), tableResult.getJobId().getJob());
-      assertEquals(JobCreationReason.OTHER, tableResult.getJobCreationReason());
+      assertEquals(JobCreationReason.Code.OTHER, tableResult.getJobCreationReason().getCode());
     }
 
     // Stateful query returns Job
