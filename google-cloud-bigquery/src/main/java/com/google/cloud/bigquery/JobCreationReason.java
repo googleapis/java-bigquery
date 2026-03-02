@@ -43,7 +43,7 @@ public class JobCreationReason {
     /**
      * Maps the server code to BQ code. Returns {@link Code#UNKNOWN} if the mapping does not exist.
      */
-    static Code fromValue(String reason) {
+    static Code fromValue(@Nullable String reason) {
       for (JobCreationReason.Code code : Code.values()) {
         if (code.reason.equals(reason)) {
           return code;
