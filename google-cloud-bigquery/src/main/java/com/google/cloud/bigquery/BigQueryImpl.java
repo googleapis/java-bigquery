@@ -2015,6 +2015,11 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                       getOptions().getDataFormatOptions().useInt64Timestamp())))
           .setJobId(jobId)
           .setQueryId(results.getQueryId())
+          // Possibly set if the JobCreationMode is set to `JOB_CREATION_OPTIONAL`
+          .setJobCreationReason(
+              results.getJobCreationReason() != null
+                  ? JobCreationReason.fromValue(results.getJobCreationReason().getCode())
+                  : null)
           .build();
     }
     // only 1 page of result
@@ -2033,6 +2038,11 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
         .setJobId(
             results.getJobReference() != null ? JobId.fromPb(results.getJobReference()) : null)
         .setQueryId(results.getQueryId())
+        // Possibly set if the JobCreationMode is set to `JOB_CREATION_OPTIONAL`
+        .setJobCreationReason(
+            results.getJobCreationReason() != null
+                ? JobCreationReason.fromValue(results.getJobCreationReason().getCode())
+                : null)
         .build();
   }
 
