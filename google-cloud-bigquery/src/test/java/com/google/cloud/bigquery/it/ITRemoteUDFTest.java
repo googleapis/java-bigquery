@@ -82,10 +82,15 @@ class ITRemoteUDFTest {
     if (bigquery != null) {
       RemoteBigQueryHelper.forceDelete(bigquery, ROUTINE_DATASET);
     }
-    // delete a connection
-    DeleteConnectionRequest request =
-        DeleteConnectionRequest.newBuilder().setName(connection.getName()).build();
-    client.deleteConnection(request);
+
+    // In JUnit, @BeforeEach only runs before a test is invoked. If a test never runs,
+    // then the logic inside @BeforeEach doesn't (e.g. connection was never created).
+    // This checks to ensure that connection was created before deleting.
+    if (connection != null) {
+      DeleteConnectionRequest request =
+          DeleteConnectionRequest.newBuilder().setName(connection.getName()).build();
+      client.deleteConnection(request);
+    }
     client.close();
   }
 
