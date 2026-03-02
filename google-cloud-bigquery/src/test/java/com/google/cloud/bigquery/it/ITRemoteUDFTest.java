@@ -86,12 +86,12 @@ class ITRemoteUDFTest {
     // In JUnit, @BeforeEach only runs before a test is invoked. If a test never runs,
     // then the logic inside @BeforeEach doesn't (e.g. connection was never created).
     // This checks to ensure that connection was created before deleting.
-    if (connection != null) {
+    if (client != null && connection != null) {
       DeleteConnectionRequest request =
           DeleteConnectionRequest.newBuilder().setName(connection.getName()).build();
       client.deleteConnection(request);
+      client.close();
     }
-    client.close();
   }
 
   @Disabled("https://github.com/googleapis/java-bigquery/issues/4103")
