@@ -28,26 +28,26 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.io.IOException;
 
 /**
- * HttpRequestInitializer that wraps a delegate initializer, intercepts all HTTP requests,
- * adds OpenTelemetry tracing and then invokes delegate interceptor.
+ * HttpRequestInitializer that wraps a delegate initializer, intercepts all HTTP requests, adds
+ * OpenTelemetry tracing and then invokes delegate interceptor.
  */
 @InternalApi
 public class HttpTracingRequestInitializer implements HttpRequestInitializer {
 
   // HTTP Specific Telemetry Attributes
   public static final AttributeKey<String> HTTP_REQUEST_METHOD =
-          AttributeKey.stringKey("http.request.method");
+      AttributeKey.stringKey("http.request.method");
   public static final AttributeKey<String> URL_FULL = AttributeKey.stringKey("url.full");
   public static final AttributeKey<String> URL_TEMPLATE = AttributeKey.stringKey("url.template");
   public static final AttributeKey<String> URL_DOMAIN = AttributeKey.stringKey("url.domain");
   public static final AttributeKey<Long> HTTP_RESPONSE_STATUS_CODE =
-          AttributeKey.longKey("http.response.status_code");
+      AttributeKey.longKey("http.response.status_code");
   public static final AttributeKey<Long> HTTP_REQUEST_RESEND_COUNT =
-          AttributeKey.longKey("http.request.resend_count");
+      AttributeKey.longKey("http.request.resend_count");
   public static final AttributeKey<Long> HTTP_REQUEST_BODY_SIZE =
-          AttributeKey.longKey("http.request.body.size");
+      AttributeKey.longKey("http.request.body.size");
   public static final AttributeKey<Long> HTTP_RESPONSE_BODY_SIZE =
-          AttributeKey.longKey("http.response.body.size");
+      AttributeKey.longKey("http.response.body.size");
 
   private final HttpRequestInitializer delegate;
   private final Tracer tracer;
@@ -80,20 +80,20 @@ public class HttpTracingRequestInitializer implements HttpRequestInitializer {
     // Wrap the existing response interceptor
     HttpResponseInterceptor originalInterceptor = request.getResponseInterceptor();
     request.setResponseInterceptor(
-            response -> {
-              try {
-                addSuccessResponseToSpan(response, httpMethod, span);
-                if (originalInterceptor != null) {
-                    originalInterceptor.interceptResponse(response);
-                }
-              } finally {
-                span.end();
-              }
-            });
+        response -> {
+          try {
+            addSuccessResponseToSpan(response, httpMethod, span);
+            if (originalInterceptor != null) {
+              originalInterceptor.interceptResponse(response);
+            }
+          } finally {
+            span.end();
+          }
+        });
 
-// Wrap the existing unsuccessful response handler
-HttpUnsuccessfulResponseHandler originalHandler = request.getUnsuccessfulResponseHandler();
-request.setUnsuccessfulResponseHandler(
+    // Wrap the existing unsuccessful response handler
+    HttpUnsuccessfulResponseHandler originalHandler = request.getUnsuccessfulResponseHandler();
+    request.setUnsuccessfulResponseHandler(
         (request1, response, supportsRetry) -> {
           addErrorResponseToSpan(response, span);
           try {
@@ -114,7 +114,9 @@ request.setUnsuccessfulResponseHandler(
     span.recordException(e);
     span.setAttribute(BigQueryTelemetryTracer.EXCEPTION_TYPE, e.getClass().getName());
     span.setAttribute(BigQueryTelemetryTracer.ERROR_TYPE, e.getClass().getSimpleName());
-    span.setAttribute(BigQueryTelemetryTracer.STATUS_MESSAGE, e.getMessage() != null ? e.getMessage() : e.getClass().getName());
+    span.setAttribute(
+        BigQueryTelemetryTracer.STATUS_MESSAGE,
+        e.getMessage() != null ? e.getMessage() : e.getClass().getName());
     span.setStatus(StatusCode.ERROR, e.getMessage());
   }
 
@@ -135,7 +137,8 @@ request.setUnsuccessfulResponseHandler(
     span.setStatus(StatusCode.ERROR, errorMessage);
   }
 
-  private static void addSuccessResponseToSpan(HttpResponse response, String httpMethod, Span span) {
+  private static void addSuccessResponseToSpan(
+      HttpResponse response, String httpMethod, Span span) {
     String actualMethod = response.getRequest().getRequestMethod();
     if (actualMethod != null && httpMethod == null) {
       span.updateName(actualMethod);
@@ -158,8 +161,9 @@ request.setUnsuccessfulResponseHandler(
     }
   }
 
-  private Span getSpan(String httpMethod, String url, String host, Integer port, Long requestBodySize) {
-    //TODO: Determine span name: {method} {url.template} or {method}
+  private Span getSpan(
+      String httpMethod, String url, String host, Integer port, Long requestBodySize) {
+    // TODO: Determine span name: {method} {url.template} or {method}
     Span span =
         BigQueryTelemetryTracer.newSpanBuilder(tracer, httpMethod)
             // OpenTelemetry semantic convention attributes
@@ -167,7 +171,7 @@ request.setUnsuccessfulResponseHandler(
             .setAttribute(URL_FULL, url)
             .setAttribute(BigQueryTelemetryTracer.SERVER_ADDRESS, host)
             .setAttribute(URL_DOMAIN, BIGQUERY_DOMAIN)
-            .setAttribute(BigQueryTelemetryTracer.RPC_SYSTEM_NAME , "http")
+            .setAttribute(BigQueryTelemetryTracer.RPC_SYSTEM_NAME, "http")
             .startSpan();
 
     // TODO: add url template && resource name

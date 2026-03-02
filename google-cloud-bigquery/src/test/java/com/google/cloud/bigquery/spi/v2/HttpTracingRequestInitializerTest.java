@@ -96,10 +96,8 @@ public class HttpTracingRequestInitializerTest {
         };
 
     HttpRequestFactory requestFactory = transport.createRequestFactory(initializer);
-  String urlString = "https://bigquery.googleapis.com:443/bigquery/v2/projects/test/datasets";
-    HttpRequest request =
-        requestFactory.buildGetRequest(
-      new GenericUrl(urlString));
+    String urlString = "https://bigquery.googleapis.com:443/bigquery/v2/projects/test/datasets";
+    HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(urlString));
 
     HttpResponse response = request.execute();
     response.disconnect();
@@ -108,36 +106,26 @@ public class HttpTracingRequestInitializerTest {
     assertEquals(1, spans.size());
 
     SpanData span = spans.get(0);
-    assertEquals(
-        "GET",
-        span.getAttributes().get(AttributeKey.stringKey("http.request.method")));
+    assertEquals("GET", span.getAttributes().get(AttributeKey.stringKey("http.request.method")));
     assertEquals(
         "bigquery.googleapis.com",
         span.getAttributes().get(AttributeKey.stringKey("server.address")));
+    assertEquals(Long.valueOf(443L), span.getAttributes().get(AttributeKey.longKey("server.port")));
     assertEquals(
-        Long.valueOf(443L),
-        span.getAttributes().get(AttributeKey.longKey("server.port")));
-    assertEquals(
-        "bigquery.googleapis.com",
-        span.getAttributes().get(AttributeKey.stringKey("url.domain")));
-    assertEquals(
-        urlString,
-        span.getAttributes().get(AttributeKey.stringKey("url.full")));
+        "bigquery.googleapis.com", span.getAttributes().get(AttributeKey.stringKey("url.domain")));
+    assertEquals(urlString, span.getAttributes().get(AttributeKey.stringKey("url.full")));
     assertEquals(
         Long.valueOf(200L),
         span.getAttributes().get(AttributeKey.longKey("http.response.status_code")));
     assertEquals(
-        "bigquery",
-        span.getAttributes().get(AttributeKey.stringKey("gcp.client.service")));
+        "bigquery", span.getAttributes().get(AttributeKey.stringKey("gcp.client.service")));
     assertEquals(
         "googleapis/java-bigquery",
         span.getAttributes().get(AttributeKey.stringKey("gcp.client.repo")));
     assertEquals(
         "google-cloud-bigquery",
         span.getAttributes().get(AttributeKey.stringKey("gcp.client.artifact")));
-    assertEquals(
-        "java",
-        span.getAttributes().get(AttributeKey.stringKey("gcp.client.language")));
+    assertEquals("java", span.getAttributes().get(AttributeKey.stringKey("gcp.client.language")));
   }
 
   @Test
@@ -161,7 +149,8 @@ public class HttpTracingRequestInitializerTest {
     HttpRequestFactory requestFactory = transport.createRequestFactory(initializer);
     HttpRequest request =
         requestFactory.buildGetRequest(
-            new GenericUrl("https://bigquery.googleapis.com/bigquery/v2/projects/test/datasets/notfound"));
+            new GenericUrl(
+                "https://bigquery.googleapis.com/bigquery/v2/projects/test/datasets/notfound"));
 
     try {
       HttpResponse response = request.execute();
@@ -177,9 +166,7 @@ public class HttpTracingRequestInitializerTest {
     assertEquals(
         Long.valueOf(404L),
         span.getAttributes().get(AttributeKey.longKey("http.response.status_code")));
-    assertEquals(
-        "404",
-        span.getAttributes().get(AttributeKey.stringKey("error.type")));
+    assertEquals("404", span.getAttributes().get(AttributeKey.stringKey("error.type")));
     assertNotNull(span.getAttributes().get(AttributeKey.stringKey("status.message")));
   }
 
@@ -234,8 +221,7 @@ public class HttpTracingRequestInitializerTest {
         IOException.class.getSimpleName(),
         span.getAttributes().get(AttributeKey.stringKey("error.type")));
     assertEquals(
-        "handler failure",
-        span.getAttributes().get(AttributeKey.stringKey("status.message")));
+        "handler failure", span.getAttributes().get(AttributeKey.stringKey("status.message")));
   }
 
   @Test
@@ -348,7 +334,8 @@ public class HttpTracingRequestInitializerTest {
     HttpRequestFactory requestFactory = transport.createRequestFactory(tracingInitializer);
     HttpRequest request =
         requestFactory.buildGetRequest(
-            new GenericUrl("https://bigquery.googleapis.com/bigquery/v2/projects/test/datasets/notfound"));
+            new GenericUrl(
+                "https://bigquery.googleapis.com/bigquery/v2/projects/test/datasets/notfound"));
 
     try {
       HttpResponse response = request.execute();
@@ -359,5 +346,4 @@ public class HttpTracingRequestInitializerTest {
 
     verify(delegateInitializer, times(1)).initialize(any(HttpRequest.class));
   }
-
 }

@@ -22,8 +22,9 @@ import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 
-/** General BigQuery Telemetry class that stores generic telemetry attributes
- * and any associated logic to calculate.
+/**
+ * General BigQuery Telemetry class that stores generic telemetry attributes and any associated
+ * logic to calculate.
  */
 @InternalApi
 public final class BigQueryTelemetryTracer {
@@ -43,8 +44,8 @@ public final class BigQueryTelemetryTracer {
       AttributeKey.stringKey("gcp.client.language");
   public static final AttributeKey<String> GCP_RESOURCE_NAME =
       AttributeKey.stringKey("gcp.resource.name");
-  public static final AttributeKey<String> RPC_SYSTEM_NAME = AttributeKey.stringKey("rpc.system.name");
-
+  public static final AttributeKey<String> RPC_SYSTEM_NAME =
+      AttributeKey.stringKey("rpc.system.name");
 
   // Common Error Attributes
   public static final AttributeKey<String> ERROR_TYPE = AttributeKey.stringKey("error.type");
