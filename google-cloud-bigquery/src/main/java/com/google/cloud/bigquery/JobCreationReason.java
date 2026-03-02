@@ -18,12 +18,13 @@ package com.google.cloud.bigquery;
 import javax.annotation.Nullable;
 
 /**
- * Enum that maps to <a
+ * Maps to <a
  * href="https://docs.cloud.google.com/bigquery/docs/reference/rest/v2/JobCreationReason">JobCreationReason</a>
  * when used with {@link
  * com.google.cloud.bigquery.QueryJobConfiguration.JobCreationMode#JOB_CREATION_OPTIONAL}.
  *
- * <p>Indicates the high level reason why a job was created.
+ * <p>The code indicates the high level reason why a job was created. The default is `UNKNOWN` if
+ * there is no mapping found between the server response and the client library.
  */
 public class JobCreationReason {
 
