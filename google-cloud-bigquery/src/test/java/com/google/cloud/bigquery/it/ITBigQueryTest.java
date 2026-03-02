@@ -1079,7 +1079,7 @@ class ITBigQueryTest {
             .addSpanProcessor(SimpleSpanProcessor.create(new TestSpanExporter()))
             .setSampler(Sampler.alwaysOn())
             .build();
-    otel = OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).build();
+    otel = OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).buildAndRegisterGlobal();
 
     bigquery = bigqueryHelper.getOptions().getService();
     storage = storageHelper.getOptions().getService();
