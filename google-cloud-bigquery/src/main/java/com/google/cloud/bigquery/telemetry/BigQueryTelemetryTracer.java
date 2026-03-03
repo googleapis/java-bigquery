@@ -31,6 +31,11 @@ public final class BigQueryTelemetryTracer {
 
   private BigQueryTelemetryTracer() {}
 
+  public static final String BQ_GCP_CLIENT_SERVICE = "bigquery";
+  public static final String BQ_GCP_CLIENT_REPO = "googleapis/java-bigquery";
+  public static final String BQ_GCP_CLIENT_ARTIFACT = "google-cloud-bigquery";
+  public static final String BQ_GCP_CLIENT_LANGUAGE = "java";
+
   // Common GCP Attributes
   public static final AttributeKey<String> GCP_CLIENT_SERVICE =
       AttributeKey.stringKey("gcp.client.service");
@@ -63,10 +68,10 @@ public final class BigQueryTelemetryTracer {
     return tracer
         .spanBuilder(spanName)
         .setSpanKind(SpanKind.CLIENT)
-        .setAttribute(GCP_CLIENT_SERVICE, "bigquery")
-        .setAttribute(GCP_CLIENT_REPO, "googleapis/java-bigquery")
-        .setAttribute(GCP_CLIENT_ARTIFACT, "google-cloud-bigquery")
-        .setAttribute(GCP_CLIENT_LANGUAGE, "java");
+        .setAttribute(GCP_CLIENT_SERVICE, BQ_GCP_CLIENT_SERVICE)
+        .setAttribute(GCP_CLIENT_REPO, BQ_GCP_CLIENT_REPO)
+        .setAttribute(GCP_CLIENT_ARTIFACT, BQ_GCP_CLIENT_ARTIFACT)
+        .setAttribute(GCP_CLIENT_LANGUAGE, BQ_GCP_CLIENT_LANGUAGE);
     // TODO: add version
   }
 }

@@ -18,15 +18,14 @@ package com.google.cloud.bigquery.spi.v2;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.cloud.bigquery.RetryContext;
+import com.google.cloud.bigquery.telemetry.BigQueryTelemetryTracer;
 import com.sun.net.httpserver.HttpServer;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
@@ -42,13 +41,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * Integration test for HTTP tracing with real HTTP transport and server.
- * This test verifies that OpenTelemetry tracing works correctly with actual network calls.
+ * Integration test for HTTP tracing with real HTTP transport and server. This test verifies that
+ * OpenTelemetry tracing works correctly with actual network calls.
  */
 public class HttpTracingIntegrationTest {
 
   private InMemorySpanExporter spanExporter;
-    private HttpTracingRequestInitializer initializer;
+  private HttpTracingRequestInitializer initializer;
   private HttpServer testServer;
   private int serverPort;
 
@@ -62,8 +61,9 @@ public class HttpTracingIntegrationTest {
             .build();
     OpenTelemetrySdk openTelemetry =
         OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).build();
-      Tracer tracer = openTelemetry.getTracer("test-tracer");
-    initializer = new HttpTracingRequestInitializer(null, tracer);
+    Tracer tracer = openTelemetry.getTracer("test-tracer");
+    initializer =
+        new HttpTracingRequestInitializer(null, tracer, "https://example-client-endpoint.test/");
 
     // Start a test HTTP server
     testServer = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
@@ -81,19 +81,22 @@ public class HttpTracingIntegrationTest {
 
   @Test
   public void testHttpTracingWithRealServer() throws IOException {
-    testServer.createContext("/api/test", exchange -> {
-      String response = "{\"status\": \"ok\"}";
-      exchange.getResponseHeaders().add("Content-Type", "application/json");
-      exchange.sendResponseHeaders(200, response.getBytes().length);
-      try (OutputStream os = exchange.getResponseBody()) {
-        os.write(response.getBytes());
-      }
-    });
+    testServer.createContext(
+        "/api/test",
+        exchange -> {
+          String response = "{\"status\": \"ok\"}";
+          exchange.getResponseHeaders().add("Content-Type", "application/json");
+          exchange.sendResponseHeaders(200, response.getBytes().length);
+          try (OutputStream os = exchange.getResponseBody()) {
+            os.write(response.getBytes());
+          }
+        });
 
     NetHttpTransport transport = new NetHttpTransport();
     HttpRequestFactory requestFactory = transport.createRequestFactory(initializer);
-    HttpRequest request = requestFactory.buildGetRequest(
-        new GenericUrl("http://localhost:" + serverPort + "/api/test"));
+    HttpRequest request =
+        requestFactory.buildGetRequest(
+            new GenericUrl("http://localhost:" + serverPort + "/api/test"));
 
     HttpResponse response = request.execute();
     assertEquals(200, response.getStatusCode());
@@ -102,8 +105,34 @@ public class HttpTracingIntegrationTest {
     List<SpanData> spans = spanExporter.getFinishedSpanItems();
     assertEquals(1, spans.size());
     SpanData span = spans.get(0);
-    assertEquals("GET", span.getAttributes().get(AttributeKey.stringKey("http.request.method")));
-    assertEquals(200L, span.getAttributes().get(AttributeKey.longKey("http.response.status_code")));
-    assertEquals("localhost", span.getAttributes().get(AttributeKey.stringKey("server.address")));
+    assertEquals(
+        200, span.getAttributes().get(HttpTracingRequestInitializer.HTTP_RESPONSE_STATUS_CODE));
+    assertEquals(
+        "GET", span.getAttributes().get(HttpTracingRequestInitializer.HTTP_REQUEST_METHOD));
+    assertEquals("localhost", span.getAttributes().get(BigQueryTelemetryTracer.SERVER_ADDRESS));
+    assertEquals(serverPort, span.getAttributes().get(BigQueryTelemetryTracer.SERVER_PORT));
+    assertEquals(
+        "example-client-endpoint.test",
+        span.getAttributes().get(HttpTracingRequestInitializer.URL_DOMAIN));
+    assertEquals(
+        "http://localhost:" + serverPort + "/api/test",
+        span.getAttributes().get(HttpTracingRequestInitializer.URL_FULL));
+    assertEquals(
+        BigQueryTelemetryTracer.BQ_GCP_CLIENT_SERVICE,
+        span.getAttributes().get(BigQueryTelemetryTracer.GCP_CLIENT_SERVICE));
+    assertEquals(
+        BigQueryTelemetryTracer.BQ_GCP_CLIENT_REPO,
+        span.getAttributes().get(BigQueryTelemetryTracer.GCP_CLIENT_REPO));
+    assertEquals(
+        BigQueryTelemetryTracer.BQ_GCP_CLIENT_ARTIFACT,
+        span.getAttributes().get(BigQueryTelemetryTracer.GCP_CLIENT_ARTIFACT));
+    assertEquals(
+        BigQueryTelemetryTracer.BQ_GCP_CLIENT_LANGUAGE,
+        span.getAttributes().get(BigQueryTelemetryTracer.GCP_CLIENT_LANGUAGE));
+    assertEquals(
+        HttpTracingRequestInitializer.HTTP_RPC_SYSTEM_NAME,
+        span.getAttributes().get(BigQueryTelemetryTracer.RPC_SYSTEM_NAME));
+    assertEquals(
+        16, span.getAttributes().get(HttpTracingRequestInitializer.HTTP_RESPONSE_BODY_SIZE));
   }
 }
