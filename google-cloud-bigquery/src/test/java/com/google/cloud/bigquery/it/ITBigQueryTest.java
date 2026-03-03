@@ -23,6 +23,7 @@ import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -93,6 +94,7 @@ import com.google.cloud.bigquery.InsertAllRequest.RowToInsert;
 import com.google.cloud.bigquery.InsertAllResponse;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.JobConfiguration;
+import com.google.cloud.bigquery.JobCreationReason;
 import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.JobStatistics;
@@ -7316,14 +7318,16 @@ class ITBigQueryTest {
     String query = "SELECT 1 as one";
     QueryJobConfiguration configStateless = QueryJobConfiguration.newBuilder(query).build();
     TableResult result = bigQuery.query(configStateless);
-    // A stateless query should result in either a queryId (stateless success) or a jobId (fallback
-    // to a job).
-    // Exactly one of them should be non-null.
-    // Ideally Stateless query will return queryId but in some cases it would return jobId instead
-    // of queryId based on the query complexity or other factors (job timeout configs).
-    assertTrue(
-        (result.getJobId() != null) ^ (result.getQueryId() != null),
-        "Exactly one of jobId or queryId should be non-null");
+    // This should trigger a stateless query due to the query simplicity. However, BQ's engine
+    // may configure this to be a job due a variety of factors. The QueryID is autopopulated and
+    // may also return a JobId if changed to a job. For the query above, the Job Creation Reason
+    // would always be `OTHER` as it is not request, a large result, or due to a timeout.
+    assertNotNull(result.getQueryId());
+    if (result.getJobCreationReason() != null) {
+      assertNotNull(result.getJobId());
+      assertEquals(result.getQueryId(), result.getJobId().getJob());
+      assertEquals(JobCreationReason.Code.OTHER, result.getJobCreationReason().getCode());
+    }
 
     // Test scenario 2 by failing stateless check by setting job timeout.
     QueryJobConfiguration configQueryWithJob =
@@ -7416,9 +7420,18 @@ class ITBigQueryTest {
     // Stateless query returns TableResult
     QueryJobConfiguration config = QueryJobConfiguration.newBuilder(query).build();
     Object result = bigQuery.queryWithTimeout(config, null, null);
-    assertTrue(result instanceof TableResult);
-    assertNull(((TableResult) result).getJobId());
-    assertNotNull(((TableResult) result).getQueryId());
+    assertInstanceOf(TableResult.class, result);
+    // This should trigger a stateless query due to the query simplicity. However, BQ's engine
+    // may configure this to be a job due a variety of factors. The QueryID is autopopulated and
+    // may also return a JobId if changed to a Job. For the query above, the Job Creation Reason
+    // would always be `OTHER` as it is not request, a large result, or due to a timeout.
+    TableResult tableResult = (TableResult) result;
+    assertNotNull(tableResult.getQueryId());
+    if (tableResult.getJobCreationReason() != null) {
+      assertNotNull(tableResult.getJobId());
+      assertEquals(tableResult.getQueryId(), tableResult.getJobId().getJob());
+      assertEquals(JobCreationReason.Code.OTHER, tableResult.getJobCreationReason().getCode());
+    }
 
     // Stateful query returns Job
     // Test scenario 2 to ensure job is created if JobCreationMode is set, but for a small query
