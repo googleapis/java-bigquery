@@ -619,15 +619,15 @@ class ITBigQueryTest {
   private static final String EXTRACT_FILE = "extract.csv";
   private static final String EXTRACT_MODEL_FILE = "extract_model.csv";
   private static final String BUCKET = RemoteStorageHelper.generateBucketName();
-  private static final TableId TABLE_ID = TableId.of(DATASET, generateTableName("testing_table"));
+  private static final TableId TABLE_ID = TableId.of(DATASET, generateRandomName("testing_table"));
   private static final TableId TABLE_ID_SIMPLE =
-      TableId.of(DATASET, generateTableName("ddl_testing_table"));
+      TableId.of(DATASET, generateRandomName("ddl_testing_table"));
   private static final TableId TABLE_ID_FAST_QUERY =
-      TableId.of(DATASET, generateTableName("fast_query_testing_table"));
+      TableId.of(DATASET, generateRandomName("fast_query_testing_table"));
   private static final TableId TABLE_ID_LARGE =
-      TableId.of(DATASET, generateTableName("large_data_testing_table"));
+      TableId.of(DATASET, generateRandomName("large_data_testing_table"));
   private static final TableId TABLE_ID_FAST_QUERY_BQ_RESULTSET =
-      TableId.of(DATASET, generateTableName("fast_query_testing_bq_resultset"));
+      TableId.of(DATASET, generateRandomName("fast_query_testing_bq_resultset"));
 
   private static final String CSV_CONTENT = "StringValue1\nStringValue2\n";
   private static final String CSV_CONTENT_NULL = "String\0Value1\n";
@@ -1063,7 +1063,7 @@ class ITBigQueryTest {
     }
   }
 
-  private static String generateTableName(String prefix) {
+  private static String generateRandomName(String prefix) {
     return prefix + UUID.randomUUID().toString().substring(0, 8);
   }
 
@@ -2718,7 +2718,7 @@ class ITBigQueryTest {
 
   @Test
   void testListPartitions() throws InterruptedException {
-    String tableName = generateTableName("test_table_partitions_");
+    String tableName = generateRandomName("test_table_partitions_");
     Date date = Date.fromJavaUtilDate(new java.util.Date());
     String partitionDate = date.toString().replaceAll("-", "");
     TableId tableId = TableId.of(DATASET, tableName + "$" + partitionDate);
@@ -4686,8 +4686,8 @@ class ITBigQueryTest {
   }
 
   @Test
-  void testProjectIDFastSQLQueryWithJobId() throws InterruptedException {
-    String invalidProjectId = "RANDOM_PROJECT_" + UUID.randomUUID().toString().replace('-', '_');
+  void testProjectIDFastSQLQueryWithJobId() {
+    String invalidProjectId = generateRandomName("RANDOM_PROJECT_").replace('-', '_');
     String query =
         "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID_FAST_QUERY.getTable();
     // With incorrect projectID in jobid
@@ -4806,7 +4806,7 @@ class ITBigQueryTest {
   void testFastDMLQuery() throws InterruptedException {
     // The test runs an update query. Clone the table to ensure that this doesn't impact
     // other tests.
-    String tableName = generateTableName("test_table_fast_query_dml");
+    String tableName = generateRandomName("test_table_fast_query_dml");
     String tableNameFastQuery = TABLE_ID_SIMPLE.getTable();
     String ddlQuery =
         String.format(
@@ -4837,7 +4837,7 @@ class ITBigQueryTest {
 
   @Test
   void testFastDDLQuery() throws InterruptedException {
-    String tableName = generateTableName("test_table_fast_query_ddl");
+    String tableName = generateRandomName("test_table_fast_query_ddl");
     String tableNameFastQuery = TABLE_ID_SIMPLE.getTable();
     String ddlQuery =
         String.format(
@@ -4876,7 +4876,7 @@ class ITBigQueryTest {
 
   @Test
   void testFastQuerySlowDDL() throws InterruptedException {
-    String tableName = generateTableName("test_table_fast_query_ddl_slow_");
+    String tableName = generateRandomName("test_table_fast_query_ddl_slow_");
     // This query take more than 10s to run and should fall back on the old query path
     String slowDdlQuery =
         String.format(
@@ -5128,7 +5128,7 @@ class ITBigQueryTest {
   void testDmlStatistics() throws InterruptedException {
     // This runs an update SQL query. Clone the table to ensure that this doesn't impact
     // other tests.
-    String tableName = generateTableName("test_table_dml_stats");
+    String tableName = generateRandomName("test_table_dml_stats");
     String tableNameSimple = TABLE_ID_SIMPLE.getTable();
     String ddlQuery =
         String.format(
@@ -5166,7 +5166,7 @@ class ITBigQueryTest {
   void testTransactionInfo() throws InterruptedException {
     // The transaction runs an update query. Clone the table to ensure that this doesn't impact
     // other tests.
-    String tableName = generateTableName("test_table_transaction_info");
+    String tableName = generateRandomName("test_table_transaction_info");
     String tableNameSimple = TABLE_ID_SIMPLE.getTable();
     String ddlQuery =
         String.format(
@@ -5821,8 +5821,8 @@ class ITBigQueryTest {
 
   @Test
   void testCreateAndGetJob() throws InterruptedException, TimeoutException {
-    String sourceTableName = generateTableName("test_create_and_get_job_source_table");
-    String destinationTableName = generateTableName("test_create_and_get_job_destination_table");
+    String sourceTableName = generateRandomName("test_create_and_get_job_source_table");
+    String destinationTableName = generateRandomName("test_create_and_get_job_destination_table");
     TableId sourceTable = TableId.of(DATASET, sourceTableName);
     StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
     TableInfo tableInfo = TableInfo.of(sourceTable, tableDefinition);
@@ -5880,9 +5880,9 @@ class ITBigQueryTest {
   @Test
   void testCreateAndGetJobWithSelectedFields() throws InterruptedException, TimeoutException {
     String sourceTableName =
-        generateTableName("test_create_and_get_job_with_selected_fields_source_table");
+        generateRandomName("test_create_and_get_job_with_selected_fields_source_table");
     String destinationTableName =
-        generateTableName("test_create_and_get_job_with_selected_fields_destination_table");
+        generateRandomName("test_create_and_get_job_with_selected_fields_destination_table");
     TableId sourceTable = TableId.of(DATASET, sourceTableName);
     StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
     TableInfo tableInfo = TableInfo.of(sourceTable, tableDefinition);
@@ -5929,8 +5929,8 @@ class ITBigQueryTest {
 
   @Test
   void testCopyJob() throws InterruptedException, TimeoutException {
-    String sourceTableName = generateTableName("test_copy_job_source_table");
-    String destinationTableName = generateTableName("test_copy_job_destination_table");
+    String sourceTableName = generateRandomName("test_copy_job_source_table");
+    String destinationTableName = generateRandomName("test_copy_job_destination_table");
     TableId sourceTable = TableId.of(DATASET, sourceTableName);
     StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
     TableInfo tableInfo = TableInfo.of(sourceTable, tableDefinition);
@@ -5961,8 +5961,8 @@ class ITBigQueryTest {
 
   @Test
   void testCopyJobStatistics() throws InterruptedException, TimeoutException {
-    String sourceTableName = generateTableName("test_copy_job_statistics_source_table");
-    String destinationTableName = generateTableName("test_copy_job_statistics_destination_table");
+    String sourceTableName = generateRandomName("test_copy_job_statistics_source_table");
+    String destinationTableName = generateRandomName("test_copy_job_statistics_destination_table");
 
     QueryJobConfiguration createTable =
         QueryJobConfiguration.newBuilder(
@@ -5992,10 +5992,10 @@ class ITBigQueryTest {
 
   @Test
   void testSnapshotTableCopyJob() throws InterruptedException {
-    String sourceTableName = generateTableName("test_copy_job_base_table");
+    String sourceTableName = generateRandomName("test_copy_job_base_table");
     String ddlTableName = TABLE_ID_SIMPLE.getTable();
     // this creates a snapshot table at specified snapshotTime
-    String snapshotTableName = generateTableName("test_snapshot_table");
+    String snapshotTableName = generateRandomName("test_snapshot_table");
     // Create source table with some data in it
     String ddlQuery =
         String.format(
@@ -6039,7 +6039,7 @@ class ITBigQueryTest {
         ((SnapshotTableDefinition) snapshotTable.getDefinition()).getBaseTableId().getTable());
 
     // Restore base table to a new table
-    String restoredTableName = generateTableName("test_restore_table");
+    String restoredTableName = generateRandomName("test_restore_table");
     TableId restoredTableId = TableId.of(DATASET, restoredTableName);
     CopyJobConfiguration restoreConfiguration =
         CopyJobConfiguration.newBuilder(restoredTableId, snapshotTableId)
@@ -6071,8 +6071,8 @@ class ITBigQueryTest {
   @Test
   void testCopyJobWithLabelsAndExpTime() throws InterruptedException {
     String destExpiryTime = "2099-12-31T23:59:59.999999999Z";
-    String sourceTableName = generateTableName("test_copy_job_source_table_label");
-    String destinationTableName = generateTableName("test_copy_job_destination_table_label");
+    String sourceTableName = generateRandomName("test_copy_job_source_table_label");
+    String destinationTableName = generateRandomName("test_copy_job_destination_table_label");
     Map<String, String> labels = ImmutableMap.of("test_job_name", "test_copy_job");
     TableId sourceTable = TableId.of(DATASET, sourceTableName);
     StandardTableDefinition tableDefinition = StandardTableDefinition.of(TABLE_SCHEMA);
@@ -6101,7 +6101,7 @@ class ITBigQueryTest {
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   public void testQueryJob() throws InterruptedException, TimeoutException {
-    String tableName = generateTableName("test_query_job_table");
+    String tableName = generateRandomName("test_query_job_table");
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     TableId destinationTable = TableId.of(DATASET, tableName);
     QueryJobConfiguration configuration =
@@ -6147,7 +6147,7 @@ class ITBigQueryTest {
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   void testQueryJobWithConnectionProperties() throws InterruptedException {
-    String tableName = generateTableName("test_query_job_table_connection_properties");
+    String tableName = generateRandomName("test_query_job_table_connection_properties");
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     TableId destinationTable = TableId.of(DATASET, tableName);
     QueryJobConfiguration configuration =
@@ -6167,7 +6167,7 @@ class ITBigQueryTest {
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   void testQueryJobWithLabels() throws InterruptedException, TimeoutException {
-    String tableName = generateTableName("test_query_job_table");
+    String tableName = generateRandomName("test_query_job_table");
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     Map<String, String> labels = ImmutableMap.of("test-job-name", "test-query-job");
     TableId destinationTable = TableId.of(DATASET, tableName);
@@ -6190,7 +6190,7 @@ class ITBigQueryTest {
 
   @Test
   void testQueryJobWithSearchReturnsSearchStatisticsUnused() throws InterruptedException {
-    String tableName = generateTableName("test_query_job_table");
+    String tableName = generateRandomName("test_query_job_table");
     String query =
         "SELECT * FROM " + TABLE_ID.getTable() + " WHERE search(StringField, \"stringValue\")";
     TableId destinationTable = TableId.of(DATASET, tableName);
@@ -6218,7 +6218,7 @@ class ITBigQueryTest {
   /* TODO(prasmish): replicate the entire test case for executeSelect */
   @Test
   void testQueryJobWithRangePartitioning() throws InterruptedException {
-    String tableName = generateTableName("test_query_job_table_rangepartitioning");
+    String tableName = generateRandomName("test_query_job_table_rangepartitioning");
     String query =
         "SELECT IntegerField, TimestampField, StringField, BooleanField FROM "
             + TABLE_ID.getTable();
@@ -6243,7 +6243,7 @@ class ITBigQueryTest {
 
   @Test
   void testLoadJobWithRangePartitioning() throws InterruptedException {
-    String tableName = generateTableName("test_load_job_table_rangepartitioning");
+    String tableName = generateRandomName("test_load_job_table_rangepartitioning");
     TableId destinationTable = TableId.of(DATASET, tableName);
     try {
       LoadJobConfiguration configuration =
@@ -6267,7 +6267,7 @@ class ITBigQueryTest {
 
   @Test
   void testLoadJobWithDecimalTargetTypes() throws InterruptedException {
-    String tableName = generateTableName("test_load_job_table_parquet_decimalTargetTypes");
+    String tableName = generateRandomName("test_load_job_table_parquet_decimalTargetTypes");
     TableId destinationTable = TableId.of(DATASET, tableName);
     String sourceUri = "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/numeric/numeric_38_12.parquet";
     try {
@@ -6295,7 +6295,7 @@ class ITBigQueryTest {
 
   @Test
   void testExternalTableWithDecimalTargetTypes() throws InterruptedException {
-    String tableName = generateTableName("test_create_external_table_parquet_decimalTargetTypes");
+    String tableName = generateRandomName("test_create_external_table_parquet_decimalTargetTypes");
     TableId destinationTable = TableId.of(DATASET, tableName);
     String sourceUri = "gs://" + CLOUD_SAMPLES_DATA + "/bigquery/numeric/numeric_38_12.parquet";
     ExternalTableDefinition externalTableDefinition =
@@ -6315,7 +6315,7 @@ class ITBigQueryTest {
 
   @Test
   void testQueryJobWithDryRun() throws InterruptedException, TimeoutException {
-    String tableName = generateTableName("test_query_job_table");
+    String tableName = generateRandomName("test_query_job_table");
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     TableId destinationTable = TableId.of(DATASET, tableName);
     QueryJobConfiguration configuration =
@@ -6333,7 +6333,7 @@ class ITBigQueryTest {
 
   @Test
   void testExtractJob() throws InterruptedException, TimeoutException {
-    String tableName = generateTableName("test_export_job_table");
+    String tableName = generateRandomName("test_export_job_table");
     TableId destinationTable = TableId.of(DATASET, tableName);
     Map<String, String> labels = ImmutableMap.of("test-job-name", "test-load-extract-job");
     LoadJobConfiguration configuration =
@@ -6410,7 +6410,7 @@ class ITBigQueryTest {
 
   @Test
   void testExtractJobWithLabels() throws InterruptedException, TimeoutException {
-    String tableName = generateTableName("test_export_job_table_label");
+    String tableName = generateRandomName("test_export_job_table_label");
     Map<String, String> labels = ImmutableMap.of("test_job_name", "test_export_job");
     TableId destinationTable = TableId.of(DATASET, tableName);
     LoadJobConfiguration configuration =
@@ -6436,7 +6436,7 @@ class ITBigQueryTest {
 
   @Test
   void testCancelJob() throws InterruptedException, TimeoutException {
-    String destinationTableName = generateTableName("test_cancel_query_job_table");
+    String destinationTableName = generateRandomName("test_cancel_query_job_table");
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     TableId destinationTable = TableId.of(DATASET, destinationTableName);
     QueryJobConfiguration configuration =
@@ -6455,7 +6455,7 @@ class ITBigQueryTest {
 
   @Test
   void testInsertFromFile() throws InterruptedException, IOException, TimeoutException {
-    String destinationTableName = generateTableName("test_insert_from_file_table");
+    String destinationTableName = generateRandomName("test_insert_from_file_table");
     TableId tableId = TableId.of(DATASET, destinationTableName);
     WriteChannelConfiguration configuration =
         WriteChannelConfiguration.newBuilder(tableId)
@@ -6528,7 +6528,7 @@ class ITBigQueryTest {
 
   @Test
   void testInsertFromFileWithLabels() throws InterruptedException, IOException, TimeoutException {
-    String destinationTableName = generateTableName("test_insert_from_file_table_with_labels");
+    String destinationTableName = generateRandomName("test_insert_from_file_table_with_labels");
     TableId tableId = TableId.of(DATASET, destinationTableName);
     WriteChannelConfiguration configuration =
         WriteChannelConfiguration.newBuilder(tableId)
@@ -6560,7 +6560,7 @@ class ITBigQueryTest {
   void testInsertWithDecimalTargetTypes()
       throws InterruptedException, IOException, TimeoutException {
     String destinationTableName =
-        generateTableName("test_insert_from_file_table_with_decimal_target_type");
+        generateRandomName("test_insert_from_file_table_with_decimal_target_type");
     TableId tableId = TableId.of(DATASET, destinationTableName);
     WriteChannelConfiguration configuration =
         WriteChannelConfiguration.newBuilder(tableId)
@@ -6694,7 +6694,7 @@ class ITBigQueryTest {
   void testWriteChannelPreserveAsciiControlCharacters()
       throws InterruptedException, IOException, TimeoutException {
     String destinationTableName =
-        generateTableName("test_write_channel_preserve_ascii_control_characters");
+        generateRandomName("test_write_channel_preserve_ascii_control_characters");
     TableId tableId = TableId.of(DATASET, destinationTableName);
     WriteChannelConfiguration configuration =
         WriteChannelConfiguration.newBuilder(tableId)
@@ -6721,7 +6721,7 @@ class ITBigQueryTest {
   @Test
   void testLoadJobPreserveAsciiControlCharacters() throws InterruptedException {
     String destinationTableName =
-        generateTableName("test_load_job_preserve_ascii_control_characters");
+        generateRandomName("test_load_job_preserve_ascii_control_characters");
     TableId destinationTable = TableId.of(DATASET, destinationTableName);
 
     try {
@@ -6742,7 +6742,7 @@ class ITBigQueryTest {
   @Test
   void testReferenceFileSchemaUriForAvro() {
     try {
-      String destinationTableName = generateTableName("test_reference_file_schema_avro");
+      String destinationTableName = generateRandomName("test_reference_file_schema_avro");
       TableId tableId = TableId.of(DATASET, destinationTableName);
       Schema expectedSchema =
           Schema.of(
@@ -6801,7 +6801,7 @@ class ITBigQueryTest {
   @Test
   void testReferenceFileSchemaUriForParquet() {
     try {
-      String destinationTableName = generateTableName("test_reference_file_schema_parquet");
+      String destinationTableName = generateRandomName("test_reference_file_schema_parquet");
       TableId tableId = TableId.of(DATASET, destinationTableName);
       Schema expectedSchema =
           Schema.of(
@@ -6859,7 +6859,7 @@ class ITBigQueryTest {
   @Test
   void testCreateExternalTableWithReferenceFileSchemaAvro() {
     String destinationTableName =
-        generateTableName("test_create_external_table_reference_file_schema_avro");
+        generateRandomName("test_create_external_table_reference_file_schema_avro");
     TableId tableId = TableId.of(DATASET, destinationTableName);
     Schema expectedSchema =
         Schema.of(
@@ -6899,7 +6899,7 @@ class ITBigQueryTest {
   @Test
   void testCreateExternalTableWithReferenceFileSchemaParquet() {
     String destinationTableName =
-        generateTableName("test_create_external_table_reference_file_schema_parquet");
+        generateRandomName("test_create_external_table_reference_file_schema_parquet");
     TableId tableId = TableId.of(DATASET, destinationTableName);
     Schema expectedSchema =
         Schema.of(
@@ -6940,9 +6940,9 @@ class ITBigQueryTest {
 
   @Test
   void testCloneTableCopyJob() throws InterruptedException {
-    String sourceTableName = generateTableName("test_copy_job_base_table");
+    String sourceTableName = generateRandomName("test_copy_job_base_table");
     String ddlTableName = TABLE_ID_SIMPLE.getTable();
-    String cloneTableName = generateTableName("test_clone_table");
+    String cloneTableName = generateRandomName("test_clone_table");
     // Create source table with some data in it
     String ddlQuery =
         String.format(
@@ -7518,7 +7518,7 @@ class ITBigQueryTest {
 
   @Test
   void testExternalTableMetadataCachingNotEnable() throws InterruptedException {
-    String tableName = generateTableName("test_metadata_cache_not_enable");
+    String tableName = generateRandomName("test_metadata_cache_not_enable");
     TableId tableId = TableId.of(DATASET, tableName);
     ExternalTableDefinition externalTableDefinition =
         ExternalTableDefinition.of(
@@ -7561,7 +7561,7 @@ class ITBigQueryTest {
   void testExternalMetadataCacheModeFailForNonBiglake() {
     // Validate that MetadataCacheMode is passed to the backend.
     // TODO: Enhance this test after BigLake testing infrastructure is inplace.
-    String tableName = generateTableName("test_metadata_cache_mode_fail_for_non_biglake");
+    String tableName = generateRandomName("test_metadata_cache_mode_fail_for_non_biglake");
     TableId tableId = TableId.of(DATASET, tableName);
     ExternalTableDefinition externalTableDefinition =
         ExternalTableDefinition.newBuilder(
@@ -7586,7 +7586,7 @@ class ITBigQueryTest {
 
   @Test
   void testObjectTable() throws InterruptedException {
-    String tableName = generateTableName("test_object_table");
+    String tableName = generateRandomName("test_object_table");
     TableId tableId = TableId.of(DATASET, tableName);
 
     String sourceUri = "gs://" + BUCKET + "/" + JSON_LOAD_FILE;
@@ -7657,7 +7657,7 @@ class ITBigQueryTest {
     // mapping.
 
     // Test v1 mapping.
-    String v1TableName = generateTableName("flexible_column_name_data_testing_table_v1");
+    String v1TableName = generateRandomName("flexible_column_name_data_testing_table_v1");
     TableId v1TableId = TableId.of(DATASET, v1TableName);
     try {
       LoadJobConfiguration loadJobConfigurationV1 =
@@ -7682,7 +7682,7 @@ class ITBigQueryTest {
     }
 
     // Test v2 mapping.
-    String v2TableName = generateTableName("flexible_column_name_data_testing_table_v2");
+    String v2TableName = generateRandomName("flexible_column_name_data_testing_table_v2");
     TableId v2TableId = TableId.of(DATASET, v2TableName);
     try {
       LoadJobConfiguration loadJobConfigurationV2 =
