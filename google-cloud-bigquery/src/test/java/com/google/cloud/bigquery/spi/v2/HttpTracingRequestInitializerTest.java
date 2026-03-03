@@ -216,6 +216,27 @@ public class HttpTracingRequestInitializerTest {
         spans.get(0).getAttributes().get(HttpTracingRequestInitializer.URL_DOMAIN));
   }
 
+  @Test
+  public void testUrlFullIsRequestBasedAndRedactsSensitiveContent() throws IOException {
+    HttpTransport transport = createTransport(200, null, null);
+    HttpRequest request =
+        buildGetRequest(
+            transport,
+            initializer,
+            "https://user:password@bigquery.googleapis.com:443/bigquery/v2/projects/test/datasets"
+                + "?AWSAccessKeyId=abc&Signature=def&sig=ghi&X-Goog-Signature=jkl&safe=value&signature=lower#frag");
+
+    HttpResponse response = request.execute();
+    response.disconnect();
+
+    List<SpanData> spans = spanExporter.getFinishedSpanItems();
+    assertEquals(1, spans.size());
+    assertEquals(
+        "https://REDACTED:REDACTED@bigquery.googleapis.com:443/bigquery/v2/projects/test/datasets"
+            + "?AWSAccessKeyId=REDACTED&Signature=REDACTED&sig=REDACTED&X-Goog-Signature=REDACTED&safe=value&signature=lower#frag",
+        spans.get(0).getAttributes().get(HttpTracingRequestInitializer.URL_FULL));
+  }
+
   private static HttpTransport createTransport(
       int statusCode, String reasonPhrase, Long contentLength) {
     return new MockHttpTransport() {

@@ -25,6 +25,12 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -50,6 +56,10 @@ public class HttpTracingRequestInitializer implements HttpRequestInitializer {
       AttributeKey.longKey("http.response.body.size");
 
   @VisibleForTesting static final String HTTP_RPC_SYSTEM_NAME = "http";
+  private static final String REDACTED_VALUE = "REDACTED";
+  private static final Set<String> SENSITIVE_QUERY_KEYS =
+      Collections.unmodifiableSet(
+          new HashSet<>(Arrays.asList("AWSAccessKeyId", "Signature", "sig", "X-Goog-Signature")));
 
   private final HttpRequestInitializer delegate;
   private final Tracer tracer;
@@ -128,7 +138,7 @@ public class HttpTracingRequestInitializer implements HttpRequestInitializer {
     Span span =
         BigQueryTelemetryTracer.newSpanBuilder(tracer, httpMethod)
             .setAttribute(HTTP_REQUEST_METHOD, httpMethod)
-            .setAttribute(URL_FULL, url)
+            .setAttribute(URL_FULL, sanitizeUrlFull(url))
             .setAttribute(BigQueryTelemetryTracer.SERVER_ADDRESS, host)
             .setAttribute(URL_DOMAIN, resolveUrlDomain(host))
             .setAttribute(BigQueryTelemetryTracer.RPC_SYSTEM_NAME, HTTP_RPC_SYSTEM_NAME)
@@ -232,5 +242,52 @@ public class HttpTracingRequestInitializer implements HttpRequestInitializer {
       span.updateName(actualMethod);
       span.setAttribute(HTTP_REQUEST_METHOD, actualMethod);
     }
+  }
+
+  @VisibleForTesting
+  static String sanitizeUrlFull(String url) {
+    try {
+      URI uri = new URI(url);
+      String sanitizedUserInfo =
+          uri.getRawUserInfo() != null ? REDACTED_VALUE + ":" + REDACTED_VALUE : null;
+      String sanitizedQuery = redactSensitiveQueryValues(uri.getRawQuery());
+      URI sanitizedUri =
+          new URI(
+              uri.getScheme(),
+              sanitizedUserInfo,
+              uri.getHost(),
+              uri.getPort(),
+              uri.getRawPath(),
+              sanitizedQuery,
+              uri.getRawFragment());
+      return sanitizedUri.toString();
+    } catch (URISyntaxException | IllegalArgumentException ex) {
+      return url;
+    }
+  }
+
+  private static String redactSensitiveQueryValues(@Nullable String rawQuery) {
+    if (rawQuery == null || rawQuery.isEmpty()) {
+      return rawQuery;
+    }
+
+    String[] params = rawQuery.split("&", -1);
+    for (int i = 0; i < params.length; i++) {
+      String param = params[i];
+      int equalsIndex = param.indexOf('=');
+      String key = equalsIndex >= 0 ? param.substring(0, equalsIndex) : param;
+      if (SENSITIVE_QUERY_KEYS.contains(key)) {
+        params[i] = key + "=" + REDACTED_VALUE;
+      }
+    }
+
+    StringBuilder redactedQuery = new StringBuilder();
+    for (int i = 0; i < params.length; i++) {
+      if (i > 0) {
+        redactedQuery.append('&');
+      }
+      redactedQuery.append(params[i]);
+    }
+    return redactedQuery.toString();
   }
 }

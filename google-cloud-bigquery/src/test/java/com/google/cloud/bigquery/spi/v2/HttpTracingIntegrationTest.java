@@ -23,7 +23,6 @@ import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.cloud.bigquery.RetryContext;
 import com.google.cloud.bigquery.telemetry.BigQueryTelemetryTracer;
 import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.api.trace.Tracer;
@@ -76,7 +75,6 @@ public class HttpTracingIntegrationTest {
     if (testServer != null) {
       testServer.stop(0);
     }
-    RetryContext.clearRetryAttempt();
   }
 
   @Test
