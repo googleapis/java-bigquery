@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import org.jspecify.annotations.Nullable;
 
 /**
  * HttpRequestInitializer that wraps a delegate initializer, intercepts all HTTP requests, adds
@@ -63,10 +62,10 @@ public class HttpTracingRequestInitializer implements HttpRequestInitializer {
 
   private final HttpRequestInitializer delegate;
   private final Tracer tracer;
-  private final @Nullable String clientRootUrl;
+  private final String clientRootUrl;
 
   public HttpTracingRequestInitializer(
-      HttpRequestInitializer delegate, Tracer tracer, @Nullable String clientRootUrl) {
+      HttpRequestInitializer delegate, Tracer tracer, String clientRootUrl) {
     this.delegate = delegate;
     this.tracer = tracer;
     this.clientRootUrl = clientRootUrl;
@@ -266,7 +265,7 @@ public class HttpTracingRequestInitializer implements HttpRequestInitializer {
     }
   }
 
-  private static String redactSensitiveQueryValues(@Nullable String rawQuery) {
+  private static String redactSensitiveQueryValues(String rawQuery) {
     if (rawQuery == null || rawQuery.isEmpty()) {
       return rawQuery;
     }
