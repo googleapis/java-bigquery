@@ -369,9 +369,12 @@ final class BigQueryJdbcOAuthUtility {
       byte[] keyBytes = pvtKey != null ? pvtKey.getBytes() : null;
 
       if (isFileExists(keyPath)) {
-        InputStream stream = new FileInputStream(keyPath);
-        keyBytes = stream.readNBytes(1024 * 1024);
-        stream.close();
+        try (InputStream stream = new FileInputStream(keyPath)) {
+          int bufferSize = 1024 * 1024;
+          byte[] buffer = new byte[bufferSize];
+          stream.read(buffer, 0, bufferSize);
+          keyBytes = buffer;
+        }
       }
 
       InputStream stream = null;
@@ -379,7 +382,7 @@ final class BigQueryJdbcOAuthUtility {
         stream = new ByteArrayInputStream(keyBytes);
       } else if (pvtKey != null) {
         key = privateKeyFromPkcs8(pvtKey);
-      } else {
+      } else if (keyBytes != null) {
         key = privateKeyFromP12Bytes(keyBytes, p12Password);
       }
 
