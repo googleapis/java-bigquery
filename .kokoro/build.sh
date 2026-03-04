@@ -63,7 +63,7 @@ integration)
     mvn -B ${INTEGRATION_TEST_ARGS} \
       -pl "!google-cloud-bigquery-jdbc" \
       -ntp \
-      -Dprotobuf.version=4.33.5 \
+      -Dprotobuf.version=4.34.0 \
       -Penable-integration-tests \
       -DtrimStackTrace=false \
       -Dclirr.skip=true \
