@@ -1065,7 +1065,10 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
     }
 
     BigQueryOptions options = bigQueryOptions.setHeaderProvider(HEADER_PROVIDER).build();
-    options.setDefaultJobCreationMode(this.useStatelessQueryMode ? JobCreationMode.JOB_CREATION_OPTIONAL : JobCreationMode.JOB_CREATION_REQUIRED);
+    options.setDefaultJobCreationMode(
+        this.useStatelessQueryMode
+            ? JobCreationMode.JOB_CREATION_OPTIONAL
+            : JobCreationMode.JOB_CREATION_REQUIRED);
     return options.getService();
   }
 

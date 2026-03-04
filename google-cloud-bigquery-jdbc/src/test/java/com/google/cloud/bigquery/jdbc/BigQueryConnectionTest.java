@@ -40,6 +40,9 @@ public class BigQueryConnectionTest {
 
   private static final String DEFAULT_VERSION = "0.0.0";
   private static final String DEFAULT_JDBC_TOKEN_VALUE = "Google-BigQuery-JDBC-Driver";
+  private static final String BASE_URL =
+      "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+          + "OAuthType=2;OAuthAccessToken=redacted;ProjectId=project;";
   private String expectedVersion;
 
   @Before
@@ -386,34 +389,31 @@ public class BigQueryConnectionTest {
 
   @Test
   public void testBigQueryJobCreationMode_required() throws Exception {
-    String url =
-        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-            + "OAuthType=3;JobCreationMode=1;";
-      try (BigQueryConnection connection = new BigQueryConnection(url)) {
-        BigQuery bq = connection.getBigQuery();
-        assertEquals(bq.getOptions().getDefaultJobCreationMode(), JobCreationMode.JOB_CREATION_REQUIRED);
-      }
+    String url = BASE_URL + "JobCreationMode=1;";
+    try (BigQueryConnection connection = new BigQueryConnection(url)) {
+      BigQuery bq = connection.getBigQuery();
+      assertEquals(
+          bq.getOptions().getDefaultJobCreationMode(), JobCreationMode.JOB_CREATION_REQUIRED);
+    }
   }
 
   @Test
   public void testBigQueryJobCreationMode_optional() throws Exception {
-    String url =
-        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-            + "OAuthType=3;JobCreationMode=2;";
-      try (BigQueryConnection connection = new BigQueryConnection(url)) {
-        BigQuery bq = connection.getBigQuery();
-        assertEquals(bq.getOptions().getDefaultJobCreationMode(), JobCreationMode.JOB_CREATION_OPTIONAL);
-      }
+    String url = BASE_URL + "JobCreationMode=2;";
+    try (BigQueryConnection connection = new BigQueryConnection(url)) {
+      BigQuery bq = connection.getBigQuery();
+      assertEquals(
+          bq.getOptions().getDefaultJobCreationMode(), JobCreationMode.JOB_CREATION_OPTIONAL);
+    }
   }
 
   @Test
   public void testBigQueryJobCreationMode_default() throws Exception {
-    String url =
-        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-            + "OAuthType=3;";
-      try (BigQueryConnection connection = new BigQueryConnection(url)) {
-        BigQuery bq = connection.getBigQuery();
-        assertEquals(bq.getOptions().getDefaultJobCreationMode(), JobCreationMode.JOB_CREATION_OPTIONAL);
-      }
+    String url = BASE_URL;
+    try (BigQueryConnection connection = new BigQueryConnection(url)) {
+      BigQuery bq = connection.getBigQuery();
+      assertEquals(
+          bq.getOptions().getDefaultJobCreationMode(), JobCreationMode.JOB_CREATION_OPTIONAL);
+    }
   }
 }

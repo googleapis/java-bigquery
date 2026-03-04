@@ -36,7 +36,7 @@ class BigQueryConnectionProperty {
   }
 
   public String getDefaultValue() {
-    if (defaultValueSupplier != null){
+    if (defaultValueSupplier != null) {
       return defaultValueSupplier.get();
     }
     return defaultValue;

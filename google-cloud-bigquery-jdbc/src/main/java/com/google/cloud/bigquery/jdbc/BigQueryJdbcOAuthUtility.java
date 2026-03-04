@@ -38,6 +38,7 @@ import com.google.gson.stream.JsonReader;
 import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -365,13 +366,15 @@ final class BigQueryJdbcOAuthUtility {
 
       final String keyPath = pvtKeyPath != null ? pvtKeyPath : pvtKey;
       PrivateKey key = null;
-      InputStream stream = null;
       byte[] keyBytes = pvtKey != null ? pvtKey.getBytes() : null;
-      
+
       if (isFileExists(keyPath)) {
-        keyBytes = Files.readAllBytes(Paths.get(keyPath));
+        InputStream stream = new FileInputStream(keyPath);
+        keyBytes = stream.readNBytes(1024 * 1024);
+        stream.close();
       }
 
+      InputStream stream = null;
       if (isJson(keyBytes)) {
         stream = new ByteArrayInputStream(keyBytes);
       } else if (pvtKey != null) {

@@ -26,9 +26,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Supplier;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -682,7 +682,10 @@ final class BigQueryJdbcUrlUtility {
   }
 
   static String parseStringPropertyLazyDefault(
-      String url, String propertyName, Supplier<String> defaultValueSupplier, String callerClassName) {
+      String url,
+      String propertyName,
+      Supplier<String> defaultValueSupplier,
+      String callerClassName) {
     LOG.finest("++enter++\t" + callerClassName);
     String parsedValue = BigQueryJdbcUrlUtility.parseUriProperty(url, propertyName);
     if (parsedValue != null) {
