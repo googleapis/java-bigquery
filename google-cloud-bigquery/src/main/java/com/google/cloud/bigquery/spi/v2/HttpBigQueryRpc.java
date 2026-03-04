@@ -109,7 +109,7 @@ public class HttpBigQueryRpc implements BigQueryRpc {
     HttpRequestInitializer initializer = transportOptions.getHttpRequestInitializer(options);
 
     String resolvedBigQueryRootUrl = options.getResolvedApiaryHost("bigquery");
-    // Wrap with tracing initializer if OpenTelemetry is enabled
+
     if (options.isOpenTelemetryTracingEnabled() && options.getOpenTelemetryTracer() != null) {
       initializer =
           new HttpTracingRequestInitializer(

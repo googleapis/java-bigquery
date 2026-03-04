@@ -55,10 +55,20 @@ public class HttpTracingRequestInitializer implements HttpRequestInitializer {
       AttributeKey.longKey("http.response.body.size");
 
   @VisibleForTesting static final String HTTP_RPC_SYSTEM_NAME = "http";
+
   private static final String REDACTED_VALUE = "REDACTED";
+  // Required by OpenTelemetry semantic conventions:
+  //     https://opentelemetry.io/docs/specs/semconv/registry/attributes/url/#url-full
   private static final Set<String> SENSITIVE_QUERY_KEYS =
       Collections.unmodifiableSet(
-          new HashSet<>(Arrays.asList("AWSAccessKeyId", "Signature", "sig", "X-Goog-Signature")));
+          new HashSet<>(
+              Arrays.asList(
+                  "AWSAccessKeyId",
+                  "Signature",
+                  "sig",
+                  "X-Goog-Signature",
+                  // Google uses this as a key in resumable uploads.
+                  "upload_id")));
 
   private final HttpRequestInitializer delegate;
   private final Tracer tracer;
@@ -88,27 +98,25 @@ public class HttpTracingRequestInitializer implements HttpRequestInitializer {
 
     Span span = createHttpTraceSpan(httpMethod, url, host, port);
 
-    // Wrap the existing response interceptor
     HttpResponseInterceptor originalInterceptor = request.getResponseInterceptor();
     request.setResponseInterceptor(
         response -> {
-          if (span.isRecording()) {
-            try {
-              int statusCode = response.getStatusCode();
-              addCommonResponseAttributesToSpan(request, response, span, httpMethod, statusCode);
-              addSuccessResponseToSpan(response, span, statusCode);
-              if (originalInterceptor != null) {
-                originalInterceptor.interceptResponse(response);
-              }
-            } finally {
-              span.end();
+          addCommonResponseAttributesToSpan(
+              request, response, span, httpMethod, response.getStatusCode());
+          span.setStatus(StatusCode.OK);
+
+          try {
+            if (originalInterceptor != null) {
+              originalInterceptor.interceptResponse(response);
             }
-          } else if (originalInterceptor != null) {
-            originalInterceptor.interceptResponse(response);
+          } catch (IOException e) {
+            addExceptionToSpan(e, span);
+            throw e;
+          } finally {
+            span.end();
           }
         });
 
-    // Wrap the existing unsuccessful response handler
     HttpUnsuccessfulResponseHandler originalHandler = request.getUnsuccessfulResponseHandler();
     request.setUnsuccessfulResponseHandler(
         (request1, response, supportsRetry) -> {
@@ -124,16 +132,15 @@ public class HttpTracingRequestInitializer implements HttpRequestInitializer {
             addExceptionToSpan(e, span);
             throw e;
           } finally {
-            if (span.isRecording()) {
-              span.end();
-            }
+            span.end();
           }
         });
   }
 
   /** Initial HTTP trace span creation with basic attributes from request */
   private Span createHttpTraceSpan(String httpMethod, String url, String host, Integer port) {
-    // TODO: Determine span name: {method} {url.template} or {method}
+    // TODO: add url template && resource name
+    // TODO: appropriately determine span name using: {method} {url.template} or {method}
     Span span =
         BigQueryTelemetryTracer.newSpanBuilder(tracer, httpMethod)
             .setAttribute(HTTP_REQUEST_METHOD, httpMethod)
@@ -142,8 +149,6 @@ public class HttpTracingRequestInitializer implements HttpRequestInitializer {
             .setAttribute(URL_DOMAIN, resolveUrlDomain(host))
             .setAttribute(BigQueryTelemetryTracer.RPC_SYSTEM_NAME, HTTP_RPC_SYSTEM_NAME)
             .startSpan();
-
-    // TODO: add url template && resource name
     if (port != null && port > 0) {
       span.setAttribute(BigQueryTelemetryTracer.SERVER_PORT, port.longValue());
     }
@@ -166,20 +171,14 @@ public class HttpTracingRequestInitializer implements HttpRequestInitializer {
 
   private static void addCommonResponseAttributesToSpan(
       HttpRequest request, HttpResponse response, Span span, String httpMethod, int statusCode) {
-    // This is called after we get a response as sometimes the request body size isn't available
-    // before the response is received.
+    // We add request body size/update request method after we receive response as they sometimes
+    // the data is
+    // not available until after the http request execution
     addRequestBodySizeToSpan(request, span);
     checkForUpdatedRequestMethod(response, httpMethod, span);
-    setResponseBodySize(response, span);
-    span.setAttribute(HTTP_RESPONSE_STATUS_CODE, statusCode);
-  }
 
-  private static void addSuccessResponseToSpan(HttpResponse response, Span span, int statusCode) {
-    if (statusCode >= 400) {
-      addErrorResponseToSpan(response, span, statusCode);
-    } else {
-      span.setStatus(StatusCode.OK);
-    }
+    addResponseBodySizeToSpan(response, span);
+    span.setAttribute(HTTP_RESPONSE_STATUS_CODE, statusCode);
   }
 
   private static void addExceptionToSpan(IOException e, Span span) {
@@ -208,22 +207,17 @@ public class HttpTracingRequestInitializer implements HttpRequestInitializer {
   }
 
   private static void addRequestBodySizeToSpan(HttpRequest request, Span span) {
-    Long requestBodySize = null;
     try {
-      HttpContent content = request.getContent();
-
-      if (content != null) {
-        requestBodySize = content.getLength();
+      long contentLength = request.getContent().getLength();
+      if (contentLength > 0) {
+        span.setAttribute(HTTP_REQUEST_BODY_SIZE, contentLength);
       }
     } catch (Exception e) {
       // Ignore - body size not available
     }
-    if (requestBodySize != null) {
-      span.setAttribute(HTTP_REQUEST_BODY_SIZE, requestBodySize);
-    }
   }
 
-  private static void setResponseBodySize(HttpResponse response, Span span) {
+  private static void addResponseBodySizeToSpan(HttpResponse response, Span span) {
     try {
       long contentLength = response.getHeaders().getContentLength();
       if (contentLength > 0) {
