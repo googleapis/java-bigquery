@@ -17,6 +17,7 @@
 package com.google.cloud.bigquery.jdbc;
 
 import com.google.cloud.bigquery.exception.BigQueryJdbcException;
+import com.google.cloud.bigquery.exception.BigQueryJdbcRuntimeException;
 import io.grpc.LoadBalancerRegistry;
 import io.grpc.internal.PickFirstLoadBalancerProvider;
 import java.io.IOException;
@@ -123,6 +124,11 @@ public class BigQueryDriver implements Driver {
         // strip 'jdbc:' from the URL, add any extra properties
         String connectionUri =
             BigQueryJdbcUrlUtility.appendPropertiesToURL(url.substring(5), this.toString(), info);
+        try {
+          BigQueryJdbcUrlUtility.parseUrl(connectionUri);
+        } catch (BigQueryJdbcRuntimeException e) {
+          throw new BigQueryJdbcException(e.getMessage(), e);
+        }
 
         // LogLevel
         String logLevelStr =

@@ -51,7 +51,7 @@ public class BigQueryJdbcBaseTest {
   }
 
   protected static URIBuilder getBaseUri(int authType, String projectId) {
-    return getBaseUri(authType).append("PROJECT_ID", projectId);
+    return getBaseUri(authType).append("ProjectId", projectId);
   }
 
   protected static URIBuilder getUriOAuthServiceAccount() {
