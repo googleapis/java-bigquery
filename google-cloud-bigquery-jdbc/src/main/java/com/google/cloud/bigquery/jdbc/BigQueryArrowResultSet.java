@@ -24,6 +24,7 @@ import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.StandardSQLTypeName;
 import com.google.cloud.bigquery.exception.BigQueryJdbcException;
+import com.google.cloud.bigquery.exception.BigQueryJdbcRuntimeException;
 import com.google.cloud.bigquery.storage.v1.ArrowRecordBatch;
 import com.google.cloud.bigquery.storage.v1.ArrowSchema;
 import java.io.IOException;
@@ -236,6 +237,9 @@ class BigQueryArrowResultSet extends BigQueryBaseResultSet {
           /* Start of iteration or we have exhausted the current batch */
           // Advance the cursor. Potentially blocking operation.
           BigQueryArrowBatchWrapper batchWrapper = this.buffer.take();
+          if (batchWrapper.getException() != null) {
+            throw new BigQueryJdbcRuntimeException(batchWrapper.getException());
+          }
           if (batchWrapper.isLast()) {
             /* Marks the end of the records */
             if (this.vectorSchemaRoot != null) {

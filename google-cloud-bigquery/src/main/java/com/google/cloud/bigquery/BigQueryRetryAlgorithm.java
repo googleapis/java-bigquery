@@ -25,8 +25,8 @@ import com.google.api.gax.retrying.RetryingContext;
 import com.google.api.gax.retrying.TimedAttemptSettings;
 import com.google.api.gax.retrying.TimedRetryAlgorithm;
 import com.google.api.gax.retrying.TimedRetryAlgorithmWithContext;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.api.services.bigquery.model.ErrorProto;
+import com.google.api.services.bigquery.model.Job;
 import java.time.Duration;
 import java.util.Iterator;
 import java.util.UUID;
@@ -222,21 +222,11 @@ public class BigQueryRetryAlgorithm<ResponseT> extends RetryAlgorithm<ResponseT>
     following logic based on response body of jobs.insert method, so far the only
     known case where a response with status code 200 may contain an error message
      */
-    try {
-      JsonObject responseJson =
-          JsonParser.parseString(previousResponse.toString()).getAsJsonObject();
-      if (responseJson.has("status") && responseJson.getAsJsonObject("status").has("errorResult")) {
-        return responseJson
-            .getAsJsonObject("status")
-            .getAsJsonObject("errorResult")
-            .get("message")
-            .toString();
-      } else {
-        return null;
-      }
-    } catch (Exception e) {
-      // exceptions here implies no error message present in response, returning null
-      return null;
+    if (previousResponse instanceof Job) {
+      Job job = (Job) previousResponse;
+      ErrorProto error = job.getStatus() != null ? job.getStatus().getErrorResult() : null;
+      return error != null ? error.getMessage() : null;
     }
+    return null;
   }
 }

@@ -159,6 +159,9 @@ class BigQueryJsonResultSet extends BigQueryBaseResultSet {
       try {
         // Advance the cursor,Potentially blocking operation
         this.cursor = this.buffer.take();
+        if (this.cursor.getException() != null) {
+          throw new BigQueryJdbcRuntimeException(this.cursor.getException());
+        }
         this.rowCnt++;
         // Check for end of stream
         if (this.cursor.isLast()) {
