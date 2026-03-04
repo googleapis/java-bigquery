@@ -48,6 +48,18 @@
         <version>3.5.2</version>
         <configuration>
           <skip>${skipSurefire}</skip>
+          <systemPropertyVariables>
+            <JDBC_TESTS>true</JDBC_TESTS>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <systemPropertyVariables>
+            <JDBC_TESTS>true</JDBC_TESTS>
+          </systemPropertyVariables>
         </configuration>
       </plugin>
       <plugin>
