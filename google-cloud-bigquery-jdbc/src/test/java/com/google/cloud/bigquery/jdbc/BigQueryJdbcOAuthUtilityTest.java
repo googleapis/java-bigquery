@@ -50,6 +50,18 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
           + "&scope=https://www.googleapis.com/auth/bigquery&state=test_state&access_type=offline&prompt=consent&login_hint=test_user&include_granted_scopes=true";
 
   @Test
+  public void testParseOAuthPropsWithSpecialChars() {
+    Map<String, String> result =
+        BigQueryJdbcOAuthUtility.parseOAuthProperties(
+            DataSource.fromUrl(
+                "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+                    + "ProjectId=MyProject;OAuthType=0;OAuthServiceAcctEmail=dummy@email.com;"
+                    + "OAuthPvtKey=Key+With+Plus;"),
+            null);
+    assertEquals("Key+With+Plus", result.get("OAuthPvtKey"));
+  }
+
+  @Test
   public void testParseOAuthPropsForAuthType0KeyfileOnly() {
     Map<String, String> result =
         BigQueryJdbcOAuthUtility.parseOAuthProperties(

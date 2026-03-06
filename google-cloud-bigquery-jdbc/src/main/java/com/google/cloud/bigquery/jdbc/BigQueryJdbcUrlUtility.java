@@ -710,7 +710,7 @@ final class BigQueryJdbcUrlUtility {
             String.format("Wrong value or unknown setting: %s", safeRef));
       }
 
-      map.put(PROPERTY_NAME_MAP.get(key), CharEscapers.decodeUriPath(kv[1]));
+      map.put(PROPERTY_NAME_MAP.get(key), CharEscapers.decodeUriPath(kv[1].replace("+", "%2B")));
     }
     return Collections.unmodifiableMap(map);
   }
