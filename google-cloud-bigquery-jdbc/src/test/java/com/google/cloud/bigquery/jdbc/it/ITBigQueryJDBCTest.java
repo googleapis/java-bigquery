@@ -1192,7 +1192,7 @@ public class ITBigQueryJDBCTest extends ITDriverAgnosticTest {
     ds.setURL("jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;");
     ds.setOAuthType(0);
     ds.setOAuthPvtKeyPath(tempFile.toPath().toString());
-    assertEquals(0, ds.getOAuthType());
+    assertEquals(0, ds.getOAuthType().intValue());
     assertEquals(tempFile.toPath().toString(), ds.getOAuthPvtKeyPath());
   }
 
