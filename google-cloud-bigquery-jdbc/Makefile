@@ -128,3 +128,24 @@ docker-integration-test: .check-env
 docker-coverage: 
 	$(MAKE) .docker-run args="make unit-test-coverage"
 	$(MAKE) .docker-run args="make full-coverage"
+
+# Standalone Tests Commands
+DRIVER_JAR ?= target/google-cloud-bigquery-jdbc-0.4.0.jar
+STANDALONE_JAR = target-it/google-cloud-bigquery-jdbc-it-0.4.0-standalone.jar
+
+build-standalone-tests:
+	mvn clean install -DskipTests
+	mvn -f pom-it.xml clean package
+
+run-standalone-tests: .check-env
+	@if [ ! -f "$(STANDALONE_JAR)" ]; then \
+		echo "Standalone test JAR not found. Run 'make build-standalone-tests' first."; \
+		exit 1; \
+	fi
+	@if [ ! -f "$(DRIVER_JAR)" ]; then \
+		echo "Driver JAR not found at $(DRIVER_JAR). Provide it using DRIVER_JAR=/path/to/driver.jar make run-standalone-tests"; \
+		exit 1; \
+	fi
+	@echo "Running standalone tests with driver: $(DRIVER_JAR)"
+	java -cp "$(STANDALONE_JAR):$(DRIVER_JAR)" \
+		org.junit.runner.JUnitCore com.google.cloud.bigquery.jdbc.it.ITDriverAgnosticTest
