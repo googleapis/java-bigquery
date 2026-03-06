@@ -139,13 +139,16 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
   String partnerToken;
 
   BigQueryConnection(String url) throws IOException {
+    this(url, DataSource.fromUrl(url));
+  }
+
+  BigQueryConnection(String url, DataSource ds) throws IOException {
     this.connectionUrl = url;
     this.openStatements = ConcurrentHashMap.newKeySet();
     this.autoCommit = true;
     this.sqlWarnings = new ArrayList<>();
     this.transactionStarted = false;
     this.isClosed = false;
-    DataSource ds = DataSource.fromUrl(url);
 
     this.labels = ds.getLabels() != null ? ds.getLabels() : new java.util.HashMap<>();
     this.maxBytesBilled = ds.getMaximumBytesBilled();

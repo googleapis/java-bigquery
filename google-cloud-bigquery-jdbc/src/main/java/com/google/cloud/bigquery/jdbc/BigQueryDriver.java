@@ -151,7 +151,7 @@ public class BigQueryDriver implements Driver {
         BigQueryJdbcRootLogger.setLevel(logLevel, logPath);
 
         // Logging starts from here.
-        BigQueryConnection connection = new BigQueryConnection(connectionUri);
+        BigQueryConnection connection = new BigQueryConnection(connectionUri, ds);
         LOG.info(
             "Driver info : { {Database Product Name : %s}, "
                 + "{Database Product Version : %s}, "
@@ -214,8 +214,10 @@ public class BigQueryDriver implements Driver {
       driverProperty.description = prop.getDescription();
       propertyInfoList.add(driverProperty);
     }
+
+    DataSource ds = DataSource.fromUrl(connectionUri);
     Map<String, String> oAuthProperties =
-        BigQueryJdbcOAuthUtility.parseOAuthProperties(DataSource.fromUrl(url), this.toString());
+        BigQueryJdbcOAuthUtility.parseOAuthProperties(ds, this.toString());
     for (Map.Entry<String, String> authProperty : oAuthProperties.entrySet()) {
       propertyInfoList.add(new DriverPropertyInfo(authProperty.getKey(), authProperty.getValue()));
     }

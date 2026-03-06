@@ -44,7 +44,8 @@ public class PooledConnectionDataSource extends DataSource implements Connection
     if (connectionPoolManager == null) {
       connectionPoolManager = new PooledConnectionListener(connectionPoolSize);
     }
-    BigQueryPooledConnection bqPooledConnection = new BigQueryPooledConnection(bqConnection);
+    BigQueryPooledConnection bqPooledConnection =
+        new BigQueryPooledConnection((BigQueryConnection) bqConnection);
     bqPooledConnection.addConnectionEventListener(connectionPoolManager);
     return bqPooledConnection;
   }

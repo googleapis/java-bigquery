@@ -19,6 +19,7 @@ package com.google.cloud.bigquery.jdbc;
 import com.google.cloud.bigquery.exception.BigQueryJdbcException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -41,6 +42,8 @@ import java.util.regex.Pattern;
 public class DataSource implements javax.sql.DataSource {
   private final BigQueryJdbcCustomLogger LOG = new BigQueryJdbcCustomLogger(this.toString());
   private String URL;
+  static final ImmutableSet<Integer> VALID_JOB_CREATION_MODES = ImmutableSet.of(1, 2);
+
   private String projectId;
   private String defaultDataset;
   private String location;
@@ -959,21 +962,17 @@ public class DataSource implements javax.sql.DataSource {
   }
 
   public Boolean getUseStatelessQueryMode() {
-    Integer jobCreationModeVal = getJobCreationMode();
-    if (jobCreationModeVal == 2) {
-      return true;
-    } else if (jobCreationModeVal == 1) {
-      return false;
-    } else {
+    return getJobCreationMode() == 2;
+  }
+
+  public void setJobCreationMode(Integer jobCreationMode) {
+    if (jobCreationMode != null && !VALID_JOB_CREATION_MODES.contains(jobCreationMode)) {
       throw new IllegalArgumentException(
           String.format(
               "Invalid value for %s. Use 1 for JOB_CREATION_REQUIRED and 2 for"
                   + " JOB_CREATION_OPTIONAL.",
               BigQueryJdbcUrlUtility.JOB_CREATION_MODE_PROPERTY_NAME));
     }
-  }
-
-  public void setJobCreationMode(Integer jobCreationMode) {
     this.jobCreationMode = jobCreationMode;
   }
 

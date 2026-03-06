@@ -36,12 +36,10 @@ class BigQueryPooledConnection implements PooledConnection {
   private Long listenerPoolSize = 10L;
   private LinkedBlockingDeque<ConnectionEventListener> listeners;
 
-  BigQueryPooledConnection(Connection bqConnection) {
+  BigQueryPooledConnection(BigQueryConnection bqConnection) {
     this.bqConnection = bqConnection;
     this.id = UUID.randomUUID().toString();
-    if (bqConnection instanceof BigQueryConnection) {
-      this.listenerPoolSize = ((BigQueryConnection) bqConnection).getListenerPoolSize();
-    }
+    this.listenerPoolSize = bqConnection.getListenerPoolSize();
     if (getListenerPoolSize() > 0L) {
       listeners = new LinkedBlockingDeque<>(getListenerPoolSize().intValue());
     } else {

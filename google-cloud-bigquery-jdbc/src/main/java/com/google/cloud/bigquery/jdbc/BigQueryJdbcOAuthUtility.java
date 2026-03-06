@@ -105,10 +105,6 @@ final class BigQueryJdbcOAuthUtility {
    * @param url The URL to parse.
    * @return A map of OAuth properties.
    */
-  static Map<String, String> parseOAuthProperties(String url, String callerClassName) {
-    return parseOAuthProperties(DataSource.fromUrl(url), callerClassName);
-  }
-
   static Map<String, String> parseOAuthProperties(DataSource ds, String callerClassName) {
     LOG.finest("++enter++\t" + callerClassName);
     Map<String, String> oauthProperties = new HashMap<>();
@@ -187,28 +183,34 @@ final class BigQueryJdbcOAuthUtility {
           oauthProperties.put(BigQueryJdbcUrlUtility.OAUTH_PVT_KEY_PATH_PROPERTY_NAME, pvtKeyPath);
           LOG.fine("OAuthPvtKeyPath provided.");
         } else {
-          if (ds.getByoidAudienceUri() != null)
+          if (ds.getByoidAudienceUri() != null) {
             oauthProperties.put(
                 BigQueryJdbcUrlUtility.BYOID_AUDIENCE_URI_PROPERTY_NAME, ds.getByoidAudienceUri());
-          if (ds.getByoidCredentialSource() != null)
+          }
+          if (ds.getByoidCredentialSource() != null) {
             oauthProperties.put(
                 BigQueryJdbcUrlUtility.BYOID_CREDENTIAL_SOURCE_PROPERTY_NAME,
                 ds.getByoidCredentialSource());
-          if (ds.getByoidPoolUserProject() != null)
+          }
+          if (ds.getByoidPoolUserProject() != null) {
             oauthProperties.put(
                 BigQueryJdbcUrlUtility.BYOID_POOL_USER_PROJECT_PROPERTY_NAME,
                 ds.getByoidPoolUserProject());
-          if (ds.getByoidSAImpersonationUri() != null)
+          }
+          if (ds.getByoidSAImpersonationUri() != null) {
             oauthProperties.put(
                 BigQueryJdbcUrlUtility.BYOID_SA_IMPERSONATION_URI_PROPERTY_NAME,
                 ds.getByoidSAImpersonationUri());
-          if (ds.getByoidSubjectTokenType() != null)
+          }
+          if (ds.getByoidSubjectTokenType() != null) {
             oauthProperties.put(
                 BigQueryJdbcUrlUtility.BYOID_SUBJECT_TOKEN_TYPE_PROPERTY_NAME,
                 ds.getByoidSubjectTokenType());
-          if (ds.getByoidTokenUri() != null)
+          }
+          if (ds.getByoidTokenUri() != null) {
             oauthProperties.put(
                 BigQueryJdbcUrlUtility.BYOID_TOKEN_URI_PROPERTY_NAME, ds.getByoidTokenUri());
+          }
 
           String universeDomain = ds.getUniverseDomain();
           if (universeDomain != null) {
