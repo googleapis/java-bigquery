@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -358,7 +359,7 @@ final class BigQueryJdbcUrlUtility {
                   BigQueryConnectionProperty.newBuilder()
                       .setName(PROJECT_ID_PROPERTY_NAME)
                       .setDescription("A globally unique identifier for your project.")
-                      .setDefaultValue(BigQueryOptions.getDefaultProjectId())
+                      .setLazyDefaultValue(() -> BigQueryOptions.getDefaultProjectId())
                       .build(),
                   BigQueryConnectionProperty.newBuilder()
                       .setName(LOG_PATH_PROPERTY_NAME)

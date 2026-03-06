@@ -21,6 +21,8 @@ import static org.junit.Assert.*;
 import com.google.api.gax.grpc.InstantiatingGrpcChannelProvider;
 import com.google.api.gax.rpc.HeaderProvider;
 import com.google.api.gax.rpc.TransportChannelProvider;
+import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.QueryJobConfiguration.JobCreationMode;
 import com.google.cloud.bigquery.exception.BigQueryJdbcException;
 import com.google.cloud.bigquery.storage.v1.BigQueryReadClient;
 import com.google.cloud.bigquery.storage.v1.BigQueryWriteClient;
@@ -35,6 +37,9 @@ public class BigQueryConnectionTest {
 
   private static final String DEFAULT_VERSION = "0.0.0";
   private static final String DEFAULT_JDBC_TOKEN_VALUE = "Google-BigQuery-JDBC-Driver";
+  private static final String BASE_URL =
+      "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+          + "OAuthType=2;OAuthAccessToken=redacted;ProjectId=project;";
   private String expectedVersion;
 
   @Before
@@ -376,6 +381,36 @@ public class BigQueryConnectionTest {
       assertEquals(java.time.Duration.ofSeconds(10), grpcProvider.getKeepAliveTimeDuration());
       assertEquals(java.time.Duration.ofSeconds(5), grpcProvider.getKeepAliveTimeoutDuration());
       assertTrue(grpcProvider.getKeepAliveWithoutCalls());
+    }
+  }
+
+  @Test
+  public void testBigQueryJobCreationMode_required() throws Exception {
+    String url = BASE_URL + "JobCreationMode=1;";
+    try (BigQueryConnection connection = new BigQueryConnection(url)) {
+      BigQuery bq = connection.getBigQuery();
+      assertEquals(
+          bq.getOptions().getDefaultJobCreationMode(), JobCreationMode.JOB_CREATION_REQUIRED);
+    }
+  }
+
+  @Test
+  public void testBigQueryJobCreationMode_optional() throws Exception {
+    String url = BASE_URL + "JobCreationMode=2;";
+    try (BigQueryConnection connection = new BigQueryConnection(url)) {
+      BigQuery bq = connection.getBigQuery();
+      assertEquals(
+          bq.getOptions().getDefaultJobCreationMode(), JobCreationMode.JOB_CREATION_OPTIONAL);
+    }
+  }
+
+  @Test
+  public void testBigQueryJobCreationMode_default() throws Exception {
+    String url = BASE_URL;
+    try (BigQueryConnection connection = new BigQueryConnection(url)) {
+      BigQuery bq = connection.getBigQuery();
+      assertEquals(
+          bq.getOptions().getDefaultJobCreationMode(), JobCreationMode.JOB_CREATION_OPTIONAL);
     }
   }
 }
