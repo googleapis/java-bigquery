@@ -53,9 +53,10 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
   public void testParseOAuthPropsForAuthType0KeyfileOnly() {
     Map<String, String> result =
         BigQueryJdbcOAuthUtility.parseOAuthProperties(
-            DataSource.fromUrl("jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-                + "ProjectId=MyBigQueryProject;OAuthType=0;"
-                + "OAuthPvtKeyPath=C:\\SecureFiles\\ServiceKeyFile.p12;"),
+            DataSource.fromUrl(
+                "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+                    + "ProjectId=MyBigQueryProject;OAuthType=0;"
+                    + "OAuthPvtKeyPath=C:\\SecureFiles\\ServiceKeyFile.p12;"),
             null);
 
     assertThat(result.get("OAuthType")).isEqualTo("GOOGLE_SERVICE_ACCOUNT");
@@ -66,10 +67,11 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
   public void testParseOAuthPropsForAuthType0ViaEmail() {
     Map<String, String> result =
         BigQueryJdbcOAuthUtility.parseOAuthProperties(
-            DataSource.fromUrl("jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-                + "ProjectId=MyBigQueryProject;OAuthType=0;"
-                + "OAuthServiceAcctEmail=dummytest@dummytest.iam.gserviceaccount.com;"
-                + "OAuthPvtKey=RedactedKey;"),
+            DataSource.fromUrl(
+                "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+                    + "ProjectId=MyBigQueryProject;OAuthType=0;"
+                    + "OAuthServiceAcctEmail=dummytest@dummytest.iam.gserviceaccount.com;"
+                    + "OAuthPvtKey=RedactedKey;"),
             null);
 
     assertThat(result.get("OAuthType")).isEqualTo("GOOGLE_SERVICE_ACCOUNT");
@@ -105,9 +107,10 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
   public void testParseOAuthPropsForAuthType2() {
     Map<String, String> result =
         BigQueryJdbcOAuthUtility.parseOAuthProperties(
-            DataSource.fromUrl("jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-                + "OAuthType=2;ProjectId=MyBigQueryProject;"
-                + "OAuthAccessToken=RedactedToken;"),
+            DataSource.fromUrl(
+                "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+                    + "OAuthType=2;ProjectId=MyBigQueryProject;"
+                    + "OAuthAccessToken=RedactedToken;"),
             null);
 
     assertThat(result.get("OAuthType")).isEqualTo("PRE_GENERATED_TOKEN");
@@ -118,8 +121,9 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
   public void testParseOAuthPropsForAuthType3() {
     Map<String, String> result =
         BigQueryJdbcOAuthUtility.parseOAuthProperties(
-            DataSource.fromUrl("jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-                + "OAuthType=3;ProjectId=MyBigQueryProject;"),
+            DataSource.fromUrl(
+                "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+                    + "OAuthType=3;ProjectId=MyBigQueryProject;"),
             null);
 
     assertThat(result.get("OAuthType")).isEqualTo("APPLICATION_DEFAULT_CREDENTIALS");
@@ -129,8 +133,9 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
   public void testParseOAuthPropsForDefaultAuthType() {
     Map<String, String> result =
         BigQueryJdbcOAuthUtility.parseOAuthProperties(
-            DataSource.fromUrl("jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-                + "ProjectId=MyBigQueryProject;OAuthType=3"),
+            DataSource.fromUrl(
+                "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+                    + "ProjectId=MyBigQueryProject;OAuthType=3"),
             null);
 
     assertThat(result.get("OAuthType")).isEqualTo("APPLICATION_DEFAULT_CREDENTIALS");
@@ -140,9 +145,10 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
   public void testGetCredentialsForPreGeneratedToken() {
     Map<String, String> authProperties =
         BigQueryJdbcOAuthUtility.parseOAuthProperties(
-            DataSource.fromUrl("jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-                + "OAuthType=2;ProjectId=MyBigQueryProject;"
-                + "OAuthAccessToken=RedactedToken;"),
+            DataSource.fromUrl(
+                "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+                    + "OAuthType=2;ProjectId=MyBigQueryProject;"
+                    + "OAuthAccessToken=RedactedToken;"),
             null);
 
     GoogleCredentials credentials =
@@ -154,10 +160,11 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
   public void testGetCredentialsForPreGeneratedTokenTPC() throws IOException {
     Map<String, String> authProperties =
         BigQueryJdbcOAuthUtility.parseOAuthProperties(
-            DataSource.fromUrl("jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-                + "OAuthType=2;ProjectId=MyBigQueryProject;"
-                + "OAuthAccessToken=RedactedToken;"
-                + "universeDomain=testDomain;"),
+            DataSource.fromUrl(
+                "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+                    + "OAuthType=2;ProjectId=MyBigQueryProject;"
+                    + "OAuthAccessToken=RedactedToken;"
+                    + "universeDomain=testDomain;"),
             null);
     Map<String, String> stringStringMap = new HashMap<>();
     stringStringMap.put(
@@ -174,8 +181,9 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
   public void testGetCredentialsForApplicationDefault() {
     Map<String, String> authProperties =
         BigQueryJdbcOAuthUtility.parseOAuthProperties(
-            DataSource.fromUrl("jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-                + "OAuthType=3;ProjectId=MyBigQueryProject;"),
+            DataSource.fromUrl(
+                "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+                    + "OAuthType=3;ProjectId=MyBigQueryProject;"),
             null);
 
     GoogleCredentials credentials =
@@ -187,9 +195,10 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
   public void testParseOAuthPropsForUserAuth() {
     Map<String, String> authProperties =
         BigQueryJdbcOAuthUtility.parseOAuthProperties(
-            DataSource.fromUrl("jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-                + "OAuthType=1;ProjectId=MyBigQueryProject;"
-                + "OAuthClientId=client;OAuthClientSecret=secret;"),
+            DataSource.fromUrl(
+                "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+                    + "OAuthType=1;ProjectId=MyBigQueryProject;"
+                    + "OAuthClientId=client;OAuthClientSecret=secret;"),
             null);
 
     assertThat(authProperties.get("OAuthType")).isEqualTo("GOOGLE_USER_ACCOUNT");
@@ -251,9 +260,10 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
   public void testParseOAuthPropsForRefreshToken() {
     Map<String, String> authProperties =
         BigQueryJdbcOAuthUtility.parseOAuthProperties(
-            DataSource.fromUrl("jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
-                + "OAuthType=2;ProjectId=MyBigQueryProject;OAuthRefreshToken=token;"
-                + "OAuthClientId=client;OAuthClientSecret=secret;"),
+            DataSource.fromUrl(
+                "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
+                    + "OAuthType=2;ProjectId=MyBigQueryProject;OAuthRefreshToken=token;"
+                    + "OAuthClientId=client;OAuthClientSecret=secret;"),
             null);
 
     assertThat(authProperties.get("OAuthType")).isEqualTo("PRE_GENERATED_TOKEN");
@@ -293,14 +303,15 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
   public void testParseBYOIDProps() {
     Map<String, String> result =
         BigQueryJdbcOAuthUtility.parseOAuthProperties(
-            DataSource.fromUrl("jdbc:bigquery://https://www.googleapis.com/bigquery/v2:433;OAuthType=4;"
-                + "ProjectId=MyBigQueryProject;"
-                + "BYOID_AudienceUri=//iam.googleapis.com/locations/global/workforcePools/pool-id/providers/provider-id;"
-                + "BYOID_PoolUserProject=workforceProjectNumber;"
-                + "BYOID_CredentialSource={\"file\": \"C:\\\\Token.txt\"};"
-                + "BYOID_SA_Impersonation_Uri=testSA;"
-                + "BYOID_SubjectTokenType=urn:ietf:params:oauth:tokentype:jwt;"
-                + "BYOID_TokenUri=https://testuri.com/v1/token"),
+            DataSource.fromUrl(
+                "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:433;OAuthType=4;"
+                    + "ProjectId=MyBigQueryProject;"
+                    + "BYOID_AudienceUri=//iam.googleapis.com/locations/global/workforcePools/pool-id/providers/provider-id;"
+                    + "BYOID_PoolUserProject=workforceProjectNumber;"
+                    + "BYOID_CredentialSource={\"file\": \"C:\\\\Token.txt\"};"
+                    + "BYOID_SA_Impersonation_Uri=testSA;"
+                    + "BYOID_SubjectTokenType=urn:ietf:params:oauth:tokentype:jwt;"
+                    + "BYOID_TokenUri=https://testuri.com/v1/token"),
             null);
 
     assertThat(result.get("BYOID_AudienceUri"))
@@ -321,7 +332,8 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
             + "OAuthType=1;OAuthClientId=redactedClientId;OAuthClientSecret=redactedClientSecret;"
             + "RequestGoogleDriveScope=1;";
     Map<String, String> properties =
-        BigQueryJdbcOAuthUtility.parseOAuthProperties(DataSource.fromUrl(url), this.getClass().getName());
+        BigQueryJdbcOAuthUtility.parseOAuthProperties(
+            DataSource.fromUrl(url), this.getClass().getName());
     assertEquals(
         String.valueOf(BigQueryJdbcOAuthUtility.AuthType.GOOGLE_USER_ACCOUNT),
         properties.get(BigQueryJdbcUrlUtility.OAUTH_TYPE_PROPERTY_NAME));
@@ -341,7 +353,8 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
             + "OAuthType=1;OAuthClientId=redactedClientId;OAuthClientSecret=redactedClientSecret;"
             + "RequestGoogleDriveScope=0;";
     Map<String, String> properties =
-        BigQueryJdbcOAuthUtility.parseOAuthProperties(DataSource.fromUrl(url), this.getClass().getName());
+        BigQueryJdbcOAuthUtility.parseOAuthProperties(
+            DataSource.fromUrl(url), this.getClass().getName());
     assertEquals(
         "0", properties.get(BigQueryJdbcUrlUtility.REQUEST_GOOGLE_DRIVE_SCOPE_PROPERTY_NAME));
   }
@@ -352,7 +365,8 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
         "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;"
             + "OAuthType=1;OAuthClientId=redactedClientId;OAuthClientSecret=redactedClientSecret;";
     Map<String, String> properties =
-        BigQueryJdbcOAuthUtility.parseOAuthProperties(DataSource.fromUrl(url), this.getClass().getName());
+        BigQueryJdbcOAuthUtility.parseOAuthProperties(
+            DataSource.fromUrl(url), this.getClass().getName());
     assertEquals(
         String.valueOf(BigQueryJdbcUrlUtility.DEFAULT_REQUEST_GOOGLE_DRIVE_SCOPE_VALUE),
         properties.get(BigQueryJdbcUrlUtility.REQUEST_GOOGLE_DRIVE_SCOPE_PROPERTY_NAME));
@@ -411,7 +425,8 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
         getUriOAuthServiceAccount()
             .append("ServiceAccountImpersonationEmail", "impersonated")
             .toString();
-    Map<String, String> result = BigQueryJdbcOAuthUtility.parseOAuthProperties(DataSource.fromUrl(connectionUri), "");
+    Map<String, String> result =
+        BigQueryJdbcOAuthUtility.parseOAuthProperties(DataSource.fromUrl(connectionUri), "");
     assertEquals(
         "impersonated",
         result.get(BigQueryJdbcUrlUtility.OAUTH_SA_IMPERSONATION_EMAIL_PROPERTY_NAME));
@@ -427,11 +442,12 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
   public void testParseUserImpersonationNonDefault() {
     Map<String, String> result =
         BigQueryJdbcOAuthUtility.parseOAuthProperties(
-            DataSource.fromUrl(getUriOAuthServiceAccount()
-                .append("ServiceAccountImpersonationEmail", "impersonated")
-                .append("ServiceAccountImpersonationScopes", "scopes")
-                .append("ServiceAccountImpersonationTokenLifetime", 300)
-                .toString()),
+            DataSource.fromUrl(
+                getUriOAuthServiceAccount()
+                    .append("ServiceAccountImpersonationEmail", "impersonated")
+                    .append("ServiceAccountImpersonationScopes", "scopes")
+                    .append("ServiceAccountImpersonationTokenLifetime", 300)
+                    .toString()),
             "");
     assertEquals(
         "impersonated",
@@ -447,9 +463,10 @@ public class BigQueryJdbcOAuthUtilityTest extends BigQueryJdbcBaseTest {
   public void testGetServiceAccountImpersonatedCredentials() {
     Map<String, String> authProperties =
         BigQueryJdbcOAuthUtility.parseOAuthProperties(
-            DataSource.fromUrl(getUriOAuthServiceAccount()
-                .append("ServiceAccountImpersonationEmail", "impersonated")
-                .toString()),
+            DataSource.fromUrl(
+                getUriOAuthServiceAccount()
+                    .append("ServiceAccountImpersonationEmail", "impersonated")
+                    .toString()),
             "");
     GoogleCredentials credentials =
         BigQueryJdbcOAuthUtility.getCredentials(authProperties, Collections.EMPTY_MAP, null);
