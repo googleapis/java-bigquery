@@ -935,7 +935,7 @@ public class BigQueryConnection extends BigQueryNoOpsConnection {
       bigQueryOptions.setTransportOptions(this.httpTransportOptions);
     }
 
-    BigQueryOptions options = bigQueryOptions.setHeaderProvider(HEADER_PROVIDER).build();
+    BigQueryOptions options = bigQueryOptions.setHeaderProvider(this.headerProvider).build();
     options.setDefaultJobCreationMode(
         this.useStatelessQueryMode
             ? JobCreationMode.JOB_CREATION_OPTIONAL
