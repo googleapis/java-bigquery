@@ -1,4 +1,4 @@
-# Google BigQuery JDBC Client for Java
+# Google BigQuery JDBC Client for Java - test
 
 Java idiomatic client for [BigQuery JDBC][product-docs].
 
