@@ -47,6 +47,8 @@ public abstract class TableResult implements Page<FieldValueList>, Serializable 
 
     public abstract TableResult.Builder setQueryId(String queryId);
 
+    public abstract TableResult.Builder setJobCreationReason(JobCreationReason jobCreationReason);
+
     /** Creates a @code TableResult} object. */
     public abstract TableResult build();
   }
@@ -76,6 +78,9 @@ public abstract class TableResult implements Page<FieldValueList>, Serializable 
   @Nullable
   public abstract String getQueryId();
 
+  @Nullable
+  public abstract JobCreationReason getJobCreationReason();
+
   @Override
   public boolean hasNextPage() {
     return getPageNoSchema().hasNextPage();
@@ -94,6 +99,7 @@ public abstract class TableResult implements Page<FieldValueList>, Serializable 
           .setTotalRows(getTotalRows())
           .setPageNoSchema(getPageNoSchema().getNextPage())
           .setQueryId(getQueryId())
+          .setJobCreationReason(getJobCreationReason())
           .build();
     }
     return null;
