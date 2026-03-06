@@ -43,6 +43,7 @@ class BigQueryJdbcRootLogger {
   private static final Logger logger = Logger.getLogger("com.google.cloud.bigquery");
 
   private static final Logger storageLogger = Logger.getLogger("com.google.cloud.bigquery.storage");
+  private static final boolean isTest = Boolean.getBoolean("JDBC_TESTS");
 
   private static Handler fileHandler = null;
   private static Path currentLogPath = null;
@@ -51,6 +52,12 @@ class BigQueryJdbcRootLogger {
   static {
     logger.setUseParentHandlers(false);
     storageLogger.setUseParentHandlers(true);
+    if (isTest) {
+      ConsoleHandler consoleHandler = new ConsoleHandler();
+      consoleHandler.setLevel(Level.SEVERE);
+      consoleHandler.setFormatter(getFormatter());
+      logger.addHandler(consoleHandler);
+    }
   }
 
   public static Formatter getFormatter() {
@@ -111,13 +118,12 @@ class BigQueryJdbcRootLogger {
     // If File handler exists, use it. Else create new one.
     for (Handler h : logger.getHandlers()) {
       if (h instanceof ConsoleHandler) {
-        h.close();
-        logger.removeHandler(h);
-        break;
-      }
-      if (h instanceof FileHandler) {
+        if (!isTest) {
+          h.close();
+          logger.removeHandler(h);
+        }
+      } else if (h instanceof FileHandler) {
         fileHandler = h;
-        break;
       }
     }
 
