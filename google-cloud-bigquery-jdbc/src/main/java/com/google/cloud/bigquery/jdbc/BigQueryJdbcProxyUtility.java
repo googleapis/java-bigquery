@@ -61,34 +61,27 @@ final class BigQueryJdbcProxyUtility {
 
   private BigQueryJdbcProxyUtility() {}
 
-  static Map<String, String> parseProxyProperties(String URL, String callerClassName) {
+  static Map<String, String> parseProxyProperties(DataSource ds, String callerClassName) {
     LOG.finest("++enter++\t" + callerClassName);
     Map<String, String> proxyProperties = new HashMap<>();
-    String proxyHost =
-        BigQueryJdbcUrlUtility.parseUriProperty(
-            URL, BigQueryJdbcUrlUtility.PROXY_HOST_PROPERTY_NAME);
+    String proxyHost = ds.getProxyHost();
     if (proxyHost != null) {
       proxyProperties.put(BigQueryJdbcUrlUtility.PROXY_HOST_PROPERTY_NAME, proxyHost);
     }
-    String proxyPort =
-        BigQueryJdbcUrlUtility.parseUriProperty(
-            URL, BigQueryJdbcUrlUtility.PROXY_PORT_PROPERTY_NAME);
+    String proxyPort = ds.getProxyPort();
     if (proxyPort != null) {
       if (!Pattern.compile(validPortRegex).matcher(proxyPort).find()) {
         throw new IllegalArgumentException(
-            "Illegal port number provided %s. Please provide a valid port number.");
+            String.format(
+                "Illegal port number provided %s. Please provide a valid port number.", proxyPort));
       }
       proxyProperties.put(BigQueryJdbcUrlUtility.PROXY_PORT_PROPERTY_NAME, proxyPort);
     }
-    String proxyUid =
-        BigQueryJdbcUrlUtility.parseUriProperty(
-            URL, BigQueryJdbcUrlUtility.PROXY_USER_ID_PROPERTY_NAME);
+    String proxyUid = ds.getProxyUid();
     if (proxyUid != null) {
       proxyProperties.put(BigQueryJdbcUrlUtility.PROXY_USER_ID_PROPERTY_NAME, proxyUid);
     }
-    String proxyPwd =
-        BigQueryJdbcUrlUtility.parseUriProperty(
-            URL, BigQueryJdbcUrlUtility.PROXY_PASSWORD_PROPERTY_NAME);
+    String proxyPwd = ds.getProxyPwd();
     if (proxyPwd != null) {
       proxyProperties.put(BigQueryJdbcUrlUtility.PROXY_PASSWORD_PROPERTY_NAME, proxyPwd);
     }
@@ -112,6 +105,10 @@ final class BigQueryJdbcProxyUtility {
           "Proxy authentication provided via connection string with no proxy host or port set.");
     }
     return proxyProperties;
+  }
+
+  static Map<String, String> parseProxyProperties(String URL, String callerClassName) {
+    return parseProxyProperties(DataSource.fromUrl(URL), callerClassName);
   }
 
   static HttpTransportOptions getHttpTransportOptions(

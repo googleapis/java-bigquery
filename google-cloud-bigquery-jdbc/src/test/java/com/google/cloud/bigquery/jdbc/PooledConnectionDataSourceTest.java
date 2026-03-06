@@ -18,12 +18,10 @@ package com.google.cloud.bigquery.jdbc;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
-import com.google.cloud.bigquery.exception.BigQueryJdbcRuntimeException;
 import java.sql.SQLException;
 import javax.sql.PooledConnection;
 import org.junit.Test;
@@ -41,9 +39,13 @@ public class PooledConnectionDataSourceTest {
 
     BigQueryConnection bqConnection = mock(BigQueryConnection.class);
     doReturn(connectionUrl).when(bqConnection).getConnectionUrl();
+    doReturn(LISTENER_POOL_SIZE).when(bqConnection).getListenerPoolSize();
+    doReturn(CONNECTION_POOL_SIZE).when(bqConnection).getConnectionPoolSize();
 
     PooledConnectionDataSource pooledDataSource = new PooledConnectionDataSource();
     pooledDataSource.setConnection(bqConnection);
+    pooledDataSource.setListenerPoolSize(LISTENER_POOL_SIZE);
+    pooledDataSource.setConnectionPoolSize(CONNECTION_POOL_SIZE);
 
     PooledConnection pooledConnection = pooledDataSource.getPooledConnection();
     assertNotNull(pooledConnection);
@@ -53,28 +55,5 @@ public class PooledConnectionDataSourceTest {
     assertNotNull(pooledDataSource.getConnectionPoolManager());
     assertEquals(
         CONNECTION_POOL_SIZE, pooledDataSource.getConnectionPoolManager().getConnectionPoolSize());
-  }
-
-  @Test
-  public void testGetPooledConnectionNoConnectionURl() throws SQLException {
-    BigQueryConnection bqConnection = mock(BigQueryConnection.class);
-    PooledConnectionDataSource pooledDataSource = new PooledConnectionDataSource();
-    pooledDataSource.setConnection(bqConnection);
-
-    assertThrows(BigQueryJdbcRuntimeException.class, () -> pooledDataSource.getPooledConnection());
-  }
-
-  @Test
-  public void testGetPooledConnectionFailInvalidConnectionURl() {
-    String connectionUrl =
-        "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;OAuthType=3;ProjectId=testProject;"
-            + "ListenerPoolSize=invalid";
-    BigQueryConnection bqConnection = mock(BigQueryConnection.class);
-    doReturn(connectionUrl).when(bqConnection).getConnectionUrl();
-
-    PooledConnectionDataSource pooledDataSource = new PooledConnectionDataSource();
-    pooledDataSource.setConnection(bqConnection);
-
-    assertThrows(NumberFormatException.class, () -> pooledDataSource.getPooledConnection());
   }
 }
