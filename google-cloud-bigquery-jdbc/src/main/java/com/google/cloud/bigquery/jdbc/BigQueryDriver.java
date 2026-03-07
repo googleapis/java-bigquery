@@ -130,19 +130,17 @@ public class BigQueryDriver implements Driver {
           throw new BigQueryJdbcException(e.getMessage(), e);
         }
 
+        DataSource ds = DataSource.fromUrl(connectionUri);
+
         // LogLevel
-        String logLevelStr =
-            BigQueryJdbcUrlUtility.parseUriProperty(
-                connectionUri, BigQueryJdbcUrlUtility.LOG_LEVEL_PROPERTY_NAME);
+        String logLevelStr = ds.getLogLevel();
         if (logLevelStr == null) {
           logLevelStr = System.getenv(BigQueryJdbcUrlUtility.LOG_LEVEL_ENV_VAR);
         }
         Level logLevel = BigQueryJdbcUrlUtility.parseLogLevel(logLevelStr);
 
         // LogPath
-        String logPath =
-            BigQueryJdbcUrlUtility.parseUriProperty(
-                connectionUri, BigQueryJdbcUrlUtility.LOG_PATH_PROPERTY_NAME);
+        String logPath = ds.getLogPath();
         if (logPath == null) {
           logPath = System.getenv(BigQueryJdbcUrlUtility.LOG_PATH_ENV_VAR);
         }
@@ -153,7 +151,7 @@ public class BigQueryDriver implements Driver {
         BigQueryJdbcRootLogger.setLevel(logLevel, logPath);
 
         // Logging starts from here.
-        BigQueryConnection connection = new BigQueryConnection(connectionUri);
+        BigQueryConnection connection = new BigQueryConnection(connectionUri, ds);
         LOG.info(
             "Driver info : { {Database Product Name : %s}, "
                 + "{Database Product Version : %s}, "
@@ -216,8 +214,10 @@ public class BigQueryDriver implements Driver {
       driverProperty.description = prop.getDescription();
       propertyInfoList.add(driverProperty);
     }
+
+    DataSource ds = DataSource.fromUrl(connectionUri);
     Map<String, String> oAuthProperties =
-        BigQueryJdbcOAuthUtility.parseOAuthProperties(url, this.toString());
+        BigQueryJdbcOAuthUtility.parseOAuthProperties(ds, this.toString());
     for (Map.Entry<String, String> authProperty : oAuthProperties.entrySet()) {
       propertyInfoList.add(new DriverPropertyInfo(authProperty.getKey(), authProperty.getValue()));
     }

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
@@ -37,6 +38,9 @@ public class PooledConnectionListenerTest {
   @Before
   public void setUp() throws IOException, SQLException {
     bigQueryConnection = mock(BigQueryConnection.class);
+    // Stub the listener pool size
+    doReturn(LISTENER_POOL_SIZE).when(bigQueryConnection).getListenerPoolSize();
+    doReturn(CONNECTION_POOL_SIZE).when(bigQueryConnection).getConnectionPoolSize();
   }
 
   @Test

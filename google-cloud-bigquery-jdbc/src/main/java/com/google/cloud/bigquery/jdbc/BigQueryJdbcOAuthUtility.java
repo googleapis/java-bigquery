@@ -38,6 +38,7 @@ import com.google.gson.stream.JsonReader;
 import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -105,19 +106,13 @@ final class BigQueryJdbcOAuthUtility {
    * @param url The URL to parse.
    * @return A map of OAuth properties.
    */
-  static Map<String, String> parseOAuthProperties(String url, String callerClassName) {
+  static Map<String, String> parseOAuthProperties(DataSource ds, String callerClassName) {
     LOG.finest("++enter++\t" + callerClassName);
     Map<String, String> oauthProperties = new HashMap<>();
 
     AuthType authType;
     try {
-      authType =
-          AuthType.fromValue(
-              BigQueryJdbcUrlUtility.parseIntProperty(
-                  url,
-                  BigQueryJdbcUrlUtility.OAUTH_TYPE_PROPERTY_NAME,
-                  BigQueryJdbcUrlUtility.DEFAULT_OAUTH_TYPE_VALUE,
-                  callerClassName));
+      authType = AuthType.fromValue(ds.getOAuthType());
     } catch (NumberFormatException exception) {
       throw new IllegalArgumentException(OAUTH_TYPE_ERROR_MESSAGE);
     }
@@ -128,21 +123,10 @@ final class BigQueryJdbcOAuthUtility {
         // need: project id, OAuthServiceAcctEmail and OAuthPvtKey or OAuthPvtKeyPath that can be
         // .p12 or json.
         // TODO: validation if .p12 or json file can be in getPropertyInfo can be handy for user
-        String serviceAccountEmail =
-            BigQueryJdbcUrlUtility.parseUriProperty(
-                url, BigQueryJdbcUrlUtility.OAUTH_SA_EMAIL_PROPERTY_NAME);
-        String serviceAccountPK =
-            BigQueryJdbcUrlUtility.parseUriProperty(
-                url, BigQueryJdbcUrlUtility.OAUTH_PVT_KEY_PROPERTY_NAME);
-        String serviceAccountPrivateKeyPath =
-            BigQueryJdbcUrlUtility.parseUriProperty(
-                url, BigQueryJdbcUrlUtility.OAUTH_PVT_KEY_PATH_PROPERTY_NAME);
-        String p12Password =
-            BigQueryJdbcUrlUtility.parseStringProperty(
-                url,
-                BigQueryJdbcUrlUtility.OAUTH_P12_PASSWORD_PROPERTY_NAME,
-                BigQueryJdbcUrlUtility.DEFAULT_OAUTH_P12_PASSWORD_VALUE,
-                callerClassName);
+        String serviceAccountEmail = ds.getOAuthServiceAcctEmail();
+        String serviceAccountPK = ds.getOAuthPvtKey();
+        String serviceAccountPrivateKeyPath = ds.getOAuthPvtKeyPath();
+        String p12Password = ds.getOAuthP12Password();
 
         oauthProperties.put(
             BigQueryJdbcUrlUtility.OAUTH_SA_EMAIL_PROPERTY_NAME, serviceAccountEmail);
@@ -157,48 +141,31 @@ final class BigQueryJdbcOAuthUtility {
         break;
       case GOOGLE_USER_ACCOUNT:
         oauthProperties.put(
-            BigQueryJdbcUrlUtility.OAUTH_CLIENT_ID_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.parseUriProperty(
-                url, BigQueryJdbcUrlUtility.OAUTH_CLIENT_ID_PROPERTY_NAME));
+            BigQueryJdbcUrlUtility.OAUTH_CLIENT_ID_PROPERTY_NAME, ds.getOAuthClientId());
         oauthProperties.put(
-            BigQueryJdbcUrlUtility.OAUTH_CLIENT_SECRET_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.parseUriProperty(
-                url, BigQueryJdbcUrlUtility.OAUTH_CLIENT_SECRET_PROPERTY_NAME));
-        int reqGoogleDriveScope =
-            BigQueryJdbcUrlUtility.parseIntProperty(
-                url,
-                BigQueryJdbcUrlUtility.REQUEST_GOOGLE_DRIVE_SCOPE_PROPERTY_NAME,
-                BigQueryJdbcUrlUtility.DEFAULT_REQUEST_GOOGLE_DRIVE_SCOPE_VALUE,
-                callerClassName);
+            BigQueryJdbcUrlUtility.OAUTH_CLIENT_SECRET_PROPERTY_NAME, ds.getOAuthClientSecret());
+        int reqGoogleDriveScope = ds.getRequestGoogleDriveScope();
         oauthProperties.put(
             BigQueryJdbcUrlUtility.REQUEST_GOOGLE_DRIVE_SCOPE_PROPERTY_NAME,
             String.valueOf(reqGoogleDriveScope));
         LOG.fine("RequestGoogleDriveScope parsed.");
         break;
       case PRE_GENERATED_TOKEN:
-        String refreshToken =
-            BigQueryJdbcUrlUtility.parseUriProperty(
-                url, BigQueryJdbcUrlUtility.OAUTH_REFRESH_TOKEN_PROPERTY_NAME);
+        String refreshToken = ds.getOAuthRefreshToken();
         if (refreshToken != null) {
           oauthProperties.put(
               BigQueryJdbcUrlUtility.OAUTH_REFRESH_TOKEN_PROPERTY_NAME, refreshToken);
           LOG.fine("OAuthRefreshToken provided.");
           oauthProperties.put(
-              BigQueryJdbcUrlUtility.OAUTH_CLIENT_ID_PROPERTY_NAME,
-              BigQueryJdbcUrlUtility.parseUriProperty(
-                  url, BigQueryJdbcUrlUtility.OAUTH_CLIENT_ID_PROPERTY_NAME));
+              BigQueryJdbcUrlUtility.OAUTH_CLIENT_ID_PROPERTY_NAME, ds.getOAuthClientId());
           LOG.fine("OAuthClientId provided.");
           oauthProperties.put(
-              BigQueryJdbcUrlUtility.OAUTH_CLIENT_SECRET_PROPERTY_NAME,
-              BigQueryJdbcUrlUtility.parseUriProperty(
-                  url, BigQueryJdbcUrlUtility.OAUTH_CLIENT_SECRET_PROPERTY_NAME));
+              BigQueryJdbcUrlUtility.OAUTH_CLIENT_SECRET_PROPERTY_NAME, ds.getOAuthClientSecret());
           LOG.fine("OAuthClientSecret provided.");
           break;
         }
         oauthProperties.put(
-            BigQueryJdbcUrlUtility.OAUTH_ACCESS_TOKEN_PROPERTY_NAME,
-            BigQueryJdbcUrlUtility.parseUriProperty(
-                url, BigQueryJdbcUrlUtility.OAUTH_ACCESS_TOKEN_PROPERTY_NAME));
+            BigQueryJdbcUrlUtility.OAUTH_ACCESS_TOKEN_PROPERTY_NAME, ds.getOAuthAccessToken());
         LOG.fine("OAuthAccessToken provided.");
         break;
       case APPLICATION_DEFAULT_CREDENTIALS:
@@ -208,38 +175,52 @@ final class BigQueryJdbcOAuthUtility {
       case EXTERNAL_ACCOUNT_AUTH:
         // For External account authentication (OAuth Type 4)
         // need: project id, OAuthPvtKey or OAuthPvtKeyPath or BYOID_PROPERTIES
-        String pvtKey =
-            BigQueryJdbcUrlUtility.parseUriProperty(
-                url, BigQueryJdbcUrlUtility.OAUTH_PVT_KEY_PROPERTY_NAME);
-        String pvtKeyPath =
-            BigQueryJdbcUrlUtility.parseUriProperty(
-                url, BigQueryJdbcUrlUtility.OAUTH_PVT_KEY_PATH_PROPERTY_NAME);
+        String pvtKey = ds.getOAuthPvtKey();
+        String pvtKeyPath = ds.getOAuthPvtKeyPath();
         if (pvtKey != null) {
-          oauthProperties.put(
-              BigQueryJdbcUrlUtility.OAUTH_PVT_KEY_PROPERTY_NAME,
-              BigQueryJdbcUrlUtility.parseUriProperty(
-                  url, BigQueryJdbcUrlUtility.OAUTH_PVT_KEY_PROPERTY_NAME));
+          oauthProperties.put(BigQueryJdbcUrlUtility.OAUTH_PVT_KEY_PROPERTY_NAME, pvtKey);
           LOG.fine("OAuthPvtKey provided.");
         } else if (pvtKeyPath != null) {
-          oauthProperties.put(
-              BigQueryJdbcUrlUtility.OAUTH_PVT_KEY_PATH_PROPERTY_NAME,
-              BigQueryJdbcUrlUtility.parseUriProperty(
-                  url, BigQueryJdbcUrlUtility.OAUTH_PVT_KEY_PATH_PROPERTY_NAME));
+          oauthProperties.put(BigQueryJdbcUrlUtility.OAUTH_PVT_KEY_PATH_PROPERTY_NAME, pvtKeyPath);
           LOG.fine("OAuthPvtKeyPath provided.");
         } else {
-          for (String property : BigQueryJdbcUrlUtility.BYOID_PROPERTIES) {
-            String value =
-                BigQueryJdbcUrlUtility.parseBYOIDProperty(url, property, callerClassName);
-            if (value != null) {
-              oauthProperties.put(property, value);
-              LOG.fine(property + " provided.");
-            }
+          if (ds.getByoidAudienceUri() != null) {
+            oauthProperties.put(
+                BigQueryJdbcUrlUtility.BYOID_AUDIENCE_URI_PROPERTY_NAME, ds.getByoidAudienceUri());
           }
-          String universeDomainProp = BigQueryJdbcUrlUtility.UNIVERSE_DOMAIN_OVERRIDE_PROPERTY_NAME;
-          String universeDomain = BigQueryJdbcUrlUtility.parseUriProperty(url, universeDomainProp);
+          if (ds.getByoidCredentialSource() != null) {
+            oauthProperties.put(
+                BigQueryJdbcUrlUtility.BYOID_CREDENTIAL_SOURCE_PROPERTY_NAME,
+                ds.getByoidCredentialSource());
+          }
+          if (ds.getByoidPoolUserProject() != null) {
+            oauthProperties.put(
+                BigQueryJdbcUrlUtility.BYOID_POOL_USER_PROJECT_PROPERTY_NAME,
+                ds.getByoidPoolUserProject());
+          }
+          if (ds.getByoidSAImpersonationUri() != null) {
+            oauthProperties.put(
+                BigQueryJdbcUrlUtility.BYOID_SA_IMPERSONATION_URI_PROPERTY_NAME,
+                ds.getByoidSAImpersonationUri());
+          }
+          if (ds.getByoidSubjectTokenType() != null) {
+            oauthProperties.put(
+                BigQueryJdbcUrlUtility.BYOID_SUBJECT_TOKEN_TYPE_PROPERTY_NAME,
+                ds.getByoidSubjectTokenType());
+          }
+          if (ds.getByoidTokenUri() != null) {
+            oauthProperties.put(
+                BigQueryJdbcUrlUtility.BYOID_TOKEN_URI_PROPERTY_NAME, ds.getByoidTokenUri());
+          }
+
+          String universeDomain = ds.getUniverseDomain();
           if (universeDomain != null) {
-            oauthProperties.put(universeDomainProp, universeDomain);
-            LOG.fine(universeDomainProp + " provided. Caller : " + callerClassName);
+            oauthProperties.put(
+                BigQueryJdbcUrlUtility.UNIVERSE_DOMAIN_OVERRIDE_PROPERTY_NAME, universeDomain);
+            LOG.fine(
+                BigQueryJdbcUrlUtility.UNIVERSE_DOMAIN_OVERRIDE_PROPERTY_NAME
+                    + " provided. Caller : "
+                    + callerClassName);
           }
         }
         break;
@@ -250,32 +231,20 @@ final class BigQueryJdbcOAuthUtility {
         || authType == AuthType.PRE_GENERATED_TOKEN) {
       oauthProperties.put(
           BigQueryJdbcUrlUtility.OAUTH_SA_IMPERSONATION_EMAIL_PROPERTY_NAME,
-          BigQueryJdbcUrlUtility.parseStringProperty(
-              url,
-              BigQueryJdbcUrlUtility.OAUTH_SA_IMPERSONATION_EMAIL_PROPERTY_NAME,
-              BigQueryJdbcUrlUtility.DEFAULT_OAUTH_SA_IMPERSONATION_EMAIL_VALUE,
-              callerClassName));
+          ds.getOAuthSAImpersonationEmail());
       oauthProperties.put(
           BigQueryJdbcUrlUtility.OAUTH_SA_IMPERSONATION_CHAIN_PROPERTY_NAME,
-          BigQueryJdbcUrlUtility.parseStringProperty(
-              url,
-              BigQueryJdbcUrlUtility.OAUTH_SA_IMPERSONATION_CHAIN_PROPERTY_NAME,
-              BigQueryJdbcUrlUtility.DEFAULT_OAUTH_SA_IMPERSONATION_CHAIN_VALUE,
-              callerClassName));
+          ds.getOAuthSAImpersonationChain());
       oauthProperties.put(
           BigQueryJdbcUrlUtility.OAUTH_SA_IMPERSONATION_SCOPES_PROPERTY_NAME,
-          BigQueryJdbcUrlUtility.parseStringProperty(
-              url,
-              BigQueryJdbcUrlUtility.OAUTH_SA_IMPERSONATION_SCOPES_PROPERTY_NAME,
-              BigQueryJdbcUrlUtility.DEFAULT_OAUTH_SA_IMPERSONATION_SCOPES_VALUE,
-              callerClassName));
+          ds.getOAuthSAImpersonationScopes() != null
+              ? ds.getOAuthSAImpersonationScopes()
+              : BigQueryJdbcUrlUtility.DEFAULT_OAUTH_SA_IMPERSONATION_SCOPES_VALUE);
       oauthProperties.put(
           BigQueryJdbcUrlUtility.OAUTH_SA_IMPERSONATION_TOKEN_LIFETIME_PROPERTY_NAME,
-          BigQueryJdbcUrlUtility.parseStringProperty(
-              url,
-              BigQueryJdbcUrlUtility.OAUTH_SA_IMPERSONATION_TOKEN_LIFETIME_PROPERTY_NAME,
-              BigQueryJdbcUrlUtility.DEFAULT_OAUTH_SA_IMPERSONATION_TOKEN_LIFETIME_VALUE,
-              callerClassName));
+          ds.getOAuthSAImpersonationTokenLifetime() != null
+              ? ds.getOAuthSAImpersonationTokenLifetime()
+              : BigQueryJdbcUrlUtility.DEFAULT_OAUTH_SA_IMPERSONATION_TOKEN_LIFETIME_VALUE);
     }
     return oauthProperties;
   }
@@ -331,11 +300,11 @@ final class BigQueryJdbcOAuthUtility {
     }
   }
 
-  private static boolean isJson(String value) {
+  private static boolean isJson(byte[] value) {
     try {
       // This is done this way to ensure strict Json parsing
       // https://github.com/google/gson/issues/1208#issuecomment-2120764686
-      InputStream stream = new ByteArrayInputStream(value.getBytes());
+      InputStream stream = new ByteArrayInputStream(value);
       InputStreamReader reader = new InputStreamReader(stream);
       JsonReader jsonReader = new JsonReader(reader);
       jsonReader.setStrictness(Strictness.STRICT);
@@ -365,17 +334,24 @@ final class BigQueryJdbcOAuthUtility {
 
       final String keyPath = pvtKeyPath != null ? pvtKeyPath : pvtKey;
       PrivateKey key = null;
-      InputStream stream = null;
+      byte[] keyBytes = pvtKey != null ? pvtKey.getBytes() : null;
 
       if (isFileExists(keyPath)) {
-        key = privateKeyFromP12File(keyPath, p12Password);
-        if (key == null) {
-          stream = Files.newInputStream(Paths.get(keyPath));
+        try (InputStream stream = new FileInputStream(keyPath)) {
+          int bufferSize = 1024 * 1024;
+          byte[] buffer = new byte[bufferSize];
+          stream.read(buffer, 0, bufferSize);
+          keyBytes = buffer;
         }
-      } else if (isJson(pvtKey)) {
-        stream = new ByteArrayInputStream(pvtKey.getBytes());
+      }
+
+      InputStream stream = null;
+      if (isJson(keyBytes)) {
+        stream = new ByteArrayInputStream(keyBytes);
       } else if (pvtKey != null) {
         key = privateKeyFromPkcs8(pvtKey);
+      } else if (keyBytes != null) {
+        key = privateKeyFromP12Bytes(keyBytes, p12Password);
       }
 
       if (stream != null) {
@@ -429,7 +405,8 @@ final class BigQueryJdbcOAuthUtility {
         }
       } catch (NumberFormatException e) {
         LOG.severe(
-            "Invalid value for RequestGoogleDriveScope, defaulting to not request Drive scope. Caller: "
+            "Invalid value for RequestGoogleDriveScope, defaulting to not request Drive scope."
+                + " Caller: "
                 + callerClassName);
       }
     }
@@ -703,9 +680,9 @@ final class BigQueryJdbcOAuthUtility {
         impersonationLifetimeInt);
   }
 
-  static PrivateKey privateKeyFromP12File(String privateKeyFile, String password) {
+  static PrivateKey privateKeyFromP12Bytes(byte[] privateKey, String password) {
     try {
-      InputStream stream = Files.newInputStream(Paths.get(privateKeyFile));
+      InputStream stream = new ByteArrayInputStream(privateKey);
       return SecurityUtils.loadPrivateKeyFromKeyStore(
           SecurityUtils.getPkcs12KeyStore(), stream, "notasecret", "privatekey", password);
     } catch (IOException | GeneralSecurityException e) {
