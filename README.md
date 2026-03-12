@@ -1,3 +1,5 @@
+**_THIS REPOSITORY IS DEPRECATED. ALL OF ITS CONTENT AND HISTORY HAS BEEN MOVED TO [GOOGLE-CLOUD-JAVA](https://github.com/googleapis/google-cloud-java/tree/main/java-bigquery)_**
+
 # Google Cloud BigQuery Client for Java
 
 Java idiomatic client for [Cloud BigQuery][product-docs].
