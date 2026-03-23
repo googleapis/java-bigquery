@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.61.0](https://github.com/googleapis/java-bigquery/compare/v2.60.0...v2.61.0) (2026-03-23)
+
+
+### Features
+
+* **jdbc:** Centralize connection properties from `BigQueryConnection` and `DataSource` ([#4116](https://github.com/googleapis/java-bigquery/issues/4116)) ([d3b8bde](https://github.com/googleapis/java-bigquery/commit/d3b8bded8d1cce9777fa5b40d72c0d6f7b9637a7))
+
+
+### Bug Fixes
+
+* **jdbc:** Various perf improvements ([#4114](https://github.com/googleapis/java-bigquery/issues/4114)) ([0137e4b](https://github.com/googleapis/java-bigquery/commit/0137e4b418ff9cefcbece1c6d9d8ef491a50819b))
+
+
+### Documentation
+
+* Redirect users to google-cloud-java ([#4136](https://github.com/googleapis/java-bigquery/issues/4136)) ([a1327bb](https://github.com/googleapis/java-bigquery/commit/a1327bbbe310474c7ce8071729dbb91b501e1c47))
+
 ## [2.60.0](https://github.com/googleapis/java-bigquery/compare/v2.59.0...v2.60.0) (2026-02-26)
 
 
